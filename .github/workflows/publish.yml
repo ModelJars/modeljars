@@ -51,12 +51,14 @@ jobs:
       - name: Build and verify
         run: ./gradlew --no-daemon test jar publishToMavenLocal
 
-      - name: Stop before publishing on dry run
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
-        run: echo "Dry run complete; artifacts were built and installed to Maven Local."
+      - name: Skip publishing until release automation is wired
+        if: github.event_name == 'push' || inputs.dry_run == 'true'
+        run: |
+          echo "Artifacts were built and installed to Maven Local."
+          echo "Maven Central publishing is gated until the catalog generator and signing plugin are added."
 
       - name: Publish to Maven Central
-        if: github.event_name == 'push' || inputs.dry_run == 'false'
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false'
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}

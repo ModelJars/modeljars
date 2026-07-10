@@ -23,7 +23,7 @@ Recommended organization settings:
 From this local repository:
 
 ```bash
-gh repo create modeljars/modeljars \
+gh repo create ModelJars/modeljars \
   --public \
   --description "Community-maintained JVM marker JAR catalog for local and remote AI models" \
   --homepage "https://modeljars.org" \

@@ -33,7 +33,7 @@ concurrency:
 jobs:
   publish:
     name: Build release artifacts
-    if: github.repository == 'modeljars/modeljars'
+    if: github.repository == 'ModelJars/modeljars'
     runs-on: ubuntu-latest
     environment: maven-central
 

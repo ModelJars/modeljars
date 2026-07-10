@@ -1,0 +1,14 @@
+# Infrastructure and release controls require infra maintainer review.
+/.github/ @modeljars/infra-maintainers
+/build.gradle.kts @modeljars/infra-maintainers
+/settings.gradle.kts @modeljars/infra-maintainers
+/gradle/ @modeljars/infra-maintainers
+/gradlew @modeljars/infra-maintainers
+/gradlew.bat @modeljars/infra-maintainers
+
+# Runtime APIs require core maintainer review.
+/modeljars-core/ @modeljars/core-maintainers
+
+# Catalog metadata requires catalog maintainer review.
+/catalog/ @modeljars/catalog-maintainers
+/modeljars-catalog-*/ @modeljars/catalog-maintainers

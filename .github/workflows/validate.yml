@@ -1,0 +1,38 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Validate build
+        run: ./gradlew --no-daemon test jar
+
+      - name: Verify marker metadata is packaged
+        run: |
+          jar tf modeljars-catalog-qwen3-0-6b-q4-0/build/libs/modeljars-catalog-qwen3-0-6b-q4-0-3.0.0-q4_0.1.jar \
+            | grep -Fx META-INF/modeljars/registry.properties

@@ -1,0 +1,71 @@
+name: publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and verify artifacts without publishing.
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  push:
+    branches:
+      - main
+    paths:
+      - catalog/**
+      - modeljars-catalog-*/**
+      - modeljars-core/**
+      - build.gradle.kts
+      - settings.gradle.kts
+      - .github/workflows/publish.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build release artifacts
+    if: github.repository == 'modeljars/modeljars'
+    runs-on: ubuntu-latest
+    environment: maven-central
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Build and verify
+        run: ./gradlew --no-daemon test jar publishToMavenLocal
+
+      - name: Stop before publishing on dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
+        run: echo "Dry run complete; artifacts were built and installed to Maven Local."
+
+      - name: Publish to Maven Central
+        if: github.event_name == 'push' || inputs.dry_run == 'false'
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [ -z "$CENTRAL_USERNAME" ] || [ -z "$CENTRAL_PASSWORD" ]; then
+            echo "Maven Central credentials are not configured in the maven-central environment." >&2
+            exit 1
+          fi
+          echo "Central publishing is intentionally gated here until the catalog generator and signing plugin are added."
+          exit 1

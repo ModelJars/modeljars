@@ -258,7 +258,7 @@ and preferred inference formats.
 |---|---:|---|---|---|
 | Qwen2.5-Coder 0.5B / 1.5B / 3B | 0.5B-3B | 0.5B and 1.5B Apache-2.0; 3B Qwen Research | Strong code-specific small family; official report covers 0.5B through 32B; good Java smoke ladder. | Closest path. Qwen2 GGUF markers are now added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0. |
 | Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
-| SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | Architecture reports as `llama`, but tokenizer/template validation is needed. |
+| SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | 360M Q8_0 marker is added as the first non-Qwen pure-Java validation fixture. |
 | TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Requires Llama/SentencePiece tokenizer support before pure-Java execution is credible. |
 | DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Architecture reports as `llama`; tokenizer/template and license metadata need careful validation. |
 | StarCoder2 3B | 3B | BigCode OpenRAIL-M | Popular code model with FIM/code-completion focus and large ecosystem. | Requires StarCoder2 architecture and BigCode tokenizer/FIM support. |

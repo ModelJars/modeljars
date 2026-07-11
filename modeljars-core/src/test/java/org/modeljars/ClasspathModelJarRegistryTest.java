@@ -125,4 +125,25 @@ class ClasspathModelJarRegistryTest {
             .toString()
             .endsWith("qwen2.5-coder-7b-instruct-q4_0.gguf"));
   }
+
+  @Test
+  void loadsSmolLm2PureJavaCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
+                    .variant("q8_0")
+                    .backend("pure-java")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("smollm2_360m_instruct_q8_0", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q8_0", descriptor.quantization());
+    assertTrue(
+        descriptor.localPath().orElseThrow().toString().endsWith("smollm2-360m-instruct-q8_0.gguf"));
+  }
 }

@@ -142,5 +142,23 @@
       "pure-java": true,
       "llama.cpp": true
     }
+  },
+  {
+    "name": "SmolLM2 360M Instruct GGUF Q8_0",
+    "description": "Apache-2.0 Llama-family small model used as the first non-Qwen pure-Java validation fixture.",
+    "sourceId": "hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF",
+    "sourceUri": "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",
+    "modelVersion": "2.0.0",
+    "variant": "q8_0",
+    "format": "gguf",
+    "architecture": "llama",
+    "quantization": "Q8_0",
+    "localPath": "${user.home}/.jvllm/models/smollm2-360m-instruct-q8_0.gguf",
+    "capabilities": ["text-generation", "chat"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
   }
 ]

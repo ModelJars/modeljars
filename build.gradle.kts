@@ -66,6 +66,7 @@ project(":modeljars-core") {
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q8-0"))
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-3b-instruct-q4-0"))
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-7b-instruct-q4-0"))
+        testRuntimeOnly(project(":modeljars-catalog-huggingfacetb-smollm2-360m-instruct-q8-0"))
     }
 }
 
@@ -161,6 +162,18 @@ project(":modeljars-catalog-qwen2-5-coder-7b-instruct-q4-0") {
     publishing {
         publications.named<MavenPublication>("maven") {
             artifactId = "qwen.qwen2.5-coder-7b-instruct-gguf.q4_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-huggingfacetb-smollm2-360m-instruct-q8-0") {
+    group = "org.modeljars.huggingface"
+    version = "2.0.0-q8_0.1"
+    description = "ModelJars marker for HuggingFaceTB/SmolLM2-360M-Instruct-GGUF Q8_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "huggingfacetb.smollm2-360m-instruct-gguf.q8_0"
         }
     }
 }

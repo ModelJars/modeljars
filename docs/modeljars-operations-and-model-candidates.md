@@ -228,7 +228,7 @@ runtime support.
 | Candidate | Local artifact shape | Current ModelJars support | Current pure-Java support | What we need next |
 |---|---|---|---|---|
 | Qwen3 0.6B GGUF Q4_0 | GGUF Q4_0; already used as test fixture | Already implemented as first marker | Supported as the only validated end-to-end fixture | Add reference-logit tests against llama.cpp; publish marker when Maven Central flow is final. |
-| Qwen2.5-Coder 0.5B/1.5B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for Q4_0 and Q8_0 | Near pure-Java; Q4_0/Q8_0 markers resolve through `models` | Run real-file integration tests, add chat/FIM templates, and compare output against llama.cpp. |
+| Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Near pure-Java; Q4_0/Q8_0 markers resolve through `models` | Run real-file integration tests, add chat/FIM templates, and compare output against llama.cpp. |
 | Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Catalog-ready | Near pure-Java after 1.5B works | Same as Qwen2.5 small, plus memory/perf benchmarks and split-file handling if needed. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
 | DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
@@ -256,7 +256,7 @@ and preferred inference formats.
 
 | Candidate | Size | License / access | Why it matters | Pure-Java proximity |
 |---|---:|---|---|---|
-| Qwen2.5-Coder 0.5B / 1.5B / 3B | 0.5B-3B | 0.5B and 1.5B Apache-2.0; 3B Qwen Research | Strong code-specific small family; official report covers 0.5B through 32B; good Java smoke ladder. | Closest path. Qwen2 GGUF Q4_0/Q8_0 markers are now added for 0.5B and 1.5B. |
+| Qwen2.5-Coder 0.5B / 1.5B / 3B | 0.5B-3B | 0.5B and 1.5B Apache-2.0; 3B Qwen Research | Strong code-specific small family; official report covers 0.5B through 32B; good Java smoke ladder. | Closest path. Qwen2 GGUF markers are now added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0. |
 | Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
 | SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | Architecture reports as `llama`, but tokenizer/template validation is needed. |
 | TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Requires Llama/SentencePiece tokenizer support before pure-Java execution is credible. |
@@ -293,11 +293,13 @@ First catalog batch:
 
 1. Qwen2.5-Coder 0.5B/1.5B Instruct GGUF. Q4_0 and Q8_0 markers are already
    added.
-2. Qwen2.5-Coder 7B Instruct GGUF.
-3. Qwen2.5-Coder 14B or 32B Instruct GGUF.
-4. CodeLlama 7B Instruct GGUF.
-5. StarCoder2 3B or 7B.
-6. Granite Code 3B or 8B.
+2. Qwen2.5-Coder 3B Instruct GGUF. Q4_0 marker is added for the next
+   pure-Java validation tier.
+3. Qwen2.5-Coder 7B Instruct GGUF.
+4. Qwen2.5-Coder 14B or 32B Instruct GGUF.
+5. CodeLlama 7B Instruct GGUF.
+6. StarCoder2 3B or 7B.
+7. Granite Code 3B or 8B.
 
 Each marker should start with:
 

@@ -66,6 +66,15 @@ class ClasspathModelJarRegistryTest {
                     .capability("code-completion")
                     .build())
             .orElseThrow();
+    ModelJarDescriptor threeBillion =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("pure-java")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
 
     assertEquals("qwen2_5_coder_0_5b_instruct_q4_0", halfBillion.alias());
     assertEquals("qwen2", halfBillion.architecture());
@@ -86,5 +95,15 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow()
             .toString()
             .endsWith("qwen2.5-coder-1.5b-instruct-q4_0.gguf"));
+
+    assertEquals("qwen2_5_coder_3b_instruct_q4_0", threeBillion.alias());
+    assertEquals("qwen2", threeBillion.architecture());
+    assertEquals("Q4_0", threeBillion.quantization());
+    assertTrue(
+        threeBillion
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("qwen2.5-coder-3b-instruct-q4_0.gguf"));
   }
 }

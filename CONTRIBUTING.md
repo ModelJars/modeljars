@@ -9,11 +9,18 @@ running from the protected `main` branch can publish artifacts.
 
 Catalog pull requests must:
 
+- add or update entries only in `catalog/models.json`; generated marker JARs and website data must
+  not be committed;
 - add or update metadata only for models whose upstream source is public and attributable;
 - include the upstream source URL and model license;
+- pin an immutable upstream revision, download URL, byte size, and SHA-256 digest;
 - avoid mirroring model weights in this repository;
 - describe the format, architecture, quantization, capabilities, and supported backends;
 - use a new immutable marker artifact version for every published metadata change.
+
+Run `./gradlew test verifyCatalog` before opening a pull request. CI generates every marker JAR and
+the website catalog from the metadata, then rejects duplicate coordinates, mutable download URLs,
+invalid versions, missing integrity fields, or inconsistent filenames.
 
 ## Review
 

@@ -13,6 +13,10 @@ META-INF/modeljars/registry.properties
 Those descriptors point to upstream model locations, expected local cache paths, checksums,
 licenses, formats, quantization variants, and backend compatibility.
 
+The catalog has one source of truth: `catalog/models.json`. Gradle generates the aggregate
+classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
+catalog. Adding a model does not require a new Gradle module or source folder.
+
 ## Supported markers
 
 The first catalog marker is the model already used by `projects/models` integration tests:
@@ -57,6 +61,30 @@ ModelJarDescriptor descriptor = registry.resolve(
 
 Path model = descriptor.localPath().orElseThrow();
 ```
+
+To download and verify the pinned artifact instead of requiring it to exist already:
+
+```java
+Path model = new ModelJarInstaller(registry).install(
+    ModelJarRequirement.forSource("hf://ggml-org/Qwen3-0.6B-GGUF")
+        .variant("q4_0")
+        .backend("pure-java")
+        .build()
+);
+```
+
+`ModelJarInstaller` verifies both the byte size and SHA-256 digest before atomically moving the
+download into the local cache.
+
+## Catalog development
+
+```bash
+./gradlew test verifyCatalog
+./gradlew generateSite
+```
+
+The generated site is written to `build/site`. Individual marker JARs are written under
+`modeljars-catalog/build/libs/markers`.
 
 ## Reference repos
 

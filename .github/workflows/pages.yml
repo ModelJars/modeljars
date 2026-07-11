@@ -30,13 +30,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Generate site catalog
+        run: ./gradlew --no-daemon generateSite
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: site
+          path: build/site
 
       - name: Deploy to GitHub Pages
         id: deployment

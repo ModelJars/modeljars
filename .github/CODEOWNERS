@@ -11,7 +11,7 @@
 
 # Catalog metadata requires catalog maintainer review.
 /catalog/ @modeljars/catalog-maintainers
-/modeljars-catalog-*/ @modeljars/catalog-maintainers
+/modeljars-catalog/ @modeljars/catalog-maintainers
 
 # Public website and docs require infrastructure review until the docs project is split out.
 /site/ @modeljars/infra-maintainers

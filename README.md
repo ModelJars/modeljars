@@ -60,3 +60,6 @@ The WebJars repositories used as design references are cloned under `../../refer
 The first implementation follows the locator-lite approach: no startup classpath scan, just
 well-known metadata resources. A richer scanner and public catalog service can come later.
 
+## Reports
+
+- [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)

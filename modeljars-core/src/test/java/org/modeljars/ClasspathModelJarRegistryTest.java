@@ -25,6 +25,26 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQwen3OnePointSevenBillionMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen3-1.7B-GGUF")
+                    .variant("q8_0")
+                    .backend("pure-java")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen3_1_7b_q8_0", descriptor.alias());
+    assertEquals("qwen3", descriptor.architecture());
+    assertEquals("Q8_0", descriptor.quantization());
+    assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-1.7B-Q8_0.gguf"));
+  }
+
+  @Test
   void loadsQwen25CoderPureJavaCandidateMarkersFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

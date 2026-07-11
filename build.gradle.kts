@@ -59,6 +59,7 @@ project(":modeljars-core") {
 
     dependencies {
         testRuntimeOnly(project(":modeljars-catalog-qwen3-0-6b-q4-0"))
+        testRuntimeOnly(project(":modeljars-catalog-qwen3-1-7b-q8-0"))
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q4-0"))
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q8-0"))
         testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q4-0"))
@@ -74,6 +75,18 @@ project(":modeljars-catalog-qwen3-0-6b-q4-0") {
     publishing {
         publications.named<MavenPublication>("maven") {
             artifactId = "ggml-org.qwen3-0.6b-gguf.q4_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-qwen3-1-7b-q8-0") {
+    group = "org.modeljars.huggingface"
+    version = "3.0.0-q8_0.1"
+    description = "ModelJars marker for Qwen/Qwen3-1.7B-GGUF Q8_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen.qwen3-1.7b-gguf.q8_0"
         }
     }
 }

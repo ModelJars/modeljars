@@ -228,7 +228,7 @@ runtime support.
 | Candidate | Local artifact shape | Current ModelJars support | Current pure-Java support | What we need next |
 |---|---|---|---|---|
 | Qwen3 0.6B GGUF Q4_0 | GGUF Q4_0; already used as test fixture | Already implemented as first marker | Supported as the only validated end-to-end fixture | Add reference-logit tests against llama.cpp; publish marker when Maven Central flow is final. |
-| Qwen2.5-Coder 0.5B/1.5B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Catalog-ready | Near pure-Java, but not claimed | Add Qwen2.5 smoke fixture, optional Q/K/V bias tensors, chat/FIM templates, and reference-output tests. |
+| Qwen2.5-Coder 0.5B/1.5B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for Q4_0 and Q8_0 | Near pure-Java; Q4_0/Q8_0 markers resolve through `models` | Run real-file integration tests, add chat/FIM templates, and compare output against llama.cpp. |
 | Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Catalog-ready | Near pure-Java after 1.5B works | Same as Qwen2.5 small, plus memory/perf benchmarks and split-file handling if needed. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
 | DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
@@ -247,7 +247,42 @@ runtime support.
 | Phi-4 Mini / Phi-4 family local weights | Small local models; not code-only but useful for Java smoke work | Catalog-ready | Requires runtime work | Add Phi architecture/tokenizer support; lower priority than Qwen2.5-Coder for coding. |
 | OpenCoder / OpenCoder2 style 1.5B/8B | Coding models with local weights/conversions depending on release | Catalog-ready after source verification | Depends on architecture | Investigate tensor layout and tokenizer; useful if Apache/MIT licensed and GGUF Q4_0/Q8_0 exists. |
 
-## 5. Recommended Execution Plan
+## 5. Small Fine-Tuning Candidates
+
+These are popular small models worth tracking for local fine-tuning and LoRA
+workflows. They are not all immediate pure-Java inference targets. ModelJars
+should catalog them with their training-oriented metadata, license constraints,
+and preferred inference formats.
+
+| Candidate | Size | License / access | Why it matters | Pure-Java proximity |
+|---|---:|---|---|---|
+| Qwen2.5-Coder 0.5B / 1.5B / 3B | 0.5B-3B | 0.5B and 1.5B Apache-2.0; 3B Qwen Research | Strong code-specific small family; official report covers 0.5B through 32B; good Java smoke ladder. | Closest path. Qwen2 GGUF Q4_0/Q8_0 markers are now added for 0.5B and 1.5B. |
+| Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
+| SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | Architecture reports as `llama`, but tokenizer/template validation is needed. |
+| TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Requires Llama/SentencePiece tokenizer support before pure-Java execution is credible. |
+| DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Architecture reports as `llama`; tokenizer/template and license metadata need careful validation. |
+| StarCoder2 3B | 3B | BigCode OpenRAIL-M | Popular code model with FIM/code-completion focus and large ecosystem. | Requires StarCoder2 architecture and BigCode tokenizer/FIM support. |
+| Granite 3.3 2B Instruct | 2B | Apache-2.0 | Enterprise-friendly IBM model; useful for OSS/commercial-friendly small-model catalog entries. | Requires Granite architecture support; likely not first pure-Java target. |
+| CodeGemma 2B | 2B | Gemma license, gated acknowledgement | Small code-completion-focused model from Google. | Requires Gemma architecture/tokenizer support and license-gating metadata. |
+| Gemma 3 1B / 4B | 1B-4B | Gemma license, gated acknowledgement | Very popular small general-purpose family; strong fine-tuning activity. | Requires Gemma 3 architecture/tokenizer support. |
+| Llama 3.2 1B / 3B | 1B-3B | Llama 3.2 license, gated | Very popular fine-tuning baseline and broad tooling support. | Requires Llama 3 tokenizer/chat-template support plus gated-license metadata. |
+| Phi-4 Mini Instruct | 3.8B | MIT | Popular small Microsoft model with code/general utility and permissive license. | Requires Phi architecture and tokenizer support; useful after Qwen/Llama tokenizers mature. |
+| OLMo 2 1B Instruct | 1B | Apache-2.0 | Fully open ecosystem from Ai2; strong candidate for transparent fine-tuning workflows. | Requires OLMo2 architecture/tokenizer support. |
+
+Recommended fine-tuning catalog priority:
+
+1. Qwen2.5-Coder 0.5B and 1.5B, because they are also pure-Java runtime
+   targets.
+2. SmolLM2 and TinyLlama, because they provide small Apache-2.0 Llama-family
+   compatibility pressure.
+3. Granite 3.3 2B and OLMo 2 1B, because they are commercially friendly and
+   useful to OSS users.
+4. StarCoder2 3B and DeepSeek-Coder 1.3B, because they expand the code-model
+   surface.
+5. Gemma, Llama 3.2, and Phi-4 Mini, once license gating and tokenizer/runtime
+   support are modeled cleanly.
+
+## 6. Recommended Execution Plan
 
 ### Track A: Catalog more models immediately
 
@@ -256,7 +291,8 @@ long as descriptors are honest about backend compatibility.
 
 First catalog batch:
 
-1. Qwen2.5-Coder 0.5B/1.5B Instruct GGUF.
+1. Qwen2.5-Coder 0.5B/1.5B Instruct GGUF. Q4_0 and Q8_0 markers are already
+   added.
 2. Qwen2.5-Coder 7B Instruct GGUF.
 3. Qwen2.5-Coder 14B or 32B Instruct GGUF.
 4. CodeLlama 7B Instruct GGUF.
@@ -328,7 +364,7 @@ Add descriptor support for:
 This lets Java users resolve a model through ModelJars and run it locally from
 Java even when the pure-Java backend is not ready.
 
-## 6. Source Links
+## 7. Source Links
 
 - KDnuggets article:
   <https://www.kdnuggets.com/top-7-coding-models-you-can-run-locally-in-2026>
@@ -338,15 +374,43 @@ Java even when the pure-Java backend is not ready.
   <https://docs.github.com/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site>
 - Qwen2.5-Coder:
   <https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct-GGUF>
+- Qwen2.5-Coder technical report:
+  <https://arxiv.org/abs/2409.12186>
+- Qwen2.5-Coder 0.5B GGUF:
+  <https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF>
+- Qwen2.5-Coder 1.5B GGUF:
+  <https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF>
 - Qwen3-Coder:
   <https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF>
+- Qwen3 1.7B:
+  <https://huggingface.co/Qwen/Qwen3-1.7B>
+- SmolLM2 1.7B:
+  <https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct>
+- TinyLlama 1.1B:
+  <https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0>
 - DeepSeek-Coder-V2-Lite:
   <https://huggingface.co/deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct>
+- DeepSeek-Coder 1.3B:
+  <https://huggingface.co/deepseek-ai/deepseek-coder-1.3b-instruct>
 - Codestral:
   <https://huggingface.co/mistralai/Codestral-22B-v0.1>
 - StarCoder2:
   <https://huggingface.co/bigcode/starcoder2-15b>
+- StarCoder2 3B:
+  <https://huggingface.co/bigcode/starcoder2-3b>
 - IBM Granite Code:
   <https://huggingface.co/ibm-granite/granite-8b-code-instruct>
+- Granite 3.3 2B:
+  <https://huggingface.co/ibm-granite/granite-3.3-2b-instruct>
+- CodeGemma 2B:
+  <https://huggingface.co/google/codegemma-2b>
+- Gemma 3 1B:
+  <https://huggingface.co/google/gemma-3-1b-it>
+- Llama 3.2 1B:
+  <https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct>
+- Phi-4 Mini:
+  <https://huggingface.co/microsoft/Phi-4-mini-instruct>
+- OLMo 2 1B:
+  <https://huggingface.co/allenai/OLMo-2-0425-1B-Instruct>
 - CodeLlama:
   <https://huggingface.co/codellama/CodeLlama-7b-Instruct-hf>

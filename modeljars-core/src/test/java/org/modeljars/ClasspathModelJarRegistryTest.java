@@ -23,5 +23,48 @@ class ClasspathModelJarRegistryTest {
     assertEquals("qwen3_0_6b_q4_0", descriptor.alias());
     assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-0.6B-Q4_0.gguf"));
   }
-}
 
+  @Test
+  void loadsQwen25CoderPureJavaCandidateMarkersFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor halfBillion =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("pure-java")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+    ModelJarDescriptor onePointFiveBillion =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("pure-java")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen2_5_coder_0_5b_instruct_q4_0", halfBillion.alias());
+    assertEquals("qwen2", halfBillion.architecture());
+    assertEquals("Q4_0", halfBillion.quantization());
+    assertTrue(
+        halfBillion
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("qwen2.5-coder-0.5b-instruct-q4_0.gguf"));
+
+    assertEquals("qwen2_5_coder_1_5b_instruct_q4_0", onePointFiveBillion.alias());
+    assertEquals("qwen2", onePointFiveBillion.architecture());
+    assertEquals("Q4_0", onePointFiveBillion.quantization());
+    assertTrue(
+        onePointFiveBillion
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("qwen2.5-coder-1.5b-instruct-q4_0.gguf"));
+  }
+}

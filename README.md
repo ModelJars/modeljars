@@ -13,7 +13,7 @@ META-INF/modeljars/registry.properties
 Those descriptors point to upstream model locations, expected local cache paths, checksums,
 licenses, formats, quantization variants, and backend compatibility.
 
-## First supported marker
+## Supported markers
 
 The first catalog marker is the model already used by `projects/models` integration tests:
 
@@ -31,6 +31,15 @@ and the local path:
 
 ```text
 ${user.home}/.jvllm/models/Qwen3-0.6B-Q4_0.gguf
+```
+
+The first pure-Java coder targets are Qwen2.5-Coder small GGUF variants:
+
+```text
+org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0:2.5.0-q4_0.1
+org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q8_0:2.5.0-q8_0.1
+org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q4_0:2.5.0-q4_0.1
+org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q8_0:2.5.0-q8_0.1
 ```
 
 ## Runtime use

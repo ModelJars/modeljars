@@ -59,6 +59,10 @@ project(":modeljars-core") {
 
     dependencies {
         testRuntimeOnly(project(":modeljars-catalog-qwen3-0-6b-q4-0"))
+        testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q4-0"))
+        testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q8-0"))
+        testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q4-0"))
+        testRuntimeOnly(project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q8-0"))
     }
 }
 
@@ -70,6 +74,54 @@ project(":modeljars-catalog-qwen3-0-6b-q4-0") {
     publishing {
         publications.named<MavenPublication>("maven") {
             artifactId = "ggml-org.qwen3-0.6b-gguf.q4_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q4-0") {
+    group = "org.modeljars.huggingface"
+    version = "2.5.0-q4_0.1"
+    description = "ModelJars marker for Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF Q4_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-qwen2-5-coder-0-5b-instruct-q8-0") {
+    group = "org.modeljars.huggingface"
+    version = "2.5.0-q8_0.1"
+    description = "ModelJars marker for Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF Q8_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen.qwen2.5-coder-0.5b-instruct-gguf.q8_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q4-0") {
+    group = "org.modeljars.huggingface"
+    version = "2.5.0-q4_0.1"
+    description = "ModelJars marker for Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF Q4_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen.qwen2.5-coder-1.5b-instruct-gguf.q4_0"
+        }
+    }
+}
+
+project(":modeljars-catalog-qwen2-5-coder-1-5b-instruct-q8-0") {
+    group = "org.modeljars.huggingface"
+    version = "2.5.0-q8_0.1"
+    description = "ModelJars marker for Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF Q8_0"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen.qwen2.5-coder-1.5b-instruct-gguf.q8_0"
         }
     }
 }

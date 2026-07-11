@@ -16,5 +16,77 @@
       "pure-java": true,
       "llama.cpp": true
     }
+  },
+  {
+    "name": "Qwen2.5-Coder 0.5B Instruct GGUF Q4_0",
+    "description": "Small Apache-2.0 Qwen2 coder model targeted as the next pure-Java backend validation fixture.",
+    "sourceId": "hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF",
+    "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0:2.5.0-q4_0.1",
+    "modelVersion": "2.5.0",
+    "variant": "q4_0",
+    "format": "gguf",
+    "architecture": "qwen2",
+    "quantization": "Q4_0",
+    "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-0.5b-instruct-q4_0.gguf",
+    "capabilities": ["text-generation", "chat", "code-completion"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
+  },
+  {
+    "name": "Qwen2.5-Coder 0.5B Instruct GGUF Q8_0",
+    "description": "Small Apache-2.0 Qwen2 coder model targeted as a higher-quality pure-Java validation fixture.",
+    "sourceId": "hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF",
+    "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q8_0:2.5.0-q8_0.1",
+    "modelVersion": "2.5.0",
+    "variant": "q8_0",
+    "format": "gguf",
+    "architecture": "qwen2",
+    "quantization": "Q8_0",
+    "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-0.5b-instruct-q8_0.gguf",
+    "capabilities": ["text-generation", "chat", "code-completion"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
+  },
+  {
+    "name": "Qwen2.5-Coder 1.5B Instruct GGUF Q4_0",
+    "description": "Apache-2.0 Qwen2 coder model for the second pure-Java backend validation tier after 0.5B.",
+    "sourceId": "hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q4_0:2.5.0-q4_0.1",
+    "modelVersion": "2.5.0",
+    "variant": "q4_0",
+    "format": "gguf",
+    "architecture": "qwen2",
+    "quantization": "Q4_0",
+    "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-1.5b-instruct-q4_0.gguf",
+    "capabilities": ["text-generation", "chat", "code-completion"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
+  },
+  {
+    "name": "Qwen2.5-Coder 1.5B Instruct GGUF Q8_0",
+    "description": "Apache-2.0 Qwen2 coder model for higher-quality pure-Java backend validation after 0.5B.",
+    "sourceId": "hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q8_0:2.5.0-q8_0.1",
+    "modelVersion": "2.5.0",
+    "variant": "q8_0",
+    "format": "gguf",
+    "architecture": "qwen2",
+    "quantization": "Q8_0",
+    "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-1.5b-instruct-q8_0.gguf",
+    "capabilities": ["text-generation", "chat", "code-completion"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
   }
 ]

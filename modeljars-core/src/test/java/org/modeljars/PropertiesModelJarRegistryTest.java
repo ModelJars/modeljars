@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,11 @@ class PropertiesModelJarRegistryTest {
         model.qwen.quantization=Q4_0
         model.qwen.path=${user.home}/.jvllm/models/Qwen3-0.6B-Q4_0.gguf
         model.qwen.sourceUri=https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF
+        model.qwen.downloadUri=https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/a41486f827d17edd055fe6b3b0ba3f8d427c0519/Qwen3-0.6B-Q4_0.gguf
+        model.qwen.revision=a41486f827d17edd055fe6b3b0ba3f8d427c0519
+        model.qwen.sha256=da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4
+        model.qwen.sizeBytes=428970080
+        model.qwen.license=Apache-2.0
         model.qwen.capabilities=text-generation,chat
         model.qwen.backend.pure-java=true
         """);
@@ -47,6 +53,17 @@ class PropertiesModelJarRegistryTest {
     assertEquals("qwen", descriptor.alias());
     assertEquals("qwen3", descriptor.architecture());
     assertTrue(descriptor.localPath().orElseThrow().isAbsolute());
+    assertEquals(
+        URI.create(
+            "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/"
+                + "a41486f827d17edd055fe6b3b0ba3f8d427c0519/Qwen3-0.6B-Q4_0.gguf"),
+        descriptor.downloadUri().orElseThrow());
+    assertEquals(
+        "a41486f827d17edd055fe6b3b0ba3f8d427c0519", descriptor.revision().orElseThrow());
+    assertEquals(
+        "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+        descriptor.sha256().orElseThrow());
+    assertEquals(428970080L, descriptor.sizeBytes().orElseThrow());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
   }
 }
-

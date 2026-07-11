@@ -20,7 +20,11 @@ public record ModelJarDescriptor(
     String quantization,
     Optional<Path> localPath,
     Optional<URI> sourceUri,
+    Optional<URI> downloadUri,
+    Optional<String> revision,
     Optional<String> sha256,
+    Optional<Long> sizeBytes,
+    Optional<String> license,
     Set<String> capabilities,
     Map<String, Boolean> backendSupport) {
   public ModelJarDescriptor {
@@ -34,7 +38,22 @@ public record ModelJarDescriptor(
     quantization = requireText(quantization, "quantization").toUpperCase(Locale.ROOT);
     localPath = Objects.requireNonNull(localPath, "localPath");
     sourceUri = Objects.requireNonNull(sourceUri, "sourceUri");
-    sha256 = Objects.requireNonNull(sha256, "sha256").filter(s -> !s.isBlank());
+    downloadUri = Objects.requireNonNull(downloadUri, "downloadUri");
+    revision = normalizedOptional(revision, "revision");
+    sha256 =
+        normalizedOptional(sha256, "sha256")
+            .map(String::toLowerCase)
+            .map(ModelJarDescriptor::requireSha256);
+    sizeBytes =
+        Objects.requireNonNull(sizeBytes, "sizeBytes")
+            .map(
+                value -> {
+                  if (value <= 0) {
+                    throw new IllegalArgumentException("sizeBytes must be > 0");
+                  }
+                  return value;
+                });
+    license = normalizedOptional(license, "license");
     capabilities =
         Set.copyOf(Objects.requireNonNull(capabilities, "capabilities")).stream()
             .map(value -> value.toLowerCase(Locale.ROOT))
@@ -56,5 +75,15 @@ public record ModelJarDescriptor(
     }
     return value.trim();
   }
-}
 
+  private static Optional<String> normalizedOptional(Optional<String> value, String name) {
+    return Objects.requireNonNull(value, name).map(String::trim).filter(text -> !text.isEmpty());
+  }
+
+  private static String requireSha256(String value) {
+    if (!value.matches("[0-9a-f]{64}")) {
+      throw new IllegalArgumentException("sha256 must contain exactly 64 hexadecimal characters");
+    }
+    return value;
+  }
+}

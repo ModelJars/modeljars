@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Qwen3 0.6B GGUF Q4_0",
+    "description": "Small text-generation fixture used by the pure-Java models backend integration tests.",
+    "sourceId": "hf://ggml-org/Qwen3-0.6B-GGUF",
+    "sourceUri": "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF",
+    "markerCoordinate": "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1",
+    "modelVersion": "3.0.0",
+    "variant": "q4_0",
+    "format": "gguf",
+    "architecture": "qwen3",
+    "quantization": "Q4_0",
+    "localPath": "${user.home}/.jvllm/models/Qwen3-0.6B-Q4_0.gguf",
+    "capabilities": ["text-generation", "chat"],
+    "backends": {
+      "pure-java": true,
+      "llama.cpp": true
+    }
+  }
+]

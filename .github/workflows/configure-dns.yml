@@ -1,0 +1,96 @@
+name: configure-dns
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dns:
+    name: Configure DNSimple records
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure modeljars.org records
+        env:
+          DNSIMPLE_TOKEN: ${{ secrets.DNSIMPLE_TOKEN }}
+          DNSIMPLE_ACCOUNT_ID: ${{ secrets.DNSIMPLE_ACCOUNT_ID }}
+          DOMAIN: modeljars.org
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DNSIMPLE_TOKEN:-}" ] || [ -z "${DNSIMPLE_ACCOUNT_ID:-}" ]; then
+            echo "DNSIMPLE_TOKEN and DNSIMPLE_ACCOUNT_ID must be available as Actions secrets." >&2
+            exit 1
+          fi
+
+          api() {
+            local method="$1"
+            local path="$2"
+            local body="${3:-}"
+            if [ -n "$body" ]; then
+              curl -fsS -X "$method" \
+                -H "Authorization: Bearer ${DNSIMPLE_TOKEN}" \
+                -H "Accept: application/json" \
+                -H "Content-Type: application/json" \
+                --data "$body" \
+                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}"
+            else
+              curl -fsS -X "$method" \
+                -H "Authorization: Bearer ${DNSIMPLE_TOKEN}" \
+                -H "Accept: application/json" \
+                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}"
+            fi
+          }
+
+          delete_records() {
+            local name="$1"
+            local type="$2"
+            local encoded_name
+            encoded_name="$(jq -rn --arg v "$name" '$v|@uri')"
+            api GET "/zones/${DOMAIN}/records?type=${type}&name=${encoded_name}" \
+              | jq -r --arg name "$name" --arg type "$type" \
+                  '.data[] | select(.name == $name and .type == $type) | .id' \
+              | while read -r id; do
+                  if [ -n "$id" ]; then
+                    echo "Deleting ${type} ${name:-@} record ${id}"
+                    api DELETE "/zones/${DOMAIN}/records/${id}" >/dev/null
+                  fi
+                done
+          }
+
+          create_record() {
+            local name="$1"
+            local type="$2"
+            local content="$3"
+            local body
+            body="$(jq -nc \
+              --arg name "$name" \
+              --arg type "$type" \
+              --arg content "$content" \
+              '{name: $name, type: $type, content: $content, ttl: 3600}')"
+            echo "Creating ${type} ${name:-@} -> ${content}"
+            api POST "/zones/${DOMAIN}/records" "$body" >/dev/null
+          }
+
+          for type in A AAAA; do
+            delete_records "" "$type"
+          done
+          for type in A AAAA CNAME; do
+            delete_records "www" "$type"
+          done
+
+          create_record "" A 185.199.108.153
+          create_record "" A 185.199.109.153
+          create_record "" A 185.199.110.153
+          create_record "" A 185.199.111.153
+
+          create_record "" AAAA 2606:50c0:8000::153
+          create_record "" AAAA 2606:50c0:8001::153
+          create_record "" AAAA 2606:50c0:8002::153
+          create_record "" AAAA 2606:50c0:8003::153
+
+          create_record www CNAME modeljars.github.io
+
+          echo "DNS records configured for ${DOMAIN}."

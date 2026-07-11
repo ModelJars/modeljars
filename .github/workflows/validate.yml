@@ -32,6 +32,9 @@ jobs:
       - name: Validate build
         run: ./gradlew --no-daemon test jar
 
+      - name: Validate site catalog
+        run: jq . site/catalog.json >/dev/null
+
       - name: Verify marker metadata is packaged
         run: |
           jar tf modeljars-catalog-qwen3-0-6b-q4-0/build/libs/modeljars-catalog-qwen3-0-6b-q4-0-3.0.0-q4_0.1.jar \

@@ -229,7 +229,7 @@ runtime support.
 |---|---|---|---|---|
 | Qwen3 0.6B GGUF Q4_0 | GGUF Q4_0; already used as test fixture | Already implemented as first marker | Supported as the only validated end-to-end fixture | Add reference-logit tests against llama.cpp; publish marker when Maven Central flow is final. |
 | Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Near pure-Java; Q4_0/Q8_0 markers resolve through `models` | Run real-file integration tests, add chat/FIM templates, and compare output against llama.cpp. |
-| Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Catalog-ready | Near pure-Java after 1.5B works | Same as Qwen2.5 small, plus memory/perf benchmarks and split-file handling if needed. |
+| Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Large pure-Java validation target | Same as Qwen2.5 small, plus memory/perf benchmarks and split-file handling if needed. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
 | DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
@@ -295,7 +295,8 @@ First catalog batch:
    added.
 2. Qwen2.5-Coder 3B Instruct GGUF. Q4_0 marker is added for the next
    pure-Java validation tier.
-3. Qwen2.5-Coder 7B Instruct GGUF.
+3. Qwen2.5-Coder 7B Instruct GGUF. Q4_0 marker is added for the large-model
+   pure-Java validation tier.
 4. Qwen2.5-Coder 14B or 32B Instruct GGUF.
 5. CodeLlama 7B Instruct GGUF.
 6. StarCoder2 3B or 7B.

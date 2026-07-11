@@ -29,19 +29,32 @@ jobs:
             local method="$1"
             local path="$2"
             local body="${3:-}"
+            local response_file
+            local status
+            response_file="$(mktemp)"
             if [ -n "$body" ]; then
-              curl -fsS -X "$method" \
+              status="$(curl -sS -o "$response_file" -w "%{http_code}" -X "$method" \
                 -H "Authorization: Bearer ${DNSIMPLE_TOKEN}" \
                 -H "Accept: application/json" \
                 -H "Content-Type: application/json" \
                 --data "$body" \
-                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}"
+                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}")"
             else
-              curl -fsS -X "$method" \
+              status="$(curl -sS -o "$response_file" -w "%{http_code}" -X "$method" \
                 -H "Authorization: Bearer ${DNSIMPLE_TOKEN}" \
                 -H "Accept: application/json" \
-                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}"
+                "https://api.dnsimple.com/v2/${DNSIMPLE_ACCOUNT_ID}${path}")"
             fi
+
+            if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+              echo "DNSimple ${method} ${path} returned HTTP ${status}." >&2
+              cat "$response_file" >&2
+              echo >&2
+              rm -f "$response_file"
+              return 22
+            fi
+            cat "$response_file"
+            rm -f "$response_file"
           }
 
           delete_records() {
@@ -74,7 +87,7 @@ jobs:
             api POST "/zones/${DOMAIN}/records" "$body" >/dev/null
           }
 
-          for type in A AAAA; do
+          for type in A AAAA ALIAS CNAME; do
             delete_records "" "$type"
           done
           for type in A AAAA CNAME; do

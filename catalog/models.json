@@ -189,6 +189,29 @@
       "license": "Apache-2.0",
       "capabilities": ["text-generation", "chat"],
       "backends": {"pure-java": true, "llama.cpp": true}
+    },
+    {
+      "id": "tinyllama_1_1b_chat_v1_0_q4_0",
+      "name": "TinyLlama 1.1B Chat v1.0 GGUF Q4_0",
+      "description": "Apache-2.0 Llama-family chat model used to validate SentencePiece tokenization in the pure-Java backend.",
+      "sourceId": "hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+      "sourceUri": "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF",
+      "downloadUri": "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/52e7645ba7c309695bec7ac98f4f005b139cf465/tinyllama-1.1b-chat-v1.0.Q4_0.gguf",
+      "revision": "52e7645ba7c309695bec7ac98f4f005b139cf465",
+      "markerCoordinate": "org.modeljars.huggingface:thebloke.tinyllama-1.1b-chat-v1.0-gguf.q4_0:1.0.0-q4_0.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_0",
+      "format": "gguf",
+      "architecture": "llama",
+      "tokenizer": "sentencepiece",
+      "quantization": "Q4_0",
+      "localPath": "${user.home}/.jvllm/models/tinyllama-1.1b-chat-v1.0.Q4_0.gguf",
+      "sha256": "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
+      "sizeBytes": 637699456,
+      "license": "Apache-2.0",
+      "capabilities": ["text-generation", "chat"],
+      "features": ["sentencepiece"],
+      "backends": {"pure-java": true, "llama.cpp": true}
     }
   ]
 }

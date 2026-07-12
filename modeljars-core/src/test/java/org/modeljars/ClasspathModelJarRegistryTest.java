@@ -45,6 +45,34 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQwen3EightBillionMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen3-8B-GGUF")
+                    .versionRange("[3.0.0,4.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen3_8b_q4_k_m", descriptor.alias());
+    assertEquals("qwen3", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("7c41481f57cb95916b40956ab2f0b139b296d974", descriptor.revision().orElseThrow());
+    assertEquals(
+        "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+        descriptor.sha256().orElseThrow());
+    assertEquals(5_027_783_488L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-8B-Q4_K_M.gguf"));
+  }
+
+  @Test
   void loadsQwen25CoderPureJavaCandidateMarkersFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

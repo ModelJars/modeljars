@@ -149,6 +149,31 @@ Confirm:
 gh api repos/ModelJars/modeljars/branches/main/protection/enforce_admins
 ```
 
+### Single-Maintainer Bootstrap Reviews
+
+When the organization has only one member, required code-owner and last-push
+approval create a bootstrap deadlock: GitHub does not allow an author to approve
+their own PR, including with `gh pr merge --admin`. After all required checks
+pass, remove only the PR review requirement, merge, and restore it immediately:
+
+```bash
+gh api --method DELETE \
+  repos/ModelJars/modeljars/branches/main/protection/required_pull_request_reviews
+
+gh pr merge <pr-number> --repo ModelJars/modeljars --squash --delete-branch
+
+gh api --method PUT \
+  repos/ModelJars/modeljars/branches/main/protection/required_pull_request_reviews \
+  -F dismiss_stale_reviews=true \
+  -F require_code_owner_reviews=true \
+  -F require_last_push_approval=true \
+  -F required_approving_review_count=1
+```
+
+Do not remove status checks, branch restrictions, conversation resolution, or
+linear-history requirements. Once a second maintainer can review PRs, this
+bootstrap exception is no longer necessary.
+
 ## 2. Current Java Runtime Boundaries
 
 The `projects/models` pure-Java backend is intentionally narrow today.
@@ -159,17 +184,17 @@ Current implemented surface:
 - Llama-family decoder path.
 - Metadata prefixes accepted by `LlamaConfig`: `llama`, `qwen2`, `qwen3`.
 - Tensor storage types recognized by the parser include many GGUF types.
-- Executed tensor paths cover F32, F16, Q4_0, Q8_0, and Q6_K.
+- Executed tensor paths cover F32, F16, Q4_0, Q5_0, Q8_0, Q4_K, and Q6_K.
 - Tokenizers cover GPT-2-style byte-level BPE, Llama SentencePiece score merges,
   and a simple plain-BPE fallback.
 - Strict end-to-end fixtures cover Qwen3 0.6B/1.7B, Qwen2.5-Coder
-  0.5B/1.5B/3B, SmolLM2 360M, and TinyLlama 1.1B. Qwen2.5-Coder 7B is in the
-  strict large-model suite.
+  0.5B/1.5B/3B, SmolLM2 360M, TinyLlama 1.1B, and DeepSeek-Coder 1.3B Q4_K_M.
+  Qwen2.5-Coder 7B is in the strict large-model suite.
 
 Important gaps:
 
 - There is no Jinja/chat-template engine yet.
-- Q4_K/Q5_K and newer K-quant variants are not executed yet.
+- Q5_K and newer K-quant variants are not executed yet.
 - Gemma, Mistral v3/Tekken, BigCode/StarCoder, Phi, and other tokenizer families
   are not first-class.
 - Split GGUF files are not resolved as a file set.
@@ -232,6 +257,7 @@ runtime support.
 | Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Supported by strict real-file integration tests; 0.5B has an exact llama.cpp token reference | Add chat/FIM templates and performance baselines. |
 | Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Supported by the strict `slowTest` large-model path | Add performance and memory benchmarks; keep it outside the default PR cache. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
+| DeepSeek-Coder 1.3B Instruct | Pinned Q4_K_M GGUF with mixed Q4_K/Q5_0/Q8_0/Q6_K tensors | Marker implemented | Supported by strict download, checksum, tokenizer, tensor-inventory, legacy-RoPE, and llama.cpp token-reference tests | Add chat/FIM templates and performance baselines. |
 | DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
 | Codestral 22B v0.1 | Local GGUF conversions exist; Mistral-family code model | Catalog-ready with license warning | Requires runtime work | Add Mistral/Codestral tokenizer support, architecture metadata prefix, sliding-window or attention variants if used, license gating metadata. |
@@ -261,7 +287,7 @@ and preferred inference formats.
 | Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
 | SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | 360M Q8_0 marker is added as the first non-Qwen pure-Java validation fixture. |
 | TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Q4_0 marker and strict pure-Java SentencePiece/inference tests are implemented. |
-| DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Architecture reports as `llama`; tokenizer/template and license metadata need careful validation. |
+| DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Q4_K_M marker and strict pure-Java mixed-quant inference tests are implemented; templates remain. |
 | StarCoder2 3B | 3B | BigCode OpenRAIL-M | Popular code model with FIM/code-completion focus and large ecosystem. | Requires StarCoder2 architecture and BigCode tokenizer/FIM support. |
 | Granite 3.3 2B Instruct | 2B | Apache-2.0 | Enterprise-friendly IBM model; useful for OSS/commercial-friendly small-model catalog entries. | Requires Granite architecture support; likely not first pure-Java target. |
 | CodeGemma 2B | 2B | Gemma license, gated acknowledgement | Small code-completion-focused model from Google. | Requires Gemma architecture/tokenizer support and license-gating metadata. |
@@ -329,17 +355,18 @@ Implemented foundation:
 
 Chat and fill-in-the-middle template resources remain follow-up work.
 
-### Track C: Add quantization support in `vectors` first
+### Track C: Add quantization support in `vectors` first (foundation implemented)
 
 Most practical local artifacts use K-quants, not Q4_0. To run larger models in
 pure Java, implement these in `projects/vectors` and use them from `models`:
 
-1. Q4_K and Q4_K_M dequantization and direct matvec.
-2. Q6_K dequantization and direct matvec.
-3. Row-wise quantized GEMV APIs over `MemorySegment`.
-4. JMH benchmarks for scalar vs Vector API kernels.
+1. Q4_K dequantization plus direct and Q8_K-activation matvec are implemented.
+2. Q5_0 direct and Q8_0-activation matvec are implemented for mixed files.
+3. Q6_K direct and Q8_K-activation matvec are implemented.
+4. Row-wise `MemorySegment` APIs and JMH coverage are implemented in `vectors`.
 
-Then consume the new kernels from `models-backend-purejava`.
+The kernels are consumed by `models-backend-purejava` and validated with a
+real DeepSeek-Coder Q4_K_M artifact. Q5_K and newer K-quant families remain.
 
 ### Track D: Add tokenizer families before adding architecture families
 

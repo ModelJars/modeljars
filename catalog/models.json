@@ -235,6 +235,29 @@
       "capabilities": ["text-generation", "chat", "code-completion", "fim"],
       "features": ["mixed-quantization", "q4-k", "q5-0", "q6-k"],
       "backends": {"pure-java": true, "llama.cpp": true}
+    },
+    {
+      "id": "deepseek_coder_6_7b_instruct_q4_k_m",
+      "name": "DeepSeek-Coder 6.7B Instruct GGUF Q4_K_M",
+      "description": "DeepSeek-licensed dense Llama-family coding model used to validate larger mixed-quant pure-Java inference.",
+      "sourceId": "hf://TheBloke/deepseek-coder-6.7B-instruct-GGUF",
+      "sourceUri": "https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF",
+      "downloadUri": "https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF/resolve/9e221e6b41cb1bf1c5d8f9718e81e3dc781f7557/deepseek-coder-6.7b-instruct.Q4_K_M.gguf",
+      "revision": "9e221e6b41cb1bf1c5d8f9718e81e3dc781f7557",
+      "markerCoordinate": "org.modeljars.huggingface:thebloke.deepseek-coder-6.7b-instruct-gguf.q4_k_m:6.7.0-q4_k_m.1",
+      "modelVersion": "6.7.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "tokenizer": "gpt2-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/deepseek-coder-6.7b-instruct.Q4_K_M.gguf",
+      "sha256": "92da6238854f2fa902d8b2ad79d548536af1d3ab06821f323bd5bbcea2013276",
+      "sizeBytes": 4083015904,
+      "license": "LicenseRef-DeepSeek",
+      "capabilities": ["text-generation", "chat", "code-completion", "fim"],
+      "features": ["mixed-quantization", "q4-k", "q6-k", "legacy-linear-rope"],
+      "backends": {"pure-java": true, "llama.cpp": true}
     }
   ]
 }

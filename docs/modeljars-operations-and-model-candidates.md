@@ -10,6 +10,10 @@ to make ModelJars useful as both:
 - a compatibility layer that tells Java applications which local runtimes can
   execute a model.
 
+The canonical 25-model launch roster, distinct-model counting rule, vertical
+qualification, and no-skip CI contract are maintained in
+[launch-catalog-25.md](launch-catalog-25.md).
+
 The public site is ModelJars.org. If ModelJars.com is later acquired, use the
 same DNS and GitHub Pages pattern below for that domain or redirect it to the
 `.org` site.

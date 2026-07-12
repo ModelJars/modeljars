@@ -100,3 +100,4 @@ well-known metadata resources. A richer scanner and public catalog service can c
 ## Reports
 
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
+- [25-model launch catalog and vertical-model qualification](docs/launch-catalog-25.md)

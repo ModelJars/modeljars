@@ -162,7 +162,7 @@ gh api --method DELETE \
 
 gh pr merge <pr-number> --repo ModelJars/modeljars --squash --delete-branch
 
-gh api --method PUT \
+gh api --method PATCH \
   repos/ModelJars/modeljars/branches/main/protection/required_pull_request_reviews \
   -F dismiss_stale_reviews=true \
   -F require_code_owner_reviews=true \

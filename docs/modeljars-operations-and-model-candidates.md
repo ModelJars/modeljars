@@ -159,18 +159,19 @@ Current implemented surface:
 - Llama-family decoder path.
 - Metadata prefixes accepted by `LlamaConfig`: `llama`, `qwen2`, `qwen3`.
 - Tensor storage types recognized by the parser include many GGUF types.
-- Executed tensor paths are limited to F32, F16, Q4_0, and Q8_0.
-- Tokenizer is GPT-2-style byte-level BPE plus a simple plain-BPE fallback.
-- Tested end-to-end fixture: `Qwen3-0.6B-Q4_0.gguf`.
+- Executed tensor paths cover F32, F16, Q4_0, Q8_0, and Q6_K.
+- Tokenizers cover GPT-2-style byte-level BPE, Llama SentencePiece score merges,
+  and a simple plain-BPE fallback.
+- Strict end-to-end fixtures cover Qwen3 0.6B/1.7B, Qwen2.5-Coder
+  0.5B/1.5B/3B, SmolLM2 360M, and TinyLlama 1.1B. Qwen2.5-Coder 7B is in the
+  strict large-model suite.
 
 Important gaps:
 
-- K-quants are parsed as enum values but not dequantized or executed.
-- Optional tensor biases are not modeled in `LlamaWeights` or applied in
-  `LlamaForwardPass`.
 - There is no Jinja/chat-template engine yet.
-- SentencePiece, Gemma, Mistral v3, BigCode/StarCoder, Phi, and other tokenizer
-  families are not first-class.
+- Q4_K/Q5_K and newer K-quant variants are not executed yet.
+- Gemma, Mistral v3/Tekken, BigCode/StarCoder, Phi, and other tokenizer families
+  are not first-class.
 - Split GGUF files are not resolved as a file set.
 - MoE expert routing, MLA, diffusion decoding, hybrid attention, and
   multimodal projectors are not implemented.
@@ -227,16 +228,16 @@ runtime support.
 
 | Candidate | Local artifact shape | Current ModelJars support | Current pure-Java support | What we need next |
 |---|---|---|---|---|
-| Qwen3 0.6B GGUF Q4_0 | GGUF Q4_0; already used as test fixture | Already implemented as first marker | Supported as the only validated end-to-end fixture | Add reference-logit tests against llama.cpp; publish marker when Maven Central flow is final. |
-| Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Near pure-Java; Q4_0/Q8_0 markers resolve through `models` | Run real-file integration tests, add chat/FIM templates, and compare output against llama.cpp. |
-| Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Large pure-Java validation target | Same as Qwen2.5 small, plus memory/perf benchmarks and split-file handling if needed. |
+| Qwen3 0.6B/1.7B GGUF | Official Q4_0/Q8_0 GGUF fixtures | Markers implemented | Supported by strict real-model tests; 0.6B has an exact llama.cpp token reference | Add chat templates and broader long-context quality tests. |
+| Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Supported by strict real-file integration tests; 0.5B has an exact llama.cpp token reference | Add chat/FIM templates and performance baselines. |
+| Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Supported by the strict `slowTest` large-model path | Add performance and memory benchmarks; keep it outside the default PR cache. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
 | DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
 | Codestral 22B v0.1 | Local GGUF conversions exist; Mistral-family code model | Catalog-ready with license warning | Requires runtime work | Add Mistral/Codestral tokenizer support, architecture metadata prefix, sliding-window or attention variants if used, license gating metadata. |
 | StarCoder2 3B/7B/15B | Local quantized artifacts exist; BigCode family | Catalog-ready | Requires runtime work | Implement StarCoder2/GPT-style decoder differences, BigCode tokenizer/FIM, tensor naming, and reference tests. |
 | IBM Granite Code 3B/8B/20B/34B | Local HF weights; some GGUF conversions exist | Catalog-ready | Requires runtime work | Confirm GGUF tensor layout, add Granite architecture/tokenizer support, add Apache-2-friendly markers. |
-| CodeLlama 7B/13B/34B Instruct | Many GGUF variants; older but stable baseline | Catalog-ready with Meta license metadata | Requires tokenizer validation | Add SentencePiece/Llama tokenizer support and chat/FIM templates; likely useful as compatibility baseline. |
+| CodeLlama 7B/13B/34B Instruct | Many GGUF variants; older but stable baseline | Catalog-ready with Meta license metadata | Near pure-Java now that Llama SentencePiece is validated | Pin a license-compliant Q4_0/Q8_0 artifact, add strict reference tests, then add chat/FIM templates. |
 | Qwen3-Coder 30B-A3B Instruct GGUF | GGUF MoE coding model | Catalog-ready | Requires runtime work | Implement MoE/expert routing and any Qwen3-Coder-specific metadata; add K-quant support. |
 | Qwen3-Coder 480B-A35B or newer large MoE | Local quantization possible but heavy | Catalog-only unless external runner | Requires major runtime work | Treat as external-runner first; pure Java would require MoE, split files, memory planning, and performance work. |
 | North Mini Code 1.0 | KDnuggets lists GGUF and Apache 2.0; 30B-A3B MoE | Catalog-ready after upstream verification | Requires runtime work | Add model metadata, MoE routing, tokenizer, and Qwen/DeepSeek compatibility investigation. |
@@ -259,7 +260,7 @@ and preferred inference formats.
 | Qwen2.5-Coder 0.5B / 1.5B / 3B | 0.5B-3B | 0.5B and 1.5B Apache-2.0; 3B Qwen Research | Strong code-specific small family; official report covers 0.5B through 32B; good Java smoke ladder. | Closest path. Qwen2 GGUF markers are now added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0. |
 | Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
 | SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | 360M Q8_0 marker is added as the first non-Qwen pure-Java validation fixture. |
-| TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Requires Llama/SentencePiece tokenizer support before pure-Java execution is credible. |
+| TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Q4_0 marker and strict pure-Java SentencePiece/inference tests are implemented. |
 | DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Architecture reports as `llama`; tokenizer/template and license metadata need careful validation. |
 | StarCoder2 3B | 3B | BigCode OpenRAIL-M | Popular code model with FIM/code-completion focus and large ecosystem. | Requires StarCoder2 architecture and BigCode tokenizer/FIM support. |
 | Granite 3.3 2B Instruct | 2B | Apache-2.0 | Enterprise-friendly IBM model; useful for OSS/commercial-friendly small-model catalog entries. | Requires Granite architecture support; likely not first pure-Java target. |
@@ -313,20 +314,20 @@ backends.ollama=true where an Ollama model/library entry is verified
 Then flip `pure-java` to true only after parser, tokenizer, forward pass, and
 reference generation tests pass.
 
-### Track B: Make Qwen2.5-Coder the next pure-Java target
+### Track B: Qwen2.5-Coder pure-Java support (completed foundation)
 
 Qwen2.5-Coder is the best next family because it is close to the existing
 Qwen2/Qwen3 Llama-family path and has small variants for fast iteration.
 
-Minimum implementation:
+Implemented foundation:
 
-1. Add ModelJars markers for 0.5B or 1.5B Q4_0/Q8_0.
-2. Add a skipped integration fixture that looks up the marker instead of a
-   hard-coded path.
-3. Add optional Q/K/V bias tensor loading and application.
-4. Add chat template and fill-in-the-middle prompt resources.
-5. Compare logits or generated token prefixes against llama.cpp for a fixed
-   prompt and seed.
+1. ModelJars markers cover 0.5B/1.5B Q4_0/Q8_0, 3B Q4_0, and 7B Q4_0.
+2. Strict integration tasks resolve, download, checksum, and run every fixture.
+3. Optional Q/K/V bias tensors are loaded and applied.
+4. Exact greedy-token references compare the pinned 0.5B artifact with
+   llama.cpp b9960.
+
+Chat and fill-in-the-middle template resources remain follow-up work.
 
 ### Track C: Add quantization support in `vectors` first
 
@@ -347,7 +348,7 @@ Tokenizer mismatches make output invalid even when tensor math runs.
 Priority:
 
 1. Qwen/GPT-2 byte BPE correctness tests.
-2. SentencePiece/Llama tokenizer.
+2. SentencePiece/Llama tokenizer (implemented and validated with TinyLlama).
 3. Mistral/Tekken tokenizer if targeting Codestral/Mistral.
 4. BigCode tokenizer and FIM behavior for StarCoder2.
 5. Gemma tokenizer.

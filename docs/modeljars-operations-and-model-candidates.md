@@ -185,10 +185,11 @@ Current implemented surface:
 - Metadata prefixes accepted by `LlamaConfig`: `llama`, `qwen2`, `qwen3`.
 - Tensor storage types recognized by the parser include many GGUF types.
 - Executed tensor paths cover F32, F16, Q4_0, Q5_0, Q8_0, Q4_K, and Q6_K.
-- Tokenizers cover GPT-2-style byte-level BPE, Llama SentencePiece score merges,
-  and a simple plain-BPE fallback.
+- Tokenizers cover GPT-2-style byte-level BPE, MiniCPM5's Llama-style BPE,
+  Llama SentencePiece score merges, and a simple plain-BPE fallback.
 - Strict end-to-end fixtures cover Qwen3 0.6B/1.7B, Qwen2.5-Coder
-  0.5B/1.5B/3B, SmolLM2 360M, TinyLlama 1.1B, and DeepSeek-Coder 1.3B Q4_K_M.
+  0.5B/1.5B/3B, SmolLM2 360M, TinyLlama 1.1B, DeepSeek-Coder 1.3B Q4_K_M,
+  and MiniCPM5 1B Q4_K_M.
   Qwen2.5-Coder 7B and DeepSeek-Coder 6.7B Q4_K_M are in isolated strict
   large-model CI jobs.
 
@@ -259,6 +260,7 @@ runtime support.
 | Qwen2.5-Coder 0.5B/1.5B/3B Instruct GGUF | Official GGUF variants from Qwen; small enough for frequent CI/manual tests | Markers added for 0.5B/1.5B Q4_0/Q8_0 and 3B Q4_0 | Supported by strict real-file integration tests; 0.5B has an exact llama.cpp token reference | Add chat/FIM templates and performance baselines. |
 | Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Supported by the strict `slowTest` large-model path | Add performance and memory benchmarks; keep it outside the default PR cache. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
+| MiniCPM5 1B | Official 688 MB Q4_K_M GGUF; Apache-2.0; dense Llama-family model with 131K context metadata | Marker implemented | Supported by mandatory checksum, exact MiniCPM5/Llama BPE references, tensor-inventory validation, and an exact llama.cpp greedy-token test | Implement chat-template rendering, Think/No Think mode selection, XML tool-call parsing, and long-context quality tests. |
 | DeepSeek-Coder 1.3B Instruct | Pinned Q4_K_M GGUF with mixed Q4_K/Q5_0/Q8_0/Q6_K tensors | Marker implemented | Supported by strict download, checksum, tokenizer, tensor-inventory, legacy-RoPE, and llama.cpp token-reference tests | Add chat/FIM templates and performance baselines. |
 | DeepSeek-Coder 6.7B Instruct | Pinned 4.08 GB Q4_K_M GGUF with Q4_K/Q6_K tensors and legacy linear RoPE | Marker implemented | Supported by a mandatory download, checksum, tensor-inventory, tokenizer, and exact llama.cpp token-reference slow test | Add chat/FIM templates and performance/memory baselines. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
@@ -289,6 +291,7 @@ and preferred inference formats.
 | Qwen3 0.6B / 1.7B | 0.6B-1.7B | Apache-2.0 | Modern Qwen family; 0.6B already validates the backend; 1.7B is a useful next general SLM. | Very close for GGUF Q4_0/Q8_0; current code accepts `qwen3`. |
 | SmolLM2 135M / 360M / 1.7B | 0.135B-1.7B | Apache-2.0 | Widely used for edge demos and inexpensive LoRA experiments; strong Hugging Face ecosystem support. | 360M Q8_0 marker is added as the first non-Qwen pure-Java validation fixture. |
 | TinyLlama 1.1B Chat | 1.1B | Apache-2.0 | Older but extremely popular tiny Llama-compatible fine-tuning baseline. | Q4_0 marker and strict pure-Java SentencePiece/inference tests are implemented. |
+| MiniCPM5 1B | 1B | Apache-2.0 | New on-device model with strong code, tool-use, and reasoning results plus official SFT and base checkpoints. | Official Q4_K_M marker and strict pure-Java inference tests are implemented; templates and tool-call parsing remain. |
 | DeepSeek-Coder 1.3B Instruct | 1.3B | DeepSeek license | Small code-specialized baseline with permissive-looking commercial posture but non-standard license naming. | Q4_K_M marker and strict pure-Java mixed-quant inference tests are implemented; templates remain. |
 | StarCoder2 3B | 3B | BigCode OpenRAIL-M | Popular code model with FIM/code-completion focus and large ecosystem. | Requires StarCoder2 architecture and BigCode tokenizer/FIM support. |
 | Granite 3.3 2B Instruct | 2B | Apache-2.0 | Enterprise-friendly IBM model; useful for OSS/commercial-friendly small-model catalog entries. | Requires Granite architecture support; likely not first pure-Java target. |
@@ -302,8 +305,8 @@ Recommended fine-tuning catalog priority:
 
 1. Qwen2.5-Coder 0.5B and 1.5B, because they are also pure-Java runtime
    targets.
-2. SmolLM2 and TinyLlama, because they provide small Apache-2.0 Llama-family
-   compatibility pressure.
+2. MiniCPM5, SmolLM2, and TinyLlama, because they provide small Apache-2.0
+   Llama-family compatibility pressure and accessible fine-tuning checkpoints.
 3. Granite 3.3 2B and OLMo 2 1B, because they are commercially friendly and
    useful to OSS users.
 4. StarCoder2 3B and DeepSeek-Coder 1.3B, because they expand the code-model
@@ -328,10 +331,12 @@ First catalog batch:
    pure-Java validation tier.
 4. DeepSeek-Coder 1.3B and 6.7B Instruct GGUF. Q4_K_M markers and strict
    pure-Java validation are implemented.
-5. Qwen2.5-Coder 14B or 32B Instruct GGUF.
-6. CodeLlama 7B Instruct GGUF.
-7. StarCoder2 3B or 7B.
-8. Granite Code 3B or 8B.
+5. MiniCPM5 1B GGUF. The official Q4_K_M marker and strict pure-Java
+   validation are implemented.
+6. Qwen2.5-Coder 14B or 32B Instruct GGUF.
+7. CodeLlama 7B Instruct GGUF.
+8. StarCoder2 3B or 7B.
+9. Granite Code 3B or 8B.
 
 Each marker should start with:
 
@@ -432,6 +437,12 @@ Java even when the pure-Java backend is not ready.
   <https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct>
 - DeepSeek-Coder 6.7B Q4_K_M GGUF:
   <https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF>
+- MiniCPM5 1B:
+  <https://huggingface.co/openbmb/MiniCPM5-1B>
+- MiniCPM5 1B Q4_K_M GGUF:
+  <https://huggingface.co/openbmb/MiniCPM5-1B-GGUF>
+- llama.cpp MiniCPM5 tokenizer support:
+  <https://github.com/ggml-org/llama.cpp/pull/23384>
 - Codestral:
   <https://huggingface.co/mistralai/Codestral-22B-v0.1>
 - StarCoder2:

@@ -243,4 +243,36 @@ class ClasspathModelJarRegistryTest {
             .toString()
             .endsWith("deepseek-coder-6.7b-instruct.Q4_K_M.gguf"));
   }
+
+  @Test
+  void loadsMiniCpm5OfficialMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://openbmb/MiniCPM5-1B-GGUF")
+                    .versionRange("[5.0.0,6.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("minicpm5_1b_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("87007042419d30c1d8f38ef065424ee33870831e", descriptor.revision().orElseThrow());
+    assertEquals(
+        "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+        descriptor.sha256().orElseThrow());
+    assertEquals(688_065_920L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("MiniCPM5-1B-Q4_K_M.gguf"));
+  }
 }

@@ -258,6 +258,29 @@
       "capabilities": ["text-generation", "chat", "code-completion", "fim"],
       "features": ["mixed-quantization", "q4-k", "q6-k", "legacy-linear-rope"],
       "backends": {"pure-java": true, "llama.cpp": true}
+    },
+    {
+      "id": "minicpm5_1b_q4_k_m",
+      "name": "MiniCPM5 1B GGUF Q4_K_M",
+      "description": "Official Apache-2.0 OpenBMB on-device model with Llama-family weights, long context, hybrid reasoning, and tool-calling support.",
+      "sourceId": "hf://openbmb/MiniCPM5-1B-GGUF",
+      "sourceUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF",
+      "downloadUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/87007042419d30c1d8f38ef065424ee33870831e/MiniCPM5-1B-Q4_K_M.gguf",
+      "revision": "87007042419d30c1d8f38ef065424ee33870831e",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "modelVersion": "5.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "tokenizer": "minicpm5-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/MiniCPM5-1B-Q4_K_M.gguf",
+      "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "sizeBytes": 688065920,
+      "license": "Apache-2.0",
+      "capabilities": ["text-generation", "chat", "code-completion", "tool-calling"],
+      "features": ["mixed-quantization", "q4-k", "q6-k", "explicit-qkv-head-widths", "long-context", "minicpm5-pretokenizer", "chat-template"],
+      "backends": {"pure-java": true, "llama.cpp": true, "ollama": true}
     }
   ]
 }

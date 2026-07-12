@@ -210,4 +210,37 @@ class ClasspathModelJarRegistryTest {
             .toString()
             .endsWith("deepseek-coder-1.3b-instruct.Q4_K_M.gguf"));
   }
+
+  @Test
+  void loadsDeepSeekCoderLargeMixedQuantCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://TheBloke/deepseek-coder-6.7B-instruct-GGUF")
+                    .versionRange("[6.7.0,7.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("deepseek_coder_6_7b_instruct_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("LicenseRef-DeepSeek", descriptor.license().orElseThrow());
+    assertEquals("9e221e6b41cb1bf1c5d8f9718e81e3dc781f7557", descriptor.revision().orElseThrow());
+    assertEquals(
+        "92da6238854f2fa902d8b2ad79d548536af1d3ab06821f323bd5bbcea2013276",
+        descriptor.sha256().orElseThrow());
+    assertEquals(4_083_015_904L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("deepseek-coder-6.7b-instruct.Q4_K_M.gguf"));
+  }
 }

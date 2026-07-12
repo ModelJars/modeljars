@@ -189,7 +189,8 @@ Current implemented surface:
   and a simple plain-BPE fallback.
 - Strict end-to-end fixtures cover Qwen3 0.6B/1.7B, Qwen2.5-Coder
   0.5B/1.5B/3B, SmolLM2 360M, TinyLlama 1.1B, and DeepSeek-Coder 1.3B Q4_K_M.
-  Qwen2.5-Coder 7B is in the strict large-model suite.
+  Qwen2.5-Coder 7B and DeepSeek-Coder 6.7B Q4_K_M are in isolated strict
+  large-model CI jobs.
 
 Important gaps:
 
@@ -200,8 +201,9 @@ Important gaps:
 - Split GGUF files are not resolved as a file set.
 - MoE expert routing, MLA, diffusion decoding, hybrid attention, and
   multimodal projectors are not implemented.
-- Larger models can be cataloged by ModelJars now, but pure-Java execution
-  requires both runtime feature support and real reference tests.
+- Models beyond the validated dense 7B range can be cataloged by ModelJars now,
+  but pure-Java execution requires both runtime feature support and real
+  reference tests.
 
 Support levels used in the model table:
 
@@ -258,7 +260,7 @@ runtime support.
 | Qwen2.5-Coder 7B Instruct GGUF | Official GGUF variants; realistic local coding model | Q4_0 marker added | Supported by the strict `slowTest` large-model path | Add performance and memory benchmarks; keep it outside the default PR cache. |
 | Qwen2.5-Coder 14B/32B Instruct GGUF | Official GGUF variants; strong coding target | Catalog-ready | Requires validation and larger-model performance work | Add split GGUF support, larger KV-cache memory controls, K-quant support if using Q4_K/Q6_K, and reference tests. |
 | DeepSeek-Coder 1.3B Instruct | Pinned Q4_K_M GGUF with mixed Q4_K/Q5_0/Q8_0/Q6_K tensors | Marker implemented | Supported by strict download, checksum, tokenizer, tensor-inventory, legacy-RoPE, and llama.cpp token-reference tests | Add chat/FIM templates and performance baselines. |
-| DeepSeek-Coder 6.7B Instruct | Local GGUF conversions exist; older dense coder | Catalog-ready after source/license verification | Requires runtime work | Add `deepseek` metadata alias if tensor layout matches; validate tokenizer; add chat/FIM templates. |
+| DeepSeek-Coder 6.7B Instruct | Pinned 4.08 GB Q4_K_M GGUF with Q4_K/Q6_K tensors and legacy linear RoPE | Marker implemented | Supported by a mandatory download, checksum, tensor-inventory, tokenizer, and exact llama.cpp token-reference slow test | Add chat/FIM templates and performance/memory baselines. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
 | Codestral 22B v0.1 | Local GGUF conversions exist; Mistral-family code model | Catalog-ready with license warning | Requires runtime work | Add Mistral/Codestral tokenizer support, architecture metadata prefix, sliding-window or attention variants if used, license gating metadata. |
 | StarCoder2 3B/7B/15B | Local quantized artifacts exist; BigCode family | Catalog-ready | Requires runtime work | Implement StarCoder2/GPT-style decoder differences, BigCode tokenizer/FIM, tensor naming, and reference tests. |
@@ -324,10 +326,12 @@ First catalog batch:
    pure-Java validation tier.
 3. Qwen2.5-Coder 7B Instruct GGUF. Q4_0 marker is added for the large-model
    pure-Java validation tier.
-4. Qwen2.5-Coder 14B or 32B Instruct GGUF.
-5. CodeLlama 7B Instruct GGUF.
-6. StarCoder2 3B or 7B.
-7. Granite Code 3B or 8B.
+4. DeepSeek-Coder 1.3B and 6.7B Instruct GGUF. Q4_K_M markers and strict
+   pure-Java validation are implemented.
+5. Qwen2.5-Coder 14B or 32B Instruct GGUF.
+6. CodeLlama 7B Instruct GGUF.
+7. StarCoder2 3B or 7B.
+8. Granite Code 3B or 8B.
 
 Each marker should start with:
 
@@ -365,8 +369,9 @@ pure Java, implement these in `projects/vectors` and use them from `models`:
 3. Q6_K direct and Q8_K-activation matvec are implemented.
 4. Row-wise `MemorySegment` APIs and JMH coverage are implemented in `vectors`.
 
-The kernels are consumed by `models-backend-purejava` and validated with a
-real DeepSeek-Coder Q4_K_M artifact. Q5_K and newer K-quant families remain.
+The kernels are consumed by `models-backend-purejava` and validated with pinned
+DeepSeek-Coder 1.3B and 6.7B Q4_K_M artifacts. Both produce exact greedy-token
+references matching llama.cpp b9960. Q5_K and newer K-quant families remain.
 
 ### Track D: Add tokenizer families before adding architecture families
 
@@ -423,6 +428,10 @@ Java even when the pure-Java backend is not ready.
   <https://huggingface.co/deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct>
 - DeepSeek-Coder 1.3B:
   <https://huggingface.co/deepseek-ai/deepseek-coder-1.3b-instruct>
+- DeepSeek-Coder 6.7B:
+  <https://huggingface.co/deepseek-ai/deepseek-coder-6.7b-instruct>
+- DeepSeek-Coder 6.7B Q4_K_M GGUF:
+  <https://huggingface.co/TheBloke/deepseek-coder-6.7B-instruct-GGUF>
 - Codestral:
   <https://huggingface.co/mistralai/Codestral-22B-v0.1>
 - StarCoder2:

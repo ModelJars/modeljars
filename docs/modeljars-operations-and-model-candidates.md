@@ -149,6 +149,31 @@ Confirm:
 gh api repos/ModelJars/modeljars/branches/main/protection/enforce_admins
 ```
 
+### Single-Maintainer Bootstrap Reviews
+
+When the organization has only one member, required code-owner and last-push
+approval create a bootstrap deadlock: GitHub does not allow an author to approve
+their own PR, including with `gh pr merge --admin`. After all required checks
+pass, remove only the PR review requirement, merge, and restore it immediately:
+
+```bash
+gh api --method DELETE \
+  repos/ModelJars/modeljars/branches/main/protection/required_pull_request_reviews
+
+gh pr merge <pr-number> --repo ModelJars/modeljars --squash --delete-branch
+
+gh api --method PUT \
+  repos/ModelJars/modeljars/branches/main/protection/required_pull_request_reviews \
+  -F dismiss_stale_reviews=true \
+  -F require_code_owner_reviews=true \
+  -F require_last_push_approval=true \
+  -F required_approving_review_count=1
+```
+
+Do not remove status checks, branch restrictions, conversation resolution, or
+linear-history requirements. Once a second maintainer can review PRs, this
+bootstrap exception is no longer necessary.
+
 ## 2. Current Java Runtime Boundaries
 
 The `projects/models` pure-Java backend is intentionally narrow today.

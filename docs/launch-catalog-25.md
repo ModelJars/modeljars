@@ -20,7 +20,7 @@ A model qualifies for the launch catalog only when it has:
 6. An honest backend claim. A marker must not advertise `pure-java=true` before
    that exact artifact passes the pure-Java contract.
 
-The catalog currently contains 14 GGUF marker artifacts representing 12
+The catalog currently contains 15 GGUF marker artifacts representing 13
 distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 
 ## Launch roster
@@ -39,7 +39,7 @@ distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 | 10 | DeepSeek-Coder 1.3B Instruct | Small code/FIM | DeepSeek model license | Community GGUF | Supported; validates mixed K-quants. |
 | 11 | DeepSeek-Coder 6.7B Instruct | Large code/FIM | DeepSeek model license | Community GGUF | Supported by an isolated slow-test job. |
 | 12 | MiniCPM5 1B | On-device tools/reasoning | Apache-2.0 | Official | Supported; validates explicit Q/K/V widths and MiniCPM5 BPE. |
-| 13 | DeepSeek-R1-Distill-Qwen-7B | Reasoning | MIT | Trusted community GGUF required | Near target: reuse Qwen2 and K-quant support; add pinned oracle and reasoning template. |
+| 13 | DeepSeek-R1-Distill-Qwen-7B | Reasoning | MIT | Pinned trusted community Q4_K_M | Marker added; pure-Java exact-oracle verification is in progress on the existing Qwen2 and K-quant foundation. |
 | 14 | Qwen2.5-Math 1.5B Instruct | Math/education | Apache-2.0 | Community GGUF required | Near target: reuse Qwen2; add math prompt/template and exact oracle. |
 | 15 | SQLCoder-7B-2 | Text-to-SQL/data | CC-BY-SA-4.0 | Upstream Q5_K_M; pin a verified Q4_K_M conversion | Near target: Llama-family weights and SentencePiece; add SQL prompt resource and read-only-use warning. |
 | 16 | EuroLLM 1.7B Instruct | Multilingual/translation | Apache-2.0 | Trusted community GGUF required | Near target: dense Llama-family structure; validate tokenizer and 35-language metadata. |

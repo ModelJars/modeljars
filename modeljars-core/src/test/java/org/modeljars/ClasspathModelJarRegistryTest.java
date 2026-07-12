@@ -273,6 +273,39 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsDeepSeekR1DistillQwenSevenBillionMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .capability("reasoning")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("deepseek_r1_distill_qwen_7b_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("MIT", descriptor.license().orElseThrow());
+    assertEquals("361004151d4f4f6b446dc5e6d46fbf4422a80d5f", descriptor.revision().orElseThrow());
+    assertEquals(
+        "731ece8d06dc7eda6f6572997feb9ee1258db0784827e642909d9b565641937b",
+        descriptor.sha256().orElseThrow());
+    assertEquals(4_683_073_504L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf"));
+  }
+
+  @Test
   void loadsMiniCpm5OfficialMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

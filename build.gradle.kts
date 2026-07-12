@@ -279,6 +279,9 @@ project(":modeljars-catalog") {
     tasks.named("processResources") {
         dependsOn(generateCatalogResources)
     }
+    tasks.named("sourcesJar") {
+        dependsOn(generateCatalogResources)
+    }
 
     catalogEntries.forEach { entry ->
         val suffix = taskSuffix(entry.id)

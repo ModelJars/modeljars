@@ -68,7 +68,11 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         required(prefix, "quantization", properties),
         optional(prefix, "path", properties).map(PropertiesModelJarRegistry::expandPath),
         optional(prefix, "sourceUri", properties).map(URI::create),
+        optional(prefix, "downloadUri", properties).map(URI::create),
+        optional(prefix, "revision", properties),
         optional(prefix, "sha256", properties),
+        optional(prefix, "sizeBytes", properties).map(PropertiesModelJarRegistry::parseSizeBytes),
+        optional(prefix, "license", properties),
         csv(optional(prefix, "capabilities", properties).orElse("")),
         backends);
   }
@@ -101,7 +105,17 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
   }
 
   private static Optional<String> optional(String prefix, String property, Properties properties) {
-    return Optional.ofNullable(properties.getProperty(prefix + property)).map(String::trim).filter(s -> !s.isEmpty());
+    return Optional.ofNullable(properties.getProperty(prefix + property))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty());
+  }
+
+  private static long parseSizeBytes(String value) {
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      throw new ModelJarException("Invalid sizeBytes: " + value, e);
+    }
   }
 
   private static Path expandPath(String value) {
@@ -111,4 +125,3 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
     return Path.of(expanded).toAbsolutePath().normalize();
   }
 }
-

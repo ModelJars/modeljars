@@ -16,7 +16,7 @@ on:
       - main
     paths:
       - catalog/**
-      - modeljars-catalog-*/**
+      - modeljars-catalog/**
       - modeljars-core/**
       - build.gradle.kts
       - settings.gradle.kts
@@ -49,7 +49,7 @@ jobs:
           cache: gradle
 
       - name: Build and verify
-        run: ./gradlew --no-daemon test jar publishToMavenLocal
+        run: ./gradlew --no-daemon test verifyCatalog publishToMavenLocal
 
       - name: Skip publishing until release automation is wired
         if: github.event_name == 'push' || inputs.dry_run == 'true'

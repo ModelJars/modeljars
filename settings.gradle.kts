@@ -15,5 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "model-jars"
 
 include("modeljars-core")
-include("modeljars-catalog-qwen3-0-6b-q4-0")
-
+include("modeljars-catalog")

@@ -30,12 +30,7 @@ jobs:
           cache: gradle
 
       - name: Validate build
-        run: ./gradlew --no-daemon test jar
+        run: ./gradlew --no-daemon test assemble verifyCatalog
 
-      - name: Validate site catalog
-        run: jq . site/catalog.json >/dev/null
-
-      - name: Verify marker metadata is packaged
-        run: |
-          jar tf modeljars-catalog-qwen3-0-6b-q4-0/build/libs/modeljars-catalog-qwen3-0-6b-q4-0-3.0.0-q4_0.1.jar \
-            | grep -Fx META-INF/modeljars/registry.properties
+      - name: Validate catalog source
+        run: jq . catalog/models.json >/dev/null

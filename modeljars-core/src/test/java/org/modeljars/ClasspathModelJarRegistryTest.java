@@ -146,4 +146,35 @@ class ClasspathModelJarRegistryTest {
     assertTrue(
         descriptor.localPath().orElseThrow().toString().endsWith("smollm2-360m-instruct-q8_0.gguf"));
   }
+
+  @Test
+  void loadsTinyLlamaSentencePieceCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_0")
+                    .backend("pure-java")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("tinyllama_1_1b_chat_v1_0_q4_0", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q4_0", descriptor.quantization());
+    assertEquals(
+        "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
+        descriptor.sha256().orElseThrow());
+    assertEquals(637_699_456L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("tinyllama-1.1b-chat-v1.0.Q4_0.gguf"));
+  }
 }

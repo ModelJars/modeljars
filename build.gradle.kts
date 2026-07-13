@@ -34,6 +34,7 @@ data class CatalogEntry(
     val sizeBytes: Long,
     val license: String,
     val capabilities: List<String>,
+    val features: List<String>,
     val backends: Map<String, Boolean>,
     val raw: Map<String, Any?>,
 )
@@ -72,6 +73,7 @@ fun CatalogEntry.registryProperties(): String =
         appendLine("${prefix}sizeBytes=$sizeBytes")
         appendLine("${prefix}license=$license")
         appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
+        appendLine("${prefix}features=${features.joinToString(",")}")
         backends.toSortedMap().forEach { (backend, supported) ->
             appendLine("${prefix}backend.$backend=$supported")
         }
@@ -95,6 +97,10 @@ val catalogEntries =
                 (raw["capabilities"] as? List<*>)
                     ?.map { it as? String ?: error("capabilities must contain strings") }
                     ?: error("capabilities must be an array")
+            val features =
+                (raw["features"] as? List<*>)
+                    ?.map { it as? String ?: error("features must contain strings") }
+                    ?: emptyList()
             val backends =
                 (raw["backends"] as? Map<*, *>)
                     ?.map { (key, supported) ->
@@ -127,6 +133,7 @@ val catalogEntries =
                     ?: error("sizeBytes must be an integer"),
                 license = raw.requiredString("license"),
                 capabilities = capabilities,
+                features = features,
                 backends = backends,
                 raw = raw,
             )
@@ -431,6 +438,12 @@ tasks.register("verifyCatalog") {
                 }
                 require(properties.getProperty("model.${entry.id}.sha256") == entry.sha256) {
                     "Marker SHA-256 mismatch in $markerJar"
+                }
+                require(
+                    properties.getProperty("model.${entry.id}.features") ==
+                        entry.features.joinToString(","),
+                ) {
+                    "Marker features mismatch in $markerJar"
                 }
             }
         }

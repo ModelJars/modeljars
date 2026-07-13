@@ -65,5 +65,6 @@ class PropertiesModelJarRegistryTest {
         descriptor.sha256().orElseThrow());
     assertEquals(428970080L, descriptor.sizeBytes().orElseThrow());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertTrue(descriptor.features().isEmpty());
   }
 }

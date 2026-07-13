@@ -26,6 +26,7 @@ public record ModelJarDescriptor(
     Optional<Long> sizeBytes,
     Optional<String> license,
     Set<String> capabilities,
+    Set<String> features,
     Map<String, Boolean> backendSupport) {
   public ModelJarDescriptor {
     alias = requireText(alias, "alias");
@@ -54,11 +55,49 @@ public record ModelJarDescriptor(
                   return value;
                 });
     license = normalizedOptional(license, "license");
-    capabilities =
-        Set.copyOf(Objects.requireNonNull(capabilities, "capabilities")).stream()
-            .map(value -> value.toLowerCase(Locale.ROOT))
-            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    capabilities = normalizedSet(capabilities, "capabilities");
+    features = normalizedSet(features, "features");
     backendSupport = Map.copyOf(Objects.requireNonNull(backendSupport, "backendSupport"));
+  }
+
+  // Retains the constructor descriptor used before marker feature flags were available.
+  public ModelJarDescriptor(
+      String alias,
+      String sourceId,
+      ModelJarCoordinate markerCoordinate,
+      ModelVersion modelVersion,
+      String variant,
+      String format,
+      String architecture,
+      String quantization,
+      Optional<Path> localPath,
+      Optional<URI> sourceUri,
+      Optional<URI> downloadUri,
+      Optional<String> revision,
+      Optional<String> sha256,
+      Optional<Long> sizeBytes,
+      Optional<String> license,
+      Set<String> capabilities,
+      Map<String, Boolean> backendSupport) {
+    this(
+        alias,
+        sourceId,
+        markerCoordinate,
+        modelVersion,
+        variant,
+        format,
+        architecture,
+        quantization,
+        localPath,
+        sourceUri,
+        downloadUri,
+        revision,
+        sha256,
+        sizeBytes,
+        license,
+        capabilities,
+        Set.of(),
+        backendSupport);
   }
 
   public boolean matchesSource(String requestedSource) {
@@ -78,6 +117,12 @@ public record ModelJarDescriptor(
 
   private static Optional<String> normalizedOptional(Optional<String> value, String name) {
     return Objects.requireNonNull(value, name).map(String::trim).filter(text -> !text.isEmpty());
+  }
+
+  private static Set<String> normalizedSet(Set<String> values, String name) {
+    return Set.copyOf(Objects.requireNonNull(values, name)).stream()
+        .map(value -> requireText(value, name + " value").toLowerCase(Locale.ROOT))
+        .collect(java.util.stream.Collectors.toUnmodifiableSet());
   }
 
   private static String requireSha256(String value) {

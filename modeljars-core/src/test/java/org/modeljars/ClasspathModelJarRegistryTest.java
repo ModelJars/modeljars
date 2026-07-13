@@ -492,4 +492,52 @@ class ClasspathModelJarRegistryTest {
                     .build())
             .isEmpty());
   }
+
+  @Test
+  void loadsEuroLlmMarkerWithoutPrematurePureJavaClaim() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("llama.cpp")
+                    .capability("translation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("eurollm_1_7b_instruct_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("2951f08f66429c934c8b01a94347161362430808", descriptor.revision().orElseThrow());
+    assertEquals(
+        "1cade17f491ea46a686dbee51fbd52442e0f001f102380c3b9d66b4a77f84093",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_045_157_088L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .features()
+            .containsAll(
+                Set.of("community-conversion", "multilingual-35", "unaligned-output-warning")));
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("EuroLLM-1.7B-Instruct.Q4_K_M.gguf"));
+    assertTrue(
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .build())
+            .isEmpty());
+  }
 }

@@ -285,6 +285,7 @@ runtime support.
 | OpenCoder 1.5B/8B | Coding models with local weights and community conversions | License audit required; the upstream 8B card uses a custom `inf` license | Depends on architecture | Do not publish until the custom license and conversion lineage are acceptable; then investigate tensor layout and tokenizer. |
 | HuatuoGPT-o1-7B | Apache-2.0 Qwen2.5-7B medical fine-tune; trusted 4.68 GB Q4_K_M GGUF | Marker implemented with immutable revision, size, digest, and `pure-java=false` | Near pure-Java | Add the mandatory real fixture, medical limitations contract, tokenizer oracle, and exact-token oracle on the existing Qwen2 path before enabling pure Java. |
 | Fin-R1 | Qwen2 financial-reasoning model with a paper and trusted 4.68 GB Q4_K_M conversion | Marker implemented with immutable lineage, digest, ChatML oracle, finance warning, card-only license provenance, and `pure-java=false` | Near pure-Java | Add the mandatory real fixture and exact ChatML oracle on the existing Qwen2 path before enabling pure Java. |
+| EuroLLM 1.7B Instruct | Apache-2.0 Llama-family model for 35 languages; verified 1.05 GB Q4_K_M conversion | Marker implemented with immutable lineage, SentencePiece/ChatML oracle, alignment warning, and `pure-java=false` | Near pure-Java | Add the mandatory real fixture on the existing Llama decoder path and validate the 128K SentencePiece vocabulary before enabling pure Java. |
 | SaulLM-7B Instruct v1 | MIT Mistral-based legal fine-tune with multiple GGUF conversions | Launch candidate | Requires Mistral foundation | Add Mistral decoder/tokenizer support first, then legal prompt and limitations metadata. |
 | Foundation-Sec-8B Instruct | Llama 3.1 security fine-tune with official Q8_0 GGUF and community quantizations | Launch candidate with dual-license metadata | Requires Llama 3.1 foundation | Preserve the Llama 3.1 base license plus Apache-2.0 Cisco changes, dual-use restrictions, and human-oversight guidance. |
 | MedGemma 4B IT | Gated Google healthcare model; trusted 2.49 GB Q4_K_M GGUF; text and vision | Launch candidate with gated Health AI terms | Requires Gemma 3 runtime work | Implement text-only Gemma 3 tokenizer and alternating local/global attention first; treat the vision projector as a separate capability. |
@@ -312,6 +313,7 @@ and preferred inference formats.
 | Llama 3.2 1B / 3B | 1B-3B | Llama 3.2 license, gated | Very popular fine-tuning baseline and broad tooling support. | Requires Llama 3 tokenizer/chat-template support plus gated-license metadata. |
 | Phi-4 Mini Instruct | 3.8B | MIT | Popular small Microsoft model with code/general utility and permissive license. | Requires Phi architecture and tokenizer support; useful after Qwen/Llama tokenizers mature. |
 | OLMo 2 1B Instruct | 1B | Apache-2.0 | Fully open ecosystem from Ai2; strong candidate for transparent fine-tuning workflows. | Requires OLMo2 architecture/tokenizer support. |
+| EuroLLM 1.7B Instruct | 1.7B | Apache-2.0 | Research-backed 35-language model with practical translation quality and a pinned Q4_K_M artifact. | Marker accepted; near target on the existing Llama path after a strict 128K SentencePiece and ChatML test. |
 | HuatuoGPT-o1-7B | 8B reported | Apache-2.0 | Medical-reasoning fine-tune with released training datasets, a paper, and a Qwen2.5 backbone. | Near target on the existing Qwen2 path; add strict health-domain acceptance and limitations metadata. |
 | Fin-R1 | 8B reported | Apache-2.0 declared by the upstream README; structured metadata and LICENSE file absent | Finance-reasoning model with a paper and a pinned trusted Q4_K_M artifact. | Marker accepted; near target on the existing Qwen2 path after a strict real-model test. |
 | MedGemma 4B IT | 4B | Gated Health AI Developer Foundations terms | Very active healthcare adaptation base: 623 fine-tunes and 110 adapters in the July 2026 snapshot. | Requires Gemma 3 text runtime; multimodal support can follow independently. |
@@ -360,7 +362,10 @@ First catalog batch:
 11. Fin-R1 Q4_K_M. The marker is implemented with a strict conversion-lineage
     record, ChatML oracle, finance warning, license-provenance warning, and an
     honest `pure-java=false` backend claim.
-12. MedGemma 4B IT Q4_K_M with gated-license metadata and
+12. EuroLLM 1.7B Instruct Q4_K_M. The marker is implemented with a strict
+    conversion-lineage record, multilingual ChatML oracle, and an honest
+    `pure-java=false` backend claim.
+13. MedGemma 4B IT Q4_K_M with gated-license metadata and
     `backends.pure-java=false` until Gemma 3 tests pass.
 
 Each marker should start with:
@@ -484,6 +489,10 @@ Java even when the pure-Java backend is not ready.
   <https://huggingface.co/SUFE-AIFLM-Lab/Fin-R1>
 - Fin-R1 trusted GGUF:
   <https://huggingface.co/bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF>
+- EuroLLM 1.7B Instruct:
+  <https://huggingface.co/utter-project/EuroLLM-1.7B-Instruct>
+- EuroLLM 1.7B Instruct GGUF:
+  <https://huggingface.co/mradermacher/EuroLLM-1.7B-Instruct-GGUF>
 - SaulLM-7B Instruct v1:
   <https://huggingface.co/Equall/Saul-7B-Instruct-v1>
 - Foundation-Sec-8B Instruct:

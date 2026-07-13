@@ -2,16 +2,19 @@
 
 ModelJars is a community-owned marker-JAR convention for local and remote model artifacts.
 It borrows the useful WebJars idea of using normal JVM dependency coordinates and classpath
-metadata, but it does not put large model weights in ordinary JARs.
+metadata. Large model weights remain external; compact, license-compatible model payloads can be
+bundled when doing so makes the artifact directly usable.
 
-The marker JAR carries descriptors only:
+Every marker JAR carries a descriptor:
 
 ```text
 META-INF/modeljars/registry.properties
 ```
 
-Those descriptors point to upstream model locations, expected local cache paths, checksums,
-licenses, formats, quantization variants, runtime feature flags, and backend compatibility.
+Descriptors point to upstream model locations, expected local cache paths or bundled resources,
+checksums, licenses, formats, quantization variants, runtime feature flags, and backend
+compatibility. A bundled payload lives below `META-INF/modeljars/models/<catalog-id>/` and is
+verified against the same size and SHA-256 metadata as an external model.
 
 The catalog has one source of truth: `catalog/models.json`. Gradle generates the aggregate
 classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
@@ -44,6 +47,12 @@ org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0:2.5.0-q4_0.
 org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q8_0:2.5.0-q8_0.1
 org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q4_0:2.5.0-q4_0.1
 org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q8_0:2.5.0-q8_0.1
+```
+
+The first bundled semantic-order model is the proven-optimal 40,000-term WordTour artifact:
+
+```text
+org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ```
 
 ## Runtime use
@@ -81,6 +90,21 @@ Path model = new ModelJarInstaller(registry).install(
 `ModelJarInstaller` verifies both the byte size and SHA-256 digest before atomically moving the
 download into the local cache.
 
+Compact bundled payloads use the same verification contract without an installation step:
+
+```java
+ModelJarDescriptor descriptor = registry.resolve(
+    ModelJarRequirement.forSource("github://joisino/wordtour")
+        .variant("optimal")
+        .backend("semantic-order")
+        .build()
+).orElseThrow();
+
+byte[] payload = new ModelJarResourceLoader(
+    Thread.currentThread().getContextClassLoader()
+).readVerified(descriptor);
+```
+
 ## Catalog development
 
 ```bash
@@ -89,7 +113,8 @@ download into the local cache.
 ```
 
 The generated site is written to `build/site`. Individual marker JARs are written under
-`modeljars-catalog/build/libs/markers`.
+`modeljars-catalog/build/libs/markers`. Classpath payloads are fetched from their pinned source
+revision during the build and must pass size, digest, format, vocabulary, and uniqueness checks.
 
 ## Reference repos
 

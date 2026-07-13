@@ -306,6 +306,39 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQwen25MathOnePointFiveBillionMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/Qwen2.5-Math-1.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .capability("math")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen2_5_math_1_5b_instruct_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("951ed2aea09c43e331c612e74d83e4a23ca98e3b", descriptor.revision().orElseThrow());
+    assertEquals(
+        "9614a50f03c897028920ca0dc4365da570bf587f9ee7768261216fe370b37e8e",
+        descriptor.sha256().orElseThrow());
+    assertEquals(986_048_832L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("Qwen2.5-Math-1.5B-Instruct-Q4_K_M.gguf"));
+  }
+
+  @Test
   void loadsMiniCpm5OfficialMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

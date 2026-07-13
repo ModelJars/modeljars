@@ -20,7 +20,7 @@ A model qualifies for the launch catalog only when it has:
 6. An honest backend claim. A marker must not advertise `pure-java=true` before
    that exact artifact passes the pure-Java contract.
 
-The catalog currently contains 16 GGUF marker artifacts representing 14
+The catalog currently contains 17 GGUF marker artifacts representing 15
 distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 
 ## Launch roster
@@ -41,7 +41,7 @@ distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 | 12 | MiniCPM5 1B | On-device tools/reasoning | Apache-2.0 | Official | Supported; validates explicit Q/K/V widths and MiniCPM5 BPE. |
 | 13 | DeepSeek-R1-Distill-Qwen-7B | Reasoning | MIT | Pinned trusted community Q4_K_M | Marker added; pure-Java exact-oracle verification is in progress on the existing Qwen2 and K-quant foundation. |
 | 14 | Qwen2.5-Math 1.5B Instruct | Math/education | Apache-2.0 | Pinned trusted community Q4_K_M | Marker added; pure-Java math prompt and exact-oracle verification is in progress on the Qwen2 foundation. |
-| 15 | SQLCoder-7B-2 | Text-to-SQL/data | CC-BY-SA-4.0 | Upstream Q5_K_M; pin a verified Q4_K_M conversion | Near target: Llama-family weights and SentencePiece; add SQL prompt resource and read-only-use warning. |
+| 15 | SQLCoder-7B-2 | Text-to-SQL/data | CC-BY-SA-4.0 | Pinned official upstream Q5_K_M | Marker added; add reusable Q5_K kernels, a SQL prompt oracle, and read-only-use warning. |
 | 16 | EuroLLM 1.7B Instruct | Multilingual/translation | Apache-2.0 | Trusted community GGUF required | Near target: dense Llama-family structure; validate tokenizer and 35-language metadata. |
 | 17 | Mistral 7B Instruct v0.3 | General/chat/tool calling | Apache-2.0 | Trusted community GGUF required | Add Mistral metadata, tokenizer v3, and sliding-window semantics. This is the Mistral-family foundation. |
 | 18 | BioMistral 7B | Biomedical research | Apache-2.0 | Official GGUF | Reuse the Mistral foundation; add research-only health warnings and a deterministic biomedical-format smoke test. |

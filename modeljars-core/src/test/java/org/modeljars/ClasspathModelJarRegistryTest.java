@@ -339,6 +339,34 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsSqlCoderSevenBillionV2MarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://defog/sqlcoder-7b-2")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q5_k_m")
+                    .backend("pure-java")
+                    .capability("text-to-sql")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("sqlcoder_7b_2_q5_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Q5_K_M", descriptor.quantization());
+    assertEquals("CC-BY-SA-4.0", descriptor.license().orElseThrow());
+    assertEquals("7e5b6f7981c0aa7d143f6bec6fa26625bdfcbe66", descriptor.revision().orElseThrow());
+    assertEquals(
+        "0068f25d1fc37cb25aa6be85064432eeeb1a0754d97139c0d2eb3529fc8fc32b",
+        descriptor.sha256().orElseThrow());
+    assertEquals(4_783_256_288L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor.localPath().orElseThrow().toString().endsWith("sqlcoder-7b-q5_k_m.gguf"));
+  }
+
+  @Test
   void loadsMiniCpm5OfficialMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

@@ -3,6 +3,8 @@ package org.modeljars;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -539,5 +541,39 @@ class ClasspathModelJarRegistryTest {
                     .backend("pure-java")
                     .build())
             .isEmpty());
+  }
+
+  @Test
+  void loadsAndVerifiesCanonicalWordTourPayloadFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("github://joisino/wordtour")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("optimal")
+                    .backend("semantic-order")
+                    .capability("semantic-neighbors")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("wordtour_glove_6b_300d_optimal", descriptor.alias());
+    assertEquals("wordtour-v1", descriptor.format());
+    assertEquals("wordtour", descriptor.architecture());
+    assertEquals("NONE", descriptor.quantization());
+    assertEquals("PDDL-1.0", descriptor.license().orElseThrow());
+    assertTrue(descriptor.localPath().isEmpty());
+    assertEquals(
+        "META-INF/modeljars/models/wordtour_glove_6b_300d_optimal/wordtour_opt.txt",
+        descriptor.classpathResource().orElseThrow());
+
+    byte[] payload =
+        new ModelJarResourceLoader(getClass().getClassLoader()).readVerified(descriptor);
+    List<String> terms = new String(payload, StandardCharsets.UTF_8).lines().toList();
+    assertEquals(40_000, terms.size());
+    assertEquals(40_000, Set.copyOf(terms).size());
+    assertEquals("the", terms.getFirst());
+    assertEquals("of", terms.getLast());
   }
 }

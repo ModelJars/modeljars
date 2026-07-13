@@ -1,8 +1,14 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import java.net.URI
+import java.nio.ByteBuffer
+import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+import java.util.HexFormat
 import java.util.Properties
 import java.util.zip.ZipFile
 import org.gradle.api.tasks.SourceSetContainer
@@ -29,10 +35,15 @@ data class CatalogEntry(
     val format: String,
     val architecture: String,
     val quantization: String,
-    val localPath: String,
+    val packaging: String,
+    val localPath: String?,
+    val classpathResource: String?,
     val sha256: String,
     val sizeBytes: Long,
     val license: String,
+    val licenseUri: String?,
+    val vocabularySize: Int?,
+    val topology: String?,
     val capabilities: List<String>,
     val features: List<String>,
     val backends: Map<String, Boolean>,
@@ -42,6 +53,9 @@ data class CatalogEntry(
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
+
+fun Map<String, Any?>.optionalString(name: String): String? =
+    (this[name] as? String)?.takeIf { it.isNotBlank() }
 
 fun Any?.stringKeyMap(context: String): Map<String, Any?> {
     val values = this as? Map<*, *> ?: error("$context must be an object")
@@ -65,7 +79,8 @@ fun CatalogEntry.registryProperties(): String =
         appendLine("${prefix}format=$format")
         appendLine("${prefix}architecture=$architecture")
         appendLine("${prefix}quantization=$quantization")
-        appendLine("${prefix}path=$localPath")
+        localPath?.let { appendLine("${prefix}path=$it") }
+        classpathResource?.let { appendLine("${prefix}classpathResource=$it") }
         appendLine("${prefix}sourceUri=$sourceUri")
         appendLine("${prefix}downloadUri=$downloadUri")
         appendLine("${prefix}revision=$revision")
@@ -81,8 +96,8 @@ fun CatalogEntry.registryProperties(): String =
 
 val catalogDocument =
     JsonSlurper().parse(file("catalog/models.json")).stringKeyMap("catalog/models.json")
-require((catalogDocument["schemaVersion"] as? Number)?.toInt() == 1) {
-    "catalog/models.json must use schemaVersion 1"
+require((catalogDocument["schemaVersion"] as? Number)?.toInt() == 2) {
+    "catalog/models.json must use schemaVersion 2"
 }
 
 val catalogEntries =
@@ -127,11 +142,16 @@ val catalogEntries =
                 format = raw.requiredString("format"),
                 architecture = raw.requiredString("architecture"),
                 quantization = raw.requiredString("quantization"),
-                localPath = raw.requiredString("localPath"),
+                packaging = raw.optionalString("packaging") ?: "external",
+                localPath = raw.optionalString("localPath"),
+                classpathResource = raw.optionalString("classpathResource"),
                 sha256 = raw.requiredString("sha256"),
                 sizeBytes = (raw["sizeBytes"] as? Number)?.toLong()
                     ?: error("sizeBytes must be an integer"),
                 license = raw.requiredString("license"),
+                licenseUri = raw.optionalString("licenseUri"),
+                vocabularySize = (raw["vocabularySize"] as? Number)?.toInt(),
+                topology = raw.optionalString("topology"),
                 capabilities = capabilities,
                 features = features,
                 backends = backends,
@@ -169,14 +189,120 @@ catalogEntries.forEach { entry ->
     }
     val download = URI.create(entry.downloadUri)
     require(download.scheme == "https") { "downloadUri must use HTTPS for ${entry.id}" }
-    require(download.path.contains("/resolve/${entry.revision}/")) {
-        "downloadUri must pin revision ${entry.revision} for ${entry.id}"
+    entry.licenseUri?.let { licenseUri ->
+        require(URI.create(licenseUri).scheme == "https") {
+            "licenseUri must use HTTPS for ${entry.id}"
+        }
     }
-    require(entry.localPath.substringAfterLast('/') == download.path.substringAfterLast('/')) {
-        "localPath and downloadUri filenames differ for ${entry.id}"
+    require(entry.packaging in setOf("external", "classpath")) {
+        "packaging must be external or classpath for ${entry.id}"
+    }
+    if (entry.packaging == "external") {
+        require(entry.classpathResource == null) {
+            "External entry must not declare classpathResource for ${entry.id}"
+        }
+        requireNotNull(entry.localPath) { "External entry must declare localPath for ${entry.id}" }
+        require(download.path.contains("/resolve/${entry.revision}/")) {
+            "downloadUri must pin revision ${entry.revision} for ${entry.id}"
+        }
+        require(entry.localPath.substringAfterLast('/') == download.path.substringAfterLast('/')) {
+            "localPath and downloadUri filenames differ for ${entry.id}"
+        }
+    } else {
+        val resource = requireNotNull(entry.classpathResource) {
+            "Classpath entry must declare classpathResource for ${entry.id}"
+        }
+        require(entry.localPath == null) {
+            "Classpath entry must not declare localPath for ${entry.id}"
+        }
+        require(resource.startsWith("META-INF/modeljars/models/${entry.id}/")) {
+            "classpathResource must be namespaced by catalog ID for ${entry.id}"
+        }
+        require(download.path.contains("/${entry.revision}/")) {
+            "downloadUri must pin revision ${entry.revision} for ${entry.id}"
+        }
+        require(entry.sizeBytes <= 10L * 1024L * 1024L) {
+            "Classpath payload exceeds the 10 MiB catalog limit for ${entry.id}"
+        }
     }
     require(entry.capabilities.isNotEmpty()) { "capabilities must not be empty for ${entry.id}" }
     require(entry.backends.values.any { it }) { "At least one backend must support ${entry.id}" }
+    if (entry.format == "wordtour-v1") {
+        require(entry.packaging == "classpath") { "WordTour payload must be bundled for ${entry.id}" }
+        require(entry.topology == "cycle") { "WordTour topology must be cycle for ${entry.id}" }
+        require((entry.vocabularySize ?: 0) > 0) {
+            "WordTour vocabularySize must be positive for ${entry.id}"
+        }
+        require(entry.backends["semantic-order"] == true) {
+            "WordTour must support the semantic-order backend for ${entry.id}"
+        }
+        require(entry.capabilities.contains("semantic-neighbors")) {
+            "WordTour must advertise semantic-neighbors for ${entry.id}"
+        }
+    }
+}
+
+fun sha256(bytes: ByteArray): String =
+    HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes))
+
+fun sha256(path: Path): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    Files.newInputStream(path).use { input ->
+        val buffer = ByteArray(16 * 1024)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return HexFormat.of().formatHex(digest.digest())
+}
+
+fun payloadMatches(entry: CatalogEntry, path: Path): Boolean =
+    Files.isRegularFile(path) &&
+        Files.size(path) == entry.sizeBytes &&
+        sha256(path) == entry.sha256
+
+fun downloadPayload(entry: CatalogEntry, output: Path) {
+    Files.createDirectories(output.parent)
+    if (payloadMatches(entry, output)) return
+
+    val temporary = output.resolveSibling("${output.fileName}.part")
+    try {
+        URI.create(entry.downloadUri).toURL().openConnection().apply {
+            connectTimeout = 30_000
+            readTimeout = 60_000
+        }.getInputStream().use { input ->
+            Files.copy(input, temporary, StandardCopyOption.REPLACE_EXISTING)
+        }
+        require(Files.size(temporary) == entry.sizeBytes) {
+            "Payload size mismatch for ${entry.id}: expected ${entry.sizeBytes}, " +
+                "got ${Files.size(temporary)}"
+        }
+        require(sha256(temporary) == entry.sha256) { "Payload SHA-256 mismatch for ${entry.id}" }
+        Files.move(temporary, output, StandardCopyOption.REPLACE_EXISTING)
+    } finally {
+        Files.deleteIfExists(temporary)
+    }
+}
+
+fun verifySemanticOrderPayload(entry: CatalogEntry, payload: ByteArray) {
+    val text =
+        StandardCharsets.UTF_8
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT)
+            .decode(ByteBuffer.wrap(payload))
+            .toString()
+    val rawLines = text.split('\n')
+    val lines = if (rawLines.lastOrNull().isNullOrEmpty()) rawLines.dropLast(1) else rawLines
+    val terms = lines.map { it.removeSuffix("\r") }
+    require(terms.size == entry.vocabularySize) {
+        "Vocabulary size mismatch for ${entry.id}: expected ${entry.vocabularySize}, " +
+            "got ${terms.size}"
+    }
+    require(terms.none(String::isBlank)) { "Blank semantic-order term in ${entry.id}" }
+    require(terms.toSet().size == terms.size) { "Duplicate semantic-order term in ${entry.id}" }
 }
 
 allprojects {
@@ -262,6 +388,22 @@ project(":modeljars-catalog") {
     description = "Generated aggregate and individual ModelJars marker metadata"
 
     val generatedResources = layout.buildDirectory.dir("generated/resources/main")
+    val bundledPayloadTasks =
+        catalogEntries
+            .filter { it.packaging == "classpath" }
+            .associateWith { entry ->
+                val resource = requireNotNull(entry.classpathResource)
+                val payload = generatedResources.map { it.file(resource) }
+                tasks.register("preparePayload${taskSuffix(entry.id)}") {
+                    inputs.property("downloadUri", entry.downloadUri)
+                    inputs.property("sha256", entry.sha256)
+                    inputs.property("sizeBytes", entry.sizeBytes)
+                    outputs.file(payload)
+                    doLast {
+                        downloadPayload(entry, payload.get().asFile.toPath())
+                    }
+                }
+            }
     val aggregateRegistry =
         generatedResources.map { it.file("META-INF/modeljars/registry.properties") }
     val generateCatalogResources =
@@ -285,9 +427,11 @@ project(":modeljars-catalog") {
     }
     tasks.named("processResources") {
         dependsOn(generateCatalogResources)
+        dependsOn(bundledPayloadTasks.values)
     }
     tasks.named("sourcesJar") {
         dependsOn(generateCatalogResources)
+        dependsOn(bundledPayloadTasks.values)
     }
 
     catalogEntries.forEach { entry ->
@@ -318,6 +462,12 @@ project(":modeljars-catalog") {
         val markerJar =
             tasks.register<Jar>("markerJar$suffix") {
                 dependsOn(generateMarker)
+                bundledPayloadTasks[entry]?.let { payloadTask ->
+                    dependsOn(payloadTask)
+                    from(generatedResources) {
+                        include(requireNotNull(entry.classpathResource))
+                    }
+                }
                 archiveBaseName.set(entry.artifactId)
                 archiveVersion.set(entry.markerVersion)
                 destinationDirectory.set(layout.buildDirectory.dir("libs/markers"))
@@ -369,7 +519,7 @@ project(":modeljars-catalog") {
                         licenses {
                             license {
                                 name.set(entry.license)
-                                url.set(entry.sourceUri)
+                                url.set(entry.licenseUri ?: entry.sourceUri)
                             }
                         }
                         developers {
@@ -444,6 +594,27 @@ tasks.register("verifyCatalog") {
                         entry.features.joinToString(","),
                 ) {
                     "Marker features mismatch in $markerJar"
+                }
+                require(
+                    properties.getProperty("model.${entry.id}.classpathResource") ==
+                        entry.classpathResource,
+                ) {
+                    "Marker classpath resource mismatch in $markerJar"
+                }
+                entry.classpathResource?.let { classpathResource ->
+                    val payloadResource =
+                        zip.getEntry(classpathResource)
+                            ?: error("Bundled payload missing from $markerJar: $classpathResource")
+                    val payload = zip.getInputStream(payloadResource).use { it.readAllBytes() }
+                    require(payload.size.toLong() == entry.sizeBytes) {
+                        "Bundled payload size mismatch in $markerJar"
+                    }
+                    require(sha256(payload) == entry.sha256) {
+                        "Bundled payload SHA-256 mismatch in $markerJar"
+                    }
+                    if (entry.format == "wordtour-v1") {
+                        verifySemanticOrderPayload(entry, payload)
+                    }
                 }
             }
         }

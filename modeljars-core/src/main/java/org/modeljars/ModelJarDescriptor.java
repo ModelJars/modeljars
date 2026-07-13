@@ -19,6 +19,7 @@ public record ModelJarDescriptor(
     String architecture,
     String quantization,
     Optional<Path> localPath,
+    Optional<String> classpathResource,
     Optional<URI> sourceUri,
     Optional<URI> downloadUri,
     Optional<String> revision,
@@ -38,6 +39,9 @@ public record ModelJarDescriptor(
     architecture = requireText(architecture, "architecture").toLowerCase(Locale.ROOT);
     quantization = requireText(quantization, "quantization").toUpperCase(Locale.ROOT);
     localPath = Objects.requireNonNull(localPath, "localPath");
+    classpathResource =
+        normalizedOptional(classpathResource, "classpathResource")
+            .map(ModelJarDescriptor::requireClasspathResource);
     sourceUri = Objects.requireNonNull(sourceUri, "sourceUri");
     downloadUri = Objects.requireNonNull(downloadUri, "downloadUri");
     revision = normalizedOptional(revision, "revision");
@@ -58,6 +62,48 @@ public record ModelJarDescriptor(
     capabilities = normalizedSet(capabilities, "capabilities");
     features = normalizedSet(features, "features");
     backendSupport = Map.copyOf(Objects.requireNonNull(backendSupport, "backendSupport"));
+  }
+
+  // Retains the constructor descriptor used before bundled classpath resources were available.
+  public ModelJarDescriptor(
+      String alias,
+      String sourceId,
+      ModelJarCoordinate markerCoordinate,
+      ModelVersion modelVersion,
+      String variant,
+      String format,
+      String architecture,
+      String quantization,
+      Optional<Path> localPath,
+      Optional<URI> sourceUri,
+      Optional<URI> downloadUri,
+      Optional<String> revision,
+      Optional<String> sha256,
+      Optional<Long> sizeBytes,
+      Optional<String> license,
+      Set<String> capabilities,
+      Set<String> features,
+      Map<String, Boolean> backendSupport) {
+    this(
+        alias,
+        sourceId,
+        markerCoordinate,
+        modelVersion,
+        variant,
+        format,
+        architecture,
+        quantization,
+        localPath,
+        Optional.empty(),
+        sourceUri,
+        downloadUri,
+        revision,
+        sha256,
+        sizeBytes,
+        license,
+        capabilities,
+        features,
+        backendSupport);
   }
 
   // Retains the constructor descriptor used before marker feature flags were available.
@@ -128,6 +174,17 @@ public record ModelJarDescriptor(
   private static String requireSha256(String value) {
     if (!value.matches("[0-9a-f]{64}")) {
       throw new IllegalArgumentException("sha256 must contain exactly 64 hexadecimal characters");
+    }
+    return value;
+  }
+
+  private static String requireClasspathResource(String value) {
+    if (value.startsWith("/")
+        || value.contains("\\")
+        || java.util.Arrays.stream(value.split("/", -1))
+            .anyMatch(part -> part.isEmpty() || part.equals(".") || part.equals(".."))) {
+      throw new IllegalArgumentException(
+          "classpathResource must be a normalized relative resource name");
     }
     return value;
   }

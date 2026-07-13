@@ -31,7 +31,7 @@
           <h1>Model marker JARs for JVM AI applications.</h1>
           <p>
             Pin model metadata with Maven-style dependencies, discover descriptors from the
-            classpath, and keep large model weights outside application artifacts.
+            classpath, keep large weights external, and bundle compact models when appropriate.
           </p>
         </div>
         <div class="hero-panel" aria-label="Gradle dependency example">
@@ -70,6 +70,7 @@
             <select id="backend-filter">
               <option value="">Any backend</option>
               <option value="pure-java">pure-java</option>
+              <option value="semantic-order">semantic-order</option>
               <option value="llama.cpp">llama.cpp</option>
             </select>
           </label>
@@ -93,10 +94,10 @@
 
         <article class="docs-card">
           <p class="eyebrow">Descriptor</p>
-          <h3>Weights stay external</h3>
+          <h3>Right-size the artifact</h3>
           <p>
-            Marker JARs carry source URLs, checksums, licenses, local cache paths, capabilities,
-            and backend compatibility. They do not embed multi-gigabyte model weights.
+            Multi-gigabyte weights stay external. Compact models can be bundled below
+            <code>META-INF/modeljars/models/</code> and verified from their descriptor before use.
           </p>
         </article>
 

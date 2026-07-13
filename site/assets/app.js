@@ -18,7 +18,11 @@ function matches(model, query, backend) {
     model.architecture,
     model.format,
     model.quantization,
+    model.packaging,
+    model.language,
+    model.topology,
     model.capabilities.join(" "),
+    (model.features || []).join(" "),
     Object.keys(model.backends).join(" ")
   ].join(" ");
 
@@ -35,6 +39,8 @@ function renderCard(model) {
     .filter(([, supported]) => supported)
     .map(([backend]) => `<span class="pill accent">${backend}</span>`)
     .join("");
+  const locationLabel = model.classpathResource ? "Classpath Resource" : "Local Path";
+  const location = model.classpathResource || model.localPath;
 
   return `
     <article class="model-card">
@@ -46,7 +52,7 @@ function renderCard(model) {
       <dl class="metadata">
         <div><dt>Source</dt><dd><a href="${model.sourceUri}">${model.sourceId}</a></dd></div>
         <div><dt>Coordinate</dt><dd><code>${model.markerCoordinate}</code></dd></div>
-        <div><dt>Local Path</dt><dd><code>${model.localPath}</code></dd></div>
+        <div><dt>${locationLabel}</dt><dd><code>${location}</code></dd></div>
       </dl>
       <div class="pills">${capabilities}${backends}</div>
       <button class="copy-button" type="button" data-copy="${model.markerCoordinate}">

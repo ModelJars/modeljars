@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "models": [
     {
       "id": "qwen3_0_6b_q4_0",
@@ -441,6 +441,43 @@
       "capabilities": ["text-generation", "chat", "tool-calling"],
       "features": ["mixed-quantization", "q4-k", "q6-k", "long-context", "chat-template"],
       "backends": {"pure-java": true, "llama.cpp": true}
+    },
+    {
+      "id": "wordtour_glove_6b_300d_optimal",
+      "name": "WordTour GloVe 6B 300d Optimal",
+      "description": "Proven-optimal cyclic semantic ordering of the 40,000-word GloVe 6B 300d vocabulary for compact pure-Java neighbor lookup and blurred bag-of-words.",
+      "sourceId": "github://joisino/wordtour",
+      "sourceUri": "https://github.com/joisino/wordtour",
+      "downloadUri": "https://raw.githubusercontent.com/joisino/wordtour/de6c20e3e6c26f61a5b7cb0a5317cff582e53637/wordtour_opt.txt",
+      "revision": "de6c20e3e6c26f61a5b7cb0a5317cff582e53637",
+      "markerCoordinate": "org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1",
+      "modelVersion": "1.0.0",
+      "variant": "optimal",
+      "format": "wordtour-v1",
+      "architecture": "wordtour",
+      "quantization": "NONE",
+      "packaging": "classpath",
+      "classpathResource": "META-INF/modeljars/models/wordtour_glove_6b_300d_optimal/wordtour_opt.txt",
+      "sha256": "56f880329c5ffa73fe549a04603ebe64fc745b4c8492392102bb935ae1c9a0b6",
+      "sizeBytes": 318552,
+      "license": "PDDL-1.0",
+      "licenseUri": "https://opendatacommons.org/licenses/pddl/1-0/",
+      "language": "en",
+      "vocabularySize": 40000,
+      "topology": "cycle",
+      "capabilities": ["semantic-neighbors", "lexical-expansion", "blurred-bow"],
+      "features": ["pure-java", "bundled-payload", "glove-6b-300d", "exact-tsp", "proven-optimal", "cyclic"],
+      "backends": {"semantic-order": true},
+      "provenance": {
+        "sourceData": "GloVe 6B 300d",
+        "sourceDataUri": "https://nlp.stanford.edu/projects/glove/",
+        "sourceDataLicense": "PDDL-1.0",
+        "generator": "Word Tour reference implementation",
+        "generatorUri": "https://github.com/joisino/wordtour",
+        "generatorLicense": "MIT",
+        "distanceMetric": "euclidean",
+        "qualityStatus": "proven-optimal"
+      }
     }
   ]
 }

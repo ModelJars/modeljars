@@ -67,6 +67,7 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         required(prefix, "architecture", properties),
         required(prefix, "quantization", properties),
         optional(prefix, "path", properties).map(PropertiesModelJarRegistry::expandPath),
+        optional(prefix, "classpathResource", properties),
         optional(prefix, "sourceUri", properties).map(URI::create),
         optional(prefix, "downloadUri", properties).map(URI::create),
         optional(prefix, "revision", properties),

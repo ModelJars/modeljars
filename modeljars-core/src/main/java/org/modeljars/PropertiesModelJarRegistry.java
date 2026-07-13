@@ -74,6 +74,7 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         optional(prefix, "sizeBytes", properties).map(PropertiesModelJarRegistry::parseSizeBytes),
         optional(prefix, "license", properties),
         csv(optional(prefix, "capabilities", properties).orElse("")),
+        csv(optional(prefix, "features", properties).orElse("")),
         backends);
   }
 

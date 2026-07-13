@@ -3,6 +3,7 @@ package org.modeljars;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class ClasspathModelJarRegistryTest {
@@ -396,5 +397,48 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow()
             .toString()
             .endsWith("MiniCPM5-1B-Q4_K_M.gguf"));
+  }
+
+  @Test
+  void loadsHuatuoGptO1SevenBillionMarkerWithoutPrematurePureJavaClaim() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("llama.cpp")
+                    .capability("medical-reasoning")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("huatuogpt_o1_7b_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("5b481e71fa41e2ccffdd863dc01f27be48075bd1", descriptor.revision().orElseThrow());
+    assertEquals(
+        "4643521a184cb26df0f7c57da9aead0c632b286a9aff103c9f9dca4dc059abd7",
+        descriptor.sha256().orElseThrow());
+    assertEquals(4_683_074_720L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor.features().containsAll(Set.of("community-conversion", "medical-use-warning")));
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("HuatuoGPT-o1-7B-Q4_K_M.gguf"));
+    assertTrue(
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .build())
+            .isEmpty());
   }
 }

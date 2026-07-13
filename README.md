@@ -11,7 +11,7 @@ META-INF/modeljars/registry.properties
 ```
 
 Those descriptors point to upstream model locations, expected local cache paths, checksums,
-licenses, formats, quantization variants, and backend compatibility.
+licenses, formats, quantization variants, runtime feature flags, and backend compatibility.
 
 The catalog has one source of truth: `catalog/models.json`. Gradle generates the aggregate
 classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
@@ -60,7 +60,12 @@ ModelJarDescriptor descriptor = registry.resolve(
 ).orElseThrow();
 
 Path model = descriptor.localPath().orElseThrow();
+Set<String> requiredFeatures = descriptor.features();
 ```
+
+Feature flags expose requirements and handling metadata such as `q4-k`, `chatml`,
+`community-conversion`, and `medical-use-warning`. Markers created before the feature property was
+introduced remain loadable and return an empty set.
 
 To download and verify the pinned artifact instead of requiring it to exist already:
 

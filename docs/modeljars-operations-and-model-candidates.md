@@ -283,7 +283,7 @@ runtime support.
 | EXAONE 4.5 33B GGUF | KDnuggets lists GGUF and non-commercial research license | Catalog-ready with license warning | Requires runtime work | Add EXAONE architecture/tokenizer; mark non-commercial or restricted use clearly. |
 | Phi-4 Mini / Phi-4 family local weights | Small local models; not code-only but useful for Java smoke work | Catalog-ready | Requires runtime work | Add Phi architecture/tokenizer support; lower priority than Qwen2.5-Coder for coding. |
 | OpenCoder 1.5B/8B | Coding models with local weights and community conversions | License audit required; the upstream 8B card uses a custom `inf` license | Depends on architecture | Do not publish until the custom license and conversion lineage are acceptable; then investigate tensor layout and tokenizer. |
-| HuatuoGPT-o1-7B | Apache-2.0 Qwen2.5-7B medical fine-tune; trusted 4.68 GB Q4_K_M GGUF | Launch candidate | Near pure-Java | Pin conversion lineage and digest, add medical limitations metadata, then add tokenizer and exact-token oracles on the existing Qwen2 path. |
+| HuatuoGPT-o1-7B | Apache-2.0 Qwen2.5-7B medical fine-tune; trusted 4.68 GB Q4_K_M GGUF | Marker implemented with immutable revision, size, digest, and `pure-java=false` | Near pure-Java | Add the mandatory real fixture, medical limitations contract, tokenizer oracle, and exact-token oracle on the existing Qwen2 path before enabling pure Java. |
 | Fin-R1 | Apache-2.0 `qwen2` financial-reasoning GGUF; 4.68 GB Q4_K_M available | Launch candidate after lineage audit | Near pure-Java | Pin the community conversion, preserve finance limitations, and add bilingual tokenizer and exact-token oracles. |
 | SaulLM-7B Instruct v1 | MIT Mistral-based legal fine-tune with multiple GGUF conversions | Launch candidate | Requires Mistral foundation | Add Mistral decoder/tokenizer support first, then legal prompt and limitations metadata. |
 | Foundation-Sec-8B Instruct | Llama 3.1 security fine-tune with official Q8_0 GGUF and community quantizations | Launch candidate with dual-license metadata | Requires Llama 3.1 foundation | Preserve the Llama 3.1 base license plus Apache-2.0 Cisco changes, dual-use restrictions, and human-oversight guidance. |
@@ -355,7 +355,8 @@ First catalog batch:
 7. CodeLlama 7B Instruct GGUF.
 8. StarCoder2 3B or 7B.
 9. Granite Code 3B or 8B.
-10. HuatuoGPT-o1-7B Q4_K_M after a strict conversion-lineage audit.
+10. HuatuoGPT-o1-7B Q4_K_M. The marker is implemented with a strict
+    conversion-lineage record and an honest `pure-java=false` backend claim.
 11. Fin-R1 Q4_K_M after a strict conversion-lineage audit.
 12. MedGemma 4B IT Q4_K_M with gated-license metadata and
     `backends.pure-java=false` until Gemma 3 tests pass.

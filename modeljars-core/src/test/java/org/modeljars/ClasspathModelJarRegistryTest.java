@@ -441,4 +441,55 @@ class ClasspathModelJarRegistryTest {
                     .build())
             .isEmpty());
   }
+
+  @Test
+  void loadsFinR1MarkerWithoutPrematurePureJavaClaim() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("llama.cpp")
+                    .capability("financial-reasoning")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("fin_r1_7b_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("61b412864cc5df96e415808920451a9856d7b078", descriptor.revision().orElseThrow());
+    assertEquals(
+        "d50f16c5149b4dc103c68e249a136ab7c82f7569a7df707a2d6150bff5994c33",
+        descriptor.sha256().orElseThrow());
+    assertEquals(4_683_073_600L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(
+        descriptor
+            .features()
+            .containsAll(
+                Set.of(
+                    "community-conversion",
+                    "financial-advice-warning",
+                    "license-card-only")));
+    assertTrue(
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("SUFE-AIFLM-Lab_Fin-R1-Q4_K_M.gguf"));
+    assertTrue(
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("pure-java")
+                    .build())
+            .isEmpty());
+  }
 }

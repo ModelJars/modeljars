@@ -39,17 +39,17 @@ distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 | 10 | DeepSeek-Coder 1.3B Instruct | Small code/FIM | DeepSeek model license | Community GGUF | Supported; validates mixed K-quants. |
 | 11 | DeepSeek-Coder 6.7B Instruct | Large code/FIM | DeepSeek model license | Community GGUF | Supported by an isolated slow-test job. |
 | 12 | MiniCPM5 1B | On-device tools/reasoning | Apache-2.0 | Official | Supported; validates explicit Q/K/V widths and MiniCPM5 BPE. |
-| 13 | DeepSeek-R1-Distill-Qwen-7B | Reasoning | MIT | Pinned trusted community Q4_K_M | Marker added; pure-Java exact-oracle verification is in progress on the existing Qwen2 and K-quant foundation. |
-| 14 | Qwen2.5-Math 1.5B Instruct | Math/education | Apache-2.0 | Pinned trusted community Q4_K_M | Marker added; pure-Java math prompt and exact-oracle verification is in progress on the Qwen2 foundation. |
-| 15 | SQLCoder-7B-2 | Text-to-SQL/data | CC-BY-SA-4.0 | Pinned official upstream Q5_K_M | Marker added; add reusable Q5_K kernels, a SQL prompt oracle, and read-only-use warning. |
-| 16 | EuroLLM 1.7B Instruct | Multilingual/translation | Apache-2.0 | Trusted community GGUF required | Near target: dense Llama-family structure; validate tokenizer and 35-language metadata. |
-| 17 | Mistral 7B Instruct v0.3 | General/chat/tool calling | Apache-2.0 | Trusted community GGUF required | Add Mistral metadata, tokenizer v3, and sliding-window semantics. This is the Mistral-family foundation. |
-| 18 | BioMistral 7B | Biomedical research | Apache-2.0 | Official GGUF | Reuse the Mistral foundation; add research-only health warnings and a deterministic biomedical-format smoke test. |
-| 19 | SaulLM-7B Instruct v1 | Legal | MIT | Trusted community GGUF required | Reuse the Mistral foundation; preserve legal limitations and add a deterministic legal-format smoke test. |
-| 20 | Llama 3.1 8B Instruct | Widely adopted general model | Gated Llama 3.1 Community License | Gated source or verified conversion | Add gated-artifact resolution, Llama 3 BPE, piecewise RoPE scaling, attribution metadata, and chat templates. |
-| 21 | AdaptLLM Finance Chat 7B | Financial question answering | Llama 2 Community License | Trusted community GGUF required | Near target: reuse the Llama-family path; preserve base-model terms and add a deterministic finance prompt oracle. |
-| 22 | Foundation-Sec-8B Instruct | Cybersecurity | Upstream NOTICE plus Llama 3.1 terms; verify before marker | Official Q8_0 GGUF; seek a trusted Q4_K_M if needed | Reuse the Llama 3.1 foundation; add security-use metadata and an exact domain prompt oracle. |
-| 23 | OLMo 2 1B Instruct | Fully open training/fine-tuning | Apache-2.0 | Official GGUF | Add OLMo2 block semantics, tokenizer/template support, and an exact small-model oracle. |
+| 13 | DeepSeek-R1-Distill-Qwen-7B | Reasoning | MIT | Pinned trusted community Q4_K_M | Supported by a mandatory exact-oracle large-model test on the Qwen2 and K-quant foundation. |
+| 14 | Qwen2.5-Math 1.5B Instruct | Math/education | Apache-2.0 | Pinned trusted community Q4_K_M | Supported by a mandatory checksum, metadata, tokenizer, and exact-oracle test. |
+| 15 | SQLCoder-7B-2 | Text-to-SQL/data | CC-BY-SA-4.0 | Pinned official upstream Q5_K_M | Marker and independent oracle are complete. The strict pure-Java test is intentionally red until the separately owned Q5_K vectors work lands on `main`; preserve a read-only-use warning. |
+| 16 | HuatuoGPT-o1-7B | Medical reasoning | Apache-2.0 | Pin trusted community Q4_K_M converted from the official weights | Near target: Qwen2.5-7B architecture and tokenizer reuse the current backend. Add the thinking/final-response format, exact oracle, and no-clinical-use metadata. |
+| 17 | Fin-R1 | Financial reasoning | Apache-2.0 on the GGUF release | Pin and audit the community Q4_K_M lineage | Near target: `qwen2` GGUF architecture reuses the current backend. Add bilingual finance prompt coverage, exact oracle, and no-financial-advice metadata. |
+| 18 | EuroLLM 1.7B Instruct | Multilingual/translation | Apache-2.0 | Trusted community GGUF required | Near target: dense Llama-family structure; validate tokenizer and 35-language metadata. |
+| 19 | Mistral 7B Instruct v0.3 | General/chat/tool calling | Apache-2.0 | Trusted community GGUF required | Add Mistral metadata, tokenizer v3, and sliding-window semantics. This is the Mistral-family foundation. |
+| 20 | SaulLM-7B Instruct v1 | Legal | MIT | Trusted community GGUF required | Reuse the Mistral foundation; preserve legal limitations and add a deterministic legal-format smoke test. |
+| 21 | Llama 3.1 8B Instruct | Widely adopted general model | Gated Llama 3.1 Community License | Gated source or verified conversion | Add gated-artifact resolution, Llama 3 BPE, piecewise RoPE scaling, attribution metadata, and chat templates. |
+| 22 | Foundation-Sec-8B Instruct | Cybersecurity | Llama 3.1 Community License for the base plus Apache-2.0 for Cisco changes | Official Q8_0 GGUF; seek a trusted Q4_K_M if needed | Reuse the Llama 3.1 foundation; add dual-use security metadata, safeguards, and an exact domain prompt oracle. |
+| 23 | MedGemma 4B IT | Medical text and imaging foundation | Gated Health AI Developer Foundations terms | Trusted Q4_K_M GGUF exists; marker must retain gating and upstream terms | Add Gemma 3 tokenizer and alternating local/global attention. Prove text-only inference first; add the multimodal projector as a separate capability. |
 | 24 | Granite 4.1 8B | Enterprise/tools/coding | Apache-2.0 | Official GGUF | Add Granite metadata and attention, embedding, residual, and logits scaling semantics before the 8B proof. |
 | 25 | Phi-4 Mini Instruct | Compact reasoning/code/tools | MIT | Trusted community GGUF required | Add Phi-3/Phi-4 tensor layout, fused projections, long-context RoPE, tokenizer, and template support. |
 
@@ -57,33 +57,44 @@ distinct models. Qwen2.5-Coder 0.5B and 1.5B each have two quantizations.
 
 The roster spans 360M through 8B parameters and covers general chat, code,
 fill-in-the-middle, reasoning, mathematics, SQL, translation, tool calling,
-biomedicine, law, finance, cybersecurity, and transparent fine-tuning. It also
+healthcare, law, finance, cybersecurity, and enterprise workflows. It also
 avoids making 25 by publishing many quantizations of a few Qwen checkpoints.
 
 The implementation work is intentionally grouped by reusable foundations:
 
-1. Existing Qwen/Llama foundation: DeepSeek-R1-Distill-Qwen, Qwen2.5-Math,
-   SQLCoder, EuroLLM, and AdaptLLM Finance Chat.
-2. Mistral foundation: Mistral 7B Instruct, BioMistral, and SaulLM.
-3. Llama 3 foundation: Llama 3.1 Instruct and Foundation-Sec.
-4. New independent foundations: OLMo 2, Granite 4.1, and Phi-4 Mini.
+1. Existing Qwen2 foundation: DeepSeek-R1-Distill-Qwen, Qwen2.5-Math,
+   HuatuoGPT-o1, and Fin-R1.
+2. Existing Llama-family foundation: SQLCoder and EuroLLM.
+3. Mistral foundation: Mistral 7B Instruct and SaulLM.
+4. Llama 3 foundation: Llama 3.1 Instruct and Foundation-Sec.
+5. New independent foundations: Gemma 3/MedGemma, Granite 4.1, and Phi-4 Mini.
 
-This sequence reaches 25 with five focused runtime foundations after the
-current Qwen/Llama path rather than implementing 13 unrelated backends.
+This sequence reaches 25 while using the current Qwen2 path for the next two
+vertical models. The new architecture work then unlocks more than one catalog
+entry: Mistral unlocks legal and biomedical alternates, Llama 3 unlocks
+security, finance, healthcare, and insurance alternates, and Gemma 3 unlocks a
+large fine-tuning ecosystem beyond MedGemma.
 
 ## Vertical-model qualification
 
 Vertical models need stronger provenance and warning metadata than general
-chat models. Popularity is supporting evidence, not proof of quality.
+chat models. Popularity is supporting evidence, not proof of quality. Download
+and like counts below are a July 11, 2026 snapshot and will change.
 
 | Vertical | Candidate | Evidence observed in July 2026 | Decision |
 |---|---|---|---|
 | SQL/data | [SQLCoder-7B-2](https://huggingface.co/defog/sqlcoder-7b-2) | 436 likes and about 22K monthly downloads; upstream GGUF; published SQL-Eval results | Launch target. Preserve CC-BY-SA and warn that generated SQL must run through read-only credentials. |
-| Healthcare | [BioMistral-7B-GGUF](https://huggingface.co/BioMistral/BioMistral-7B-GGUF) | Official Apache-2.0 GGUF, paper, 190 likes, and about 1K monthly downloads | Launch target for research and evaluation, not clinical use. The upstream card explicitly advises against professional medical deployment. |
-| Legal | [SaulLM-7B-Instruct-v1](https://huggingface.co/Equall/Saul-7B-Instruct-v1) | MIT model, paper, 116 likes, and continued pretraining on a large legal corpus | Launch target after Mistral support. Do not represent output as legal advice. |
-| Finance | [AdaptLLM Finance Chat](https://huggingface.co/AdaptLLM/finance-chat) | ICLR domain-adaptation work, 100 likes, and a finance model reported to compete with much larger domain models | Launch target after a community GGUF lineage audit. Preserve Llama 2 terms. |
-| Finance | [Fino1-8B](https://huggingface.co/TheFinAI/Fino1-8B) | Newer Llama 3.1 financial-reasoning fine-tune with a paper, 35 likes, and community quantization | Watchlist alternate. Reconsider after Llama 3 support and GGUF lineage verification. |
-| Cybersecurity | [Foundation-Sec-8B-Instruct](https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct) | Cisco Foundation AI release, technical report, 71 likes, and an official GGUF variant | Provisional launch target. Resolve the upstream NOTICE/license mapping before publication. |
+| Healthcare | [HuatuoGPT-o1-7B](https://huggingface.co/FreedomIntelligence/HuatuoGPT-o1-7B) | Apache-2.0 Qwen2.5 medical-reasoning model with a paper, 60 likes, about 2.1K monthly downloads, and 13 quantizations; a trusted Q4_K_M GGUF is 4.68 GB | Launch target and next pure-Java vertical after SQLCoder because it reuses the Qwen2.5 runtime. Require research-only/no-clinical-use metadata. |
+| Healthcare | [MedGemma 4B IT](https://huggingface.co/google/medgemma-4b-it) | 1.01K likes, 284K monthly downloads, 623 fine-tunes, 44 quantizations, and extensive Google benchmarks; trusted Q4_K_M GGUF is 2.49 GB | Launch target with gated terms. Implement text-only Gemma 3 inference before vision. Preserve Google's requirement for adaptation, validation, and independent verification. |
+| Healthcare | [OpenBioLLM Llama3 8B](https://huggingface.co/aaditya/Llama3-OpenBioLLM-8B) | 247 likes, about 7K monthly downloads, 16 quantizations, but no completed accompanying paper and Llama 3 terms | Strong post-launch alternate after Llama 3 support; MedGemma has better provenance and adoption for the core 25. |
+| Healthcare | [BioMistral-7B-GGUF](https://huggingface.co/BioMistral/BioMistral-7B-GGUF) | Official Apache-2.0 GGUF, paper, 190 likes, and about 1K monthly downloads | Post-launch alternate after Mistral support. Retain research-only health warnings. |
+| Legal | [SaulLM-7B-Instruct-v1](https://huggingface.co/Equall/Saul-7B-Instruct-v1) | MIT model, paper, 116 likes, about 1.8K monthly downloads, and 16 quantizations | Launch target after Mistral support. Do not represent output as legal advice. |
+| Finance | [Fin-R1 GGUF](https://huggingface.co/Mungert/Fin-R1-GGUF) | Apache-2.0 Qwen2 financial-reasoning release with a paper, 14 likes, 733 monthly GGUF downloads, and a 4.68 GB Q4_K_M | Launch target and next pure-Java finance model. Audit and pin the community conversion lineage before publishing its marker. |
+| Finance | [AdaptLLM Finance Chat](https://huggingface.co/AdaptLLM/finance-chat) | ICLR domain-adaptation work and 100 likes, but only 283 monthly downloads and Llama 2 terms | Research-backed alternate; Fin-R1 is closer to the current runtime and has a simpler catalog license posture. |
+| Finance | [Fino1-8B](https://huggingface.co/TheFinAI/Fino1-8B) | Llama 3.1 financial-reasoning fine-tune with a paper, 35 likes, 197 monthly downloads, and community quantizations | Watchlist alternate after Llama 3 support and GGUF lineage verification. |
+| Cybersecurity | [Foundation-Sec-8B-Instruct](https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct) | Cisco release with a technical report, 71 likes, 13.6K monthly downloads, and 10 quantizations | Launch target after Llama 3.1. Its NOTICE maps the Meta base to the Llama 3.1 Community License and Cisco changes to Apache-2.0; preserve dual-use restrictions and human-oversight guidance. |
+| Code | [StarCoder2 3B](https://huggingface.co/bigcode/starcoder2-3b) | BigCode OpenRAIL-M, 221 likes, 178K monthly downloads, 294 adapters, 50 fine-tunes, and 29 quantizations | Highest-priority post-launch code foundation. It is not in the core 25 because six Qwen/DeepSeek code models are already implemented; add StarCoder2 decoder, sliding-window attention, tokenizer, and FIM support next. |
+| Insurance | [Open-Insurance-LLM-Llama3-8B](https://huggingface.co/Raj-Maharajwala/Open-Insurance-LLM-Llama3-8B) | Llama 3 fine-tune on InsuranceQA with 4 likes and 460 monthly upstream downloads; trusted Q4_K_M GGUF is available | Best current insurance watchlist candidate, but no independent evaluation or paper justifies a launch slot. Reassess after Llama 3 support. |
 | Insurance | [Mistral-7B-Insurance](https://huggingface.co/bitext/Mistral-7B-Insurance) | Apache-2.0 and technically reusable after Mistral support, but only about 155 monthly downloads and 3 likes | Watchlist; insufficient adoption evidence for a launch slot. |
 | Insurance | [InsureLLM-4B](https://huggingface.co/piyushptiwari/InsureLLM-4B) | Apache-2.0 Qwen3 fine-tune, but 0 likes, 9 monthly downloads, and self-reported domain score 0.25 | Reject for the launch roster pending independent evaluation and adoption. |
 
@@ -151,6 +162,10 @@ justifies the operational complexity.
 
 | Model | Reason for deferral |
 |---|---|
+| StarCoder2 3B | Excellent adoption and ecosystem signal, but the launch roster already contains six implemented Qwen/DeepSeek code models. Make it the first post-launch code architecture. |
+| BioMistral 7B | Solid permissive biomedical alternate that becomes inexpensive after Mistral support, but HuatuoGPT-o1 is closer to the current runtime and MedGemma has much stronger adoption. |
+| AdaptLLM Finance Chat 7B | Strong research lineage, but Fin-R1 has Qwen2 runtime proximity and Apache-2.0 GGUF metadata. |
+| OLMo 2 1B Instruct | Fully open and valuable for fine-tuning, but MedGemma provides more launch diversity and much stronger demonstrated adoption. Keep OLMo 2 near the top of the post-launch transparent-model list. |
 | Qwen3.5 9B | Gated DeltaNet/linear recurrent state, gated attention, multimodal encoder, and MTP make it a major new hybrid runtime. |
 | Gemma 4 E4B | Per-layer embeddings, hybrid local/global attention, proportional RoPE, and multimodal inputs make it substantially larger than a normal dense 4.5B integration. |
 | Aya Expanse 8B | Useful multilingual model, but gated CC-BY-NC terms are a poor fit for the unrestricted launch roster. |
@@ -161,10 +176,20 @@ justifies the operational complexity.
 - [Qwen3 8B official GGUF](https://huggingface.co/Qwen/Qwen3-8B-GGUF)
 - [DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)
 - [Qwen2.5-Math 1.5B Instruct](https://huggingface.co/Qwen/Qwen2.5-Math-1.5B-Instruct)
+- [HuatuoGPT-o1-7B](https://huggingface.co/FreedomIntelligence/HuatuoGPT-o1-7B)
+- [HuatuoGPT-o1-7B trusted GGUF](https://huggingface.co/bartowski/HuatuoGPT-o1-7B-GGUF)
+- [Fin-R1 GGUF](https://huggingface.co/Mungert/Fin-R1-GGUF)
 - [EuroLLM 1.7B Instruct](https://huggingface.co/utter-project/EuroLLM-1.7B-Instruct)
 - [Mistral 7B Instruct v0.3](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3)
 - [AdaptLLM Finance Chat](https://huggingface.co/AdaptLLM/finance-chat)
 - [OLMo 2 1B Instruct](https://huggingface.co/allenai/OLMo-2-0425-1B-Instruct)
+- [MedGemma 4B IT](https://huggingface.co/google/medgemma-4b-it)
+- [MedGemma 4B IT trusted GGUF](https://huggingface.co/bartowski/google_medgemma-4b-it-GGUF)
+- [StarCoder2 3B](https://huggingface.co/bigcode/starcoder2-3b)
+- [SaulLM 7B Instruct v1](https://huggingface.co/Equall/Saul-7B-Instruct-v1)
+- [Foundation-Sec 8B Instruct](https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct)
+- [Foundation-Sec NOTICE](https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct/blob/main/NOTICE.md)
+- [Open-Insurance-LLM Llama3 8B](https://huggingface.co/Raj-Maharajwala/Open-Insurance-LLM-Llama3-8B)
 - [Granite 4.1 8B](https://huggingface.co/ibm-granite/granite-4.1-8b)
 - [Granite 4.1 8B official GGUF](https://huggingface.co/ibm-granite/granite-4.1-8b-GGUF)
 - [Phi-4 Mini Instruct](https://huggingface.co/microsoft/Phi-4-mini-instruct)

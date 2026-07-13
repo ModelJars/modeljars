@@ -33,5 +33,6 @@ class ModelJarDescriptorTest {
             Map.of("llama.cpp", true));
 
     assertTrue(descriptor.features().isEmpty());
+    assertTrue(descriptor.classpathResource().isEmpty());
   }
 }

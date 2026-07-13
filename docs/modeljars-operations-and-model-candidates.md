@@ -193,14 +193,16 @@ Current implemented surface:
   Llama SentencePiece score merges, and a simple plain-BPE fallback.
 - Strict end-to-end fixtures cover Qwen3 0.6B/1.7B, Qwen2.5-Coder
   0.5B/1.5B/3B, SmolLM2 360M, TinyLlama 1.1B, DeepSeek-Coder 1.3B Q4_K_M,
-  and MiniCPM5 1B Q4_K_M.
-  Qwen2.5-Coder 7B and DeepSeek-Coder 6.7B Q4_K_M are in isolated strict
-  large-model CI jobs.
+  MiniCPM5 1B Q4_K_M, Qwen2.5-Math 1.5B, and DeepSeek-R1-Distill-Qwen-7B.
+  Qwen3 8B, Qwen2.5-Coder 7B, DeepSeek-Coder 6.7B, and the DeepSeek-R1
+  distill are covered by isolated strict large-model jobs where appropriate.
 
 Important gaps:
 
 - There is no Jinja/chat-template engine yet.
-- Q5_K and newer K-quant variants are not executed yet.
+- Q5_K and newer K-quant variants are not executed on the released vectors
+  dependency yet. SQLCoder's strict test remains intentionally red until the
+  separately owned Q5_K vectors change is reviewed and merged.
 - Gemma, Mistral v3/Tekken, BigCode/StarCoder, Phi, and other tokenizer families
   are not first-class.
 - Split GGUF files are not resolved as a file set.
@@ -269,7 +271,7 @@ runtime support.
 | DeepSeek-Coder 6.7B Instruct | Pinned 4.08 GB Q4_K_M GGUF with Q4_K/Q6_K tensors and legacy linear RoPE | Marker implemented | Supported by a mandatory download, checksum, tensor-inventory, tokenizer, and exact llama.cpp token-reference slow test | Add chat/FIM templates and performance/memory baselines. |
 | DeepSeek-Coder-V2-Lite Instruct | Local quantized runners exist; MoE model | Catalog-ready | Requires runtime work | Implement DeepSeek-V2 architecture, MoE expert routing, MLA if present, tokenizer/template support. |
 | Codestral 22B v0.1 | Local GGUF conversions exist; Mistral-family code model | Catalog-ready with license warning | Requires runtime work | Add Mistral/Codestral tokenizer support, architecture metadata prefix, sliding-window or attention variants if used, license gating metadata. |
-| StarCoder2 3B/7B/15B | Local quantized artifacts exist; BigCode family | Catalog-ready | Requires runtime work | Implement StarCoder2/GPT-style decoder differences, BigCode tokenizer/FIM, tensor naming, and reference tests. |
+| StarCoder2 3B/7B/15B | Local quantized artifacts exist; BigCode family. The 3B upstream had 178K monthly downloads, 294 adapters, 50 fine-tunes, and 29 quantizations in the July 2026 snapshot. | Catalog-ready with BigCode OpenRAIL-M metadata | Requires runtime work | Implement StarCoder2/GPT-style decoder differences, sliding-window attention, BigCode tokenizer/FIM, tensor naming, and reference tests. |
 | IBM Granite Code 3B/8B/20B/34B | Local HF weights; some GGUF conversions exist | Catalog-ready | Requires runtime work | Confirm GGUF tensor layout, add Granite architecture/tokenizer support, add Apache-2-friendly markers. |
 | CodeLlama 7B/13B/34B Instruct | Many GGUF variants; older but stable baseline | Catalog-ready with Meta license metadata | Near pure-Java now that Llama SentencePiece is validated | Pin a license-compliant Q4_0/Q8_0 artifact, add strict reference tests, then add chat/FIM templates. |
 | Qwen3-Coder 30B-A3B Instruct GGUF | GGUF MoE coding model | Catalog-ready | Requires runtime work | Implement MoE/expert routing and any Qwen3-Coder-specific metadata; add K-quant support. |
@@ -280,7 +282,13 @@ runtime support.
 | Nemotron Cascade 2 30B A3B GGUF | KDnuggets lists GGUF MoE-style local model | Catalog-ready after upstream verification | Requires runtime work | Add architecture metadata, MoE routing, tokenizer, and license/use restriction metadata. |
 | EXAONE 4.5 33B GGUF | KDnuggets lists GGUF and non-commercial research license | Catalog-ready with license warning | Requires runtime work | Add EXAONE architecture/tokenizer; mark non-commercial or restricted use clearly. |
 | Phi-4 Mini / Phi-4 family local weights | Small local models; not code-only but useful for Java smoke work | Catalog-ready | Requires runtime work | Add Phi architecture/tokenizer support; lower priority than Qwen2.5-Coder for coding. |
-| OpenCoder / OpenCoder2 style 1.5B/8B | Coding models with local weights/conversions depending on release | Catalog-ready after source verification | Depends on architecture | Investigate tensor layout and tokenizer; useful if Apache/MIT licensed and GGUF Q4_0/Q8_0 exists. |
+| OpenCoder 1.5B/8B | Coding models with local weights and community conversions | License audit required; the upstream 8B card uses a custom `inf` license | Depends on architecture | Do not publish until the custom license and conversion lineage are acceptable; then investigate tensor layout and tokenizer. |
+| HuatuoGPT-o1-7B | Apache-2.0 Qwen2.5-7B medical fine-tune; trusted 4.68 GB Q4_K_M GGUF | Launch candidate | Near pure-Java | Pin conversion lineage and digest, add medical limitations metadata, then add tokenizer and exact-token oracles on the existing Qwen2 path. |
+| Fin-R1 | Apache-2.0 `qwen2` financial-reasoning GGUF; 4.68 GB Q4_K_M available | Launch candidate after lineage audit | Near pure-Java | Pin the community conversion, preserve finance limitations, and add bilingual tokenizer and exact-token oracles. |
+| SaulLM-7B Instruct v1 | MIT Mistral-based legal fine-tune with multiple GGUF conversions | Launch candidate | Requires Mistral foundation | Add Mistral decoder/tokenizer support first, then legal prompt and limitations metadata. |
+| Foundation-Sec-8B Instruct | Llama 3.1 security fine-tune with official Q8_0 GGUF and community quantizations | Launch candidate with dual-license metadata | Requires Llama 3.1 foundation | Preserve the Llama 3.1 base license plus Apache-2.0 Cisco changes, dual-use restrictions, and human-oversight guidance. |
+| MedGemma 4B IT | Gated Google healthcare model; trusted 2.49 GB Q4_K_M GGUF; text and vision | Launch candidate with gated Health AI terms | Requires Gemma 3 runtime work | Implement text-only Gemma 3 tokenizer and alternating local/global attention first; treat the vision projector as a separate capability. |
+| Open-Insurance-LLM-Llama3-8B | Llama 3 InsuranceQA fine-tune with trusted Q4_K_M GGUF | Watchlist | Requires Llama 3 foundation | Reassess after Llama 3 support; current evidence lacks a paper and independent evaluation. |
 
 ## 5. Small Fine-Tuning Candidates
 
@@ -304,19 +312,25 @@ and preferred inference formats.
 | Llama 3.2 1B / 3B | 1B-3B | Llama 3.2 license, gated | Very popular fine-tuning baseline and broad tooling support. | Requires Llama 3 tokenizer/chat-template support plus gated-license metadata. |
 | Phi-4 Mini Instruct | 3.8B | MIT | Popular small Microsoft model with code/general utility and permissive license. | Requires Phi architecture and tokenizer support; useful after Qwen/Llama tokenizers mature. |
 | OLMo 2 1B Instruct | 1B | Apache-2.0 | Fully open ecosystem from Ai2; strong candidate for transparent fine-tuning workflows. | Requires OLMo2 architecture/tokenizer support. |
+| HuatuoGPT-o1-7B | 8B reported | Apache-2.0 | Medical-reasoning fine-tune with released training datasets, a paper, and a Qwen2.5 backbone. | Near target on the existing Qwen2 path; add strict health-domain acceptance and limitations metadata. |
+| Fin-R1 | 8B reported | Apache-2.0 on the GGUF release | Finance-reasoning model with a paper and practical Q4_K_M artifact. | Near target on the existing Qwen2 path after conversion-lineage audit. |
+| MedGemma 4B IT | 4B | Gated Health AI Developer Foundations terms | Very active healthcare adaptation base: 623 fine-tunes and 110 adapters in the July 2026 snapshot. | Requires Gemma 3 text runtime; multimodal support can follow independently. |
+| SaulLM-7B Instruct v1 | 7B | MIT | Research-backed legal model created by continued pretraining of Mistral 7B. | Requires the shared Mistral foundation. |
+| Foundation-Sec-8B Instruct | 8B | Llama 3.1 terms plus Apache-2.0 Cisco changes | Research-backed security assistant with strong domain adoption and explicit safety guidance. | Requires the shared Llama 3.1 foundation. |
 
 Recommended fine-tuning catalog priority:
 
-1. Qwen2.5-Coder 0.5B and 1.5B, because they are also pure-Java runtime
-   targets.
-2. MiniCPM5, SmolLM2, and TinyLlama, because they provide small Apache-2.0
-   Llama-family compatibility pressure and accessible fine-tuning checkpoints.
-3. Granite 3.3 2B and OLMo 2 1B, because they are commercially friendly and
-   useful to OSS users.
+1. HuatuoGPT-o1-7B and Fin-R1, because they add healthcare and finance while
+   reusing the current Qwen2 runtime.
+2. Qwen2.5-Coder 0.5B and 1.5B, MiniCPM5, SmolLM2, and TinyLlama, because they
+   are already practical pure-Java fine-tuning and smoke-test bases.
+3. MedGemma 4B IT, because its adoption and adaptation ecosystem justify a
+   Gemma 3 foundation despite the gated terms.
 4. StarCoder2 3B and DeepSeek-Coder 1.3B, because they expand the code-model
-   surface.
-5. Gemma, Llama 3.2, and Phi-4 Mini, once license gating and tokenizer/runtime
-   support are modeled cleanly.
+   surface; StarCoder2 is the first post-launch code architecture.
+5. SaulLM and Foundation-Sec after the Mistral and Llama 3 foundations.
+6. Granite 3.3 2B and OLMo 2 1B as commercially friendly, transparent
+   post-launch fine-tuning bases.
 
 ## 6. Recommended Execution Plan
 
@@ -341,6 +355,10 @@ First catalog batch:
 7. CodeLlama 7B Instruct GGUF.
 8. StarCoder2 3B or 7B.
 9. Granite Code 3B or 8B.
+10. HuatuoGPT-o1-7B Q4_K_M after a strict conversion-lineage audit.
+11. Fin-R1 Q4_K_M after a strict conversion-lineage audit.
+12. MedGemma 4B IT Q4_K_M with gated-license metadata and
+    `backends.pure-java=false` until Gemma 3 tests pass.
 
 Each marker should start with:
 
@@ -380,7 +398,9 @@ pure Java, implement these in `projects/vectors` and use them from `models`:
 
 The kernels are consumed by `models-backend-purejava` and validated with pinned
 DeepSeek-Coder 1.3B and 6.7B Q4_K_M artifacts. Both produce exact greedy-token
-references matching llama.cpp b9960. Q5_K and newer K-quant families remain.
+references matching llama.cpp b9960. Q5_K is under separate vectors review and
+must not be treated as available until it is merged and released; newer K-quant
+families remain future work.
 
 ### Track D: Add tokenizer families before adding architecture families
 
@@ -453,6 +473,24 @@ Java even when the pure-Java backend is not ready.
   <https://huggingface.co/bigcode/starcoder2-15b>
 - StarCoder2 3B:
   <https://huggingface.co/bigcode/starcoder2-3b>
+- HuatuoGPT-o1-7B:
+  <https://huggingface.co/FreedomIntelligence/HuatuoGPT-o1-7B>
+- HuatuoGPT-o1-7B GGUF:
+  <https://huggingface.co/bartowski/HuatuoGPT-o1-7B-GGUF>
+- Fin-R1 GGUF:
+  <https://huggingface.co/Mungert/Fin-R1-GGUF>
+- SaulLM-7B Instruct v1:
+  <https://huggingface.co/Equall/Saul-7B-Instruct-v1>
+- Foundation-Sec-8B Instruct:
+  <https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct>
+- Foundation-Sec NOTICE:
+  <https://huggingface.co/fdtn-ai/Foundation-Sec-8B-Instruct/blob/main/NOTICE.md>
+- MedGemma 4B IT:
+  <https://huggingface.co/google/medgemma-4b-it>
+- MedGemma 4B IT GGUF:
+  <https://huggingface.co/bartowski/google_medgemma-4b-it-GGUF>
+- Open-Insurance-LLM-Llama3-8B:
+  <https://huggingface.co/Raj-Maharajwala/Open-Insurance-LLM-Llama3-8B>
 - IBM Granite Code:
   <https://huggingface.co/ibm-granite/granite-8b-code-instruct>
 - Granite 3.3 2B:

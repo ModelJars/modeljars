@@ -16,6 +16,7 @@ on:
       - main
     paths:
       - catalog/**
+      - modeljars/**
       - modeljars-catalog/**
       - modeljars-core/**
       - build.gradle.kts

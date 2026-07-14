@@ -36,6 +36,7 @@
         </div>
         <div class="hero-panel" aria-label="Gradle dependency example">
           <pre><code>dependencies {
+    implementation("org.modeljars:modeljars:0.1.0")
     runtimeOnly(
         "org.modeljars.huggingface:" +
         "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -113,8 +114,11 @@
 
         <article class="docs-card">
           <p class="eyebrow">Gradle</p>
-          <h3>Pin a model marker</h3>
-          <pre><code>runtimeOnly(
+          <h3>Add the API and pin a marker</h3>
+          <pre><code>implementation(
+    "org.modeljars:modeljars:0.1.0"
+)
+runtimeOnly(
     "org.modeljars.huggingface:" +
     "ggml-org.qwen3-0.6b-gguf.q4_0:" +
     "3.0.0-q4_0.1"
@@ -123,11 +127,11 @@
 
         <article class="docs-card">
           <p class="eyebrow">Maven</p>
-          <h3>Use the same coordinates</h3>
+          <h3>Add the ModelJars facade</h3>
           <pre><code>&lt;dependency&gt;
-  &lt;groupId&gt;org.modeljars.huggingface&lt;/groupId&gt;
-  &lt;artifactId&gt;ggml-org.qwen3-0.6b-gguf.q4_0&lt;/artifactId&gt;
-  &lt;version&gt;3.0.0-q4_0.1&lt;/version&gt;
+  &lt;groupId&gt;org.modeljars&lt;/groupId&gt;
+  &lt;artifactId&gt;modeljars&lt;/artifactId&gt;
+  &lt;version&gt;0.1.0&lt;/version&gt;
 &lt;/dependency&gt;</code></pre>
         </article>
 

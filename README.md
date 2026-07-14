@@ -20,6 +20,39 @@ The catalog has one source of truth: `catalog/models.json`. Gradle generates the
 classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
 catalog. Adding a model does not require a new Gradle module or source folder.
 
+## Dependency
+
+Applications use the stable facade artifact and add only the model markers they intend to ship:
+
+```kotlin
+dependencies {
+    implementation("org.modeljars:modeljars:0.1.0")
+    runtimeOnly(
+        "org.modeljars.huggingface:" +
+            "ggml-org.qwen3-0.6b-gguf.q4_0:" +
+            "3.0.0-q4_0.1",
+    )
+}
+```
+
+```xml
+<dependency>
+  <groupId>org.modeljars</groupId>
+  <artifactId>modeljars</artifactId>
+  <version>0.1.0</version>
+</dependency>
+<dependency>
+  <groupId>org.modeljars.huggingface</groupId>
+  <artifactId>ggml-org.qwen3-0.6b-gguf.q4_0</artifactId>
+  <version>3.0.0-q4_0.1</version>
+  <scope>runtime</scope>
+</dependency>
+```
+
+`modeljars` exposes the runtime API from `modeljars-core` transitively. It intentionally does not
+pull in `modeljars-catalog`: keeping marker dependencies explicit preserves application-level model
+version pinning and avoids bundling unrelated compact payloads.
+
 ## Supported markers
 
 The first catalog marker is the model already used by `projects/models` integration tests:

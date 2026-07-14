@@ -6,4 +6,4 @@ out/
 
 *.class
 *.log
-
+node_modules/

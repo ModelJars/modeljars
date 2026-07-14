@@ -33,6 +33,18 @@ class PropertiesModelJarRegistryTest {
         model.qwen.sha256=da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4
         model.qwen.sizeBytes=428970080
         model.qwen.license=Apache-2.0
+        model.qwen.licenseUri=https://www.apache.org/licenses/LICENSE-2.0.txt
+        model.qwen.name=Qwen3 0.6B GGUF Q4_0
+        model.qwen.description=Compact Qwen3 model for local inference.
+        model.qwen.domains=general,coding
+        model.qwen.dimension.parameterCount=596049920
+        model.qwen.dimension.contextLength=40960
+        model.qwen.dimension.embeddingLength=1024
+        model.qwen.dimension.blockCount=28
+        model.qwen.dimension.attentionBlockCount=28
+        model.qwen.dimension.attentionHeadCount=16
+        model.qwen.dimension.keyValueHeadCount=8
+        model.qwen.dimension.feedForwardLength=3072
         model.qwen.capabilities=text-generation,chat
         model.qwen.backend.pure-java=true
         """);
@@ -65,6 +77,17 @@ class PropertiesModelJarRegistryTest {
         descriptor.sha256().orElseThrow());
     assertEquals(428970080L, descriptor.sizeBytes().orElseThrow());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals("Qwen3 0.6B GGUF Q4_0", descriptor.name().orElseThrow());
+    assertEquals(
+        URI.create("https://www.apache.org/licenses/LICENSE-2.0.txt"),
+        descriptor.licenseUri().orElseThrow());
+    assertEquals(596049920L, descriptor.dimensions().parameterCount().orElseThrow());
+    assertEquals(40960, descriptor.dimensions().contextLength().orElseThrow());
+    assertEquals(1024, descriptor.dimensions().embeddingLength().orElseThrow());
+    assertTrue(descriptor.domains().contains("coding"));
+    assertTrue(
+        descriptor.estimateMemory(4096, KvCachePrecision.FLOAT16).orElseThrow().minimumBytes()
+            > descriptor.sizeBytes().orElseThrow());
     assertTrue(descriptor.features().isEmpty());
   }
 }

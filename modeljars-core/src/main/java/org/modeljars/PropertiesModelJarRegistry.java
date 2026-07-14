@@ -76,7 +76,41 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         optional(prefix, "license", properties),
         csv(optional(prefix, "capabilities", properties).orElse("")),
         csv(optional(prefix, "features", properties).orElse("")),
-        backends);
+        backends,
+        optional(prefix, "name", properties),
+        optional(prefix, "description", properties),
+        optional(prefix, "licenseUri", properties).map(URI::create),
+        csv(optional(prefix, "domains", properties).orElse("")),
+        dimensions(prefix, properties));
+  }
+
+  private static ModelDimensions dimensions(String prefix, Properties properties) {
+    String dimensionPrefix = prefix + "dimension.";
+    return new ModelDimensions(
+        optional(dimensionPrefix, "parameterCount", properties)
+            .map(value -> parseLong("parameterCount", value)),
+        optional(dimensionPrefix, "contextLength", properties)
+            .map(value -> parseInteger("contextLength", value)),
+        optional(dimensionPrefix, "embeddingLength", properties)
+            .map(value -> parseInteger("embeddingLength", value)),
+        optional(dimensionPrefix, "blockCount", properties)
+            .map(value -> parseInteger("blockCount", value)),
+        optional(dimensionPrefix, "attentionHeadCount", properties)
+            .map(value -> parseInteger("attentionHeadCount", value)),
+        optional(dimensionPrefix, "keyValueHeadCount", properties)
+            .map(value -> parseInteger("keyValueHeadCount", value)),
+        optional(dimensionPrefix, "feedForwardLength", properties)
+            .map(value -> parseInteger("feedForwardLength", value)),
+        optional(dimensionPrefix, "expertCount", properties)
+            .map(value -> parseInteger("expertCount", value)),
+        optional(dimensionPrefix, "expertUsedCount", properties)
+            .map(value -> parseInteger("expertUsedCount", value)),
+        optional(dimensionPrefix, "keyLength", properties)
+            .map(value -> parseInteger("keyLength", value)),
+        optional(dimensionPrefix, "valueLength", properties)
+            .map(value -> parseInteger("valueLength", value)),
+        optional(dimensionPrefix, "attentionBlockCount", properties)
+            .map(value -> parseInteger("attentionBlockCount", value)));
   }
 
   private static Map<String, Boolean> backends(String prefix, Properties properties) {
@@ -113,10 +147,22 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
   }
 
   private static long parseSizeBytes(String value) {
+    return parseLong("sizeBytes", value);
+  }
+
+  private static long parseLong(String property, String value) {
     try {
       return Long.parseLong(value);
     } catch (NumberFormatException e) {
-      throw new ModelJarException("Invalid sizeBytes: " + value, e);
+      throw new ModelJarException("Invalid " + property + ": " + value, e);
+    }
+  }
+
+  private static int parseInteger(String property, String value) {
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException e) {
+      throw new ModelJarException("Invalid " + property + ": " + value, e);
     }
   }
 

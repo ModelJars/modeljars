@@ -28,7 +28,12 @@ public record ModelJarDescriptor(
     Optional<String> license,
     Set<String> capabilities,
     Set<String> features,
-    Map<String, Boolean> backendSupport) {
+    Map<String, Boolean> backendSupport,
+    Optional<String> name,
+    Optional<String> description,
+    Optional<URI> licenseUri,
+    Set<String> domains,
+    ModelDimensions dimensions) {
   public ModelJarDescriptor {
     alias = requireText(alias, "alias");
     sourceId = requireText(sourceId, "sourceId");
@@ -62,6 +67,59 @@ public record ModelJarDescriptor(
     capabilities = normalizedSet(capabilities, "capabilities");
     features = normalizedSet(features, "features");
     backendSupport = Map.copyOf(Objects.requireNonNull(backendSupport, "backendSupport"));
+    name = normalizedOptional(name, "name");
+    description = normalizedOptional(description, "description");
+    licenseUri = Objects.requireNonNull(licenseUri, "licenseUri");
+    domains = normalizedSet(domains, "domains");
+    dimensions = Objects.requireNonNull(dimensions, "dimensions");
+  }
+
+  // Retains the constructor descriptor used before rich catalog metadata was available.
+  public ModelJarDescriptor(
+      String alias,
+      String sourceId,
+      ModelJarCoordinate markerCoordinate,
+      ModelVersion modelVersion,
+      String variant,
+      String format,
+      String architecture,
+      String quantization,
+      Optional<Path> localPath,
+      Optional<String> classpathResource,
+      Optional<URI> sourceUri,
+      Optional<URI> downloadUri,
+      Optional<String> revision,
+      Optional<String> sha256,
+      Optional<Long> sizeBytes,
+      Optional<String> license,
+      Set<String> capabilities,
+      Set<String> features,
+      Map<String, Boolean> backendSupport) {
+    this(
+        alias,
+        sourceId,
+        markerCoordinate,
+        modelVersion,
+        variant,
+        format,
+        architecture,
+        quantization,
+        localPath,
+        classpathResource,
+        sourceUri,
+        downloadUri,
+        revision,
+        sha256,
+        sizeBytes,
+        license,
+        capabilities,
+        features,
+        backendSupport,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Set.of(),
+        ModelDimensions.unknown());
   }
 
   // Retains the constructor descriptor used before bundled classpath resources were available.
@@ -152,6 +210,11 @@ public record ModelJarDescriptor(
 
   public boolean supportsBackend(String backend) {
     return backendSupport.getOrDefault(backend.toLowerCase(Locale.ROOT), false);
+  }
+
+  public Optional<ModelMemoryEstimate> estimateMemory(
+      int contextTokens, KvCachePrecision precision) {
+    return sizeBytes.flatMap(bytes -> dimensions.estimateMemory(contextTokens, precision, bytes));
   }
 
   private static String requireText(String value, String name) {

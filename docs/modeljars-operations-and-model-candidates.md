@@ -10,9 +10,10 @@ to make ModelJars useful as both:
 - a compatibility layer that tells Java applications which local runtimes can
   execute a model.
 
-The canonical 25-model launch roster, distinct-model counting rule, vertical
-qualification, and no-skip CI contract are maintained in
-[launch-catalog-25.md](launch-catalog-25.md).
+The current 100+ model catalog, distinct-model counting rule, metadata contract,
+and no-skip CI boundary are maintained in
+[launch-catalog-100.md](launch-catalog-100.md). The original 25-model report is
+retained as historical planning context.
 
 The public site is ModelJars.org. If ModelJars.com is later acquired, use the
 same DNS and GitHub Pages pattern below for that domain or redirect it to the
@@ -24,9 +25,11 @@ same DNS and GitHub Pages pattern below for that domain or redirect it to the
 
 - GitHub org: `ModelJars`
 - Repository: `ModelJars/modeljars`
-- GitHub Pages mode: GitHub Actions
+- Production target: Cloudflare Pages direct upload from GitHub Actions
+- Temporary fallback: GitHub Pages via GitHub Actions
 - Custom domain: `modeljars.org`
 - Site source directory: `site/`
+- Generated output directory: `build/site/`
 - Deployed files include:
   - `site/index.html`
   - `site/catalog.json`
@@ -34,8 +37,39 @@ same DNS and GitHub Pages pattern below for that domain or redirect it to the
   - `site/assets/styles.css`
   - `site/CNAME`
 
-The Pages workflow is `.github/workflows/pages.yml`. It deploys `site/` when
-site files or the Pages workflow change.
+The Cloudflare workflow is `.github/workflows/cloudflare-pages.yml`. GitHub Actions runs
+`./gradlew generateSite`, which extracts `catalog.json` from the aggregate ModelJars JAR, and then
+uploads `build/site` with Wrangler. No Worker, Pages Function, D1 database, or live Maven Central
+query is required. Static asset requests are free and unlimited on Cloudflare Pages; current Free
+plan limits include 500 builds per month, 20,000 files, and 25 MiB per asset, all comfortably above
+this site.
+
+Configure these repository or `cloudflare-pages` environment secrets:
+
+```text
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_API_TOKEN
+```
+
+Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT`; it defaults to `modeljars`.
+Create the Pages project as a Direct Upload project before the first deployment. The GitHub Pages
+workflow remains available until Cloudflare cutover is verified.
+
+For the apex `modeljars.org` hostname, Cloudflare requires the domain to be an active Cloudflare
+zone. DNSimple can remain the registrar, but its registrar nameserver delegation must point to the
+Cloudflare nameservers. Cloudflare then creates and renews the public certificate through Universal
+SSL at no charge. A subdomain such as `www.modeljars.org` can use a CNAME without moving the zone,
+but that does not satisfy the apex-domain requirement.
+
+Official references:
+
+- <https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/>
+- <https://developers.cloudflare.com/pages/platform/limits/>
+- <https://developers.cloudflare.com/pages/configuration/custom-domains/>
+- <https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/>
+
+The GitHub Pages and DNSimple instructions below are retained as the rollback path until the
+Cloudflare nameserver migration is complete.
 
 ### DNSimple Automation
 

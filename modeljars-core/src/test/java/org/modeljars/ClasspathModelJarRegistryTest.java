@@ -3,12 +3,43 @@ package org.modeljars;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ClasspathModelJarRegistryTest {
+  @TempDir Path tempDir;
+
+  @Test
+  void deduplicatesTheSameMarkerFromAggregateAndIndividualJars() throws IOException {
+    String marker =
+        """
+        model.example.sourceId=hf://example/model
+        model.example.markerCoordinate=org.modeljars.huggingface:example.model.q4_0:1.0.0-q4_0.1
+        model.example.modelVersion=1.0.0
+        model.example.variant=q4_0
+        model.example.format=gguf
+        model.example.architecture=llama
+        model.example.quantization=Q4_0
+        model.example.capabilities=text-generation
+        model.example.backend.llama.cpp=true
+        """;
+    Path aggregate = writeRegistry("aggregate", marker);
+    Path individual = writeRegistry("individual", marker);
+
+    try (URLClassLoader loader =
+        new URLClassLoader(
+            new java.net.URL[] {aggregate.toUri().toURL(), individual.toUri().toURL()}, null)) {
+      assertEquals(1, ClasspathModelJarRegistry.load(loader).descriptors().size());
+    }
+  }
+
   @Test
   void loadsRegistryPropertiesFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
@@ -25,6 +56,14 @@ class ClasspathModelJarRegistryTest {
 
     assertEquals("qwen3_0_6b_q4_0", descriptor.alias());
     assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-0.6B-Q4_0.gguf"));
+  }
+
+  private Path writeRegistry(String directory, String marker) throws IOException {
+    Path root = tempDir.resolve(directory);
+    Path resource = root.resolve(ClasspathModelJarRegistry.REGISTRY_RESOURCE);
+    Files.createDirectories(resource.getParent());
+    Files.writeString(resource, marker, StandardCharsets.ISO_8859_1);
+    return root;
   }
 
   @Test

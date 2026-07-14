@@ -1,17 +1,37 @@
-import { matches, normalize } from "./search.js";
 import { estimateMemory, formatBytes, formatParameters } from "./resource-profile.js";
+import { filterCatalog } from "./search.js";
+import { buildFacets, sizeTier, verificationProfile } from "./taxonomy.js";
+import { initializeTheme } from "./theme.js";
 
 const catalog = [];
+const state = {
+  query: "",
+  domain: "",
+  backend: "",
+  architecture: "",
+  size: "",
+  sort: "name",
+};
 
-const searchInput = document.querySelector("#catalog-search");
-const backendFilter = document.querySelector("#backend-filter");
-const resultCount = document.querySelector("#result-count");
-const results = document.querySelector("#catalog-results");
-const emptyState = document.querySelector("#empty-state");
+const elements = {
+  search: document.querySelector("#catalog-search"),
+  domains: document.querySelector("#domain-filters"),
+  backend: document.querySelector("#backend-filter"),
+  architecture: document.querySelector("#architecture-filter"),
+  size: document.querySelector("#size-filter"),
+  sort: document.querySelector("#sort-filter"),
+  results: document.querySelector("#catalog-results"),
+  resultCount: document.querySelector("#result-count"),
+  emptyState: document.querySelector("#empty-state"),
+  advanced: document.querySelector("#advanced-filters"),
+  filterToggle: document.querySelector("#filter-toggle"),
+  activeFilterCount: document.querySelector("#active-filter-count"),
+};
+
 const numberFormat = new Intl.NumberFormat("en-US");
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -19,88 +39,202 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function renderCard(model) {
+function publisher(model) {
+  return String(model.sourceId || "")
+    .replace(/^hf:\/\//, "")
+    .split("/")[0];
+}
+
+function detailPath(model) {
+  return `/models/${encodeURIComponent(model.id)}/`;
+}
+
+function metric(label, value) {
+  if (!value) return "";
+  return `<span><strong>${escapeHtml(value)}</strong> ${escapeHtml(label)}</span>`;
+}
+
+function renderEntry(model) {
   const dimensions = model.dimensions || {};
-  const planningContext = Math.min(4_096, dimensions.contextLength || 4_096);
-  const memory = estimateMemory(model, planningContext, 2);
-  const dimensionParts = [
-    dimensions.embeddingLength && `${numberFormat.format(dimensions.embeddingLength)} width`,
-    dimensions.blockCount && `${numberFormat.format(dimensions.blockCount)} blocks`,
-    dimensions.attentionBlockCount &&
-      dimensions.attentionBlockCount !== dimensions.blockCount &&
-      `${numberFormat.format(dimensions.attentionBlockCount)} attention blocks`,
-    dimensions.attentionHeadCount &&
-      `${numberFormat.format(dimensions.attentionHeadCount)} heads`,
-    dimensions.keyValueHeadCount &&
-      `${numberFormat.format(dimensions.keyValueHeadCount)} KV heads`,
-  ].filter(Boolean);
-  const capabilities = model.capabilities
-    .map((capability) => `<span class="pill">${escapeHtml(capability)}</span>`)
-    .join("");
-  const backends = Object.entries(model.backends)
+  const context = dimensions.contextLength
+    ? `${numberFormat.format(dimensions.contextLength)} ctx`
+    : null;
+  const profile = verificationProfile(model);
+  const tags = [
+    ...(model.domains || []),
+    ...(model.capabilities || []).slice(0, 2),
+  ].slice(0, 4);
+  const backends = Object.entries(model.backends || {})
     .filter(([, supported]) => supported)
-    .map(([backend]) => `<span class="pill accent">${escapeHtml(backend)}</span>`)
-    .join("");
-  const locationLabel = model.classpathResource ? "Classpath Resource" : "Local Path";
-  const location = model.classpathResource || model.localPath;
-  const parameterCount = dimensions.parameterCount;
+    .map(([backend]) => backend);
 
   return `
-    <article class="model-card">
-      <div>
-        <p class="eyebrow">${escapeHtml(model.format.toUpperCase())} · ${escapeHtml(model.quantization)}</p>
-        <h3>${escapeHtml(model.name)}</h3>
-        <p>${escapeHtml(model.description)}</p>
+    <article class="catalog-entry">
+      <div class="entry-main">
+        <div class="entry-title-row">
+          <div>
+            <a class="entry-title" href="${detailPath(model)}">${escapeHtml(model.name)}</a>
+            <span class="publisher">by ${escapeHtml(publisher(model))}</span>
+          </div>
+          <span class="verification-badge ${escapeHtml(profile.level)}">${escapeHtml(profile.label)}</span>
+        </div>
+        <p class="entry-description">${escapeHtml(model.description)}</p>
+        <div class="entry-tags">
+          ${tags.map((tag) => `<button type="button" data-search="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}
+        </div>
       </div>
-      <dl class="metadata">
-        <div><dt>Source</dt><dd><a href="${escapeHtml(model.sourceUri)}">${escapeHtml(model.sourceId)}</a></dd></div>
-        <div><dt>Coordinate</dt><dd><code>${escapeHtml(model.markerCoordinate)}</code></dd></div>
-        <div><dt>Architecture</dt><dd>${escapeHtml(model.architecture)}</dd></div>
-        ${parameterCount ? `<div><dt>Parameters</dt><dd title="${numberFormat.format(parameterCount)} parameters">${formatParameters(parameterCount)}</dd></div>` : ""}
-        ${dimensions.contextLength ? `<div><dt>Context</dt><dd>${numberFormat.format(dimensions.contextLength)} tokens</dd></div>` : ""}
-        ${dimensionParts.length ? `<div><dt>Dimensions</dt><dd>${escapeHtml(dimensionParts.join(" / "))}</dd></div>` : ""}
-        <div><dt>Disk</dt><dd>${formatBytes(model.sizeBytes)}</dd></div>
-        ${memory ? `<div><dt>Memory baseline</dt><dd title="Weights plus FP16 KV cache. Backend workspace, repacking, allocator, JVM, and OS overhead are excluded.">&ge; ${formatBytes(memory.minimumBytes)} at ${numberFormat.format(planningContext)} tokens</dd></div>` : ""}
-        <div><dt>${locationLabel}</dt><dd><code>${escapeHtml(location)}</code></dd></div>
-      </dl>
-      <div class="pills">${capabilities}${backends}</div>
-      <button class="copy-button" type="button" data-copy="${escapeHtml(model.markerCoordinate)}">
-        Copy coordinate
-      </button>
-    </article>
-  `;
+      <div class="entry-facts" aria-label="Model properties">
+        ${metric("parameters", formatParameters(dimensions.parameterCount))}
+        ${metric("download", formatBytes(model.sizeBytes))}
+        ${metric("", context)}
+        ${metric("", model.quantization)}
+      </div>
+      <div class="entry-runtime">
+        <span>${escapeHtml(model.architecture)}</span>
+        ${backends.map((backend) => `<span class="runtime-label">${escapeHtml(backend)}</span>`).join("")}
+        <a class="entry-arrow" href="${detailPath(model)}" aria-label="View ${escapeHtml(model.name)}">&#8594;</a>
+      </div>
+    </article>`;
+}
+
+function activeFilterCount() {
+  return [state.domain, state.backend, state.architecture, state.size].filter(Boolean).length;
+}
+
+function renderDomainFilters(facets) {
+  const visibleDomains = facets.domains.slice(0, 9);
+  elements.domains.innerHTML = [
+    { value: "", count: catalog.length, label: "All" },
+    ...visibleDomains.map((facet) => ({ ...facet, label: facet.value })),
+  ]
+    .map(
+      ({ value, count, label }) => `
+        <button type="button" data-domain="${escapeHtml(value)}" aria-pressed="${state.domain === value}">
+          ${escapeHtml(label)} <span>${numberFormat.format(count)}</span>
+        </button>`,
+    )
+    .join("");
+}
+
+function populateSelect(select, facets, format = (value) => value) {
+  const first = select.options[0];
+  select.replaceChildren(first);
+  for (const { value, count } of facets) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = `${format(value)} (${count})`;
+    select.append(option);
+  }
 }
 
 function render() {
-  const query = normalize(searchInput.value.trim());
-  const backend = backendFilter.value;
-  const filtered = catalog.filter((model) => matches(model, query, backend));
+  const filtered = filterCatalog(catalog, state);
+  elements.results.innerHTML = filtered.map(renderEntry).join("");
+  elements.results.setAttribute("aria-busy", "false");
+  elements.resultCount.textContent = `${numberFormat.format(filtered.length)} model${filtered.length === 1 ? "" : "s"}`;
+  elements.emptyState.hidden = filtered.length > 0;
 
-  results.innerHTML = filtered.map(renderCard).join("");
-  resultCount.textContent = `${filtered.length} model${filtered.length === 1 ? "" : "s"}`;
-  emptyState.hidden = filtered.length > 0;
+  const count = activeFilterCount();
+  elements.activeFilterCount.hidden = count === 0;
+  elements.activeFilterCount.textContent = count;
+  renderDomainFilters(buildFacets(catalog));
 }
 
-async function loadCatalog() {
-  const response = await fetch("/catalog.json");
-  catalog.push(...(await response.json()));
+function clearFilters() {
+  Object.assign(state, {
+    query: "",
+    domain: "",
+    backend: "",
+    architecture: "",
+    size: "",
+    sort: "name",
+  });
+  elements.search.value = "";
+  elements.backend.value = "";
+  elements.architecture.value = "";
+  elements.size.value = "";
+  elements.sort.value = "name";
   render();
 }
 
-document.addEventListener("click", async (event) => {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement) || !target.dataset.copy) {
-    return;
+function bindControls() {
+  elements.search.addEventListener("input", () => {
+    state.query = elements.search.value;
+    render();
+  });
+  elements.backend.addEventListener("change", () => {
+    state.backend = elements.backend.value;
+    render();
+  });
+  elements.architecture.addEventListener("change", () => {
+    state.architecture = elements.architecture.value;
+    render();
+  });
+  elements.size.addEventListener("change", () => {
+    state.size = elements.size.value;
+    render();
+  });
+  elements.sort.addEventListener("change", () => {
+    state.sort = elements.sort.value;
+    render();
+  });
+  elements.filterToggle.addEventListener("click", () => {
+    const open = elements.advanced.hidden;
+    elements.advanced.hidden = !open;
+    elements.filterToggle.setAttribute("aria-expanded", String(open));
+  });
+
+  document.addEventListener("click", (event) => {
+    const domainButton = event.target.closest("[data-domain]");
+    const searchButton = event.target.closest("[data-search]");
+    if (domainButton) {
+      state.domain = domainButton.dataset.domain;
+      render();
+    } else if (searchButton) {
+      state.query = searchButton.dataset.search;
+      elements.search.value = state.query;
+      elements.search.focus();
+      render();
+    } else if (event.target.closest("#clear-filters, [data-clear-filters]")) {
+      clearFilters();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "/" && !["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+      event.preventDefault();
+      elements.search.focus();
+    }
+  });
+}
+
+async function loadCatalog() {
+  try {
+    const response = await fetch("/catalog.json");
+    if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
+    const payload = await response.json();
+    catalog.push(...(Array.isArray(payload) ? payload : payload.models || []));
+    const facets = buildFacets(catalog);
+
+    populateSelect(elements.backend, facets.backends);
+    populateSelect(elements.architecture, facets.architectures);
+    populateSelect(elements.size, facets.sizes, (value) => value.replace("-", " "));
+
+    document.querySelector("#model-total").textContent = numberFormat.format(catalog.length);
+    document.querySelector("#pure-java-total").textContent = numberFormat.format(
+      catalog.filter((model) => model.backends?.["pure-java"]).length,
+    );
+    document.querySelector("#publisher-total").textContent = numberFormat.format(
+      new Set(catalog.map(publisher)).size,
+    );
+    render();
+  } catch (error) {
+    elements.results.setAttribute("aria-busy", "false");
+    elements.resultCount.textContent = "Catalog unavailable";
+    elements.results.innerHTML = `<p class="error-state">${escapeHtml(error.message)}</p>`;
   }
-  await navigator.clipboard.writeText(target.dataset.copy);
-  const original = target.textContent;
-  target.textContent = "Copied";
-  setTimeout(() => {
-    target.textContent = original;
-  }, 1200);
-});
+}
 
-searchInput.addEventListener("input", render);
-backendFilter.addEventListener("change", render);
-
+initializeTheme(document.querySelector("#theme-toggle"));
+bindControls();
 loadCatalog();

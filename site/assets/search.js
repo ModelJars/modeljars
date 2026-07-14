@@ -1,26 +1,48 @@
+import { modelTerms, sizeTier } from "./taxonomy.js";
+
+const SEARCH_ALIASES = new Map([
+  ["medical", ["healthcare", "clinical"]],
+  ["medicine", ["healthcare", "clinical"]],
+  ["programming", ["coding", "code"]],
+  ["developer", ["coding", "code"]],
+  ["java", ["pure-java"]],
+  ["local", ["offline", "on-device"]],
+]);
+
 export function normalize(value) {
-  return String(value || "").toLowerCase();
+  return String(value || "").trim().toLowerCase();
+}
+
+function queryTerms(query) {
+  const normalized = normalize(query);
+  if (!normalized) return [];
+  return [normalized, ...(SEARCH_ALIASES.get(normalized) || [])];
 }
 
 export function matches(model, query, backend) {
-  const text = [
-    model.name,
-    model.description,
-    model.sourceId,
-    model.markerCoordinate,
-    model.architecture,
-    model.format,
-    model.quantization,
-    model.packaging,
-    model.language,
-    model.topology,
-    (model.domains || []).join(" "),
-    (model.capabilities || []).join(" "),
-    (model.features || []).join(" "),
-    Object.keys(model.backends || {}).join(" "),
-  ].join(" ");
+  const text = modelTerms(model).join(" ");
 
-  const queryMatches = !query || normalize(text).includes(normalize(query));
+  const queryMatches = !query || queryTerms(query).some((term) => text.includes(term));
   const backendMatches = !backend || model.backends?.[backend] === true;
   return queryMatches && backendMatches;
+}
+
+export function filterCatalog(catalog, filters = {}) {
+  const { query, domain, backend, architecture, size, sort = "name" } = filters;
+  const filtered = catalog.filter(
+    (model) =>
+      matches(model, query, backend) &&
+      (!domain || model.domains?.includes(domain)) &&
+      (!architecture || normalize(model.architecture) === normalize(architecture)) &&
+      (!size || sizeTier(model) === size),
+  );
+
+  const comparators = {
+    largest: (left, right) => (right.sizeBytes || 0) - (left.sizeBytes || 0),
+    name: (left, right) => left.name.localeCompare(right.name),
+    newest: (left, right) => String(right.modelVersion).localeCompare(String(left.modelVersion)),
+    smallest: (left, right) => (left.sizeBytes || Number.MAX_SAFE_INTEGER) - (right.sizeBytes || Number.MAX_SAFE_INTEGER),
+  };
+
+  return [...filtered].sort(comparators[sort] || comparators.name);
 }

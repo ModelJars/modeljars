@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Model | ModelJars</title>
+    <meta name="description" content="ModelJars model artifact details and JVM installation coordinates.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/model-detail.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJars home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJars</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a class="active" href="/">Models</a>
+          <a href="/#using-modeljars">Docs</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="model-detail" class="detail-shell" aria-live="polite">
+      <p class="loading-state">Loading model metadata...</p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJars</a>
+        <span>Open model metadata for the JVM.</span>
+        <div>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

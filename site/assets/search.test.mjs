@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { matches } from "./search.js";
+import { filterCatalog, matches } from "./search.js";
 
 const model = {
   name: "Nexus Medical",
@@ -15,6 +15,8 @@ const model = {
   features: ["pinned-revision"],
   backends: { "llama.cpp": true, "pure-java": false },
   domains: ["healthcare"],
+  tags: ["clinical", "on-device"],
+  dimensions: { parameterCount: 3_000_000_000 },
 };
 
 test("matches catalog domains and descriptions", () => {
@@ -26,4 +28,37 @@ test("matches catalog domains and descriptions", () => {
 test("applies backend filters independently of text", () => {
   assert.equal(matches(model, "medical", "llama.cpp"), true);
   assert.equal(matches(model, "medical", "pure-java"), false);
+});
+
+test("searches folksonomy tags and common discovery aliases", () => {
+  assert.equal(matches(model, "clinical", ""), true);
+  assert.equal(matches(model, "medical", ""), true);
+  assert.equal(matches(model, "java", "pure-java"), false);
+});
+
+test("combines category, backend, architecture, size, and sort filters", () => {
+  const catalog = [
+    model,
+    {
+      ...model,
+      id: "coder",
+      name: "Coder",
+      domains: ["coding"],
+      architecture: "qwen2",
+      backends: { "pure-java": true, "llama.cpp": true },
+      dimensions: { parameterCount: 600_000_000 },
+      sizeBytes: 500_000_000,
+    },
+  ];
+
+  const filtered = filterCatalog(catalog, {
+    query: "code",
+    domain: "coding",
+    backend: "pure-java",
+    architecture: "qwen2",
+    size: "tiny",
+    sort: "smallest",
+  });
+
+  assert.deepEqual(filtered.map((candidate) => candidate.id), ["coder"]);
 });

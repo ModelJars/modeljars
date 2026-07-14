@@ -846,12 +846,25 @@ val generateSiteCatalog =
         }
     }
 
+val generatedSiteDirectory = layout.buildDirectory.dir("site")
 tasks.register<Sync>("generateSite") {
     dependsOn(generateSiteCatalog)
     from("site")
     from("media/icons")
     from(generatedSiteCatalog)
-    into(layout.buildDirectory.dir("site"))
+    into(generatedSiteDirectory)
+    doLast {
+        val siteRoot = generatedSiteDirectory.get().asFile.toPath()
+        val detailTemplate = siteRoot.resolve("model.html")
+        require(Files.isRegularFile(detailTemplate)) {
+            "Model detail template is missing: $detailTemplate"
+        }
+        catalogEntries.forEach { entry ->
+            val route = siteRoot.resolve("models/${entry.id}/index.html")
+            Files.createDirectories(route.parent)
+            Files.copy(detailTemplate, route, StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
 }
 
 tasks.register("verifyRemoteCatalogMetadata") {
@@ -981,6 +994,13 @@ tasks.register("verifyCatalog") {
         }
         val siteCatalog = generatedSiteCatalog.get().asFile
         require(siteCatalog.isFile) { "Generated site catalog is missing: $siteCatalog" }
+        val generatedSite = layout.buildDirectory.dir("site").get().asFile
+        catalogEntries.forEach { entry ->
+            val detailRoute = generatedSite.resolve("models/${entry.id}/index.html")
+            require(detailRoute.isFile) {
+                "Generated model detail route is missing: $detailRoute"
+            }
+        }
         println("Verified ${catalogEntries.size} generated ModelJars markers and website entries")
     }
 }

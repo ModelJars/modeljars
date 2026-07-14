@@ -3,147 +3,156 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ModelJars</title>
+    <title>Explore models | ModelJars</title>
     <meta
       name="description"
-      content="Community-maintained JVM marker JAR catalog for local and remote AI models.">
+      content="Search versioned, verified model markers for JVM applications.">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
     <script src="/assets/app.js" type="module"></script>
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="/">
-          <img src="/android-chrome-192x192.png" alt="" width="36" height="36">
+        <a class="brand" href="/" aria-label="ModelJars home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
           <span>ModelJars</span>
         </a>
         <nav class="nav" aria-label="Primary">
-          <a href="#catalog">Catalog</a>
-          <a href="#docs">Docs</a>
+          <a class="active" href="/">Models</a>
+          <a href="#using-modeljars">Docs</a>
           <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
         </nav>
       </div>
     </header>
 
-    <section class="hero">
-      <div class="section">
-        <h1>ModelJars</h1>
-        <p>
-          Versioned model metadata for JVM applications, with classpath discovery, immutable
-          upstream artifacts, verified dimensions, and explicit runtime compatibility.
-        </p>
-      </div>
-    </section>
-
     <main>
-      <section class="section" id="catalog" aria-labelledby="catalog-title">
-        <div class="section-header">
+      <section class="catalog-shell" id="catalog" aria-labelledby="catalog-title">
+        <div class="catalog-heading">
           <div>
-            <h2 id="catalog-title">Catalog</h2>
-            <p>Search marker coordinates, sources, architectures, quantizations, and backends.</p>
+            <p class="eyebrow">Community model registry</p>
+            <h1 id="catalog-title">Explore models</h1>
+            <p class="lede">Versioned model artifacts with JVM-ready metadata and verified runtime support.</p>
           </div>
-          <strong id="result-count">0 models</strong>
+          <div class="catalog-stats" aria-label="Catalog statistics">
+            <span><strong id="model-total">0</strong> models</span>
+            <span><strong id="pure-java-total">0</strong> pure Java</span>
+            <span><strong id="publisher-total">0</strong> publishers</span>
+          </div>
         </div>
 
-        <div class="search-panel">
-          <label>
-            <span class="eyebrow">Search</span>
+        <form class="discovery" role="search" onsubmit="return false">
+          <label class="search-field" for="catalog-search">
+            <span class="sr-only">Search models</span>
+            <span class="search-symbol" aria-hidden="true">&#128269;</span>
             <input
               id="catalog-search"
               type="search"
               autocomplete="off"
-              placeholder="qwen, gguf, pure-java, q4_0">
+              placeholder="Search by model, task, architecture, publisher, or tag">
           </label>
-          <label>
-            <span class="eyebrow">Backend</span>
-            <select id="backend-filter">
-              <option value="">Any backend</option>
-              <option value="pure-java">pure-java</option>
-              <option value="semantic-order">semantic-order</option>
-              <option value="llama.cpp">llama.cpp</option>
+
+          <div class="filter-row">
+            <div id="domain-filters" class="chip-list" aria-label="Model categories"></div>
+            <button
+              id="filter-toggle"
+              class="secondary-button"
+              type="button"
+              aria-expanded="false"
+              aria-controls="advanced-filters">
+              Filters <span id="active-filter-count" class="filter-count" hidden>0</span>
+            </button>
+          </div>
+
+          <div id="advanced-filters" class="advanced-filters" hidden>
+            <label>
+              <span>Runtime</span>
+              <select id="backend-filter"><option value="">Any runtime</option></select>
+            </label>
+            <label>
+              <span>Architecture</span>
+              <select id="architecture-filter"><option value="">Any architecture</option></select>
+            </label>
+            <label>
+              <span>Model size</span>
+              <select id="size-filter"><option value="">Any size</option></select>
+            </label>
+            <button id="clear-filters" class="text-button" type="button">Clear filters</button>
+          </div>
+        </form>
+
+        <div class="results-toolbar">
+          <p id="result-count" aria-live="polite">Loading models...</p>
+          <label class="sort-control">
+            <span>Sort</span>
+            <select id="sort-filter">
+              <option value="name">Name</option>
+              <option value="smallest">Smallest download</option>
+              <option value="largest">Largest download</option>
+              <option value="newest">Newest version</option>
             </select>
           </label>
         </div>
 
-        <div id="catalog-results" class="catalog-results"></div>
-        <p id="empty-state" class="empty-state" hidden>No matching model markers.</p>
+        <div id="catalog-results" class="catalog-results" aria-busy="true"></div>
+        <div id="empty-state" class="empty-state" hidden>
+          <h2>No matching models</h2>
+          <p>Try a broader term or clear one of the active filters.</p>
+          <button class="secondary-button" type="button" data-clear-filters>Clear filters</button>
+        </div>
       </section>
 
-      <section class="docs-grid" id="docs" aria-label="Documentation">
-        <article class="docs-card">
-          <p class="eyebrow">Runtime</p>
-          <h3>Resolve from the classpath</h3>
-          <p>
-            ModelJars descriptors live in <code>META-INF/modeljars/registry.properties</code>.
-            JVM libraries can load every marker JAR already on the application classpath.
-          </p>
-          <pre><code>ModelJarRegistry registry =
-    ModelJarRegistry.fromClasspath();</code></pre>
-        </article>
-
-        <article class="docs-card">
-          <p class="eyebrow">Descriptor</p>
-          <h3>Right-size the artifact</h3>
-          <p>
-            Multi-gigabyte weights stay external. Compact models can be bundled below
-            <code>META-INF/modeljars/models/</code> and verified from their descriptor before use.
-          </p>
-        </article>
-
-        <article class="docs-card">
-          <p class="eyebrow">Publishing</p>
-          <h3>Catalog changes are reviewed</h3>
-          <p>
-            Catalog metadata is reviewed through GitHub pull requests. CI validates descriptors,
-            generates marker artifacts, and publishes immutable versions once release automation
-            is enabled.
-          </p>
-        </article>
-
-        <article class="docs-card">
-          <p class="eyebrow">Gradle</p>
-          <h3>Add the API and pin a marker</h3>
-          <pre><code>implementation(
-    "org.modeljars:modeljars:0.1.0"
-)
-runtimeOnly(
-    "org.modeljars.huggingface:" +
-    "ggml-org.qwen3-0.6b-gguf.q4_0:" +
-    "3.0.0-q4_0.1"
-)</code></pre>
-        </article>
-
-        <article class="docs-card">
-          <p class="eyebrow">Maven</p>
-          <h3>Add the ModelJars facade</h3>
-          <pre><code>&lt;dependency&gt;
-  &lt;groupId&gt;org.modeljars&lt;/groupId&gt;
-  &lt;artifactId&gt;modeljars&lt;/artifactId&gt;
-  &lt;version&gt;0.1.0&lt;/version&gt;
-&lt;/dependency&gt;</code></pre>
-        </article>
-
-        <article class="docs-card">
-          <p class="eyebrow">Contribute</p>
-          <h3>Add a model descriptor</h3>
-          <ol>
-            <li>Open a PR against the catalog metadata.</li>
-            <li>Include upstream source, license, format, quantization, and backend claims.</li>
-            <li>Let CI validate the generated marker artifact.</li>
-          </ol>
-        </article>
+      <section class="guide-band" id="using-modeljars" aria-labelledby="guide-title">
+        <div class="guide-inner">
+          <div class="guide-intro">
+            <p class="eyebrow">Use from Java</p>
+            <h2 id="guide-title">Pin model artifacts like dependencies</h2>
+            <p>
+              Marker JARs put immutable model metadata on the classpath while model weights remain
+              in their upstream repository or local cache.
+            </p>
+          </div>
+          <div class="guide-steps">
+            <article>
+              <span class="step-number">01</span>
+              <h3>Add the facade</h3>
+              <pre><code>implementation("org.modeljars:modeljars:0.1.0")</code></pre>
+            </article>
+            <article>
+              <span class="step-number">02</span>
+              <h3>Pin a model marker</h3>
+              <pre><code>runtimeOnly("org.modeljars.huggingface:...")</code></pre>
+            </article>
+            <article>
+              <span class="step-number">03</span>
+              <h3>Discover it</h3>
+              <pre><code>ModelJarRegistry.fromClasspath()</code></pre>
+            </article>
+          </div>
+        </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="footer-inner">
-        <span>Community-maintained by the ModelJars project.</span>
-        <a href="https://github.com/ModelJars/modeljars">github.com/ModelJars/modeljars</a>
+        <a class="footer-brand" href="/">ModelJars</a>
+        <span>Open model metadata for the JVM.</span>
+        <div>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
+        </div>
       </div>
     </footer>
   </body>

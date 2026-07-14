@@ -830,7 +830,7 @@
         "medical-use-warning"
       ],
       "backends": {
-        "pure-java": false,
+        "pure-java": true,
         "llama.cpp": true,
         "ollama": true
       },

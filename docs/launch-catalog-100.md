@@ -10,7 +10,7 @@ The metadata-driven catalog currently contains:
 - 111 pinned GGUF files;
 - 109 distinct Hugging Face model repositories;
 - 24 GGUF architecture identifiers;
-- 18 artifacts from 16 sources with a verified `pure-java` backend claim; and
+- 19 artifacts from 17 sources with a verified `pure-java` backend claim; and
 - one bundled WordTour semantic-order model.
 
 Distinct models are counted by upstream `sourceId`. Multiple quantizations are separate artifacts,

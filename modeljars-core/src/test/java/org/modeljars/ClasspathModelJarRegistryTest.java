@@ -441,7 +441,7 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
-  void loadsHuatuoGptO1SevenBillionMarkerWithoutPrematurePureJavaClaim() {
+  void loadsHuatuoGptO1SevenBillionMarkerWithVerifiedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 
     ModelJarDescriptor descriptor =
@@ -450,7 +450,7 @@ class ClasspathModelJarRegistryTest {
                 ModelJarRequirement.forSource("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
                     .versionRange("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
-                    .backend("llama.cpp")
+                    .backend("pure-java")
                     .capability("medical-reasoning")
                     .build())
             .orElseThrow();
@@ -472,15 +472,8 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow()
             .toString()
             .endsWith("HuatuoGPT-o1-7B-Q4_K_M.gguf"));
-    assertTrue(
-        registry
-            .resolve(
-                ModelJarRequirement.forSource("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
-                    .variant("q4_k_m")
-                    .backend("pure-java")
-                    .build())
-            .isEmpty());
+    assertTrue(descriptor.supportsBackend("pure-java"));
+    assertTrue(descriptor.supportsBackend("llama.cpp"));
   }
 
   @Test

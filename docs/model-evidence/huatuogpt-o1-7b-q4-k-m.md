@@ -1,6 +1,6 @@
 # HuatuoGPT-o1-7B Q4_K_M Acceptance Evidence
 
-Status: catalog marker accepted; pure-Java runtime acceptance pending
+Status: catalog marker and pure-Java runtime accepted
 
 ## Artifact
 
@@ -62,10 +62,14 @@ Decoded continuation:
  The heart is the
 ```
 
-## Runtime Gate
+## Runtime Acceptance
 
-The ModelJars marker intentionally advertises `pure-java=false`. Enabling it
-requires a mandatory models-library job that downloads this exact artifact,
-verifies size and SHA-256, asserts the GGUF contract above, matches the prompt
-and greedy token IDs, and retains research-only/no-clinical-use metadata. The
-test must not skip when the artifact is absent.
+The ModelJars marker advertises `pure-java=true` after the mandatory
+`huatuoGptO17BSlowTest` in `integrallis/models` verified this exact artifact.
+The task resolves and checksum-verifies the model through ModelJars, asserts
+the GGUF and tokenizer contracts above, and matches the llama.cpp greedy token
+IDs with the pure-Java backend. It fails when the artifact cannot be resolved
+or installed and cannot report a missing model as a pass or skip.
+
+The `medical-use-warning` feature remains part of the descriptor. Runtime
+compatibility is not a clinical-safety or medical-validity claim.

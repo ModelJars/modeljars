@@ -849,6 +849,7 @@ val generateSiteCatalog =
 tasks.register<Sync>("generateSite") {
     dependsOn(generateSiteCatalog)
     from("site")
+    from("media/icons")
     from(generatedSiteCatalog)
     into(layout.buildDirectory.dir("site"))
 }

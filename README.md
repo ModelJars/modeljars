@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="media/icons/android-chrome-512x512.png" alt="ModelJars logo" width="200">
+</p>
+
 # ModelJars
 
 ModelJars is a community-owned marker-JAR convention for local and remote model artifacts.

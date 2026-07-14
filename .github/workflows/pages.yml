@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - site/**
+      - catalog/**
+      - modeljars-catalog/**
+      - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:
 

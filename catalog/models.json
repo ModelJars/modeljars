@@ -19,8 +19,29 @@
       "sha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
       "sizeBytes": 428970080,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 751632384,
+        "contextLength": 40960,
+        "embeddingLength": 1024,
+        "blockCount": 28,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 3072,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "general"
+      ]
     },
     {
       "id": "qwen3_1_7b_q8_0",
@@ -40,8 +61,29 @@
       "sha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
       "sizeBytes": 1834426016,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1720574976,
+        "contextLength": 40960,
+        "embeddingLength": 2048,
+        "blockCount": 28,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 6144,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_0_5b_instruct_q4_0",
@@ -61,8 +103,29 @@
       "sha256": "9739055e046d62a937e5b7879012209ef40ebea8a1569a96028de491f3f091d5",
       "sizeBytes": 428730240,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 630167424,
+        "contextLength": 32768,
+        "embeddingLength": 896,
+        "blockCount": 24,
+        "attentionHeadCount": 14,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 4864,
+        "attentionBlockCount": 24
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_0_5b_instruct_q8_0",
@@ -82,8 +145,29 @@
       "sha256": "e1a77721fa97d412f121878223eec81fb4ae6f271e18f922d746711f67b344d1",
       "sizeBytes": 675710848,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 630167424,
+        "contextLength": 32768,
+        "embeddingLength": 896,
+        "blockCount": 24,
+        "attentionHeadCount": 14,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 4864,
+        "attentionBlockCount": 24
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_1_5b_instruct_q4_0",
@@ -103,8 +187,29 @@
       "sha256": "aa8353e0d0fca3a0041828701e90db7635197400f040676d11d7798665fa316e",
       "sizeBytes": 1066227264,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1777088000,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_1_5b_instruct_q8_0",
@@ -124,8 +229,29 @@
       "sha256": "507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47",
       "sizeBytes": 1894532160,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1777088000,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_3b_instruct_q4_0",
@@ -145,8 +271,29 @@
       "sha256": "282085f05511706c7b59b32ccabfc452f214771076298c29183e595c576417e0",
       "sizeBytes": 1997879744,
       "license": "LicenseRef-Qwen-Research",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 3397103616,
+        "contextLength": 32768,
+        "embeddingLength": 2048,
+        "blockCount": 36,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 36
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen2_5_coder_7b_instruct_q4_0",
@@ -166,8 +313,29 @@
       "sha256": "8561411b4705cbf2d105cf8e2084c6d6f1bcaba415249ce65fc5f21230d4961b",
       "sizeBytes": 4431390720,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 7615616512,
+        "contextLength": 131072,
+        "embeddingLength": 3584,
+        "blockCount": 28,
+        "attentionHeadCount": 28,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 18944,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "smollm2_360m_instruct_q8_0",
@@ -187,8 +355,27 @@
       "sha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
       "sizeBytes": 386404992,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 361821120,
+        "contextLength": 8192,
+        "embeddingLength": 960,
+        "blockCount": 32,
+        "attentionHeadCount": 15,
+        "keyValueHeadCount": 5,
+        "feedForwardLength": 2560,
+        "attentionBlockCount": 32
+      },
+      "domains": [
+        "general"
+      ]
     },
     {
       "id": "tinyllama_1_1b_chat_v1_0_q4_0",
@@ -209,9 +396,30 @@
       "sha256": "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
       "sizeBytes": 637699456,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat"],
-      "features": ["sentencepiece"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "sentencepiece"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1100048384,
+        "contextLength": 2048,
+        "embeddingLength": 2048,
+        "blockCount": 22,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 5632,
+        "attentionBlockCount": 22
+      },
+      "domains": [
+        "general"
+      ]
     },
     {
       "id": "deepseek_coder_1_3b_instruct_q4_k_m",
@@ -232,9 +440,36 @@
       "sha256": "04cebb6fafa40ae628cf6bfeb76032ec792852f54020c559ad0a56b9f2839118",
       "sizeBytes": 873582624,
       "license": "LicenseRef-DeepSeek",
-      "capabilities": ["text-generation", "chat", "code-completion", "fim"],
-      "features": ["mixed-quantization", "q4-k", "q5-0", "q6-k"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q5-0",
+        "q6-k"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1346471936,
+        "contextLength": 16384,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 16,
+        "feedForwardLength": 5504,
+        "attentionBlockCount": 24
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "deepseek_coder_6_7b_instruct_q4_k_m",
@@ -255,9 +490,36 @@
       "sha256": "92da6238854f2fa902d8b2ad79d548536af1d3ab06821f323bd5bbcea2013276",
       "sizeBytes": 4083015904,
       "license": "LicenseRef-DeepSeek",
-      "capabilities": ["text-generation", "chat", "code-completion", "fim"],
-      "features": ["mixed-quantization", "q4-k", "q6-k", "legacy-linear-rope"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "legacy-linear-rope"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 6740512768,
+        "contextLength": 16384,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 32
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "deepseek_r1_distill_qwen_7b_q4_k_m",
@@ -278,9 +540,38 @@
       "sha256": "731ece8d06dc7eda6f6572997feb9ee1258db0784827e642909d9b565641937b",
       "sizeBytes": 4683073504,
       "license": "MIT",
-      "capabilities": ["text-generation", "chat", "reasoning"],
-      "features": ["mixed-quantization", "q4-k", "q6-k", "grouped-query-attention", "long-context", "chat-template", "deepseek-r1-qwen-pretokenizer"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "chat-template",
+        "deepseek-r1-qwen-pretokenizer"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 7615616512,
+        "contextLength": 131072,
+        "embeddingLength": 3584,
+        "blockCount": 28,
+        "attentionHeadCount": 28,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 18944,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "general",
+        "reasoning"
+      ]
     },
     {
       "id": "qwen2_5_math_1_5b_instruct_q4_k_m",
@@ -301,9 +592,40 @@
       "sha256": "9614a50f03c897028920ca0dc4365da570bf587f9ee7768261216fe370b37e8e",
       "sizeBytes": 986048832,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "reasoning", "math", "tool-integrated-reasoning"],
-      "features": ["mixed-quantization", "q4-k", "q6-k", "grouped-query-attention", "bilingual-math", "chat-template"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "bilingual-math",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 4096,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "general",
+        "mathematics",
+        "reasoning"
+      ]
     },
     {
       "id": "sqlcoder_7b_2_q5_k_m",
@@ -324,9 +646,36 @@
       "sha256": "0068f25d1fc37cb25aa6be85064432eeeb1a0754d97139c0d2eb3529fc8fc32b",
       "sizeBytes": 4783256288,
       "license": "CC-BY-SA-4.0",
-      "capabilities": ["text-generation", "text-to-sql", "sql-generation"],
-      "features": ["mixed-quantization", "q5-k", "q6-k", "sentencepiece", "long-context", "sql-prompt-template"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "text-to-sql",
+        "sql-generation"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q5-k",
+        "q6-k",
+        "sentencepiece",
+        "long-context",
+        "sql-prompt-template"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 6738546688,
+        "contextLength": 16384,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 32
+      },
+      "domains": [
+        "coding"
+      ]
     },
     {
       "id": "eurollm_1_7b_instruct_q4_k_m",
@@ -347,9 +696,42 @@
       "sha256": "1cade17f491ea46a686dbee51fbd52442e0f001f102380c3b9d66b4a77f84093",
       "sizeBytes": 1045157088,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "translation", "multilingual"],
-      "features": ["community-conversion", "mixed-quantization", "q4-k", "q6-k", "grouped-query-attention", "sentencepiece", "chatml", "multilingual-35", "unaligned-output-warning"],
-      "backends": {"pure-java": false, "llama.cpp": true, "ollama": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ],
+      "features": [
+        "community-conversion",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "sentencepiece",
+        "chatml",
+        "multilingual-35",
+        "unaligned-output-warning"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 1656850432,
+        "contextLength": 8192,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 5632,
+        "attentionBlockCount": 24
+      },
+      "domains": [
+        "general",
+        "translation"
+      ]
     },
     {
       "id": "fin_r1_7b_q4_k_m",
@@ -370,9 +752,45 @@
       "sha256": "d50f16c5149b4dc103c68e249a136ab7c82f7569a7df707a2d6150bff5994c33",
       "sizeBytes": 4683073600,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "reasoning", "financial-reasoning", "bilingual"],
-      "features": ["community-conversion", "mixed-quantization", "q4-k", "q6-k", "grouped-query-attention", "long-context", "chatml", "thinking-final-response", "financial-advice-warning", "license-card-only"],
-      "backends": {"pure-java": false, "llama.cpp": true, "ollama": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ],
+      "features": [
+        "community-conversion",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "chatml",
+        "thinking-final-response",
+        "financial-advice-warning",
+        "license-card-only"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 7615616512,
+        "contextLength": 32768,
+        "embeddingLength": 3584,
+        "blockCount": 28,
+        "attentionHeadCount": 28,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 18944,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "finance",
+        "general",
+        "reasoning"
+      ]
     },
     {
       "id": "huatuogpt_o1_7b_q4_k_m",
@@ -393,9 +811,44 @@
       "sha256": "4643521a184cb26df0f7c57da9aead0c632b286a9aff103c9f9dca4dc059abd7",
       "sizeBytes": 4683074720,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "reasoning", "medical-reasoning", "bilingual"],
-      "features": ["community-conversion", "mixed-quantization", "q4-k", "q6-k", "grouped-query-attention", "long-context", "chatml", "thinking-final-response", "medical-use-warning"],
-      "backends": {"pure-java": false, "llama.cpp": true, "ollama": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ],
+      "features": [
+        "community-conversion",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "chatml",
+        "thinking-final-response",
+        "medical-use-warning"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 7615616512,
+        "contextLength": 32768,
+        "embeddingLength": 3584,
+        "blockCount": 28,
+        "attentionHeadCount": 28,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 18944,
+        "attentionBlockCount": 28
+      },
+      "domains": [
+        "general",
+        "healthcare",
+        "reasoning"
+      ]
     },
     {
       "id": "minicpm5_1b_q4_k_m",
@@ -416,9 +869,42 @@
       "sha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "sizeBytes": 688065920,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "code-completion", "tool-calling"],
-      "features": ["mixed-quantization", "q4-k", "q6-k", "explicit-qkv-head-widths", "long-context", "minicpm5-pretokenizer", "chat-template"],
-      "backends": {"pure-java": true, "llama.cpp": true, "ollama": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "tool-calling"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "explicit-qkv-head-widths",
+        "long-context",
+        "minicpm5-pretokenizer",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 1080632832,
+        "contextLength": 131072,
+        "embeddingLength": 1536,
+        "blockCount": 24,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 4608,
+        "attentionBlockCount": 24
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
     },
     {
       "id": "qwen3_8b_q4_k_m",
@@ -438,9 +924,4447 @@
       "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
       "sizeBytes": 5027783488,
       "license": "Apache-2.0",
-      "capabilities": ["text-generation", "chat", "tool-calling"],
-      "features": ["mixed-quantization", "q4-k", "q6-k", "long-context", "chat-template"],
-      "backends": {"pure-java": true, "llama.cpp": true}
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "long-context",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 8190735360,
+        "contextLength": 40960,
+        "embeddingLength": 4096,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 36
+      },
+      "domains": [
+        "general"
+      ]
+    },
+    {
+      "id": "granite_4_1_8b_q4_k_m",
+      "name": "IBM Granite 4.1 8B GGUF Q4_K_M",
+      "description": "Official Apache-2.0 Granite 4.1 8B instruct model pinned at Q4_K_M for long-context local inference.",
+      "sourceId": "hf://ibm-granite/granite-4.1-8b-GGUF",
+      "sourceUri": "https://huggingface.co/ibm-granite/granite-4.1-8b-GGUF",
+      "downloadUri": "https://huggingface.co/ibm-granite/granite-4.1-8b-GGUF/resolve/865b82c2e7970d82e3731278c88c57ae7138359c/granite-4.1-8b-Q4_K_M.gguf",
+      "revision": "865b82c2e7970d82e3731278c88c57ae7138359c",
+      "markerCoordinate": "org.modeljars.huggingface:ibm-granite.granite-4.1-8b-gguf.q4_k_m:4.1.0-q4_k_m.1",
+      "modelVersion": "4.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "granite",
+      "tokenizer": "gpt2-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/granite-4.1-8b-Q4_K_M.gguf",
+      "sha256": "ed902ac9eb6adce5a90c6a08c8ea201b50e23fdc5976d1cd0362006afac5309e",
+      "sizeBytes": 5347914400,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling",
+        "code-completion"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "granite-scaling",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 8791592960,
+        "contextLength": 131072,
+        "embeddingLength": 4096,
+        "blockCount": 40,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 12800,
+        "attentionBlockCount": 40
+      },
+      "domains": [
+        "coding",
+        "general"
+      ]
+    },
+    {
+      "id": "smollm3_3b_q4_k_m",
+      "name": "SmolLM3 3B GGUF Q4_K_M",
+      "description": "Officially maintained Apache-2.0 SmolLM3 3B artifact for compact long-context reasoning and chat.",
+      "sourceId": "hf://ggml-org/SmolLM3-3B-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/SmolLM3-3B-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/SmolLM3-3B-GGUF/resolve/4965cb60b150737b68a0408c36aeefb65078f894/SmolLM3-Q4_K_M.gguf",
+      "revision": "4965cb60b150737b68a0408c36aeefb65078f894",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.smollm3-3b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "smollm3",
+      "tokenizer": "smaug-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/SmolLM3-Q4_K_M.gguf",
+      "sha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
+      "sizeBytes": 1915305312,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "tool-calling"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "selective-rope",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 3075098624,
+        "contextLength": 65536,
+        "embeddingLength": 2048,
+        "blockCount": 36,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 36
+      },
+      "domains": [
+        "general",
+        "reasoning"
+      ]
+    },
+    {
+      "id": "llama_3_1_8b_instruct_q4_k_m",
+      "name": "Llama 3.1 8B Instruct GGUF Q4_K_M",
+      "description": "Community GGUF conversion of Meta's Llama 3.1 8B Instruct model, pinned at a widely used local-inference quantization.",
+      "sourceId": "hf://bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/bf5b95e96dac0462e2a09145ec66cae9a3f12067/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+      "revision": "bf5b95e96dac0462e2a09145ec66cae9a3f12067",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.meta-llama-3.1-8b-instruct-gguf.q4_k_m:3.1.0-q4_k_m.1",
+      "modelVersion": "3.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "tokenizer": "llama3-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+      "sha256": "7b064f5842bf9532c91456deda288a1b672397a54fa729aa665952863033557c",
+      "sizeBytes": 4920739232,
+      "license": "LicenseRef-Llama-3.1",
+      "licenseUri": "https://www.llama.com/llama3_1/license/",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ],
+      "features": [
+        "community-conversion",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "llama3-bpe",
+        "piecewise-rope",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 8030261312,
+        "contextLength": 131072,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      },
+      "domains": [
+        "general"
+      ]
+    },
+    {
+      "id": "phi_4_mini_instruct_q4_k_m",
+      "name": "Phi-4 Mini Instruct GGUF Q4_K_M",
+      "description": "MIT-licensed Phi-4 Mini Instruct model pinned from a widely used GGUF conversion for compact reasoning and chat.",
+      "sourceId": "hf://bartowski/microsoft_Phi-4-mini-instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF/resolve/7ff82c2aaa4dde30121698a973765f39be5288c0/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+      "revision": "7ff82c2aaa4dde30121698a973765f39be5288c0",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.microsoft-phi-4-mini-instruct-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "phi3",
+      "tokenizer": "phi4-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+      "sha256": "01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2",
+      "sizeBytes": 2491874688,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ],
+      "features": [
+        "community-conversion",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "partial-rope",
+        "longrope",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true,
+        "ollama": true
+      },
+      "dimensions": {
+        "parameterCount": 3836021856,
+        "contextLength": 131072,
+        "embeddingLength": 3072,
+        "blockCount": 32,
+        "attentionHeadCount": 24,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 32
+      },
+      "domains": [
+        "coding",
+        "general",
+        "mathematics",
+        "reasoning"
+      ]
+    },
+    {
+      "id": "ministral_3_3b_instruct_2512_q4_k_m",
+      "name": "Ministral 3 3B Instruct 2512 GGUF Q4_K_M",
+      "description": "Official Apache-2.0 Ministral 3 3B Instruct text weights pinned at Q4_K_M for efficient local deployment.",
+      "sourceId": "hf://mistralai/Ministral-3-3B-Instruct-2512-GGUF",
+      "sourceUri": "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF",
+      "downloadUri": "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512-GGUF/resolve/eb599d408350ea2bb60452cb86be7c7b2fc28227/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "revision": "eb599d408350ea2bb60452cb86be7c7b2fc28227",
+      "markerCoordinate": "org.modeljars.huggingface:mistralai.ministral-3-3b-instruct-2512-gguf.q4_k_m:3.0.0+2512-q4_k_m.1",
+      "modelVersion": "3.0.0+2512",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "mistral3",
+      "tokenizer": "tekken",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "sha256": "9ed150d4367e68df0ac8e1540f6ddc65b42d0ee26378329d1ecbca60f93fc5f8",
+      "sizeBytes": 2147023008,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ],
+      "features": [
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "tekken",
+        "multimodal-projector-optional",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 3429006336,
+        "contextLength": 262144,
+        "embeddingLength": 3072,
+        "blockCount": 26,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 9216,
+        "attentionBlockCount": 26
+      },
+      "domains": [
+        "general"
+      ]
+    },
+    {
+      "id": "gemma_4_e4b_it_q4_0",
+      "name": "Gemma 4 E4B IT QAT GGUF Q4_0",
+      "description": "Official Apache-2.0 Gemma 4 E4B instruction-tuned QAT artifact for efficient text inference with an optional vision projector.",
+      "sourceId": "hf://google/gemma-4-E4B-it-qat-q4_0-gguf",
+      "sourceUri": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf",
+      "downloadUri": "https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/7edc6763a77bbca236126a361613b834c5ea0f7a/gemma-4-E4B_q4_0-it.gguf",
+      "revision": "7edc6763a77bbca236126a361613b834c5ea0f7a",
+      "markerCoordinate": "org.modeljars.huggingface:google.gemma-4-e4b-it-qat-gguf.q4_0:4.0.0-q4_0.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_0",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "tokenizer": "gemma-sentencepiece",
+      "quantization": "Q4_0",
+      "localPath": "${user.home}/.jvllm/models/gemma-4-E4B_q4_0-it.gguf",
+      "sha256": "e8b6a059ba86947a44ace84d6e5679795bc41862c25c30513142588f0e9dba1d",
+      "sizeBytes": 5154939136,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "code-completion"
+      ],
+      "features": [
+        "qat",
+        "q4-0",
+        "grouped-query-attention",
+        "long-context",
+        "per-layer-embeddings",
+        "multimodal-projector-optional",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 7463013674,
+        "contextLength": 131072,
+        "embeddingLength": 2560,
+        "blockCount": 42,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 10240,
+        "attentionBlockCount": 42
+      },
+      "domains": [
+        "coding",
+        "general",
+        "reasoning"
+      ]
+    },
+    {
+      "id": "gemma_3n_e2b_it_q8_0",
+      "name": "Gemma 3n E2B IT GGUF Q8_0",
+      "description": "Gemma-licensed on-device multimodal E2B model pinned from the official ggml-org conversion; this marker identifies its text weights.",
+      "sourceId": "hf://ggml-org/gemma-3n-E2B-it-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/gemma-3n-E2B-it-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/gemma-3n-E2B-it-GGUF/resolve/989cffaba23976934324f5e3abfabe31b30eb73b/gemma-3n-E2B-it-Q8_0.gguf",
+      "revision": "989cffaba23976934324f5e3abfabe31b30eb73b",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.gemma-3n-e2b-it-gguf.q8_0:3.0.0-q8_0.1",
+      "modelVersion": "3.0.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "gemma3n",
+      "tokenizer": "gemma-sentencepiece",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.jvllm/models/gemma-3n-E2B-it-Q8_0.gguf",
+      "sha256": "038a47c482e7af3009c462b56a7592e1ade3c7862540717aa1d9dee1760c337b",
+      "sizeBytes": 4788112064,
+      "license": "LicenseRef-Gemma",
+      "licenseUri": "https://ai.google.dev/gemma/terms",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "image-understanding",
+        "audio-understanding",
+        "video-understanding"
+      ],
+      "features": [
+        "q8-0",
+        "matformer",
+        "selective-parameter-activation",
+        "per-layer-embeddings",
+        "multimodal-projector-optional",
+        "gated-upstream",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "dimensions": {
+        "parameterCount": 4455632480,
+        "contextLength": 32768,
+        "embeddingLength": 2048,
+        "blockCount": 30,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 30
+      },
+      "domains": [
+        "general",
+        "multimodal"
+      ]
+    },
+    {
+      "id": "unsloth_qwen3_5_0_8b_gguf_q4_k_m",
+      "name": "Qwen3.5-0.8B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-0.8B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-0.8B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-0.8b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "sha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
+      "sizeBytes": 532517120,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 752393024,
+        "contextLength": 262144,
+        "embeddingLength": 1024,
+        "blockCount": 24,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 3584,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_2b_gguf_q4_k_m",
+      "name": "Qwen3.5-2B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-2B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-2B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_M.gguf",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-2b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-2B-Q4_K_M.gguf",
+      "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
+      "sizeBytes": 1280835840,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1881825088,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 6144,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_4b_gguf_q4_k_m",
+      "name": "Qwen3.5-4B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-4B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-4B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf",
+      "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-4B-Q4_K_M.gguf",
+      "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+      "sizeBytes": 2740937888,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 4205751296,
+        "contextLength": 262144,
+        "embeddingLength": 2560,
+        "blockCount": 32,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 9216,
+        "attentionBlockCount": 8
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_9b_gguf_q4_k_m",
+      "name": "Qwen3.5-9B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-9B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-9B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/3885219b6810b007914f3a7950a8d1b469d598a5/Qwen3.5-9B-Q4_K_M.gguf",
+      "revision": "3885219b6810b007914f3a7950a8d1b469d598a5",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-9b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-9B-Q4_K_M.gguf",
+      "sha256": "03b74727a860a56338e042c4420bb3f04b2fec5734175f4cb9fa853daf52b7e8",
+      "sizeBytes": 5680522464,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 8953803264,
+        "contextLength": 262144,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 8
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_27b_gguf_q4_k_m",
+      "name": "Qwen3.5-27B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-27B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-27B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-27B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-27B-GGUF/resolve/3221f178a6b842d04f1fb42f1c413534adcc0a6a/Qwen3.5-27B-Q4_K_M.gguf",
+      "revision": "3221f178a6b842d04f1fb42f1c413534adcc0a6a",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-27b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-27B-Q4_K_M.gguf",
+      "sha256": "84b5f7f112156d63836a01a69dc3f11a6ba63b10a23b8ca7a7efaf52d5a2d806",
+      "sizeBytes": 16740812704,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 26895998464,
+        "contextLength": 262144,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 24,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 17408,
+        "attentionBlockCount": 16
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_35b_a3b_gguf_q4_k_m",
+      "name": "Qwen3.5-35B-A3B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.5-35B-A3B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.5-35B-A3B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-35B-A3B-GGUF/resolve/bc014a17be43adabd7066b7a86075ff935c6a4e2/Qwen3.5-35B-A3B-Q4_K_M.gguf",
+      "revision": "bc014a17be43adabd7066b7a86075ff935c6a4e2",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-35b-a3b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.5-35B-A3B-Q4_K_M.gguf",
+      "sha256": "3b46d1066bc91cc2d613e3bc22ce691dd77e6f0d33c9060690d24ce6de494375",
+      "sizeBytes": 22016023168,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 34660610688,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 40,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "expertCount": 256,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 10
+      }
+    },
+    {
+      "id": "unsloth_qwen3_6_27b_gguf_q4_k_m",
+      "name": "Qwen3.6-27B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.6-27B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.6-27B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.6-27B-GGUF/resolve/82d411acf4a06cfb8d9b073a5211bf410bfc29bf/Qwen3.6-27B-Q4_K_M.gguf",
+      "revision": "82d411acf4a06cfb8d9b073a5211bf410bfc29bf",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.6-27b-gguf.q4_k_m:3.6.0-q4_k_m.1",
+      "modelVersion": "3.6.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.6-27B-Q4_K_M.gguf",
+      "sha256": "5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0",
+      "sizeBytes": 16817244384,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 26895998464,
+        "contextLength": 262144,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 24,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 17408,
+        "attentionBlockCount": 16
+      }
+    },
+    {
+      "id": "unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_m",
+      "name": "Qwen3.6-35B-A3B GGUF UD-Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3.6-35B-A3B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3.6-35B-A3B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/a483e9e6cbd595906af30beda3187c2663a1118c/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
+      "revision": "a483e9e6cbd595906af30beda3187c2663a1118c",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.6-35b-a3b-gguf.ud_q4_k_m:3.6.0-ud_q4_k_m.1",
+      "modelVersion": "3.6.0",
+      "variant": "ud_q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
+      "sha256": "ac0e2c1189e055faa36eff361580e79c5bd6f8e76bffb4ce547f167d53e31a61",
+      "sizeBytes": 22134528992,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 34660610688,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 40,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "expertCount": 256,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 10
+      }
+    },
+    {
+      "id": "qwen_qwen3_4b_gguf_q4_k_m",
+      "name": "Qwen3-4B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-4B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen3-4B-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen3-4B-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/bc640142c66e1fdd12af0bd68f40445458f3869b/Qwen3-4B-Q4_K_M.gguf",
+      "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-4b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-4B-Q4_K_M.gguf",
+      "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+      "sizeBytes": 2497280256,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 4022468096,
+        "contextLength": 40960,
+        "embeddingLength": 2560,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 9728,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "unsloth_qwen3_14b_gguf_q4_k_m",
+      "name": "Qwen3-14B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-14B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-14B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-14B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-14B-GGUF/resolve/a04a82c4739b3ef5fa6da7d10261db2c67dd1985/Qwen3-14B-Q4_K_M.gguf",
+      "revision": "a04a82c4739b3ef5fa6da7d10261db2c67dd1985",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-14b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-14B-Q4_K_M.gguf",
+      "sha256": "5eaa0870bd81ed3b58a630a271234cfa604e43ffb3a19cd68e54a80dd9d52a66",
+      "sizeBytes": 9001753984,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 14768307200,
+        "contextLength": 40960,
+        "embeddingLength": 5120,
+        "blockCount": 40,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 17408,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "unsloth_qwen3_30b_a3b_gguf_q4_k_m",
+      "name": "Qwen3-30B-A3B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-30B-A3B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-30B-A3B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-30B-A3B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-30B-A3B-GGUF/resolve/d5b1d57bd0b504ac62ae6c725904e96ef228dc74/Qwen3-30B-A3B-Q4_K_M.gguf",
+      "revision": "d5b1d57bd0b504ac62ae6c725904e96ef228dc74",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-30b-a3b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-30B-A3B-Q4_K_M.gguf",
+      "sha256": "9f1a24700a339b09c06009b729b5c809e0b64c213b8af5b711b3dbdfd0c5ba48",
+      "sizeBytes": 18556686912,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 30532122624,
+        "contextLength": 40960,
+        "embeddingLength": 2048,
+        "blockCount": 48,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 6144,
+        "expertCount": 128,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "unsloth_qwen3_32b_gguf_q4_k_m",
+      "name": "Qwen3-32B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-32B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-32B-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-32B-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-32B-GGUF/resolve/931c84066f88693a02ab8de820cfcd066d913241/Qwen3-32B-Q4_K_M.gguf",
+      "revision": "931c84066f88693a02ab8de820cfcd066d913241",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-32b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-32B-Q4_K_M.gguf",
+      "sha256": "8df67573b2c23484e02ec7af295e39bed7ee774f3771d5fda2978265b59370e7",
+      "sizeBytes": 19762150048,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 32762123264,
+        "contextLength": 40960,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 64,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 25600,
+        "attentionBlockCount": 64
+      }
+    },
+    {
+      "id": "unsloth_qwen3_30b_a3b_instruct_2507_gguf_q4_k_m",
+      "name": "Qwen3-30B-A3B-Instruct-2507 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-30B-A3B-Instruct-2507, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/eea7b2be5805a5f151f8847ede8e5f9a9284bf77/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+      "revision": "eea7b2be5805a5f151f8847ede8e5f9a9284bf77",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-30b-a3b-instruct-2507-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+      "sha256": "6c997b8af17debdfb01d890214400ccbab00db6acc0ba8da5de1cc906c4774d0",
+      "sizeBytes": 18556686752,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 30532122624,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 48,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 6144,
+        "expertCount": 128,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "unsloth_qwen3_coder_30b_a3b_instruct_gguf_q4_k_m",
+      "name": "Qwen3-Coder-30B-A3B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-Coder-30B-A3B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF/resolve/b17cb02dd882d5b6ab62fc777ad2995f19668350/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+      "revision": "b17cb02dd882d5b6ab62fc777ad2995f19668350",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-coder-30b-a3b-instruct-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf",
+      "sha256": "fadc3e5f8d42bf7e894a785b05082e47daee4df26680389817e2093056f088ad",
+      "sizeBytes": 18556689568,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 30532122624,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 48,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 5472,
+        "expertCount": 128,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "unsloth_qwen3_coder_next_gguf_q4_k_m",
+      "name": "Qwen3-Coder-Next GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen3-Coder-Next, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/Qwen3-Coder-Next-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/Qwen3-Coder-Next-GGUF/resolve/ce09c67b53bc8739eef83fe67b2f5d293c270632/Qwen3-Coder-Next-Q4_K_M.gguf",
+      "revision": "ce09c67b53bc8739eef83fe67b2f5d293c270632",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3-coder-next-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3next",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-Coder-Next-Q4_K_M.gguf",
+      "sha256": "9e6032d2f3b50a60f17ce8bf5a1d85c71af9b53b89c7978020ae7c660f29b090",
+      "sizeBytes": 48528320544,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 79674391296,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 48,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 5120,
+        "expertCount": 512,
+        "expertUsedCount": 10,
+        "attentionBlockCount": 12
+      }
+    },
+    {
+      "id": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-0.5B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-0.5B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+      "sizeBytes": 491400032,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 630167424,
+        "contextLength": 32768,
+        "embeddingLength": 896,
+        "blockCount": 24,
+        "attentionHeadCount": 14,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 4864,
+        "attentionBlockCount": 24
+      }
+    },
+    {
+      "id": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-1.5B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-1.5B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/91cad51170dc346986eccefdc2dd33a9da36ead9/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "revision": "91cad51170dc346986eccefdc2dd33a9da36ead9",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-1.5b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+      "sizeBytes": 1117320736,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1777088000,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-3B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-3B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen2.5-3B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/7dabda4d13d513e3e842b20f0d435c732f172cbe/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "revision": "7dabda4d13d513e3e842b20f0d435c732f172cbe",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-3b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "sha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+      "sizeBytes": 2104932768,
+      "license": "LicenseRef-Qwen-Research",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3397103616,
+        "contextLength": 32768,
+        "embeddingLength": 2048,
+        "blockCount": 36,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "bartowski_qwen2_5_14b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-14B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-14B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Qwen2.5-14B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF/resolve/05244aa5d871c661c80082a15d3bce44714d068d/Qwen2.5-14B-Instruct-Q4_K_M.gguf",
+      "revision": "05244aa5d871c661c80082a15d3bce44714d068d",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.qwen2.5-14b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen2.5-14B-Instruct-Q4_K_M.gguf",
+      "sha256": "e47ad95dad6ff848b431053b375adb5d39321290ea2c638682577dafca87c008",
+      "sizeBytes": 8988110976,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 14770033664,
+        "contextLength": 32768,
+        "embeddingLength": 5120,
+        "blockCount": 48,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 13824,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "bartowski_qwen2_5_32b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-32B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-32B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Qwen2.5-32B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/2116cbb385b8ce3a4d28cf3bf1cd2039a55821a6/Qwen2.5-32B-Instruct-Q4_K_M.gguf",
+      "revision": "2116cbb385b8ce3a4d28cf3bf1cd2039a55821a6",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.qwen2.5-32b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen2.5-32B-Instruct-Q4_K_M.gguf",
+      "sha256": "2e5f6daea180dbc59f65a40641e94d3973b5dbaa32b3c0acf54647fa874e519e",
+      "sizeBytes": 19851336576,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 32763876352,
+        "contextLength": 32768,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 27648,
+        "attentionBlockCount": 64
+      }
+    },
+    {
+      "id": "qwen_qwen2_5_coder_14b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-Coder-14B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-Coder-14B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen2.5-Coder-14B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct-GGUF/resolve/d0a692ef765eefbf2fabb130b3cb2e8917e3d225/qwen2.5-coder-14b-instruct-q4_k_m.gguf",
+      "revision": "d0a692ef765eefbf2fabb130b3cb2e8917e3d225",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-14b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-14b-instruct-q4_k_m.gguf",
+      "sha256": "c1e659736d89ac1065fb495330fb824d94001974a4bfa78e7270e43476a8d940",
+      "sizeBytes": 8988110272,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 14770033664,
+        "contextLength": 131072,
+        "embeddingLength": 5120,
+        "blockCount": 48,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 13824,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "qwen_qwen2_5_coder_32b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-Coder-32B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-Coder-32B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen2.5-Coder-32B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct-GGUF/resolve/9d3053fce650fe1cdbdb75998c2a87add9d178ef/qwen2.5-coder-32b-instruct-q4_k_m.gguf",
+      "revision": "9d3053fce650fe1cdbdb75998c2a87add9d178ef",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-32b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-coder-32b-instruct-q4_k_m.gguf",
+      "sha256": "4d64b316b5e6319d9613e0d97935d9ebd631fc7e334da400d00085eca749d085",
+      "sizeBytes": 19851335872,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 32763876352,
+        "contextLength": 131072,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 27648,
+        "attentionBlockCount": 64
+      }
+    },
+    {
+      "id": "bartowski_qwen2_5_math_7b_instruct_gguf_q4_k_m",
+      "name": "Qwen2.5-Math-7B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Qwen2.5-Math-7B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Qwen2.5-Math-7B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Qwen2.5-Math-7B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Qwen2.5-Math-7B-Instruct-GGUF/resolve/22e2c9c42470193b2b643636564765c84bcb06cb/Qwen2.5-Math-7B-Instruct-Q4_K_M.gguf",
+      "revision": "22e2c9c42470193b2b643636564765c84bcb06cb",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.qwen2.5-math-7b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen2.5-Math-7B-Instruct-Q4_K_M.gguf",
+      "sha256": "7e03cee8c65b9ebf9ca14ddb010aca27b6b18e6c70f2779e94e7451d9529c091",
+      "sizeBytes": 4683074272,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "mathematics"
+      ],
+      "dimensions": {
+        "parameterCount": 7615616512,
+        "contextLength": 4096,
+        "embeddingLength": 3584,
+        "blockCount": 28,
+        "attentionHeadCount": 28,
+        "keyValueHeadCount": 4,
+        "feedForwardLength": 18944,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "lmstudio_community_gemma_4_e2b_it_gguf_q4_k_m",
+      "name": "gemma-4-E2B-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-4-E2B-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://lmstudio-community/gemma-4-E2B-it-GGUF",
+      "sourceUri": "https://huggingface.co/lmstudio-community/gemma-4-E2B-it-GGUF",
+      "downloadUri": "https://huggingface.co/lmstudio-community/gemma-4-E2B-it-GGUF/resolve/3155b2dec005f7b0a6f721198c26ab11492a38e4/gemma-4-E2B-it-Q4_K_M.gguf",
+      "revision": "3155b2dec005f7b0a6f721198c26ab11492a38e4",
+      "markerCoordinate": "org.modeljars.huggingface:lmstudio-community.gemma-4-e2b-it-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-4-E2B-it-Q4_K_M.gguf",
+      "sha256": "6c950d754366dd8b372fd17a40497ba5f130a46d833b4c5bccc9f6bb6382ce1e",
+      "sizeBytes": 3427877696,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 4647450147,
+        "contextLength": 131072,
+        "embeddingLength": 1536,
+        "blockCount": 35,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 1,
+        "keyLength": 512,
+        "valueLength": 512,
+        "attentionBlockCount": 35
+      }
+    },
+    {
+      "id": "unsloth_gemma_4_12b_it_gguf_q4_k_m",
+      "name": "gemma-4-12b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-4-12b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/gemma-4-12b-it-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/gemma-4-12b-it-GGUF/resolve/d997c805aafe035a8024f961c6e1afd6b30d79a5/gemma-4-12b-it-Q4_K_M.gguf",
+      "revision": "d997c805aafe035a8024f961c6e1afd6b30d79a5",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.gemma-4-12b-it-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-4-12b-it-Q4_K_M.gguf",
+      "sha256": "43fec98c5102b1c446b4ddd0a9439f1db3a2e1f2e0b8cd143ce1ea619a9403d6",
+      "sizeBytes": 7121860000,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 11907350576,
+        "contextLength": 262144,
+        "embeddingLength": 3840,
+        "blockCount": 48,
+        "attentionHeadCount": 16,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 15360,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m",
+      "name": "gemma-4-26B-A4B-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-4-26B-A4B-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://ggml-org/gemma-4-26B-A4B-it-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/ae4d537a6345467d1c86bb5cc0d4505ff3ebe0f3/gemma-4-26B-A4B-it-Q4_K_M.gguf",
+      "revision": "ae4d537a6345467d1c86bb5cc0d4505ff3ebe0f3",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.gemma-4-26b-a4b-it-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-4-26B-A4B-it-Q4_K_M.gguf",
+      "sha256": "88f4a13b0bb95f031a7fad973e10854122fb67ebc34d214d39a2f65053046abc",
+      "sizeBytes": 16796015136,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 25233142046,
+        "contextLength": 262144,
+        "embeddingLength": 2816,
+        "blockCount": 30,
+        "attentionHeadCount": 16,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 2112,
+        "expertCount": 128,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 30
+      }
+    },
+    {
+      "id": "unsloth_gemma_4_31b_it_gguf_q4_k_m",
+      "name": "gemma-4-31B-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-4-31B-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/gemma-4-31B-it-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/gemma-4-31B-it-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/gemma-4-31B-it-GGUF/resolve/12e99a2f1ca91c69897aba2472bc16db674b3cb1/gemma-4-31B-it-Q4_K_M.gguf",
+      "revision": "12e99a2f1ca91c69897aba2472bc16db674b3cb1",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.gemma-4-31b-it-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-4-31B-it-Q4_K_M.gguf",
+      "sha256": "9fdf3dc8b0384830b4402d151388c140bd8eb2abf8d60588d8224231198254a1",
+      "sizeBytes": 18323731456,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 30697345596,
+        "contextLength": 262144,
+        "embeddingLength": 5376,
+        "blockCount": 60,
+        "attentionHeadCount": 32,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 21504,
+        "attentionBlockCount": 60
+      }
+    },
+    {
+      "id": "bartowski_gemma_2_2b_it_gguf_q4_k_m",
+      "name": "gemma-2-2b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-2-2b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/gemma-2-2b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/855f67caed130e1befc571b52bd181be2e858883/gemma-2-2b-it-Q4_K_M.gguf",
+      "revision": "855f67caed130e1befc571b52bd181be2e858883",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.gemma-2-2b-it-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-2-2b-it-Q4_K_M.gguf",
+      "sha256": "e0aee85060f168f0f2d8473d7ea41ce2f3230c1bc1374847505ea599288a7787",
+      "sizeBytes": 1708582752,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 2614341888,
+        "contextLength": 8192,
+        "embeddingLength": 2304,
+        "blockCount": 26,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 9216,
+        "attentionBlockCount": 26
+      }
+    },
+    {
+      "id": "bartowski_gemma_2_9b_it_gguf_q4_k_m",
+      "name": "gemma-2-9b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gemma-2-9b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/gemma-2-9b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/gemma-2-9b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/resolve/d731033f3dc4018261fd39896e50984d398b4ac5/gemma-2-9b-it-Q4_K_M.gguf",
+      "revision": "d731033f3dc4018261fd39896e50984d398b4ac5",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.gemma-2-9b-it-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gemma-2-9b-it-Q4_K_M.gguf",
+      "sha256": "13b2a7b4115bbd0900162edcebe476da1ba1fc24e718e8b40d32f6e300f56dfe",
+      "sizeBytes": 5761057728,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 9241705984,
+        "contextLength": 8192,
+        "embeddingLength": 3584,
+        "blockCount": 42,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 42
+      }
+    },
+    {
+      "id": "bartowski_google_gemma_3_1b_it_gguf_q4_k_m",
+      "name": "google gemma-3-1b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for google gemma-3-1b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/google_gemma-3-1b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/116f76234503685a98f572982177b11d44ec8ff1/google_gemma-3-1b-it-Q4_K_M.gguf",
+      "revision": "116f76234503685a98f572982177b11d44ec8ff1",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.google-gemma-3-1b-it-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/google_gemma-3-1b-it-Q4_K_M.gguf",
+      "sha256": "12bf0fff8815d5f73a3c9b586bd8fee8e7b248c935de70dec367679873d0f29d",
+      "sizeBytes": 806058496,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 999885952,
+        "contextLength": 32768,
+        "embeddingLength": 1152,
+        "blockCount": 26,
+        "attentionHeadCount": 4,
+        "keyValueHeadCount": 1,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 6912,
+        "attentionBlockCount": 26
+      }
+    },
+    {
+      "id": "bartowski_google_gemma_3_4b_it_gguf_q4_k_m",
+      "name": "google gemma-3-4b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for google gemma-3-4b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/google_gemma-3-4b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/google_gemma-3-4b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/google_gemma-3-4b-it-GGUF/resolve/71506238f970075ca85125cd749c28b1b0eee84e/google_gemma-3-4b-it-Q4_K_M.gguf",
+      "revision": "71506238f970075ca85125cd749c28b1b0eee84e",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.google-gemma-3-4b-it-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/google_gemma-3-4b-it-Q4_K_M.gguf",
+      "sha256": "4996030242583a40aa151ff93f49ed787ac8c25e4120c3ae4588b2e2a7d1ae94",
+      "sizeBytes": 2489758112,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3880099328,
+        "contextLength": 131072,
+        "embeddingLength": 2560,
+        "blockCount": 34,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 10240,
+        "attentionBlockCount": 34
+      }
+    },
+    {
+      "id": "bartowski_google_gemma_3_12b_it_gguf_q4_k_m",
+      "name": "google gemma-3-12b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for google gemma-3-12b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/google_gemma-3-12b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/google_gemma-3-12b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/google_gemma-3-12b-it-GGUF/resolve/648e3a36a77c8a9f12d86e741f9dcb9089c769c4/google_gemma-3-12b-it-Q4_K_M.gguf",
+      "revision": "648e3a36a77c8a9f12d86e741f9dcb9089c769c4",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.google-gemma-3-12b-it-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/google_gemma-3-12b-it-Q4_K_M.gguf",
+      "sha256": "fc57f67efa46d711c346e587cbef7d049e95f3df8db2eb2271153343ef0acc7b",
+      "sizeBytes": 7300575264,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 11765788416,
+        "contextLength": 131072,
+        "embeddingLength": 3840,
+        "blockCount": 48,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 15360,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "bartowski_google_gemma_3_27b_it_gguf_q4_k_m",
+      "name": "google gemma-3-27b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for google gemma-3-27b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/google_gemma-3-27b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/google_gemma-3-27b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/google_gemma-3-27b-it-GGUF/resolve/4a05c54413bd0d87d77a97af403266f69cec0ee6/google_gemma-3-27b-it-Q4_K_M.gguf",
+      "revision": "4a05c54413bd0d87d77a97af403266f69cec0ee6",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.google-gemma-3-27b-it-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/google_gemma-3-27b-it-Q4_K_M.gguf",
+      "sha256": "4e83142e3ad3719ac61334f70a956dcc60bbba8adb29de5114161310bb9f7170",
+      "sizeBytes": 16546404992,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 27009002240,
+        "contextLength": 131072,
+        "embeddingLength": 5376,
+        "blockCount": 62,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 16,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 21504,
+        "attentionBlockCount": 62
+      }
+    },
+    {
+      "id": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_m",
+      "name": "Llama-3.2-1B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Llama-3.2-1B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Llama-3.2-1B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/067b946cf014b7c697f3654f621d577a3e3afd1c/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+      "revision": "067b946cf014b7c697f3654f621d577a3e3afd1c",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.llama-3.2-1b-instruct-gguf.q4_k_m:3.2.0-q4_k_m.1",
+      "modelVersion": "3.2.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+      "sha256": "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
+      "sizeBytes": 807694464,
+      "license": "LicenseRef-Llama-3.2",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1235814432,
+        "contextLength": 131072,
+        "embeddingLength": 2048,
+        "blockCount": 16,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 64,
+        "valueLength": 64,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 16
+      }
+    },
+    {
+      "id": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_m",
+      "name": "Llama-3.2-3B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Llama-3.2-3B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Llama-3.2-3B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/5ab33fa94d1d04e903623ae72c95d1696f09f9e8/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "revision": "5ab33fa94d1d04e903623ae72c95d1696f09f9e8",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.llama-3.2-3b-instruct-gguf.q4_k_m:3.2.0-q4_k_m.1",
+      "modelVersion": "3.2.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "sha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+      "sizeBytes": 2019377696,
+      "license": "LicenseRef-Llama-3.2",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3212749888,
+        "contextLength": 131072,
+        "embeddingLength": 3072,
+        "blockCount": 28,
+        "attentionHeadCount": 24,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "bartowski_llama_3_3_70b_instruct_gguf_q4_k_m",
+      "name": "Llama-3.3-70B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Llama-3.3-70B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Llama-3.3-70B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Llama-3.3-70B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Llama-3.3-70B-Instruct-GGUF/resolve/b6c5c9f176f3279204034e1d16d393105e95cb88/Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+      "revision": "b6c5c9f176f3279204034e1d16d393105e95cb88",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.llama-3.3-70b-instruct-gguf.q4_k_m:3.3.0-q4_k_m.1",
+      "modelVersion": "3.3.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Llama-3.3-70B-Instruct-Q4_K_M.gguf",
+      "sha256": "32df3baccb556f9840059b2528b2dee4d3d516b24afdfb9d0c56ff5f63e3a664",
+      "sizeBytes": 42520398816,
+      "license": "LicenseRef-Llama-3.3",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 70553706560,
+        "contextLength": 131072,
+        "embeddingLength": 8192,
+        "blockCount": 80,
+        "attentionHeadCount": 64,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 28672,
+        "attentionBlockCount": 80
+      }
+    },
+    {
+      "id": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q4_k_m",
+      "name": "Meta-Llama-3-8B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Meta-Llama-3-8B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/MaziyarPanahi/Meta-Llama-3-8B-Instruct-GGUF/resolve/4ece958b356f2ec00338e5898ba0a7254d976baf/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+      "revision": "4ece958b356f2ec00338e5898ba0a7254d976baf",
+      "markerCoordinate": "org.modeljars.huggingface:maziyarpanahi.meta-llama-3-8b-instruct-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+      "sha256": "4903067381e3753e2629f9d20c52df0e43b675bed2735bc3efea351c7d07454d",
+      "sizeBytes": 4921246944,
+      "license": "LicenseRef-Llama-3",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 8030261248,
+        "contextLength": 8192,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_m",
+      "name": "Mistral-7B-Instruct-v0.3 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Mistral-7B-Instruct-v0.3, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://MaziyarPanahi/Mistral-7B-Instruct-v0.3-GGUF",
+      "sourceUri": "https://huggingface.co/MaziyarPanahi/Mistral-7B-Instruct-v0.3-GGUF",
+      "downloadUri": "https://huggingface.co/MaziyarPanahi/Mistral-7B-Instruct-v0.3-GGUF/resolve/ce89f595755a4bf2e2e05d155cc43cb847c78978/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf",
+      "revision": "ce89f595755a4bf2e2e05d155cc43cb847c78978",
+      "markerCoordinate": "org.modeljars.huggingface:maziyarpanahi.mistral-7b-instruct-v0.3-gguf.q4_k_m:0.3.0-q4_k_m.1",
+      "modelVersion": "0.3.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Mistral-7B-Instruct-v0.3.Q4_K_M.gguf",
+      "sha256": "14850c84ff9f06e9b51d505d64815d5cc0cea0257380353ac0b3d21b21f6e024",
+      "sizeBytes": 4372811936,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 7248023552,
+        "contextLength": 32768,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "bartowski_mistral_nemo_instruct_2407_gguf_q4_k_m",
+      "name": "Mistral-Nemo-Instruct-2407 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Mistral-Nemo-Instruct-2407, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Mistral-Nemo-Instruct-2407-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Mistral-Nemo-Instruct-2407-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Mistral-Nemo-Instruct-2407-GGUF/resolve/a2dd64a0a76ea1bdb2bb6ab6fa5496b003c7c908/Mistral-Nemo-Instruct-2407-Q4_K_M.gguf",
+      "revision": "a2dd64a0a76ea1bdb2bb6ab6fa5496b003c7c908",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.mistral-nemo-instruct-2407-gguf.q4_k_m:24.7.0-q4_k_m.1",
+      "modelVersion": "24.7.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Mistral-Nemo-Instruct-2407-Q4_K_M.gguf",
+      "sha256": "7c1a10d202d8788dbe5628dc962254d10654c853cae6aaeca0618f05490d4a46",
+      "sizeBytes": 7477208192,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 12247782400,
+        "contextLength": 1024000,
+        "embeddingLength": 5120,
+        "blockCount": 40,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_m",
+      "name": "Ministral-8B-Instruct-2410 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Ministral-8B-Instruct-2410, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Ministral-8B-Instruct-2410-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Ministral-8B-Instruct-2410-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Ministral-8B-Instruct-2410-GGUF/resolve/b4e2ea74eb4eecb178aa88d482c3126b34ad0157/Ministral-8B-Instruct-2410-Q4_K_M.gguf",
+      "revision": "b4e2ea74eb4eecb178aa88d482c3126b34ad0157",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.ministral-8b-instruct-2410-gguf.q4_k_m:24.10.0-q4_k_m.1",
+      "modelVersion": "24.10.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Ministral-8B-Instruct-2410-Q4_K_M.gguf",
+      "sha256": "bbe8d91c196491b1802b20aba121d2ef38945a8e6c6c6a8710bfd2ef393fe73f",
+      "sizeBytes": 4911500096,
+      "license": "LicenseRef-Mistral-Research",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 8019808256,
+        "contextLength": 32768,
+        "embeddingLength": 4096,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "bartowski_mistral_small_24b_instruct_2501_gguf_q4_k_m",
+      "name": "Mistral-Small-24B-Instruct-2501 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Mistral-Small-24B-Instruct-2501, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Mistral-Small-24B-Instruct-2501-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Mistral-Small-24B-Instruct-2501-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Mistral-Small-24B-Instruct-2501-GGUF/resolve/62a613c92d5a5f73bba6d348b51433b232c4640c/Mistral-Small-24B-Instruct-2501-Q4_K_M.gguf",
+      "revision": "62a613c92d5a5f73bba6d348b51433b232c4640c",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.mistral-small-24b-instruct-2501-gguf.q4_k_m:25.1.0-q4_k_m.1",
+      "modelVersion": "25.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Mistral-Small-24B-Instruct-2501-Q4_K_M.gguf",
+      "sha256": "d1a6d049f09730c3f8ba26cf6b0b60c89790b5fdafa9a59c819acdfe93fffd1b",
+      "sizeBytes": 14333908672,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 23572403200,
+        "contextLength": 32768,
+        "embeddingLength": 5120,
+        "blockCount": 40,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 32768,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "mistralai_devstral_small_2507_gguf_q4_k_m",
+      "name": "Devstral-Small-2507 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Devstral-Small-2507, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://mistralai/Devstral-Small-2507_gguf",
+      "sourceUri": "https://huggingface.co/mistralai/Devstral-Small-2507_gguf",
+      "downloadUri": "https://huggingface.co/mistralai/Devstral-Small-2507_gguf/resolve/ee2f0c00c5c86862f471fbf533268cf01b80d4a6/Devstral-Small-2507-Q4_K_M.gguf",
+      "revision": "ee2f0c00c5c86862f471fbf533268cf01b80d4a6",
+      "markerCoordinate": "org.modeljars.huggingface:mistralai.devstral-small-2507-gguf.q4_k_m:25.7.0-q4_k_m.1",
+      "modelVersion": "25.7.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Devstral-Small-2507-Q4_K_M.gguf",
+      "sha256": "1bcc2b1b7b7ea3168ba2dbe782432c464f2240598bd193930122c41b117c1796",
+      "sizeBytes": 14333915904,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 23572403200,
+        "contextLength": 131072,
+        "embeddingLength": 5120,
+        "blockCount": 40,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 32768,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "bartowski_phi_3_5_mini_instruct_gguf_q4_k_m",
+      "name": "Phi-3.5-mini-instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Phi-3.5-mini-instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Phi-3.5-mini-instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/6d70da17e749a471ccb62ade694486011a75cda3/Phi-3.5-mini-instruct-Q4_K_M.gguf",
+      "revision": "6d70da17e749a471ccb62ade694486011a75cda3",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.phi-3.5-mini-instruct-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "phi3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Phi-3.5-mini-instruct-Q4_K_M.gguf",
+      "sha256": "e4165e3a71af97f1b4820da61079826d8752a2088e313af0c7d346796c38eff5",
+      "sizeBytes": 2393232672,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3821079648,
+        "contextLength": 131072,
+        "embeddingLength": 3072,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "bartowski_phi_3_mini_4k_instruct_gguf_q4_k_m",
+      "name": "Phi-3-mini-4k-instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Phi-3-mini-4k-instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Phi-3-mini-4k-instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Phi-3-mini-4k-instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Phi-3-mini-4k-instruct-GGUF/resolve/e1447f6da0be91f91683c5d19f938d4f51122d88/Phi-3-mini-4k-instruct-Q4_K_M.gguf",
+      "revision": "e1447f6da0be91f91683c5d19f938d4f51122d88",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.phi-3-mini-4k-instruct-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "phi3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Phi-3-mini-4k-instruct-Q4_K_M.gguf",
+      "sha256": "28a89b4ddb5766355f24e362ae4078b4c35b9ca9568df5fc9e6d9aeee4dee834",
+      "sizeBytes": 2393231360,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3821079552,
+        "contextLength": 4096,
+        "embeddingLength": 3072,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-Distill-Qwen-1.5B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-Distill-Qwen-1.5B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/9cc28b17e86fa2415fcb070f8ee5ec27c965aa61/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+      "revision": "9cc28b17e86fa2415fcb070f8ee5ec27c965aa61",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-r1-distill-qwen-1.5b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+      "sha256": "1741e5b2d062b07acf048bf0d2c514dadf2a48f94e2b4aa0cfe069af3838ee2f",
+      "sizeBytes": 1117320800,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 1777088000,
+        "contextLength": 131072,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "bartowski_deepseek_r1_distill_qwen_14b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-Distill-Qwen-14B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-Distill-Qwen-14B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-14B-GGUF/resolve/9f5d77d401799416e0702290a691038b44012e0c/DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf",
+      "revision": "9f5d77d401799416e0702290a691038b44012e0c",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-r1-distill-qwen-14b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf",
+      "sha256": "0b319bd0572f2730bfe11cc751defe82045fad5085b4e60591ac2cd2d9633181",
+      "sizeBytes": 8988110240,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 14770033664,
+        "contextLength": 131072,
+        "embeddingLength": 5120,
+        "blockCount": 48,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 13824,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "bartowski_deepseek_r1_distill_qwen_32b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-Distill-Qwen-32B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-Distill-Qwen-32B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-32B-GGUF/resolve/1dc8cf9ffa5dd333057ea1b09ccf4772d8726dec/DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
+      "revision": "1dc8cf9ffa5dd333057ea1b09ccf4772d8726dec",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-r1-distill-qwen-32b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gguf",
+      "sha256": "bed9b0f551f5b95bf9da5888a48f0f87c37ad6b72519c4cbd775f54ac0b9fc62",
+      "sizeBytes": 19851335840,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 32763876352,
+        "contextLength": 131072,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 27648,
+        "attentionBlockCount": 64
+      }
+    },
+    {
+      "id": "bartowski_deepseek_r1_distill_llama_8b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-Distill-Llama-8B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-Distill-Llama-8B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-R1-Distill-Llama-8B-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Llama-8B-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Llama-8B-GGUF/resolve/935d400c2ed1a29cc2a1045df25ec7998fb4dfe4/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+      "revision": "935d400c2ed1a29cc2a1045df25ec7998fb4dfe4",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-r1-distill-llama-8b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf",
+      "sha256": "87bcba20b4846d8dadf753d3ff48f9285d131fc95e3e0e7e934d4f20bc896f5d",
+      "sizeBytes": 4920736608,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 8030261312,
+        "contextLength": 131072,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "bartowski_deepseek_r1_distill_llama_70b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-Distill-Llama-70B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-Distill-Llama-70B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-R1-Distill-Llama-70B-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Llama-70B-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-R1-Distill-Llama-70B-GGUF/resolve/1842c5f7280f933ead58adf8afd078672c9f6cd0/DeepSeek-R1-Distill-Llama-70B-Q4_K_M.gguf",
+      "revision": "1842c5f7280f933ead58adf8afd078672c9f6cd0",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-r1-distill-llama-70b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-Distill-Llama-70B-Q4_K_M.gguf",
+      "sha256": "181a82a1d6d2fa24fe4db83a68eee030384986bdbdd4773ba76424e3a6eb9fd8",
+      "sizeBytes": 42520395936,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 70553706560,
+        "contextLength": 131072,
+        "embeddingLength": 8192,
+        "blockCount": 80,
+        "attentionHeadCount": 64,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 28672,
+        "attentionBlockCount": 80
+      }
+    },
+    {
+      "id": "lmstudio_community_deepseek_r1_0528_qwen3_8b_gguf_q4_k_m",
+      "name": "DeepSeek-R1-0528-Qwen3-8B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-R1-0528-Qwen3-8B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://lmstudio-community/DeepSeek-R1-0528-Qwen3-8B-GGUF",
+      "sourceUri": "https://huggingface.co/lmstudio-community/DeepSeek-R1-0528-Qwen3-8B-GGUF",
+      "downloadUri": "https://huggingface.co/lmstudio-community/DeepSeek-R1-0528-Qwen3-8B-GGUF/resolve/335076f2c9044728bd2d906527150757e03ba35e/DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "revision": "335076f2c9044728bd2d906527150757e03ba35e",
+      "markerCoordinate": "org.modeljars.huggingface:lmstudio-community.deepseek-r1-0528-qwen3-8b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-R1-0528-Qwen3-8B-Q4_K_M.gguf",
+      "sha256": "713d3a7a93f306763a6de2b5e9f9350e3aeee3bbfe8c3ee0066b61939feaa332",
+      "sizeBytes": 5027782720,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 8190735360,
+        "contextLength": 131072,
+        "embeddingLength": 4096,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "bartowski_codegemma_7b_it_gguf_q4_k_m",
+      "name": "codegemma-7b-it GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for codegemma-7b-it, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/codegemma-7b-it-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/codegemma-7b-it-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/codegemma-7b-it-GGUF/resolve/3e388f0aa56214f81baa9a7ee9e1da7889118d82/codegemma-7b-it-Q4_K_M.gguf",
+      "revision": "3e388f0aa56214f81baa9a7ee9e1da7889118d82",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.codegemma-7b-it-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/codegemma-7b-it-Q4_K_M.gguf",
+      "sha256": "71acf09271bd521ee11811d9c463781fdad49b202e6a72b22c816a0d0c6c1a6b",
+      "sizeBytes": 5329759232,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 8537680896,
+        "contextLength": 8192,
+        "embeddingLength": 3072,
+        "blockCount": 28,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 16,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 24576,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "thebloke_codellama_7b_instruct_gguf_q4_k_m",
+      "name": "CodeLlama-7B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for CodeLlama-7B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://TheBloke/CodeLlama-7B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/TheBloke/CodeLlama-7B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/TheBloke/CodeLlama-7B-Instruct-GGUF/resolve/2f064ee0c6ae3f025ec4e392c6ba5dd049c77969/codellama-7b-instruct.Q4_K_M.gguf",
+      "revision": "2f064ee0c6ae3f025ec4e392c6ba5dd049c77969",
+      "markerCoordinate": "org.modeljars.huggingface:thebloke.codellama-7b-instruct-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/codellama-7b-instruct.Q4_K_M.gguf",
+      "sha256": "0701500c591c2c1b910516658e58044cdfa07b2e8b5a2e3b6808d983441daf1a",
+      "sizeBytes": 4081095360,
+      "license": "LicenseRef-Llama-2",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 6738546688,
+        "contextLength": 16384,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "thebloke_codellama_13b_instruct_gguf_q4_k_m",
+      "name": "CodeLlama-13B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for CodeLlama-13B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://TheBloke/CodeLlama-13B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/TheBloke/CodeLlama-13B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/TheBloke/CodeLlama-13B-Instruct-GGUF/resolve/82f1dd9567b9b20b7e8f8aa9ecf3d2f121e5d415/codellama-13b-instruct.Q4_K_M.gguf",
+      "revision": "82f1dd9567b9b20b7e8f8aa9ecf3d2f121e5d415",
+      "markerCoordinate": "org.modeljars.huggingface:thebloke.codellama-13b-instruct-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/codellama-13b-instruct.Q4_K_M.gguf",
+      "sha256": "48cc5600c5e35b1226208a53b1871f50efb15764232babaef23e2264c285d7d9",
+      "sizeBytes": 7866070016,
+      "license": "LicenseRef-Llama-2",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 13016028160,
+        "contextLength": 16384,
+        "embeddingLength": 5120,
+        "blockCount": 40,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 40,
+        "feedForwardLength": 13824,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "thebloke_codellama_34b_instruct_gguf_q4_k_m",
+      "name": "CodeLlama-34B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for CodeLlama-34B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://TheBloke/CodeLlama-34B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/TheBloke/CodeLlama-34B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/TheBloke/CodeLlama-34B-Instruct-GGUF/resolve/7b84402c234acb1c5be542b5ecfc820ea3b74422/codellama-34b-instruct.Q4_K_M.gguf",
+      "revision": "7b84402c234acb1c5be542b5ecfc820ea3b74422",
+      "markerCoordinate": "org.modeljars.huggingface:thebloke.codellama-34b-instruct-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/codellama-34b-instruct.Q4_K_M.gguf",
+      "sha256": "57290fe55636910ab11b935dbe675d19781d06bd8020594d9135e06477e3c2bf",
+      "sizeBytes": 20219900064,
+      "license": "LicenseRef-Llama-2",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 33743970304,
+        "contextLength": 16384,
+        "embeddingLength": 8192,
+        "blockCount": 48,
+        "attentionHeadCount": 64,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 22016,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "bartowski_deepseek_coder_v2_lite_instruct_gguf_q4_k_m",
+      "name": "DeepSeek-Coder-V2-Lite-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for DeepSeek-Coder-V2-Lite-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF/resolve/8f248fa2072348f77a8bc37754e470de1f61866e/DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf",
+      "revision": "8f248fa2072348f77a8bc37754e470de1f61866e",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.deepseek-coder-v2-lite-instruct-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "deepseek2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/DeepSeek-Coder-V2-Lite-Instruct-Q4_K_M.gguf",
+      "sha256": "603bd3f8a0281d16571da7c08bd661ee17ff0d1be6fcbd1b42242da257ef0bb8",
+      "sizeBytes": 10364416768,
+      "license": "LicenseRef-DeepSeek",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 15706484224,
+        "contextLength": 163840,
+        "embeddingLength": 2048,
+        "blockCount": 27,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 16,
+        "keyLength": 192,
+        "valueLength": 128,
+        "feedForwardLength": 10944,
+        "expertCount": 64,
+        "expertUsedCount": 6,
+        "attentionBlockCount": 27
+      }
+    },
+    {
+      "id": "bartowski_codestral_22b_v0_1_gguf_q4_k_m",
+      "name": "Codestral-22B-v0.1 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Codestral-22B-v0.1, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Codestral-22B-v0.1-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Codestral-22B-v0.1-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Codestral-22B-v0.1-GGUF/resolve/0e6abe14d6aeaf2c99d5dc9973205e8e38692d90/Codestral-22B-v0.1-Q4_K_M.gguf",
+      "revision": "0e6abe14d6aeaf2c99d5dc9973205e8e38692d90",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.codestral-22b-v0.1-gguf.q4_k_m:0.1.0-q4_k_m.1",
+      "modelVersion": "0.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Codestral-22B-v0.1-Q4_K_M.gguf",
+      "sha256": "003e48ed892850b80994fcddca2bd6b833b092a4ef2db2853c33a3144245e06c",
+      "sizeBytes": 13341237600,
+      "license": "LicenseRef-MNPL-0.1",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 22247282688,
+        "contextLength": 32768,
+        "embeddingLength": 6144,
+        "blockCount": 56,
+        "attentionHeadCount": 48,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 16384,
+        "attentionBlockCount": 56
+      }
+    },
+    {
+      "id": "bartowski_mathstral_7b_v0_1_gguf_q4_k_m",
+      "name": "mathstral-7B-v0.1 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for mathstral-7B-v0.1, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/mathstral-7B-v0.1-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/mathstral-7B-v0.1-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/mathstral-7B-v0.1-GGUF/resolve/37c8ee4527abbcc564fddddd6d21484f2852bf19/mathstral-7B-v0.1-Q4_K_M.gguf",
+      "revision": "37c8ee4527abbcc564fddddd6d21484f2852bf19",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.mathstral-7b-v0.1-gguf.q4_k_m:0.1.0-q4_k_m.1",
+      "modelVersion": "0.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/mathstral-7B-v0.1-Q4_K_M.gguf",
+      "sha256": "2c7fbe11db4f1381a19601880bd51daab9c097965860817d892d7e98988ab61d",
+      "sizeBytes": 4372811584,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "mathematics"
+      ],
+      "dimensions": {
+        "parameterCount": 7248023552,
+        "contextLength": 32768,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "unsloth_gpt_oss_20b_gguf_q4_k_m",
+      "name": "gpt-oss-20b GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for gpt-oss-20b, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://unsloth/gpt-oss-20b-GGUF",
+      "sourceUri": "https://huggingface.co/unsloth/gpt-oss-20b-GGUF",
+      "downloadUri": "https://huggingface.co/unsloth/gpt-oss-20b-GGUF/resolve/d449b42d93e1c2c7bda5312f5c25c8fb91dfa9b4/gpt-oss-20b-Q4_K_M.gguf",
+      "revision": "d449b42d93e1c2c7bda5312f5c25c8fb91dfa9b4",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.gpt-oss-20b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gpt-oss",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/gpt-oss-20b-Q4_K_M.gguf",
+      "sha256": "c27536640e410032865dc68781d80a08b98f8db5e93575919af8ccc0568aeb4f",
+      "sizeBytes": 11624759488,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding",
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 20914757184,
+        "contextLength": 131072,
+        "embeddingLength": 2880,
+        "blockCount": 24,
+        "attentionHeadCount": 64,
+        "keyValueHeadCount": 8,
+        "keyLength": 64,
+        "valueLength": 64,
+        "feedForwardLength": 2880,
+        "expertCount": 32,
+        "expertUsedCount": 4,
+        "attentionBlockCount": 24
+      }
+    },
+    {
+      "id": "liquidai_lfm2_5_1_2b_instruct_gguf_q4_k_m",
+      "name": "LFM2.5-1.2B-Instruct GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for LFM2.5-1.2B-Instruct, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF/resolve/047e06635fbe71469926b35ea414537245218200/LFM2.5-1.2B-Instruct-Q4_K_M.gguf",
+      "revision": "047e06635fbe71469926b35ea414537245218200",
+      "markerCoordinate": "org.modeljars.huggingface:liquidai.lfm2.5-1.2b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "lfm2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/LFM2.5-1.2B-Instruct-Q4_K_M.gguf",
+      "sha256": "b1b3de114215d9507409a662a501a631095a479a419584e8a2ded6304b19b4f5",
+      "sizeBytes": 730895168,
+      "license": "LicenseRef-LFM-1.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1170340608,
+        "contextLength": 128000,
+        "embeddingLength": 2048,
+        "blockCount": 16,
+        "attentionHeadCount": 32,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "janhq_jan_v3_5_4b_gguf_q4_k_m",
+      "name": "Jan-v3.5-4B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Jan-v3.5-4B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://janhq/Jan-v3.5-4B-gguf",
+      "sourceUri": "https://huggingface.co/janhq/Jan-v3.5-4B-gguf",
+      "downloadUri": "https://huggingface.co/janhq/Jan-v3.5-4B-gguf/resolve/2b0fcab0066198e78f7c004a0815179fbce13985/Jan-v3.5-4B-Q4_K_M.gguf",
+      "revision": "2b0fcab0066198e78f7c004a0815179fbce13985",
+      "markerCoordinate": "org.modeljars.huggingface:janhq.jan-v3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "modelVersion": "3.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Jan-v3.5-4B-Q4_K_M.gguf",
+      "sha256": "2f5305d93100ad9105eeb47c45ef1af99ba6d568c734fc267b0628b3be41c07a",
+      "sizeBytes": 2716066656,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 4411424256,
+        "contextLength": 262144,
+        "embeddingLength": 2560,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 9728,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "deepreinforce_ai_ornith_1_0_9b_gguf_q4_k_m",
+      "name": "Ornith-1.0-9B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Ornith-1.0-9B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://deepreinforce-ai/Ornith-1.0-9B-GGUF",
+      "sourceUri": "https://huggingface.co/deepreinforce-ai/Ornith-1.0-9B-GGUF",
+      "downloadUri": "https://huggingface.co/deepreinforce-ai/Ornith-1.0-9B-GGUF/resolve/3296bc7a404871a72ac3f1903f561459c09b5c17/ornith-1.0-9b-Q4_K_M.gguf",
+      "revision": "3296bc7a404871a72ac3f1903f561459c09b5c17",
+      "markerCoordinate": "org.modeljars.huggingface:deepreinforce-ai.ornith-1.0-9b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/ornith-1.0-9b-Q4_K_M.gguf",
+      "sha256": "5720d1f671b4996481274fffe01868c3c36e87c135cc8538471cc7bd6087b106",
+      "sizeBytes": 5629108704,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding",
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 8953803264,
+        "contextLength": 262144,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 8
+      }
+    },
+    {
+      "id": "deepreinforce_ai_ornith_1_0_35b_gguf_q4_k_m",
+      "name": "Ornith-1.0-35B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Ornith-1.0-35B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://deepreinforce-ai/Ornith-1.0-35B-GGUF",
+      "sourceUri": "https://huggingface.co/deepreinforce-ai/Ornith-1.0-35B-GGUF",
+      "downloadUri": "https://huggingface.co/deepreinforce-ai/Ornith-1.0-35B-GGUF/resolve/c2e1703039380de4ce6820e97afd185682d3c16c/ornith-1.0-35b-Q4_K_M.gguf",
+      "revision": "c2e1703039380de4ce6820e97afd185682d3c16c",
+      "markerCoordinate": "org.modeljars.huggingface:deepreinforce-ai.ornith-1.0-35b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/ornith-1.0-35b-Q4_K_M.gguf",
+      "sha256": "ff25291b2599fb927a835e624d2b3540106af61761c3fa57ac4264046dbec002",
+      "sizeBytes": 21166757760,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding",
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 34660610688,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 40,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "expertCount": 256,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 10
+      }
+    },
+    {
+      "id": "ggml_org_embeddinggemma_300m_gguf_q8_0",
+      "name": "embeddinggemma-300M GGUF Q8_0",
+      "description": "Pinned GGUF embedding artifact for embeddinggemma-300M, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://ggml-org/embeddinggemma-300M-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF/resolve/0f741b5a6585bd53aeb15cd1372c56f2a0f65e12/embeddinggemma-300M-Q8_0.gguf",
+      "revision": "0f741b5a6585bd53aeb15cd1372c56f2a0f65e12",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.embeddinggemma-300m-gguf.q8_0:3.0.0-q8_0.1",
+      "modelVersion": "3.0.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "gemma-embedding",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.jvllm/models/embeddinggemma-300M-Q8_0.gguf",
+      "sha256": "b5ce9d77a3fc4b3b39ccb5643c36777911cc4eb46a66962eadfa3f5f60490d63",
+      "sizeBytes": 333590944,
+      "license": "LicenseRef-Gemma",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q8-0",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 307581696,
+        "contextLength": 2048,
+        "embeddingLength": 768,
+        "blockCount": 24,
+        "attentionHeadCount": 3,
+        "keyValueHeadCount": 1,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 1152,
+        "attentionBlockCount": 24
+      }
+    },
+    {
+      "id": "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+      "name": "Qwen3-Embedding-0.6B GGUF Q8_0",
+      "description": "Pinned GGUF embedding artifact for Qwen3-Embedding-0.6B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/370f27d7550e0def9b39c1f16d3fbaa13aa67728/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "revision": "370f27d7550e0def9b39c1f16d3fbaa13aa67728",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-embedding-0.6b-gguf.q8_0:3.0.0-q8_0.1",
+      "modelVersion": "3.0.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+      "sizeBytes": 639150592,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q8-0"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 595776512,
+        "contextLength": 32768,
+        "embeddingLength": 1024,
+        "blockCount": 28,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 3072,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "qwen_qwen3_embedding_4b_gguf_q4_k_m",
+      "name": "Qwen3-Embedding-4B GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for Qwen3-Embedding-4B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen3-Embedding-4B-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen3-Embedding-4B-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen3-Embedding-4B-GGUF/resolve/f4602530db1d980e16da9d7d3a70294cf5c190be/Qwen3-Embedding-4B-Q4_K_M.gguf",
+      "revision": "f4602530db1d980e16da9d7d3a70294cf5c190be",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-embedding-4b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-Embedding-4B-Q4_K_M.gguf",
+      "sha256": "2b0cf8f17b4c723c27303015383c27ec4bf2d8314bb677d05e920dd70bb0f16b",
+      "sizeBytes": 2496703776,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 4021774336,
+        "contextLength": 40960,
+        "embeddingLength": 2560,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 9728,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "qwen_qwen3_embedding_8b_gguf_q4_k_m",
+      "name": "Qwen3-Embedding-8B GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for Qwen3-Embedding-8B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Qwen/Qwen3-Embedding-8B-GGUF",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen3-Embedding-8B-GGUF",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen3-Embedding-8B-GGUF/resolve/69d0e58a13e463cd99a9b83e3f5fee7c10265fab/Qwen3-Embedding-8B-Q4_K_M.gguf",
+      "revision": "69d0e58a13e463cd99a9b83e3f5fee7c10265fab",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-embedding-8b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Qwen3-Embedding-8B-Q4_K_M.gguf",
+      "sha256": "3fcd3febec8b3fd64435204db75bf0dd73b91e8d0661e0331acfe7e7c3120b85",
+      "sizeBytes": 4676804928,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 7567295488,
+        "contextLength": 40960,
+        "embeddingLength": 4096,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 12288,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_m",
+      "name": "All-MiniLM-L6-v2-Embedding GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for All-MiniLM-L6-v2-Embedding, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://second-state/All-MiniLM-L6-v2-Embedding-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF/resolve/544f204f2eaa2d71361ffc74d6df7170285b286a/all-MiniLM-L6-v2-Q4_K_M.gguf",
+      "revision": "544f204f2eaa2d71361ffc74d6df7170285b286a",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "bert",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q4_K_M.gguf",
+      "sha256": "2ec4cee28a27a9c973d5f5230930d6ef6e52694bd2bc71be26a9bef5b1d755e6",
+      "sizeBytes": 20999104,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 22565376,
+        "contextLength": 512,
+        "embeddingLength": 384,
+        "blockCount": 6,
+        "attentionHeadCount": 12,
+        "feedForwardLength": 1536,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "liquidai_lfm2_5_embedding_350m_gguf_q4_k_m",
+      "name": "LFM2.5-Embedding-350M GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for LFM2.5-Embedding-350M, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://LiquidAI/LFM2.5-Embedding-350M-GGUF",
+      "sourceUri": "https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M-GGUF",
+      "downloadUri": "https://huggingface.co/LiquidAI/LFM2.5-Embedding-350M-GGUF/resolve/a80de9c5b941d429104f0038292a0ef5a860e486/LFM2.5-Embedding-350M-Q4_K_M.gguf",
+      "revision": "a80de9c5b941d429104f0038292a0ef5a860e486",
+      "markerCoordinate": "org.modeljars.huggingface:liquidai.lfm2.5-embedding-350m-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "lfm2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/LFM2.5-Embedding-350M-Q4_K_M.gguf",
+      "sha256": "4d7aa9dc6406a10fc3dec2c11f8f06781af063bf49211b8e4132e9b876d3f32a",
+      "sizeBytes": 229311232,
+      "license": "LicenseRef-LFM-1.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 354483968,
+        "contextLength": 128000,
+        "embeddingLength": 1024,
+        "blockCount": 16,
+        "attentionHeadCount": 16,
+        "feedForwardLength": 4608,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_m",
+      "name": "granite-embedding-107m-multilingual GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for granite-embedding-107m-multilingual, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/granite-embedding-107m-multilingual-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/granite-embedding-107m-multilingual-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/granite-embedding-107m-multilingual-GGUF/resolve/52fed1c818636b7cb8c4e4e3ae73189efeb78081/granite-embedding-107m-multilingual-Q4_K_M.gguf",
+      "revision": "52fed1c818636b7cb8c4e4e3ae73189efeb78081",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.granite-embedding-107m-multilingual-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "bert",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q4_K_M.gguf",
+      "sha256": "4a0115de29aeeedc73175f14c6e2eee9da1d4b586cbe4c1e95b68b7e36aff36a",
+      "sizeBytes": 117011136,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 106845696,
+        "contextLength": 512,
+        "embeddingLength": 384,
+        "blockCount": 6,
+        "attentionHeadCount": 12,
+        "feedForwardLength": 1536,
+        "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q4_k_m",
+      "name": "Nomic-embed-text-v1.5-Embedding GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for Nomic-embed-text-v1.5-Embedding, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://second-state/Nomic-embed-text-v1.5-Embedding-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/Nomic-embed-text-v1.5-Embedding-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/f472d22b2e8befcffc19ba0bdd881575041d931c/nomic-embed-text-v1.5-Q4_K_M.gguf",
+      "revision": "f472d22b2e8befcffc19ba0bdd881575041d931c",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.nomic-embed-text-v1.5-embedding-gguf.q4_k_m:1.5.0-q4_k_m.1",
+      "modelVersion": "1.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "nomic-bert",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q4_K_M.gguf",
+      "sha256": "145b7a8e6cec3574a8097520aee6b92cc9f314ad581e5b1a50b372b43b2ab20b",
+      "sizeBytes": 90150080,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 136727040,
+        "contextLength": 2048,
+        "embeddingLength": 768,
+        "blockCount": 12,
+        "attentionHeadCount": 12,
+        "feedForwardLength": 3072,
+        "attentionBlockCount": 12
+      }
+    },
+    {
+      "id": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m",
+      "name": "E5-Mistral-7B-Instruct-Embedding GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for E5-Mistral-7B-Instruct-Embedding, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://second-state/E5-Mistral-7B-Instruct-Embedding-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/E5-Mistral-7B-Instruct-Embedding-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/E5-Mistral-7B-Instruct-Embedding-GGUF/resolve/3e8b3777ee103fc655e835bd96ab72fe57af4695/e5-mistral-7b-instruct-Q4_K_M.gguf",
+      "revision": "3e8b3777ee103fc655e835bd96ab72fe57af4695",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.e5-mistral-7b-instruct-embedding-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/e5-mistral-7b-instruct-Q4_K_M.gguf",
+      "sha256": "96f5b8305d2091b48dc1191c082e61cca1f0fc7181650106bed3dd5a495ab5e4",
+      "sizeBytes": 4368439520,
+      "license": "MIT",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 7241732096,
+        "contextLength": 32768,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "second_state_jina_embeddings_v2_base_code_gguf_q4_k_m",
+      "name": "jina-embeddings-v2-base-code GGUF Q4_K_M",
+      "description": "Pinned GGUF embedding artifact for jina-embeddings-v2-base-code, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://second-state/jina-embeddings-v2-base-code-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/jina-embeddings-v2-base-code-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/jina-embeddings-v2-base-code-GGUF/resolve/5a9d2a5183c6a23a30d98741ffe3a594feeb10aa/jina-embeddings-v2-base-code-Q4_K_M.gguf",
+      "revision": "5a9d2a5183c6a23a30d98741ffe3a594feeb10aa",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.jina-embeddings-v2-base-code-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "jina-bert-v2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/jina-embeddings-v2-base-code-Q4_K_M.gguf",
+      "sha256": "cc1b9c936e806c5b3a4fa437903cd538ff9839e948870cb44be49825fe00fee1",
+      "sizeBytes": 109451680,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 160278528,
+        "contextLength": 8192,
+        "embeddingLength": 768,
+        "blockCount": 12,
+        "attentionHeadCount": 12,
+        "feedForwardLength": 3072,
+        "attentionBlockCount": 12
+      }
+    },
+    {
+      "id": "umarfarookm_umartransit_1b_q4_k_m",
+      "name": "UmarTransit-1B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for UmarTransit-1B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://umarfarookm/UmarTransit-1B",
+      "sourceUri": "https://huggingface.co/umarfarookm/UmarTransit-1B",
+      "downloadUri": "https://huggingface.co/umarfarookm/UmarTransit-1B/resolve/086c12aadfee08963ed70ab73ae2cb3997dbde3a/UmarTransit-1B.Q4_K_M.gguf",
+      "revision": "086c12aadfee08963ed70ab73ae2cb3997dbde3a",
+      "markerCoordinate": "org.modeljars.huggingface:umarfarookm.umartransit-1b.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/UmarTransit-1B.Q4_K_M.gguf",
+      "sha256": "db1a4489626110145274f508b3fa30439516a47b4e721fe02d67df4679db5b9a",
+      "sizeBytes": 986048096,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "transportation"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "king3djbl_nexus_medical_gguf_q4_k_m",
+      "name": "nexus-medical GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for nexus-medical, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://King3Djbl/nexus-medical-GGUF",
+      "sourceUri": "https://huggingface.co/King3Djbl/nexus-medical-GGUF",
+      "downloadUri": "https://huggingface.co/King3Djbl/nexus-medical-GGUF/resolve/ee4785b0b4c5bf646801f5806248244b661da5e6/nexus-medical-q4_k_m.gguf",
+      "revision": "ee4785b0b4c5bf646801f5806248244b661da5e6",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-medical-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nexus-medical-q4_k_m.gguf",
+      "sha256": "f26138b8e049e91a3e006f215a3618e3da0fef28755f73fe83bea19f73c700ea",
+      "sizeBytes": 986045632,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "healthcare"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_m",
+      "name": "PopiT-Qwen3-4B-Medical-SFT-1128 GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for PopiT-Qwen3-4B-Medical-SFT-1128, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://mradermacher/PopiT-Qwen3-4B-Medical-SFT-1128-GGUF",
+      "sourceUri": "https://huggingface.co/mradermacher/PopiT-Qwen3-4B-Medical-SFT-1128-GGUF",
+      "downloadUri": "https://huggingface.co/mradermacher/PopiT-Qwen3-4B-Medical-SFT-1128-GGUF/resolve/95e3a48a7356c0f5b2dd5d34c630e744b97a1957/PopiT-Qwen3-4B-Medical-SFT-1128.Q4_K_M.gguf",
+      "revision": "95e3a48a7356c0f5b2dd5d34c630e744b97a1957",
+      "markerCoordinate": "org.modeljars.huggingface:mradermacher.popit-qwen3-4b-medical-sft-1128-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/PopiT-Qwen3-4B-Medical-SFT-1128.Q4_K_M.gguf",
+      "sha256": "07b3cc6981e8d7b1185169def28fb8f951028dd237e40d50d0c03a450502e7d8",
+      "sizeBytes": 2497282880,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "healthcare"
+      ],
+      "dimensions": {
+        "parameterCount": 4022468096,
+        "contextLength": 40960,
+        "embeddingLength": 2560,
+        "blockCount": 36,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 9728,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "king3djbl_nexus_finance_gguf_q4_k_m",
+      "name": "nexus-finance GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for nexus-finance, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://King3Djbl/nexus-finance-GGUF",
+      "sourceUri": "https://huggingface.co/King3Djbl/nexus-finance-GGUF",
+      "downloadUri": "https://huggingface.co/King3Djbl/nexus-finance-GGUF/resolve/c3388d8f6126505a7f998ca1b5354f286c9ca891/nexus-finance-q4_k_m.gguf",
+      "revision": "c3388d8f6126505a7f998ca1b5354f286c9ca891",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-finance-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nexus-finance-q4_k_m.gguf",
+      "sha256": "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
+      "sizeBytes": 986045632,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "finance"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "mradermacher_financegemma_e4b_gguf_q4_k_m",
+      "name": "FinanceGemma-E4B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for FinanceGemma-E4B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://mradermacher/FinanceGemma-E4B-GGUF",
+      "sourceUri": "https://huggingface.co/mradermacher/FinanceGemma-E4B-GGUF",
+      "downloadUri": "https://huggingface.co/mradermacher/FinanceGemma-E4B-GGUF/resolve/c26b473b6131ff241af8a9dda4325588448ae2cb/FinanceGemma-E4B.Q4_K_M.gguf",
+      "revision": "c26b473b6131ff241af8a9dda4325588448ae2cb",
+      "markerCoordinate": "org.modeljars.huggingface:mradermacher.financegemma-e4b-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "modelVersion": "4.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/FinanceGemma-E4B.Q4_K_M.gguf",
+      "sha256": "7fae4aae380e0e2e4d8e82bc67da8452046233332d6e21c80c7aa698e8fb96f4",
+      "sizeBytes": 5335291648,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "finance"
+      ],
+      "dimensions": {
+        "parameterCount": 7518069290,
+        "contextLength": 131072,
+        "embeddingLength": 2560,
+        "blockCount": 42,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 10240,
+        "attentionBlockCount": 42
+      }
+    },
+    {
+      "id": "king3djbl_nexus_legal_gguf_q4_k_m",
+      "name": "nexus-legal GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for nexus-legal, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://King3Djbl/nexus-legal-GGUF",
+      "sourceUri": "https://huggingface.co/King3Djbl/nexus-legal-GGUF",
+      "downloadUri": "https://huggingface.co/King3Djbl/nexus-legal-GGUF/resolve/e55697a1bcbce71db82e7551c98cb6bd279620f6/nexus-legal-q4_k_m.gguf",
+      "revision": "e55697a1bcbce71db82e7551c98cb6bd279620f6",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-legal-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nexus-legal-q4_k_m.gguf",
+      "sha256": "309437dc5aa980fd7025fc29b3a25740564244e124a0d806967ee05ed01b6d93",
+      "sizeBytes": 986045472,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "legal"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m",
+      "name": "Indian-Legal-Qwen2.5-3B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Indian-Legal-Qwen2.5-3B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF",
+      "sourceUri": "https://huggingface.co/GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF",
+      "downloadUri": "https://huggingface.co/GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF/resolve/b1be624893865ae28ac424d85b410b808315be76/qwen2.5-3b-instruct.Q4_K_M.gguf",
+      "revision": "b1be624893865ae28ac424d85b410b808315be76",
+      "markerCoordinate": "org.modeljars.huggingface:gsms-b.indian-legal-qwen2.5-3b-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/qwen2.5-3b-instruct.Q4_K_M.gguf",
+      "sha256": "20e09a60606859d9a5401f4d261d02c1a1c57b75ee322a10b034cdbf2506fcb5",
+      "sizeBytes": 1929902560,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "legal"
+      ],
+      "dimensions": {
+        "parameterCount": 3085938688,
+        "contextLength": 32768,
+        "embeddingLength": 2048,
+        "blockCount": 36,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 36
+      }
+    },
+    {
+      "id": "mungert_hunyuan_mt_7b_gguf_q4_k_m",
+      "name": "Hunyuan-MT-7B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Hunyuan-MT-7B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://Mungert/Hunyuan-MT-7B-GGUF",
+      "sourceUri": "https://huggingface.co/Mungert/Hunyuan-MT-7B-GGUF",
+      "downloadUri": "https://huggingface.co/Mungert/Hunyuan-MT-7B-GGUF/resolve/61e98ae605cc4fe9581fd3ff1052a271843e4d64/Hunyuan-MT-7B-q4_k_m.gguf",
+      "revision": "61e98ae605cc4fe9581fd3ff1052a271843e4d64",
+      "markerCoordinate": "org.modeljars.huggingface:mungert.hunyuan-mt-7b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "hunyuan-dense",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Hunyuan-MT-7B-q4_k_m.gguf",
+      "sha256": "c6cb1068db17f851a4dd9e1d2e3217a293a50000e617486e7fd0bfaa05674d88",
+      "sizeBytes": 4702111200,
+      "license": "LicenseRef-Tencent-Hunyuan-Community-2025",
+      "licenseUri": "https://github.com/Tencent-Hunyuan/Hunyuan-MT/blob/main/License.txt",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "license-terms-apply",
+        "territory-restricted-license",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "translation"
+      ],
+      "dimensions": {
+        "parameterCount": 7504932864,
+        "contextLength": 262144,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 14336,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "sugoitoolkit_sugoi_14b_ultra_gguf_q4_k_m",
+      "name": "Sugoi-14B-Ultra GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Sugoi-14B-Ultra, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://sugoitoolkit/Sugoi-14B-Ultra-GGUF",
+      "sourceUri": "https://huggingface.co/sugoitoolkit/Sugoi-14B-Ultra-GGUF",
+      "downloadUri": "https://huggingface.co/sugoitoolkit/Sugoi-14B-Ultra-GGUF/resolve/d8dd836bf519a604530779cbf5ce13ffb35c3eeb/Sugoi-14B-Ultra-Q4_K_M.gguf",
+      "revision": "d8dd836bf519a604530779cbf5ce13ffb35c3eeb",
+      "markerCoordinate": "org.modeljars.huggingface:sugoitoolkit.sugoi-14b-ultra-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Sugoi-14B-Ultra-Q4_K_M.gguf",
+      "sha256": "d34cdc5f1be98091fdef6cedaf0a84978ca17c785a7b99c57ca22e44d4687b77",
+      "sizeBytes": 8988110080,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "translation"
+      ],
+      "dimensions": {
+        "parameterCount": 14770033664,
+        "contextLength": 32768,
+        "embeddingLength": 5120,
+        "blockCount": 48,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 13824,
+        "attentionBlockCount": 48
+      }
+    },
+    {
+      "id": "sugoitoolkit_sugoi_32b_ultra_gguf_q4_k_m",
+      "name": "Sugoi-32B-Ultra GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Sugoi-32B-Ultra, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://sugoitoolkit/Sugoi-32B-Ultra-GGUF",
+      "sourceUri": "https://huggingface.co/sugoitoolkit/Sugoi-32B-Ultra-GGUF",
+      "downloadUri": "https://huggingface.co/sugoitoolkit/Sugoi-32B-Ultra-GGUF/resolve/3167b2d18c29a12f6eece6f6941e8eeb52d29e08/Sugoi-32B-Ultra-Q4_K_M.gguf",
+      "revision": "3167b2d18c29a12f6eece6f6941e8eeb52d29e08",
+      "markerCoordinate": "org.modeljars.huggingface:sugoitoolkit.sugoi-32b-ultra-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Sugoi-32B-Ultra-Q4_K_M.gguf",
+      "sha256": "9ec2fdb69b958df7971a43364467f108f15c918208311a7fb0d5dbd1aacd2cda",
+      "sizeBytes": 19851335680,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "translation"
+      ],
+      "dimensions": {
+        "parameterCount": 32763876352,
+        "contextLength": 32768,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 27648,
+        "attentionBlockCount": 64
+      }
+    },
+    {
+      "id": "ibm_granite_granite_4_1_3b_gguf_q4_k_m",
+      "name": "granite-4.1-3b GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for granite-4.1-3b, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://ibm-granite/granite-4.1-3b-GGUF",
+      "sourceUri": "https://huggingface.co/ibm-granite/granite-4.1-3b-GGUF",
+      "downloadUri": "https://huggingface.co/ibm-granite/granite-4.1-3b-GGUF/resolve/ab4701481089b58a082ef63cc1cee738887293ff/granite-4.1-3b-Q4_K_M.gguf",
+      "revision": "ab4701481089b58a082ef63cc1cee738887293ff",
+      "markerCoordinate": "org.modeljars.huggingface:ibm-granite.granite-4.1-3b-gguf.q4_k_m:4.1.0-q4_k_m.1",
+      "modelVersion": "4.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "granite",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/granite-4.1-3b-Q4_K_M.gguf",
+      "sha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
+      "sizeBytes": 2099501664,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 3402836480,
+        "contextLength": 131072,
+        "embeddingLength": 2560,
+        "blockCount": 40,
+        "attentionHeadCount": 40,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 40
+      }
+    },
+    {
+      "id": "ibm_granite_granite_4_1_30b_gguf_q4_k_m",
+      "name": "granite-4.1-30b GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for granite-4.1-30b, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://ibm-granite/granite-4.1-30b-GGUF",
+      "sourceUri": "https://huggingface.co/ibm-granite/granite-4.1-30b-GGUF",
+      "downloadUri": "https://huggingface.co/ibm-granite/granite-4.1-30b-GGUF/resolve/26a44ffe9923eea39af3ad811b56c9b0071e4347/granite-4.1-30b-Q4_K_M.gguf",
+      "revision": "26a44ffe9923eea39af3ad811b56c9b0071e4347",
+      "markerCoordinate": "org.modeljars.huggingface:ibm-granite.granite-4.1-30b-gguf.q4_k_m:4.1.0-q4_k_m.1",
+      "modelVersion": "4.1.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "granite",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/granite-4.1-30b-Q4_K_M.gguf",
+      "sha256": "b33e4376e3581d11236ea53ced6b38399f6e91c0a391488486dc0827972f23f6",
+      "sizeBytes": 17490240736,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 28865728512,
+        "contextLength": 131072,
+        "embeddingLength": 4096,
+        "blockCount": 64,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 32768,
+        "attentionBlockCount": 64
+      }
     },
     {
       "id": "wordtour_glove_6b_300d_optimal",
@@ -465,9 +5389,22 @@
       "language": "en",
       "vocabularySize": 40000,
       "topology": "cycle",
-      "capabilities": ["semantic-neighbors", "lexical-expansion", "blurred-bow"],
-      "features": ["pure-java", "bundled-payload", "glove-6b-300d", "exact-tsp", "proven-optimal", "cyclic"],
-      "backends": {"semantic-order": true},
+      "capabilities": [
+        "semantic-neighbors",
+        "lexical-expansion",
+        "blurred-bow"
+      ],
+      "features": [
+        "pure-java",
+        "bundled-payload",
+        "glove-6b-300d",
+        "exact-tsp",
+        "proven-optimal",
+        "cyclic"
+      ],
+      "backends": {
+        "semantic-order": true
+      },
       "provenance": {
         "sourceData": "GloVe 6B 300d",
         "sourceDataUri": "https://nlp.stanford.edu/projects/glove/",
@@ -477,7 +5414,11 @@
         "generatorLicense": "MIT",
         "distanceMetric": "euclidean",
         "qualityStatus": "proven-optimal"
-      }
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ]
     }
   ]
 }

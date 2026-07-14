@@ -29,13 +29,32 @@ jobs:
           java-version: 21
           cache: gradle
 
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install catalog tooling
+        run: npm ci
+
+      - name: Test catalog tooling and site modules
+        run: npm test
+
       - name: Validate build
         run: ./gradlew --no-daemon test assemble verifyCatalog verifyFacadePublication
+
+      - name: Verify pinned Hugging Face metadata
+        run: ./gradlew --no-daemon verifyRemoteCatalogMetadata
+
+      - name: Verify exact GGUF dimensions
+        run: npm run catalog:enrich -- --concurrency=6
 
       - name: Publish facade smoke-test artifacts to Maven Local
         run: >
           ./gradlew --no-daemon
           :modeljars-core:publishMavenPublicationToMavenLocal
+          :modeljars-catalog:publishMavenPublicationToMavenLocal
           :modeljars:publishMavenPublicationToMavenLocal
 
       - name: Consume facade from Maven Local

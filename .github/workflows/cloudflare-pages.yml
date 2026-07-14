@@ -1,0 +1,67 @@
+name: cloudflare-pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - site/**
+      - catalog/**
+      - modeljars-catalog/**
+      - build.gradle.kts
+      - .github/workflows/cloudflare-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: cloudflare-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy static catalog
+    runs-on: ubuntu-latest
+    environment: cloudflare-pages
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Generate static site from the aggregate catalog JAR
+        run: ./gradlew --no-daemon generateSite
+
+      - name: Detect Cloudflare credentials
+        id: cloudflare
+        shell: bash
+        run: |
+          if [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare deployment skipped until repository secrets are configured."
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.cloudflare.outputs.enabled == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy build/site
+            --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'modeljars' }}
+            --branch=main
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

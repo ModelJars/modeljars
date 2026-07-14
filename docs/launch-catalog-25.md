@@ -1,5 +1,8 @@
 # ModelJars Launch Catalog: 25 Distinct Models
 
+> Historical planning document. The implemented launch baseline now exceeds 100 distinct sources;
+> see [launch-catalog-100.md](launch-catalog-100.md) for current counts and acceptance rules.
+
 Status: July 2026 planning baseline
 
 ## Counting rule

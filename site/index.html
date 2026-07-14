@@ -8,7 +8,7 @@
       name="description"
       content="Community-maintained JVM marker JAR catalog for local and remote AI models.">
     <link rel="stylesheet" href="/assets/styles.css">
-    <script src="/assets/app.js" defer></script>
+    <script src="/assets/app.js" type="module"></script>
   </head>
   <body>
     <header class="site-header">
@@ -27,23 +27,11 @@
 
     <section class="hero">
       <div class="section">
-        <div>
-          <h1>Model marker JARs for JVM AI applications.</h1>
-          <p>
-            Pin model metadata with Maven-style dependencies, discover descriptors from the
-            classpath, keep large weights external, and bundle compact models when appropriate.
-          </p>
-        </div>
-        <div class="hero-panel" aria-label="Gradle dependency example">
-          <pre><code>dependencies {
-    implementation("org.modeljars:modeljars:0.1.0")
-    runtimeOnly(
-        "org.modeljars.huggingface:" +
-        "ggml-org.qwen3-0.6b-gguf.q4_0:" +
-        "3.0.0-q4_0.1"
-    )
-}</code></pre>
-        </div>
+        <h1>ModelJars</h1>
+        <p>
+          Versioned model metadata for JVM applications, with classpath discovery, immutable
+          upstream artifacts, verified dimensions, and explicit runtime compatibility.
+        </p>
       </div>
     </section>
 

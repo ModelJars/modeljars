@@ -99,18 +99,14 @@ pre {
 }
 
 .hero .section {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 40px;
-  padding: 56px 0 44px;
-  align-items: center;
+  padding: 34px 0 30px;
 }
 
 .hero h1 {
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   max-width: 760px;
-  font-size: 4.2rem;
-  line-height: 0.97;
+  font-size: 3rem;
+  line-height: 1;
   letter-spacing: 0;
 }
 
@@ -119,23 +115,6 @@ pre {
   max-width: 720px;
   color: var(--muted);
   font-size: 1.08rem;
-}
-
-.hero-panel {
-  border: 1px solid var(--line);
-  background: var(--panel);
-  padding: 18px;
-  border-radius: 8px;
-}
-
-.hero-panel pre {
-  overflow-x: auto;
-  margin: 0;
-  color: #d8dee9;
-  background: var(--code);
-  border-radius: 6px;
-  padding: 18px;
-  font-size: 0.9rem;
 }
 
 .section {

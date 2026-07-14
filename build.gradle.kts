@@ -1,5 +1,6 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
@@ -10,6 +11,9 @@ import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.util.HexFormat
 import java.util.Properties
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 import org.gradle.api.tasks.SourceSetContainer
@@ -46,11 +50,44 @@ data class CatalogEntry(
     val licenseUri: String?,
     val vocabularySize: Int?,
     val topology: String?,
+    val domains: List<String>,
+    val dimensions: CatalogDimensions?,
     val capabilities: List<String>,
     val features: List<String>,
     val backends: Map<String, Boolean>,
     val raw: Map<String, Any?>,
 )
+
+data class CatalogDimensions(
+    val parameterCount: Long,
+    val contextLength: Int,
+    val embeddingLength: Int,
+    val blockCount: Int,
+    val attentionHeadCount: Int,
+    val keyValueHeadCount: Int?,
+    val feedForwardLength: Int?,
+    val expertCount: Int?,
+    val expertUsedCount: Int?,
+    val keyLength: Int?,
+    val valueLength: Int?,
+    val attentionBlockCount: Int,
+) {
+    fun properties(prefix: String): List<String> =
+        buildList {
+            add("${prefix}dimension.parameterCount=$parameterCount")
+            add("${prefix}dimension.contextLength=$contextLength")
+            add("${prefix}dimension.embeddingLength=$embeddingLength")
+            add("${prefix}dimension.blockCount=$blockCount")
+            add("${prefix}dimension.attentionHeadCount=$attentionHeadCount")
+            keyValueHeadCount?.let { add("${prefix}dimension.keyValueHeadCount=$it") }
+            feedForwardLength?.let { add("${prefix}dimension.feedForwardLength=$it") }
+            expertCount?.let { add("${prefix}dimension.expertCount=$it") }
+            expertUsedCount?.let { add("${prefix}dimension.expertUsedCount=$it") }
+            keyLength?.let { add("${prefix}dimension.keyLength=$it") }
+            valueLength?.let { add("${prefix}dimension.valueLength=$it") }
+            add("${prefix}dimension.attentionBlockCount=$attentionBlockCount")
+        }
+}
 
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
@@ -89,6 +126,11 @@ fun CatalogEntry.registryProperties(): String =
         appendLine("${prefix}sha256=$sha256")
         appendLine("${prefix}sizeBytes=$sizeBytes")
         appendLine("${prefix}license=$license")
+        licenseUri?.let { appendLine("${prefix}licenseUri=$it") }
+        appendLine("${prefix}name=$name")
+        appendLine("${prefix}description=$description")
+        appendLine("${prefix}domains=${domains.joinToString(",")}")
+        dimensions?.properties(prefix)?.forEach(::appendLine)
         appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
         appendLine("${prefix}features=${features.joinToString(",")}")
         backends.toSortedMap().forEach { (backend, supported) ->
@@ -118,6 +160,37 @@ val catalogEntries =
                 (raw["features"] as? List<*>)
                     ?.map { it as? String ?: error("features must contain strings") }
                     ?: emptyList()
+            val domains =
+                (raw["domains"] as? List<*>)
+                    ?.map { it as? String ?: error("domains must contain strings") }
+                    ?: emptyList()
+            val dimensions =
+                raw["dimensions"]?.stringKeyMap("dimensions for ${raw["id"]}")?.let { values ->
+                    fun requiredLong(name: String): Long =
+                        (values[name] as? Number)?.toLong()
+                            ?: error("dimensions.$name must be an integer")
+
+                    fun requiredInt(name: String): Int =
+                        (values[name] as? Number)?.toInt()
+                            ?: error("dimensions.$name must be an integer")
+
+                    fun optionalInt(name: String): Int? = (values[name] as? Number)?.toInt()
+
+                    CatalogDimensions(
+                        parameterCount = requiredLong("parameterCount"),
+                        contextLength = requiredInt("contextLength"),
+                        embeddingLength = requiredInt("embeddingLength"),
+                        blockCount = requiredInt("blockCount"),
+                        attentionHeadCount = requiredInt("attentionHeadCount"),
+                        keyValueHeadCount = optionalInt("keyValueHeadCount"),
+                        feedForwardLength = optionalInt("feedForwardLength"),
+                        expertCount = optionalInt("expertCount"),
+                        expertUsedCount = optionalInt("expertUsedCount"),
+                        keyLength = optionalInt("keyLength"),
+                        valueLength = optionalInt("valueLength"),
+                        attentionBlockCount = requiredInt("attentionBlockCount"),
+                    )
+                }
             val backends =
                 (raw["backends"] as? Map<*, *>)
                     ?.map { (key, supported) ->
@@ -154,6 +227,8 @@ val catalogEntries =
                 licenseUri = raw.optionalString("licenseUri"),
                 vocabularySize = (raw["vocabularySize"] as? Number)?.toInt(),
                 topology = raw.optionalString("topology"),
+                domains = domains,
+                dimensions = dimensions,
                 capabilities = capabilities,
                 features = features,
                 backends = backends,
@@ -186,11 +261,44 @@ catalogEntries.forEach { entry ->
         "sha256 must be lowercase hexadecimal for ${entry.id}"
     }
     require(entry.sizeBytes > 0) { "sizeBytes must be positive for ${entry.id}" }
+    entry.dimensions?.let { dimensions ->
+        require(dimensions.parameterCount > 0) { "parameterCount must be positive for ${entry.id}" }
+        require(dimensions.contextLength > 0) { "contextLength must be positive for ${entry.id}" }
+        require(dimensions.embeddingLength > 0) { "embeddingLength must be positive for ${entry.id}" }
+        require(dimensions.blockCount > 0) { "blockCount must be positive for ${entry.id}" }
+        require(dimensions.attentionHeadCount > 0) {
+            "attentionHeadCount must be positive for ${entry.id}"
+        }
+        require(dimensions.attentionBlockCount in 1..dimensions.blockCount) {
+            "attentionBlockCount must be between 1 and blockCount for ${entry.id}"
+        }
+    }
+    if (entry.format == "gguf") {
+        requireNotNull(entry.dimensions) { "GGUF dimensions are required for ${entry.id}" }
+    }
     require(URI.create(entry.sourceUri).scheme == "https") {
         "sourceUri must use HTTPS for ${entry.id}"
     }
     val download = URI.create(entry.downloadUri)
     require(download.scheme == "https") { "downloadUri must use HTTPS for ${entry.id}" }
+    if (entry.sourceId.startsWith("hf://")) {
+        require(entry.sourceId.matches(Regex("hf://[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*"))) {
+            "Invalid Hugging Face sourceId for ${entry.id}: ${entry.sourceId}"
+        }
+        val repository = entry.sourceId.removePrefix("hf://")
+        require(entry.sourceUri == "https://huggingface.co/$repository") {
+            "Hugging Face sourceUri does not match sourceId for ${entry.id}"
+        }
+        require(download.host == "huggingface.co") {
+            "Hugging Face downloads must use huggingface.co for ${entry.id}"
+        }
+        require(download.path.startsWith("/$repository/resolve/${entry.revision}/")) {
+            "Hugging Face download path does not match sourceId and revision for ${entry.id}"
+        }
+        require(entry.license != "NOASSERTION") {
+            "Hugging Face license must be resolved before publication for ${entry.id}"
+        }
+    }
     entry.licenseUri?.let { licenseUri ->
         require(URI.create(licenseUri).scheme == "https") {
             "licenseUri must use HTTPS for ${entry.id}"
@@ -228,6 +336,7 @@ catalogEntries.forEach { entry ->
         }
     }
     require(entry.capabilities.isNotEmpty()) { "capabilities must not be empty for ${entry.id}" }
+    require(entry.domains.isNotEmpty()) { "domains must not be empty for ${entry.id}" }
     require(entry.backends.values.any { it }) { "At least one backend must support ${entry.id}" }
     if (entry.format == "wordtour-v1") {
         require(entry.packaging == "classpath") { "WordTour payload must be bundled for ${entry.id}" }
@@ -305,6 +414,81 @@ fun verifySemanticOrderPayload(entry: CatalogEntry, payload: ByteArray) {
     }
     require(terms.none(String::isBlank)) { "Blank semantic-order term in ${entry.id}" }
     require(terms.toSet().size == terms.size) { "Duplicate semantic-order term in ${entry.id}" }
+}
+
+fun fetchHuggingFaceRevision(repository: String, revision: String): Map<String, Any?> {
+    val endpoint =
+        URI.create("https://huggingface.co/api/models/$repository/revision/$revision?blobs=true")
+    var lastFailure: Exception? = null
+
+    repeat(3) { attempt ->
+        try {
+            val connection = endpoint.toURL().openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 30_000
+            connection.readTimeout = 60_000
+            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("User-Agent", "ModelJars-Catalog-Verifier/0.1")
+            try {
+                val status = connection.responseCode
+                if (status != HttpURLConnection.HTTP_OK) {
+                    val detail =
+                        connection.errorStream
+                            ?.bufferedReader(StandardCharsets.UTF_8)
+                            ?.use { it.readText().take(500) }
+                            .orEmpty()
+                    error("Hugging Face returned HTTP $status for $repository@$revision: $detail")
+                }
+                return JsonSlurper()
+                    .parse(connection.inputStream.bufferedReader(StandardCharsets.UTF_8))
+                    .stringKeyMap("Hugging Face metadata for $repository@$revision")
+            } finally {
+                connection.disconnect()
+            }
+        } catch (failure: Exception) {
+            lastFailure = failure
+            if (attempt < 2) {
+                Thread.sleep(250L * (attempt + 1))
+            }
+        }
+    }
+
+    throw IllegalStateException(
+        "Unable to verify Hugging Face metadata for $repository@$revision",
+        lastFailure,
+    )
+}
+
+fun verifyHuggingFaceRevision(entries: List<CatalogEntry>) {
+    val first = entries.first()
+    val repository = first.sourceId.removePrefix("hf://")
+    val metadata = fetchHuggingFaceRevision(repository, first.revision)
+    require(metadata.requiredString("sha") == first.revision) {
+        "Hugging Face resolved an unexpected revision for $repository"
+    }
+    val siblings =
+        ((metadata["siblings"] as? List<*>) ?: error("Missing siblings for $repository"))
+            .associate { value ->
+                val sibling = value.stringKeyMap("Hugging Face sibling for $repository")
+                sibling.requiredString("rfilename") to sibling
+            }
+
+    entries.forEach { entry ->
+        val filename =
+            URI.create(entry.downloadUri).path.substringAfter("/resolve/${entry.revision}/")
+        val sibling = siblings[filename] ?: error("Missing $filename at $repository@${entry.revision}")
+        val lfs = sibling["lfs"].stringKeyMap("LFS metadata for $repository/$filename")
+        val remoteSize =
+            (lfs["size"] as? Number)?.toLong()
+                ?: (sibling["size"] as? Number)?.toLong()
+                ?: error("Missing size for $repository/$filename")
+        require(remoteSize == entry.sizeBytes) {
+            "Size mismatch for $repository/$filename: catalog=${entry.sizeBytes}, remote=$remoteSize"
+        }
+        require(lfs.requiredString("sha256") == entry.sha256) {
+            "SHA-256 mismatch for $repository/$filename"
+        }
+    }
 }
 
 allprojects {
@@ -396,6 +580,7 @@ project(":modeljars") {
 
     dependencies {
         api(project(":modeljars-core"))
+        runtimeOnly(project(":modeljars-catalog"))
     }
 }
 
@@ -434,21 +619,35 @@ val verifyFacadePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 1) {
-                "Facade must publish exactly one dependency, modeljars-core"
+            require(dependencies.length == 2) {
+                "Facade must publish modeljars-core and the runtime catalog"
             }
-            val coreDependency = dependencies.item(0) as Element
+
+            fun dependency(artifactId: String): Element =
+                (0 until dependencies.length)
+                    .map { dependencies.item(it) as Element }
+                    .single { it.childText("artifactId") == artifactId }
+
+            val coreDependency = dependency("modeljars-core")
             require(coreDependency.childText("groupId") == "org.modeljars") {
                 "Facade dependency groupId must be org.modeljars"
-            }
-            require(coreDependency.childText("artifactId") == "modeljars-core") {
-                "Facade must expose modeljars-core"
             }
             require(coreDependency.childText("version") == facadePublicationVersion) {
                 "Facade and modeljars-core versions must match"
             }
             require(coreDependency.childText("scope") == "compile") {
                 "Facade must expose modeljars-core in Maven compile scope"
+            }
+
+            val catalogDependency = dependency("modeljars-catalog")
+            require(catalogDependency.childText("groupId") == "org.modeljars") {
+                "Catalog dependency groupId must be org.modeljars"
+            }
+            require(catalogDependency.childText("version") == facadePublicationVersion) {
+                "Facade and modeljars-catalog versions must match"
+            }
+            require(catalogDependency.childText("scope") == "runtime") {
+                "Facade must expose modeljars-catalog in Maven runtime scope"
             }
         }
     }
@@ -477,16 +676,23 @@ project(":modeljars-catalog") {
             }
     val aggregateRegistry =
         generatedResources.map { it.file("META-INF/modeljars/registry.properties") }
+    val aggregateMetadata =
+        generatedResources.map { it.file("META-INF/modeljars/catalog.json") }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
-            outputs.file(aggregateRegistry)
+            outputs.files(aggregateRegistry, aggregateMetadata)
             doLast {
-                val output = aggregateRegistry.get().asFile
-                output.parentFile.mkdirs()
-                output.writeText(
+                val registry = aggregateRegistry.get().asFile
+                registry.parentFile.mkdirs()
+                registry.writeText(
                     catalogEntries.joinToString("\n") { it.registryProperties().trimEnd() } + "\n",
                     StandardCharsets.ISO_8859_1,
+                )
+                aggregateMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(JsonOutput.toJson(catalogEntries.map(CatalogEntry::raw))) +
+                        "\n",
+                    StandardCharsets.UTF_8,
                 )
             }
         }
@@ -509,17 +715,17 @@ project(":modeljars-catalog") {
         val suffix = taskSuffix(entry.id)
         val markerRoot = layout.buildDirectory.dir("generated/markers/${entry.id}/main")
         val markerRegistry = markerRoot.map { it.file("META-INF/modeljars/registry.properties") }
-        val markerCatalog = markerRoot.map { it.file("META-INF/modeljars/catalog.json") }
+        val markerMetadata = markerRoot.map { it.file("META-INF/modeljars/model.json") }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
-                outputs.files(markerRegistry, markerCatalog, markerDocs)
+                outputs.files(markerRegistry, markerMetadata, markerDocs)
                 doLast {
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
-                    markerCatalog.get().asFile.writeText(
+                    markerMetadata.get().asFile.writeText(
                         JsonOutput.prettyPrint(JsonOutput.toJson(entry.raw)) + "\n",
                         StandardCharsets.UTF_8,
                     )
@@ -543,7 +749,10 @@ project(":modeljars-catalog") {
                 archiveVersion.set(entry.markerVersion)
                 destinationDirectory.set(layout.buildDirectory.dir("libs/markers"))
                 from(markerRoot) {
-                    include("META-INF/modeljars/registry.properties")
+                    include(
+                        "META-INF/modeljars/registry.properties",
+                        "META-INF/modeljars/model.json",
+                    )
                 }
             }
         val markerSourcesJar =
@@ -554,7 +763,7 @@ project(":modeljars-catalog") {
                 archiveClassifier.set("sources")
                 destinationDirectory.set(layout.buildDirectory.dir("libs/markers"))
                 from(markerRoot) {
-                    include("META-INF/modeljars/catalog.json")
+                    include("META-INF/modeljars/model.json")
                 }
             }
         val markerJavadocJar =
@@ -615,19 +824,25 @@ project(":modeljars-catalog") {
     }
 }
 
+val aggregateCatalogJar =
+    project(":modeljars-catalog").tasks.named<Jar>("jar").flatMap { it.archiveFile }
 val generatedSiteCatalog = layout.buildDirectory.file("generated/site/catalog.json")
 val generateSiteCatalog =
     tasks.register("generateSiteCatalog") {
-        inputs.file(file("catalog/models.json"))
+        dependsOn(aggregateCatalogJar)
+        inputs.file(aggregateCatalogJar)
         outputs.file(generatedSiteCatalog)
         doLast {
             val output = generatedSiteCatalog.get().asFile
             output.parentFile.mkdirs()
-            output.writeText(
-                JsonOutput.prettyPrint(JsonOutput.toJson(catalogEntries.map(CatalogEntry::raw))) +
-                    "\n",
-                StandardCharsets.UTF_8,
-            )
+            ZipFile(aggregateCatalogJar.get().asFile).use { zip ->
+                val metadata =
+                    zip.getEntry("META-INF/modeljars/catalog.json")
+                        ?: error("Aggregate ModelJars catalog metadata is missing")
+                zip.getInputStream(metadata).use { input ->
+                    Files.copy(input, output.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
         }
     }
 
@@ -636,6 +851,53 @@ tasks.register<Sync>("generateSite") {
     from("site")
     from(generatedSiteCatalog)
     into(layout.buildDirectory.dir("site"))
+}
+
+tasks.register("verifyRemoteCatalogMetadata") {
+    group = "verification"
+    description = "Verify pinned Hugging Face revisions, sizes, and LFS hashes without model downloads"
+    inputs.file(file("catalog/models.json"))
+
+    doLast {
+        val revisions =
+            catalogEntries
+                .filter { it.sourceId.startsWith("hf://") }
+                .groupBy { it.sourceId to it.revision }
+                .values
+        val executor = Executors.newFixedThreadPool(minOf(8, revisions.size))
+        try {
+            val futures =
+                revisions.map { entries ->
+                    executor.submit(
+                        Callable {
+                            verifyHuggingFaceRevision(entries)
+                            entries.size
+                        },
+                    )
+                }
+            var verifiedArtifacts = 0
+            val failures = mutableListOf<Throwable>()
+            futures.forEach { future ->
+                try {
+                    verifiedArtifacts += future.get()
+                } catch (failure: ExecutionException) {
+                    failures.add(failure.cause ?: failure)
+                }
+            }
+            require(failures.isEmpty()) {
+                failures.joinToString(
+                    prefix = "Remote catalog metadata verification failed:\n- ",
+                    separator = "\n- ",
+                ) { failure -> failure.message ?: failure.javaClass.name }
+            }
+            println(
+                "Verified $verifiedArtifacts artifacts across ${revisions.size} pinned " +
+                    "Hugging Face model revisions",
+            )
+        } finally {
+            executor.shutdownNow()
+        }
+    }
 }
 
 tasks.register("verifyCatalog") {
@@ -649,6 +911,16 @@ tasks.register("verifyCatalog") {
                 val resource =
                     zip.getEntry("META-INF/modeljars/registry.properties")
                         ?: error("Marker resource missing from $markerJar")
+                val metadataResource =
+                    zip.getEntry("META-INF/modeljars/model.json")
+                        ?: error("Self-describing model metadata missing from $markerJar")
+                val metadata =
+                    zip.getInputStream(metadataResource).bufferedReader(StandardCharsets.UTF_8).use {
+                        JsonSlurper().parse(it).stringKeyMap("Marker metadata in $markerJar")
+                    }
+                require(metadata.requiredString("id") == entry.id) {
+                    "Marker metadata ID mismatch in $markerJar"
+                }
                 val properties = Properties()
                 zip.getInputStream(resource).use(properties::load)
                 require(
@@ -659,6 +931,23 @@ tasks.register("verifyCatalog") {
                 }
                 require(properties.getProperty("model.${entry.id}.sha256") == entry.sha256) {
                     "Marker SHA-256 mismatch in $markerJar"
+                }
+                require(properties.getProperty("model.${entry.id}.name") == entry.name) {
+                    "Marker display name mismatch in $markerJar"
+                }
+                entry.dimensions?.let { dimensions ->
+                    require(
+                        properties.getProperty("model.${entry.id}.dimension.parameterCount") ==
+                            dimensions.parameterCount.toString(),
+                    ) {
+                        "Marker parameter count mismatch in $markerJar"
+                    }
+                    require(
+                        properties.getProperty("model.${entry.id}.dimension.attentionBlockCount") ==
+                            dimensions.attentionBlockCount.toString(),
+                    ) {
+                        "Marker attention block count mismatch in $markerJar"
+                    }
                 }
                 require(
                     properties.getProperty("model.${entry.id}.features") ==

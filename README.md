@@ -5,10 +5,11 @@ It borrows the useful WebJars idea of using normal JVM dependency coordinates an
 metadata. Large model weights remain external; compact, license-compatible model payloads can be
 bundled when doing so makes the artifact directly usable.
 
-Every marker JAR carries a descriptor:
+Every marker JAR carries machine-readable runtime and catalog metadata:
 
 ```text
 META-INF/modeljars/registry.properties
+META-INF/modeljars/model.json
 ```
 
 Descriptors point to upstream model locations, expected local cache paths or bundled resources,
@@ -18,11 +19,14 @@ verified against the same size and SHA-256 metadata as an external model.
 
 The catalog has one source of truth: `catalog/models.json`. Gradle generates the aggregate
 classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
-catalog. Adding a model does not require a new Gradle module or source folder.
+catalog. The aggregate JAR embeds `META-INF/modeljars/catalog.json`; the static website extracts
+that resource instead of maintaining a model list in JavaScript. Adding a model does not require a
+new Gradle module or source folder.
 
 ## Dependency
 
-Applications use the stable facade artifact and add only the model markers they intend to ship:
+Applications use the stable facade artifact and may add explicit marker dependencies to record the
+models they intend to ship:
 
 ```kotlin
 dependencies {
@@ -49,9 +53,10 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes the runtime API from `modeljars-core` transitively. It intentionally does not
-pull in `modeljars-catalog`: keeping marker dependencies explicit preserves application-level model
-version pinning and avoids bundling unrelated compact payloads.
+`modeljars` exposes `modeljars-core` and the aggregate `modeljars-catalog` at runtime. This makes the
+complete catalog discoverable with one ergonomic dependency. Explicit marker dependencies remain
+useful as build-time model-version declarations; duplicate descriptors from the aggregate and an
+individual marker are deduplicated by marker coordinate.
 
 ## Supported markers
 
@@ -103,7 +108,16 @@ ModelJarDescriptor descriptor = registry.resolve(
 
 Path model = descriptor.localPath().orElseThrow();
 Set<String> requiredFeatures = descriptor.features();
+ModelDimensions dimensions = descriptor.dimensions();
+Optional<ModelMemoryEstimate> baseline =
+    descriptor.estimateMemory(4096, KvCachePrecision.FLOAT16);
 ```
+
+Descriptors also expose display name, description, domains, upstream and download links, license
+link, exact artifact byte size, parameter count, context length, embedding width, total and
+attention block counts, attention/KV heads, feed-forward width, and MoE dimensions when present.
+Memory estimates are deliberately limited to model-file bytes plus the requested KV cache. Backend
+workspace, tensor repacking, allocator overhead, the JVM, and the operating system are excluded.
 
 Feature flags expose requirements and handling metadata such as `q4-k`, `chatml`,
 `community-conversion`, and `medical-use-warning`. Markers created before the feature property was
@@ -141,13 +155,20 @@ byte[] payload = new ModelJarResourceLoader(
 ## Catalog development
 
 ```bash
-./gradlew test verifyCatalog
+./gradlew test verifyCatalog verifyRemoteCatalogMetadata
 ./gradlew generateSite
+npm ci
+npm test
+npm run catalog:enrich
 ```
 
 The generated site is written to `build/site`. Individual marker JARs are written under
 `modeljars-catalog/build/libs/markers`. Classpath payloads are fetched from their pinned source
 revision during the build and must pass size, digest, format, vocabulary, and uniqueness checks.
+
+`npm run catalog:enrich -- --write` uses Hugging Face's official range-aware GGUF parser to update
+dimensions from each exact revision-pinned artifact without downloading its tensors. The same
+command without `--write` is the CI verification mode.
 
 ## Reference repos
 
@@ -163,4 +184,4 @@ well-known metadata resources. A richer scanner and public catalog service can c
 ## Reports
 
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
-- [25-model launch catalog and vertical-model qualification](docs/launch-catalog-25.md)
+- [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)

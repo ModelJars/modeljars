@@ -25,18 +25,16 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false' && 'release' || 'verify' }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  verify:
     name: Build release artifacts
     if: github.repository == 'ModelJars/modeljars'
     runs-on: ubuntu-latest
-    environment: maven-central
 
     steps:
       - name: Checkout
@@ -52,14 +50,21 @@ jobs:
       - name: Build and verify
         run: ./gradlew --no-daemon test verifyCatalog publishToMavenLocal
 
-      - name: Skip publishing until release automation is wired
-        if: github.event_name == 'push' || inputs.dry_run == 'true'
-        run: |
-          echo "Artifacts were built and installed to Maven Local."
-          echo "Maven Central publishing is gated until the catalog generator and signing plugin are added."
+  publish:
+    name: Publish to Maven Central
+    if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: maven-central
+    permissions:
+      contents: read
+      id-token: write
 
-      - name: Publish to Maven Central
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify release credentials
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -70,5 +75,9 @@ jobs:
             echo "Maven Central credentials are not configured in the maven-central environment." >&2
             exit 1
           fi
-          echo "Central publishing is intentionally gated here until the catalog generator and signing plugin are added."
+          if [ -z "$GPG_PRIVATE_KEY" ] || [ -z "$GPG_PASSPHRASE" ]; then
+            echo "Signing credentials are not configured in the maven-central environment." >&2
+            exit 1
+          fi
+          echo "Central publishing is intentionally gated until the publishing plugin is added."
           exit 1

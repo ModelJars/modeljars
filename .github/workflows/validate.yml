@@ -30,7 +30,16 @@ jobs:
           cache: gradle
 
       - name: Validate build
-        run: ./gradlew --no-daemon test assemble verifyCatalog
+        run: ./gradlew --no-daemon test assemble verifyCatalog verifyFacadePublication
+
+      - name: Publish facade smoke-test artifacts to Maven Local
+        run: >
+          ./gradlew --no-daemon
+          :modeljars-core:publishMavenPublicationToMavenLocal
+          :modeljars:publishMavenPublicationToMavenLocal
+
+      - name: Consume facade from Maven Local
+        run: ./gradlew --no-daemon -p smoke-tests/facade-consumer run
 
       - name: Validate catalog source
         run: jq . catalog/models.json >/dev/null

@@ -11,7 +11,9 @@ import java.security.MessageDigest
 import java.util.HexFormat
 import java.util.Properties
 import java.util.zip.ZipFile
+import javax.xml.parsers.DocumentBuilderFactory
 import org.gradle.api.tasks.SourceSetContainer
+import org.w3c.dom.Element
 
 plugins {
     `java-library`
@@ -346,8 +348,15 @@ subprojects {
             create<MavenPublication>("maven") {
                 from(components["java"])
                 pom {
-                    name.set(project.name)
-                    description.set("ModelJars marker metadata for JVM model resolution")
+                    name.set(
+                        provider { if (project.name == "modeljars") "ModelJars" else project.name },
+                    )
+                    description.set(
+                        provider {
+                            project.description
+                                ?: "ModelJars marker metadata for JVM model resolution"
+                        },
+                    )
                     url.set("https://modeljars.org")
                     licenses {
                         license {
@@ -381,6 +390,68 @@ project(":modeljars-core") {
         testRuntimeOnly(project(":modeljars-catalog"))
     }
 }
+
+project(":modeljars") {
+    description = "Application-facing ModelJars dependency facade"
+
+    dependencies {
+        api(project(":modeljars-core"))
+    }
+}
+
+val facadePom =
+    project(":modeljars").layout.buildDirectory.file("publications/maven/pom-default.xml")
+val facadePublicationVersion = version.toString()
+val verifyFacadePublication =
+    tasks.register("verifyFacadePublication") {
+        dependsOn(":modeljars:generatePomFileForMavenPublication")
+        inputs.file(facadePom)
+
+        doLast {
+            val documentBuilderFactory = DocumentBuilderFactory.newInstance()
+            documentBuilderFactory.setFeature(
+                "http://apache.org/xml/features/disallow-doctype-decl",
+                true,
+            )
+            val document =
+                documentBuilderFactory
+                    .newDocumentBuilder()
+                    .parse(facadePom.get().asFile)
+
+            fun Element.childText(tagName: String): String =
+                getElementsByTagName(tagName).item(0)?.textContent
+                    ?: error("Missing <$tagName> in facade publication POM")
+
+            val projectElement = document.documentElement
+            require(projectElement.childText("groupId") == "org.modeljars") {
+                "Facade groupId must be org.modeljars"
+            }
+            require(projectElement.childText("artifactId") == "modeljars") {
+                "Facade artifactId must be modeljars"
+            }
+            require(projectElement.childText("version") == facadePublicationVersion) {
+                "Facade version must match the project version"
+            }
+
+            val dependencies = document.getElementsByTagName("dependency")
+            require(dependencies.length == 1) {
+                "Facade must publish exactly one dependency, modeljars-core"
+            }
+            val coreDependency = dependencies.item(0) as Element
+            require(coreDependency.childText("groupId") == "org.modeljars") {
+                "Facade dependency groupId must be org.modeljars"
+            }
+            require(coreDependency.childText("artifactId") == "modeljars-core") {
+                "Facade must expose modeljars-core"
+            }
+            require(coreDependency.childText("version") == facadePublicationVersion) {
+                "Facade and modeljars-core versions must match"
+            }
+            require(coreDependency.childText("scope") == "compile") {
+                "Facade must expose modeljars-core in Maven compile scope"
+            }
+        }
+    }
 
 val markerJarTasks = mutableListOf<TaskProvider<Jar>>()
 
@@ -626,4 +697,5 @@ tasks.register("verifyCatalog") {
 
 tasks.named("check") {
     dependsOn("verifyCatalog")
+    dependsOn(verifyFacadePublication)
 }

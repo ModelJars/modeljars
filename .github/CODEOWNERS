@@ -7,7 +7,9 @@
 /gradlew.bat @modeljars/infra-maintainers
 
 # Runtime APIs require core maintainer review.
+/modeljars/ @modeljars/core-maintainers
 /modeljars-core/ @modeljars/core-maintainers
+/smoke-tests/ @modeljars/core-maintainers
 
 # Catalog metadata requires catalog maintainer review.
 /catalog/ @modeljars/catalog-maintainers

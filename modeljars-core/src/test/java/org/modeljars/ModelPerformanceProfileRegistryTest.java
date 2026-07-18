@@ -94,7 +94,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(3, registry.profiles().size());
+    assertEquals(4, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -107,6 +107,16 @@ class ModelPerformanceProfileRegistryTest {
                 profile ->
                     profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25")
                         && profile.recommendations().get("compiler").equals("graal-jvmci")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_mixed_k")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.mixedKProjections"))));
   }
 
   private static Properties profileProperties(boolean outputHashesMatch) {

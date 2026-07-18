@@ -45,6 +45,21 @@ The initial data deliberately demonstrates that a compiler cannot be a global de
 All ten output hashes matched for every comparison. A separate Qwen run with six warmups remained
 at 19.75 tok/s, ruling out insufficient warmup as the explanation for its regression.
 
+The same exact model and runtime may have multiple profiles when each recommendation has its own
+controlled evidence. Recommendations must be non-conflicting when their selectors overlap. The
+MiniCPM5 mixed-K profile is separate from its compiler profile because it measures a different
+choice:
+
+| JVM | Independent decode | Mixed Q4_K/Q6_K decode | Change | Recommendation |
+| --- | ---: | ---: | ---: | --- |
+| OpenJDK 25.0.3 HotSpot | 13.05 tok/s | 13.37 tok/s | +2.52% | `models.purejava.mixedKProjections=true` |
+| GraalVM CE 25.2.4-dev | 15.28 tok/s | 15.47 tok/s | +1.31% | corroborating gate |
+
+Each JVM result combines ten control-first and ten candidate-first trials after two warmups per
+process. All 40 paired output hashes matched; mean TTFT changed by +0.02% on HotSpot and -0.06% on
+Graal. The profile's primary evidence map records the HotSpot comparison, while its controls retain
+the independent Graal values and exact Models/Vectors commits.
+
 ## Safety Contract
 
 `ModelPerformanceProfile.safeForAutomaticSelection()` requires exact output-hash agreement and at

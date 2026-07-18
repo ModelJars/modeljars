@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - site/**
-      - catalog/**
-      - modeljars-catalog/**
+      - site-public/**
+      - media/icons/**
       - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -40,8 +39,8 @@ jobs:
           java-version: 21
           cache: gradle
 
-      - name: Generate site catalog
-        run: ./gradlew --no-daemon generateSite
+      - name: Generate private-preview placeholder
+        run: ./gradlew --no-daemon generatePublicSite
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
@@ -49,7 +48,7 @@ jobs:
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: build/site
+          path: build/public-site
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -160,13 +160,14 @@ byte[] payload = new ModelJarResourceLoader(
 
 ```bash
 ./gradlew test verifyCatalog verifyRemoteCatalogMetadata
-./gradlew generateSite
+./gradlew generateSite generatePublicSite
 npm ci
 npm test
 npm run catalog:enrich
 ```
 
-The generated site is written to `build/site`. Individual marker JARs are written under
+The authenticated Cloudflare site is written to `build/site`; the metadata-free GitHub Pages
+placeholder is written to `build/public-site`. Individual marker JARs are written under
 `modeljars-catalog/build/libs/markers`. Classpath payloads are fetched from their pinned source
 revision during the build and must pass size, digest, format, vocabulary, and uniqueness checks.
 
@@ -187,5 +188,6 @@ well-known metadata resources. A richer scanner and public catalog service can c
 
 ## Reports
 
+- [Private preview authentication and deployment](docs/private-preview-auth.md)
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
 - [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)

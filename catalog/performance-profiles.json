@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "qwen3_0_6b_q4_0_epyc_milan_jdk25",
+      "modelId": "qwen3_0_6b_q4_0",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1",
+      "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "compiler": "hotspot-c2"
+      },
+      "evidence": {
+        "benchmarkId": "inference-matrix-20260718",
+        "measuredAt": "2026-07-18T18:50:27.111163953Z",
+        "baseline": "hotspot-c2",
+        "candidate": "graal-jvmci",
+        "warmups": 2,
+        "trials": 10,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 194.076337,
+          "p95TtftMillis": 3145.565868,
+          "prefillTokensPerSecond": 49.537077,
+          "decodeTokensPerSecond": 25.864888,
+          "peakRssBytes": 1119391744
+        },
+        "candidateMetrics": {
+          "loadMillis": 205.564363,
+          "p95TtftMillis": 5900.253479,
+          "prefillTokensPerSecond": 27.490130,
+          "decodeTokensPerSecond": 19.646824,
+          "peakRssBytes": 1774723072
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "a1f0919f68be3fc5eb03b6357f4c341c8034070c",
+          "vectorsCommit": "4144202221bc61ac4742eefb0be7169f72294d41",
+          "extendedCandidateWarmups": "6",
+          "extendedCandidateDecodeTokensPerSecond": "19.750873"
+        }
+      }
+    },
+    {
+      "id": "smollm2_360m_q8_0_epyc_milan_jdk25",
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",
+      "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "compiler": "graal-jvmci"
+      },
+      "evidence": {
+        "benchmarkId": "inference-matrix-20260718",
+        "measuredAt": "2026-07-18T18:52:34.731627458Z",
+        "baseline": "hotspot-c2",
+        "candidate": "graal-jvmci",
+        "warmups": 2,
+        "trials": 10,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 131.168346,
+          "p95TtftMillis": 2643.733682,
+          "prefillTokensPerSecond": 60.158501,
+          "decodeTokensPerSecond": 21.226575,
+          "peakRssBytes": 744579072
+        },
+        "candidateMetrics": {
+          "loadMillis": 138.590999,
+          "p95TtftMillis": 1299.085687,
+          "prefillTokensPerSecond": 122.260080,
+          "decodeTokensPerSecond": 44.703344,
+          "peakRssBytes": 847527936
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "a1f0919f68be3fc5eb03b6357f4c341c8034070c",
+          "vectorsCommit": "4144202221bc61ac4742eefb0be7169f72294d41"
+        }
+      }
+    },
+    {
+      "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25",
+      "modelId": "minicpm5_1b_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "compiler": "graal-jvmci"
+      },
+      "evidence": {
+        "benchmarkId": "inference-matrix-20260718",
+        "measuredAt": "2026-07-18T19:00:42.338463249Z",
+        "baseline": "hotspot-c2",
+        "candidate": "graal-jvmci",
+        "warmups": 2,
+        "trials": 10,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 172.907459,
+          "p95TtftMillis": 8527.854024,
+          "prefillTokensPerSecond": 17.824569,
+          "decodeTokensPerSecond": 13.194557,
+          "peakRssBytes": 946946048
+        },
+        "candidateMetrics": {
+          "loadMillis": 197.034309,
+          "p95TtftMillis": 7377.228862,
+          "prefillTokensPerSecond": 20.593317,
+          "decodeTokensPerSecond": 15.339483,
+          "peakRssBytes": 1026539520
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "a1f0919f68be3fc5eb03b6357f4c341c8034070c",
+          "vectorsCommit": "4144202221bc61ac4742eefb0be7169f72294d41"
+        }
+      }
+    }
+  ]
+}

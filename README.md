@@ -14,6 +14,8 @@ Every marker JAR carries machine-readable runtime and catalog metadata:
 ```text
 META-INF/modeljars/registry.properties
 META-INF/modeljars/model.json
+META-INF/modeljars/performance-v1.properties
+META-INF/modeljars/performance-v1.json
 ```
 
 Descriptors point to upstream model locations, expected local cache paths or bundled resources,
@@ -21,7 +23,8 @@ checksums, licenses, formats, quantization variants, runtime feature flags, and 
 compatibility. A bundled payload lives below `META-INF/modeljars/models/<catalog-id>/` and is
 verified against the same size and SHA-256 metadata as an external model.
 
-The catalog has one source of truth: `catalog/models.json`. Gradle generates the aggregate
+Model identity has one source of truth, `catalog/models.json`; controlled performance evidence has
+the independent versioned source `catalog/performance-profiles.json`. Gradle generates the aggregate
 classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
 catalog. The aggregate JAR embeds `META-INF/modeljars/catalog.json`; the static website extracts
 that resource instead of maintaining a model list in JavaScript. Adding a model does not require a
@@ -127,6 +130,25 @@ Feature flags expose requirements and handling metadata such as `q4-k`, `chatml`
 `community-conversion`, and `medical-use-warning`. Markers created before the feature property was
 introduced remain loadable and return an empty set.
 
+Versioned performance profiles are discovered separately and bind every recommendation to the
+exact marker coordinate, model SHA-256, backend, runtime selector, and reproducible before/after
+evidence:
+
+```java
+ModelPerformanceProfileRegistry profiles =
+    ModelPerformanceProfileRegistry.fromClasspath();
+
+List<ModelPerformanceProfile> measured = profiles.profilesFor(descriptor);
+```
+
+Backends call `matching(descriptor, backend, runtimeFacts)` with their complete structured runtime
+fingerprint before considering a recommendation.
+
+`safeForAutomaticSelection()` means the profile has recommendations and exact output hashes
+matched in its comparison. It does not authorize arbitrary runtime properties or native code;
+backends must whitelist supported recommendation keys and retain their own correctness checks. See
+[Performance profiles](docs/performance-profiles.md) for the schema and contribution rules.
+
 To download and verify the pinned artifact instead of requiring it to exist already:
 
 ```java
@@ -190,3 +212,4 @@ well-known metadata resources. A richer scanner and public catalog service can c
 
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
 - [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)
+- [Performance profile schema and safety contract](docs/performance-profiles.md)

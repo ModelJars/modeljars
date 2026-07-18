@@ -9,6 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.time.Instant
 import java.util.HexFormat
 import java.util.Properties
 import java.util.concurrent.Callable
@@ -89,6 +90,32 @@ data class CatalogDimensions(
         }
 }
 
+data class CatalogPerformanceEvidence(
+    val benchmarkId: String,
+    val measuredAt: String,
+    val baseline: String,
+    val candidate: String,
+    val warmups: Int,
+    val trials: Int,
+    val generatedTokens: Int,
+    val outputHashesMatch: Boolean,
+    val baselineMetrics: Map<String, Double>,
+    val candidateMetrics: Map<String, Double>,
+    val controls: Map<String, String>,
+)
+
+data class CatalogPerformanceProfile(
+    val id: String,
+    val modelId: String,
+    val markerCoordinate: String,
+    val artifactSha256: String,
+    val backend: String,
+    val selector: Map<String, String>,
+    val recommendations: Map<String, String>,
+    val evidence: CatalogPerformanceEvidence,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -103,9 +130,63 @@ fun Any?.stringKeyMap(context: String): Map<String, Any?> {
     }
 }
 
+fun Any?.stringMap(context: String): Map<String, String> =
+    stringKeyMap(context).mapValues { (key, value) ->
+        value as? String ?: error("$context.$key must be a string")
+    }
+
+fun Any?.doubleMap(context: String): Map<String, Double> =
+    stringKeyMap(context).mapValues { (key, value) ->
+        (value as? Number)?.toDouble() ?: error("$context.$key must be a number")
+    }
+
 fun taskSuffix(id: String): String =
     id.split('_').joinToString("") { part ->
         part.replaceFirstChar { character -> character.uppercase() }
+    }
+
+fun propertyValue(value: String): String =
+    value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+
+fun CatalogPerformanceProfile.registryProperties(): String =
+    buildString {
+        val prefix = "profile.$id."
+        appendLine("${prefix}modelAlias=$modelId")
+        appendLine("${prefix}markerCoordinate=${propertyValue(markerCoordinate)}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}backend=$backend")
+        selector.toSortedMap().forEach { (name, value) ->
+            appendLine("${prefix}selector.$name=${propertyValue(value)}")
+        }
+        recommendations.toSortedMap().forEach { (name, value) ->
+            appendLine("${prefix}recommendation.$name=${propertyValue(value)}")
+        }
+        val evidencePrefix = "${prefix}evidence."
+        appendLine("${evidencePrefix}benchmarkId=${propertyValue(evidence.benchmarkId)}")
+        appendLine("${evidencePrefix}measuredAt=${evidence.measuredAt}")
+        appendLine("${evidencePrefix}baseline=${propertyValue(evidence.baseline)}")
+        appendLine("${evidencePrefix}candidate=${propertyValue(evidence.candidate)}")
+        appendLine("${evidencePrefix}warmups=${evidence.warmups}")
+        appendLine("${evidencePrefix}trials=${evidence.trials}")
+        appendLine("${evidencePrefix}generatedTokens=${evidence.generatedTokens}")
+        appendLine("${evidencePrefix}outputHashesMatch=${evidence.outputHashesMatch}")
+        evidence.baselineMetrics.toSortedMap().forEach { (name, value) ->
+            appendLine("${evidencePrefix}baseline.metric.$name=$value")
+        }
+        evidence.candidateMetrics.toSortedMap().forEach { (name, value) ->
+            appendLine("${evidencePrefix}candidate.metric.$name=$value")
+        }
+        evidence.controls.toSortedMap().forEach { (name, value) ->
+            appendLine("${evidencePrefix}control.$name=${propertyValue(value)}")
+        }
+    }
+
+fun performanceRegistryProperties(profiles: List<CatalogPerformanceProfile>): String =
+    buildString {
+        appendLine("modeljars.performance.schemaVersion=1")
+        profiles.forEach { profile ->
+            appendLine(profile.registryProperties().trimEnd())
+        }
     }
 
 fun CatalogEntry.registryProperties(): String =
@@ -236,6 +317,64 @@ val catalogEntries =
             )
         }
 
+val performanceDocument =
+    JsonSlurper()
+        .parse(file("catalog/performance-profiles.json"))
+        .stringKeyMap("catalog/performance-profiles.json")
+require((performanceDocument["schemaVersion"] as? Number)?.toInt() == 1) {
+    "catalog/performance-profiles.json must use schemaVersion 1"
+}
+val performanceProfiles =
+    ((performanceDocument["profiles"] as? List<*>)
+            ?: error("Performance catalog must contain a profiles array"))
+        .map { value ->
+            val raw = value.stringKeyMap("Every performance profile")
+            val evidence =
+                raw["evidence"].stringKeyMap("evidence for ${raw["id"]}")
+            CatalogPerformanceProfile(
+                id = raw.requiredString("id"),
+                modelId = raw.requiredString("modelId"),
+                markerCoordinate = raw.requiredString("markerCoordinate"),
+                artifactSha256 = raw.requiredString("artifactSha256"),
+                backend = raw.requiredString("backend"),
+                selector = raw["selector"].stringMap("selector for ${raw["id"]}"),
+                recommendations =
+                    raw["recommendations"].stringMap("recommendations for ${raw["id"]}"),
+                evidence =
+                    CatalogPerformanceEvidence(
+                        benchmarkId = evidence.requiredString("benchmarkId"),
+                        measuredAt = evidence.requiredString("measuredAt"),
+                        baseline = evidence.requiredString("baseline"),
+                        candidate = evidence.requiredString("candidate"),
+                        warmups =
+                            (evidence["warmups"] as? Number)?.toInt()
+                                ?: error("evidence.warmups must be an integer"),
+                        trials =
+                            (evidence["trials"] as? Number)?.toInt()
+                                ?: error("evidence.trials must be an integer"),
+                        generatedTokens =
+                            (evidence["generatedTokens"] as? Number)?.toInt()
+                                ?: error("evidence.generatedTokens must be an integer"),
+                        outputHashesMatch =
+                            evidence["outputHashesMatch"] as? Boolean
+                                ?: error("evidence.outputHashesMatch must be a boolean"),
+                        baselineMetrics =
+                            evidence["baselineMetrics"].doubleMap(
+                                "evidence.baselineMetrics for ${raw["id"]}",
+                            ),
+                        candidateMetrics =
+                            evidence["candidateMetrics"].doubleMap(
+                                "evidence.candidateMetrics for ${raw["id"]}",
+                            ),
+                        controls =
+                            evidence["controls"].stringMap(
+                                "evidence.controls for ${raw["id"]}",
+                            ),
+                    ),
+                raw = raw,
+            )
+        }
+
 require(catalogEntries.isNotEmpty()) { "Catalog must contain at least one model" }
 require(catalogEntries.map(CatalogEntry::id).distinct().size == catalogEntries.size) {
     "Catalog IDs must be unique"
@@ -244,6 +383,49 @@ require(
     catalogEntries.map(CatalogEntry::markerCoordinate).distinct().size == catalogEntries.size,
 ) {
     "Marker coordinates must be unique"
+}
+require(performanceProfiles.map(CatalogPerformanceProfile::id).distinct().size == performanceProfiles.size) {
+    "Performance profile IDs must be unique"
+}
+
+performanceProfiles.forEach { profile ->
+    require(profile.id.matches(Regex("[a-z0-9][a-z0-9_-]*"))) {
+        "Invalid performance profile id: ${profile.id}"
+    }
+    val model = catalogEntries.singleOrNull { it.id == profile.modelId }
+        ?: error("Unknown modelId in performance profile ${profile.id}: ${profile.modelId}")
+    require(profile.markerCoordinate == model.markerCoordinate) {
+        "Performance profile coordinate does not match ${profile.modelId}"
+    }
+    require(profile.artifactSha256 == model.sha256) {
+        "Performance profile SHA-256 does not match ${profile.modelId}"
+    }
+    require(model.backends[profile.backend] == true) {
+        "Performance profile backend is not supported by ${profile.modelId}: ${profile.backend}"
+    }
+    require(profile.selector.isNotEmpty()) { "Performance selector must not be empty: ${profile.id}" }
+    require(profile.recommendations.isNotEmpty()) {
+        "Performance recommendations must not be empty: ${profile.id}"
+    }
+    require(profile.evidence.warmups >= 0 && profile.evidence.trials > 0) {
+        "Performance trial counts are invalid: ${profile.id}"
+    }
+    require(profile.evidence.generatedTokens > 0) {
+        "Performance generatedTokens must be positive: ${profile.id}"
+    }
+    require(profile.evidence.baselineMetrics.isNotEmpty()) {
+        "Baseline metrics must not be empty: ${profile.id}"
+    }
+    require(profile.evidence.candidateMetrics.isNotEmpty()) {
+        "Candidate metrics must not be empty: ${profile.id}"
+    }
+    require(
+        (profile.evidence.baselineMetrics.values + profile.evidence.candidateMetrics.values)
+            .all { it.isFinite() && it >= 0.0 },
+    ) {
+        "Performance metrics must be finite and non-negative: ${profile.id}"
+    }
+    Instant.parse(profile.evidence.measuredAt)
 }
 
 catalogEntries.forEach { entry ->
@@ -678,10 +860,20 @@ project(":modeljars-catalog") {
         generatedResources.map { it.file("META-INF/modeljars/registry.properties") }
     val aggregateMetadata =
         generatedResources.map { it.file("META-INF/modeljars/catalog.json") }
+    val aggregatePerformanceRegistry =
+        generatedResources.map { it.file("META-INF/modeljars/performance-v1.properties") }
+    val aggregatePerformanceMetadata =
+        generatedResources.map { it.file("META-INF/modeljars/performance-v1.json") }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
-            outputs.files(aggregateRegistry, aggregateMetadata)
+            inputs.file(rootProject.file("catalog/performance-profiles.json"))
+            outputs.files(
+                aggregateRegistry,
+                aggregateMetadata,
+                aggregatePerformanceRegistry,
+                aggregatePerformanceMetadata,
+            )
             doLast {
                 val registry = aggregateRegistry.get().asFile
                 registry.parentFile.mkdirs()
@@ -690,8 +882,33 @@ project(":modeljars-catalog") {
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateMetadata.get().asFile.writeText(
-                    JsonOutput.prettyPrint(JsonOutput.toJson(catalogEntries.map(CatalogEntry::raw))) +
+                    JsonOutput.prettyPrint(
+                        JsonOutput.toJson(
+                            catalogEntries.map { entry ->
+                                entry.raw +
+                                    ("performanceProfiles" to
+                                        performanceProfiles
+                                            .filter { it.modelId == entry.id }
+                                            .map(CatalogPerformanceProfile::raw))
+                            },
+                        ),
+                    ) +
                         "\n",
+                    StandardCharsets.UTF_8,
+                )
+                aggregatePerformanceRegistry.get().asFile.writeText(
+                    performanceRegistryProperties(performanceProfiles),
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregatePerformanceMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(
+                        JsonOutput.toJson(
+                            mapOf(
+                                "schemaVersion" to 1,
+                                "profiles" to performanceProfiles.map(CatalogPerformanceProfile::raw),
+                            ),
+                        ),
+                    ) + "\n",
                     StandardCharsets.UTF_8,
                 )
             }
@@ -716,17 +933,44 @@ project(":modeljars-catalog") {
         val markerRoot = layout.buildDirectory.dir("generated/markers/${entry.id}/main")
         val markerRegistry = markerRoot.map { it.file("META-INF/modeljars/registry.properties") }
         val markerMetadata = markerRoot.map { it.file("META-INF/modeljars/model.json") }
+        val markerPerformanceRegistry =
+            markerRoot.map { it.file("META-INF/modeljars/performance-v1.properties") }
+        val markerPerformanceMetadata =
+            markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
-                outputs.files(markerRegistry, markerMetadata, markerDocs)
+                inputs.file(rootProject.file("catalog/performance-profiles.json"))
+                outputs.files(
+                    markerRegistry,
+                    markerMetadata,
+                    markerPerformanceRegistry,
+                    markerPerformanceMetadata,
+                    markerDocs,
+                )
                 doLast {
+                    val modelProfiles = performanceProfiles.filter { it.modelId == entry.id }
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
                     markerMetadata.get().asFile.writeText(
                         JsonOutput.prettyPrint(JsonOutput.toJson(entry.raw)) + "\n",
+                        StandardCharsets.UTF_8,
+                    )
+                    markerPerformanceRegistry.get().asFile.writeText(
+                        performanceRegistryProperties(modelProfiles),
+                        StandardCharsets.ISO_8859_1,
+                    )
+                    markerPerformanceMetadata.get().asFile.writeText(
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                mapOf(
+                                    "schemaVersion" to 1,
+                                    "profiles" to modelProfiles.map(CatalogPerformanceProfile::raw),
+                                ),
+                            ),
+                        ) + "\n",
                         StandardCharsets.UTF_8,
                     )
                     markerDocs.get().asFile.writeText(
@@ -752,6 +996,8 @@ project(":modeljars-catalog") {
                     include(
                         "META-INF/modeljars/registry.properties",
                         "META-INF/modeljars/model.json",
+                        "META-INF/modeljars/performance-v1.properties",
+                        "META-INF/modeljars/performance-v1.json",
                     )
                 }
             }
@@ -764,6 +1010,7 @@ project(":modeljars-catalog") {
                 destinationDirectory.set(layout.buildDirectory.dir("libs/markers"))
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
+                    include("META-INF/modeljars/performance-v1.json")
                 }
             }
         val markerJavadocJar =
@@ -935,6 +1182,12 @@ tasks.register("verifyCatalog") {
                 val metadataResource =
                     zip.getEntry("META-INF/modeljars/model.json")
                         ?: error("Self-describing model metadata missing from $markerJar")
+                val performanceResource =
+                    zip.getEntry("META-INF/modeljars/performance-v1.properties")
+                        ?: error("Performance profile resource missing from $markerJar")
+                val performanceMetadataResource =
+                    zip.getEntry("META-INF/modeljars/performance-v1.json")
+                        ?: error("Performance profile metadata missing from $markerJar")
                 val metadata =
                     zip.getInputStream(metadataResource).bufferedReader(StandardCharsets.UTF_8).use {
                         JsonSlurper().parse(it).stringKeyMap("Marker metadata in $markerJar")
@@ -944,6 +1197,43 @@ tasks.register("verifyCatalog") {
                 }
                 val properties = Properties()
                 zip.getInputStream(resource).use(properties::load)
+                val profileProperties = Properties()
+                zip.getInputStream(performanceResource).use(profileProperties::load)
+                require(
+                    profileProperties.getProperty("modeljars.performance.schemaVersion") == "1",
+                ) {
+                    "Performance profile schema mismatch in $markerJar"
+                }
+                val expectedProfiles = performanceProfiles.filter { it.modelId == entry.id }
+                expectedProfiles.forEach { profile ->
+                    require(
+                        profileProperties.getProperty(
+                            "profile.${profile.id}.markerCoordinate",
+                        ) == entry.markerCoordinate,
+                    ) {
+                        "Performance profile coordinate mismatch in $markerJar"
+                    }
+                    require(
+                        profileProperties.getProperty("profile.${profile.id}.artifactSha256") ==
+                            entry.sha256,
+                    ) {
+                        "Performance profile SHA-256 mismatch in $markerJar"
+                    }
+                }
+                val profileMetadata =
+                    zip.getInputStream(performanceMetadataResource)
+                        .bufferedReader(StandardCharsets.UTF_8)
+                        .use {
+                            JsonSlurper()
+                                .parse(it)
+                                .stringKeyMap("Performance metadata in $markerJar")
+                        }
+                require((profileMetadata["schemaVersion"] as? Number)?.toInt() == 1) {
+                    "Performance JSON schema mismatch in $markerJar"
+                }
+                require((profileMetadata["profiles"] as? List<*>)?.size == expectedProfiles.size) {
+                    "Performance JSON profile count mismatch in $markerJar"
+                }
                 require(
                     properties.getProperty("model.${entry.id}.markerCoordinate") ==
                         entry.markerCoordinate,
@@ -1001,6 +1291,17 @@ tasks.register("verifyCatalog") {
         }
         val siteCatalog = generatedSiteCatalog.get().asFile
         require(siteCatalog.isFile) { "Generated site catalog is missing: $siteCatalog" }
+        val siteModels =
+            JsonSlurper().parse(siteCatalog).let { it as? List<*> }
+                ?: error("Generated site catalog must contain a model array")
+        require(
+            siteModels.sumOf { model ->
+                val values = model.stringKeyMap("Generated site model")
+                (values["performanceProfiles"] as? List<*>)?.size ?: 0
+            } == performanceProfiles.size,
+        ) {
+            "Generated site catalog performance profile count mismatch"
+        }
         val generatedSite = layout.buildDirectory.dir("site").get().asFile
         catalogEntries.forEach { entry ->
             val detailRoute = generatedSite.resolve("models/${entry.id}/index.html")

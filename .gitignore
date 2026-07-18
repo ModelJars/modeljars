@@ -7,3 +7,7 @@ out/
 *.class
 *.log
 node_modules/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.wrangler/

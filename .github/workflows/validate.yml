@@ -42,7 +42,9 @@ jobs:
         run: npm test
 
       - name: Validate build
-        run: ./gradlew --no-daemon test assemble verifyCatalog verifyFacadePublication
+        run: >
+          ./gradlew --no-daemon
+          test assemble verifyCatalog verifyFacadePublication generateSite generatePublicSite
 
       - name: Verify pinned Hugging Face metadata
         run: ./gradlew --no-daemon verifyRemoteCatalogMetadata

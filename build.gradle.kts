@@ -867,6 +867,13 @@ tasks.register<Sync>("generateSite") {
     }
 }
 
+val generatedPublicSiteDirectory = layout.buildDirectory.dir("public-site")
+tasks.register<Sync>("generatePublicSite") {
+    from("site-public")
+    from("media/icons")
+    into(generatedPublicSiteDirectory)
+}
+
 tasks.register("verifyRemoteCatalogMetadata") {
     group = "verification"
     description = "Verify pinned Hugging Face revisions, sizes, and LFS hashes without model downloads"

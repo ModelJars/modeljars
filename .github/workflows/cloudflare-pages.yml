@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - site/**
+      - functions/**
       - catalog/**
       - modeljars-catalog/**
       - build.gradle.kts
@@ -22,7 +23,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build and deploy static catalog
+    name: Build and deploy private catalog
     runs-on: ubuntu-latest
     environment: cloudflare-pages
     env:
@@ -60,6 +61,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.112.0
           command: >-
             pages deploy build/site
             --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'modeljars' }}

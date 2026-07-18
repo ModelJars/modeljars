@@ -15,9 +15,9 @@ and no-skip CI boundary are maintained in
 [launch-catalog-100.md](launch-catalog-100.md). The original 25-model report is
 retained as historical planning context.
 
-The public site is ModelJars.org. If ModelJars.com is later acquired, use the
-same DNS and GitHub Pages pattern below for that domain or redirect it to the
-`.org` site.
+The canonical site is ModelJars.org. It is temporarily an invite-only private preview; see
+[private-preview-auth.md](private-preview-auth.md) for the authentication boundary and deployment
+runbook. If ModelJars.com is later acquired, redirect it to the `.org` site.
 
 ## 1. ModelJars.org Setup Runbook
 
@@ -25,11 +25,13 @@ same DNS and GitHub Pages pattern below for that domain or redirect it to the
 
 - GitHub org: `ModelJars`
 - Repository: `ModelJars/modeljars`
-- Production target: Cloudflare Pages direct upload from GitHub Actions
-- Temporary fallback: GitHub Pages via GitHub Actions
+- Private application: Cloudflare Pages direct upload from GitHub Actions
+- Public placeholder: GitHub Pages via GitHub Actions
 - Custom domain: `modeljars.org`
 - Site source directory: `site/`
 - Generated output directory: `build/site/`
+- Pages Functions source directory: `functions/`
+- Public placeholder source/output: `site-public/` and `build/public-site/`
 - Deployed files include:
   - `site/index.html`
   - `site/catalog.json`
@@ -39,10 +41,8 @@ same DNS and GitHub Pages pattern below for that domain or redirect it to the
 
 The Cloudflare workflow is `.github/workflows/cloudflare-pages.yml`. GitHub Actions runs
 `./gradlew generateSite`, which extracts `catalog.json` from the aggregate ModelJars JAR, and then
-uploads `build/site` with Wrangler. No Worker, Pages Function, D1 database, or live Maven Central
-query is required. Static asset requests are free and unlimited on Cloudflare Pages; current Free
-plan limits include 500 builds per month, 20,000 files, and 25 MiB per asset, all comfortably above
-this site.
+uploads `build/site` and the authentication Pages Functions with Wrangler. No D1 database or live
+Maven Central query is required. The root middleware authenticates every generated site route.
 
 Configure these repository or `cloudflare-pages` environment secrets:
 
@@ -52,8 +52,9 @@ CLOUDFLARE_API_TOKEN
 ```
 
 Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT`; it defaults to `modeljars`.
-Create the Pages project as a Direct Upload project before the first deployment. The GitHub Pages
-workflow remains available until Cloudflare cutover is verified.
+Create the Pages project as a Direct Upload project before the first deployment. GitHub Pages must
+not host the private application because it cannot enforce per-user access; its workflow publishes
+only the private-preview placeholder.
 
 For the apex `modeljars.org` hostname, Cloudflare requires the domain to be an active Cloudflare
 zone. DNSimple can remain the registrar, but its registrar nameserver delegation must point to the
@@ -68,8 +69,8 @@ Official references:
 - <https://developers.cloudflare.com/pages/configuration/custom-domains/>
 - <https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/>
 
-The GitHub Pages and DNSimple instructions below are retained as the rollback path until the
-Cloudflare nameserver migration is complete.
+The GitHub Pages and DNSimple instructions below are retained as infrastructure history and for a
+future public-site rollback. They are not an authenticated hosting option during private preview.
 
 ### DNSimple Automation
 

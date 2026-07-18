@@ -3,16 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test site/assets/*.test.mjs tools/*.test.mjs functions/*.test.mjs",
+    "test": "node --test site/assets/*.test.mjs tools/*.test.mjs",
     "catalog:enrich": "node tools/enrich-catalog.mjs",
-    "catalog:inspect": "node tools/inspect-gguf.mjs",
-    "site:build": "./gradlew generateSite",
-    "site:dev": "wrangler pages dev build/site --port 8788 --compatibility-date 2026-07-17"
+    "catalog:inspect": "node tools/inspect-gguf.mjs"
   },
   "dependencies": {
     "@huggingface/gguf": "0.4.2"
-  },
-  "devDependencies": {
-    "wrangler": "4.112.0"
   }
 }

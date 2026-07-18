@@ -15,9 +15,9 @@ and no-skip CI boundary are maintained in
 [launch-catalog-100.md](launch-catalog-100.md). The original 25-model report is
 retained as historical planning context.
 
-The canonical site is ModelJars.org. It is temporarily an invite-only private preview; see
-[private-preview-auth.md](private-preview-auth.md) for the authentication boundary and deployment
-runbook. If ModelJars.com is later acquired, redirect it to the `.org` site.
+The canonical site is ModelJars.org. It temporarily publishes a private-preview placeholder while
+the framework is not ready for public use. If ModelJars.com is later acquired, redirect it to the
+`.org` site.
 
 ## 1. ModelJars.org Setup Runbook
 
@@ -25,52 +25,25 @@ runbook. If ModelJars.com is later acquired, redirect it to the `.org` site.
 
 - GitHub org: `ModelJars`
 - Repository: `ModelJars/modeljars`
-- Private application: Cloudflare Pages direct upload from GitHub Actions
-- Public placeholder: GitHub Pages via GitHub Actions
+- Hosting: GitHub Pages via GitHub Actions
 - Custom domain: `modeljars.org`
-- Site source directory: `site/`
-- Generated output directory: `build/site/`
-- Pages Functions source directory: `functions/`
-- Public placeholder source/output: `site-public/` and `build/public-site/`
-- Deployed files include:
-  - `site/index.html`
-  - `site/catalog.json`
-  - `site/assets/app.js`
-  - `site/assets/styles.css`
-  - `site/CNAME`
+- Full site source/output for local review: `site/` and `build/site/`
+- Deployed placeholder source/output: `site-public/` and `build/public-site/`
 
-The Cloudflare workflow is `.github/workflows/cloudflare-pages.yml`. GitHub Actions runs
-`./gradlew generateSite`, which extracts `catalog.json` from the aggregate ModelJars JAR, and then
-uploads `build/site` and the authentication Pages Functions with Wrangler. No D1 database or live
-Maven Central query is required. The root middleware authenticates every generated site route.
+The GitHub Pages workflow is `.github/workflows/pages.yml`. GitHub Actions runs
+`./gradlew generatePublicSite` and uploads only `build/public-site`. The deployed artifact contains
+the private-preview page, `CNAME`, and brand icons; it contains no catalog, framework documentation,
+or model metadata.
 
-Configure these repository or `cloudflare-pages` environment secrets:
-
-```text
-CLOUDFLARE_ACCOUNT_ID
-CLOUDFLARE_API_TOKEN
-```
-
-Optionally set the repository variable `CLOUDFLARE_PAGES_PROJECT`; it defaults to `modeljars`.
-Create the Pages project as a Direct Upload project before the first deployment. GitHub Pages must
-not host the private application because it cannot enforce per-user access; its workflow publishes
-only the private-preview placeholder.
-
-For the apex `modeljars.org` hostname, Cloudflare requires the domain to be an active Cloudflare
-zone. DNSimple can remain the registrar, but its registrar nameserver delegation must point to the
-Cloudflare nameservers. Cloudflare then creates and renews the public certificate through Universal
-SSL at no charge. A subdomain such as `www.modeljars.org` can use a CNAME without moving the zone,
-but that does not satisfy the apex-domain requirement.
+GitHub Pages provides static hosting and cannot enforce per-user login on this public repository.
+The temporary policy is therefore to publish no protected material. Maintainers can generate the
+full site locally with `./gradlew generateSite`. When the framework is ready for public use, the
+Pages workflow can publish `build/site` again.
 
 Official references:
 
-- <https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/>
-- <https://developers.cloudflare.com/pages/platform/limits/>
-- <https://developers.cloudflare.com/pages/configuration/custom-domains/>
-- <https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/>
-
-The GitHub Pages and DNSimple instructions below are retained as infrastructure history and for a
-future public-site rollback. They are not an authenticated hosting option during private preview.
+- <https://docs.github.com/pages/getting-started-with-github-pages/what-is-github-pages>
+- <https://docs.github.com/pages/configuring-a-custom-domain-for-your-github-pages-site>
 
 ### DNSimple Automation
 

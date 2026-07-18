@@ -25,7 +25,7 @@ no model list in the website code. The build generates:
 
 1. one self-describing marker JAR per catalog entry;
 2. `modeljars-catalog.jar` with the aggregate registry and `catalog.json`;
-3. the static Cloudflare/GitHub Pages `catalog.json` extracted from that aggregate JAR; and
+3. the generated website `catalog.json` extracted from that aggregate JAR; and
 4. Maven publications for the facade, core, aggregate catalog, and markers.
 
 An individual marker embeds both `META-INF/modeljars/registry.properties` for the dependency-free

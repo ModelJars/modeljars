@@ -161,6 +161,68 @@
           "vectorsCommit": "4144202221bc61ac4742eefb0be7169f72294d41"
         }
       }
+    },
+    {
+      "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_mixed_k",
+      "modelId": "minicpm5_1b_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.purejava.mixedKProjections": "true"
+      },
+      "evidence": {
+        "benchmarkId": "mixed-k-projections-20260718",
+        "measuredAt": "2026-07-18T21:36:22.996738920Z",
+        "baseline": "mixed-k=false",
+        "candidate": "mixed-k=true",
+        "warmups": 2,
+        "trials": 20,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 234.363324,
+          "p95TtftMillis": 8502.339585,
+          "prefillTokensPerSecond": 17.798940,
+          "decodeTokensPerSecond": 13.080167,
+          "peakRssBytes": 948834304
+        },
+        "candidateMetrics": {
+          "loadMillis": 249.004835,
+          "p95TtftMillis": 8542.405464,
+          "prefillTokensPerSecond": 17.787695,
+          "decodeTokensPerSecond": 13.369107,
+          "peakRssBytes": 951078912
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "00de3059ef695ba7252c2ee12981f5722a74ec26",
+          "vectorsCommit": "e957a50e1afadf4a276be7e9890508d5ada826f0",
+          "compiler": "hotspot-c2",
+          "order": "counterbalanced-control-first-and-candidate-first",
+          "aggregation": "median-over-20-trials",
+          "meanDecodeChangePercent": "2.515281",
+          "pairedDecodeChangeRangePercent": "1.323525..4.257629",
+          "graalControlDecodeTokensPerSecond": "15.275457",
+          "graalCandidateDecodeTokensPerSecond": "15.474967",
+          "graalMeanDecodeChangePercent": "1.306078",
+          "graalOutputHashesMatch": "true"
+        }
+      }
     }
   ]
 }

@@ -44,19 +44,19 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         List.of(
             "-Djdk.graal.MaximumInliningSize=10000",
-            "-Dvectors.gguf.q4ShortPairwise=true"),
+            "-XX:+UseSerialGC"),
         launch.jvmArguments());
     assertEquals(
         List.of(
             "java",
             "-Djdk.graal.MaximumInliningSize=10000",
-            "-Dvectors.gguf.q4ShortPairwise=true",
+            "-XX:+UseSerialGC",
             "-cp",
             "app.jar",
             "example.Main"),
         launch.command("java", List.of("-cp", "app.jar", "example.Main")));
     assertEquals(
-        List.of("-Dvectors.gguf.q4ShortPairwise=true"),
+        List.of("-XX:+UseSerialGC"),
         launch.missingArguments(List.of("-Djdk.graal.MaximumInliningSize=10000")));
 
     Map<String, String> runtime =
@@ -204,7 +204,12 @@ class ModelPerformanceProfileRegistryTest {
                             .javaLaunch()
                             .orElseThrow()
                             .jvmArguments()
-                            .contains("-Dvectors.gguf.q4ShortPairwise=true")));
+                            .equals(List.of("-Djdk.graal.MaximumInliningSize=10000"))
+                        && "short-pairwise"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.q4Kernel"))));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -243,7 +248,7 @@ class ModelPerformanceProfileRegistryTest {
     properties.setProperty(
         prefix + "launch.jvmArgument.000", "-Djdk.graal.MaximumInliningSize=10000");
     properties.setProperty(
-        prefix + "launch.jvmArgument.001", "-Dvectors.gguf.q4ShortPairwise=true");
+        prefix + "launch.jvmArgument.001", "-XX:+UseSerialGC");
     properties.setProperty(prefix + "evidence.benchmarkId", "inference-matrix-20260718");
     properties.setProperty(
         prefix + "evidence.measuredAt", "2026-07-18T18:52:34.731627458Z");

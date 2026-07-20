@@ -39,7 +39,7 @@ is stable:
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.runtime=graal-jvmci
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.javaFeature=25
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.000=-Djdk.graal.MaximumInliningSize=10000
-profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.001=-Dvectors.gguf.q4ShortPairwise=true
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.recommendation.models.purejava.q4Kernel=short-pairwise
 ```
 
 `JavaLaunchProfile.command(...)` returns an argument list suitable for `ProcessBuilder`; it does not

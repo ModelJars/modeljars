@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -132,6 +133,7 @@ public final class ModelPerformanceProfileRegistry {
         required(properties, prefix + "backend"),
         descendants(properties, prefix + "selector."),
         descendants(properties, prefix + "recommendation."),
+        javaLaunch(properties, prefix),
         new PerformanceEvidence(
             required(properties, evidencePrefix + "benchmarkId"),
             parseInstant(
@@ -150,6 +152,38 @@ public final class ModelPerformanceProfileRegistry {
             metrics(properties, evidencePrefix + "baseline.metric."),
             metrics(properties, evidencePrefix + "candidate.metric."),
             descendants(properties, evidencePrefix + "control.")));
+  }
+
+  private static Optional<JavaLaunchProfile> javaLaunch(Properties properties, String prefix) {
+    String launchPrefix = prefix + "launch.";
+    String runtime = properties.getProperty(launchPrefix + "runtime");
+    String javaFeature = properties.getProperty(launchPrefix + "javaFeature");
+    List<String> arguments = indexedValues(properties, launchPrefix + "jvmArgument.");
+    if (runtime == null && javaFeature == null && arguments.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new JavaLaunchProfile(
+            required(properties, launchPrefix + "runtime"),
+            parseInt(
+                launchPrefix + "javaFeature",
+                required(properties, launchPrefix + "javaFeature")),
+            arguments));
+  }
+
+  private static List<String> indexedValues(Properties properties, String prefix) {
+    List<String> names =
+        properties.stringPropertyNames().stream()
+            .filter(name -> name.startsWith(prefix))
+            .sorted()
+            .toList();
+    for (int index = 0; index < names.size(); index++) {
+      String expected = prefix + String.format("%03d", index);
+      if (!names.get(index).equals(expected)) {
+        throw new ModelJarException("Expected indexed property " + expected);
+      }
+    }
+    return names.stream().map(properties::getProperty).toList();
   }
 
   private static Map<String, String> descendants(Properties properties, String prefix) {

@@ -13,33 +13,39 @@
         "cpu-model": "AMD EPYC-Milan Processor",
         "processors": "8",
         "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
         "active-vector-bits": "256"
       },
-      "recommendations": {
-        "compiler": "hotspot-c2"
+      "recommendations": {},
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "-Djdk.graal.MaximumInliningSize=10000",
+          "-Dvectors.gguf.q4ShortPairwise=true"
+        ]
       },
       "evidence": {
-        "benchmarkId": "inference-matrix-20260718",
-        "measuredAt": "2026-07-18T18:50:27.111163953Z",
-        "baseline": "hotspot-c2",
-        "candidate": "graal-jvmci",
+        "benchmarkId": "graal-q4-short-pairwise-20260720",
+        "measuredAt": "2026-07-20T18:40:01.535755857Z",
+        "baseline": "graal-jvmci-q4-widened",
+        "candidate": "graal-jvmci-q4-short-pairwise",
         "warmups": 2,
-        "trials": 10,
+        "trials": 12,
         "generatedTokens": 64,
         "outputHashesMatch": true,
         "baselineMetrics": {
-          "loadMillis": 194.076337,
-          "p95TtftMillis": 3145.565868,
-          "prefillTokensPerSecond": 49.537077,
-          "decodeTokensPerSecond": 25.864888,
-          "peakRssBytes": 1119391744
+          "medianTtftMillis": 2220.792325,
+          "medianPrefillTokensPerSecond": 70.006363,
+          "medianDecodeTokensPerSecond": 28.751916,
+          "meanCpuMillis": 29690.833
         },
         "candidateMetrics": {
-          "loadMillis": 205.564363,
-          "p95TtftMillis": 5900.253479,
-          "prefillTokensPerSecond": 27.490130,
-          "decodeTokensPerSecond": 19.646824,
-          "peakRssBytes": 1774723072
+          "medianTtftMillis": 1757.505867,
+          "medianPrefillTokensPerSecond": 88.512021,
+          "medianDecodeTokensPerSecond": 34.844466,
+          "meanCpuMillis": 23250.833
         },
         "controls": {
           "cpuModel": "AMD EPYC-Milan Processor",
@@ -49,10 +55,13 @@
           "promptStrategy": "sha256-nonce-prefix-v1",
           "seed": "42",
           "temperature": "0.0",
-          "modelsCommit": "a1f0919f68be3fc5eb03b6357f4c341c8034070c",
-          "vectorsCommit": "4144202221bc61ac4742eefb0be7169f72294d41",
-          "extendedCandidateWarmups": "6",
-          "extendedCandidateDecodeTokensPerSecond": "19.750873"
+          "modelsCommit": "ab12fffdbb8090f013bccf0ccc6bc39bf422e06f",
+          "vectorsCandidateCommit": "b3aece4",
+          "vectorsMergeCommit": "67e70d502e1acae943bdac558f662d1ab8c9902a",
+          "jvmBuild": "GraalVM CE 25.0.3+9-jvmci-25.1-b19",
+          "order": "four-counterbalanced-process-pairs",
+          "trialsPerMode": "12",
+          "rssClaim": "none-lifecycle-sensitive"
         }
       }
     },

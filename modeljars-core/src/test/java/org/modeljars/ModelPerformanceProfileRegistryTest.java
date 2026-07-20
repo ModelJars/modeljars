@@ -9,6 +9,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -37,11 +38,34 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(Instant.parse("2026-07-18T18:52:34.731627458Z"), profile.evidence().measuredAt());
     assertTrue(profile.safeForAutomaticSelection());
 
+    JavaLaunchProfile launch = profile.javaLaunch().orElseThrow();
+    assertEquals("graal-jvmci", launch.runtime());
+    assertEquals(25, launch.javaFeature());
+    assertEquals(
+        List.of(
+            "-Djdk.graal.MaximumInliningSize=10000",
+            "-Dvectors.gguf.q4ShortPairwise=true"),
+        launch.jvmArguments());
+    assertEquals(
+        List.of(
+            "java",
+            "-Djdk.graal.MaximumInliningSize=10000",
+            "-Dvectors.gguf.q4ShortPairwise=true",
+            "-cp",
+            "app.jar",
+            "example.Main"),
+        launch.command("java", List.of("-cp", "app.jar", "example.Main")));
+    assertEquals(
+        List.of("-Dvectors.gguf.q4ShortPairwise=true"),
+        launch.missingArguments(List.of("-Djdk.graal.MaximumInliningSize=10000")));
+
     Map<String, String> runtime =
         Map.of(
             "os", "Linux",
             "architecture", "amd64",
             "processors", "8",
+            "java-feature", "25",
+            "compiler", "graal-jvmci",
             "active-vector-bits", "256");
     assertEquals(1, registry.matching(descriptor(SHA), "pure-java", runtime).size());
     assertTrue(
@@ -63,6 +87,80 @@ class ModelPerformanceProfileRegistryTest {
 
     assertFalse(profile.safeForAutomaticSelection());
     assertFalse(profile.evidence().outputHashesMatch());
+  }
+
+  @Test
+  void launchProfileCanBeTheOnlyAutomaticRecommendation() {
+    Properties properties = profileProperties(true);
+    properties.remove("profile.smollm2_360m_q8_0_epyc_milan_jdk25.recommendation.compiler");
+
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromProperties(properties).profiles().getFirst();
+
+    assertTrue(profile.recommendations().isEmpty());
+    assertTrue(profile.javaLaunch().isPresent());
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void recommendationOnlyProfilesDoNotRequireLaunchMetadata() {
+    Properties properties = profileProperties(true);
+    properties.stringPropertyNames().stream()
+        .filter(name -> name.contains(".launch."))
+        .toList()
+        .forEach(properties::remove);
+
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromProperties(properties).profiles().getFirst();
+
+    assertTrue(profile.javaLaunch().isEmpty());
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void rejectsIncompleteOrNonContiguousLaunchMetadata() {
+    Properties missingFeature = profileProperties(true);
+    missingFeature.remove("profile.smollm2_360m_q8_0_epyc_milan_jdk25.launch.javaFeature");
+    assertThrows(
+        ModelJarException.class,
+        () -> ModelPerformanceProfileRegistry.fromProperties(missingFeature));
+
+    Properties gappedArguments = profileProperties(true);
+    gappedArguments.remove(
+        "profile.smollm2_360m_q8_0_epyc_milan_jdk25.launch.jvmArgument.000");
+    assertThrows(
+        ModelJarException.class,
+        () -> ModelPerformanceProfileRegistry.fromProperties(gappedArguments));
+  }
+
+  @Test
+  void rejectsDuplicateJvmArguments() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new JavaLaunchProfile(
+                "graal-jvmci",
+                25,
+                List.of(
+                    "-Djdk.graal.MaximumInliningSize=10000",
+                    "-Djdk.graal.MaximumInliningSize=10000")));
+  }
+
+  @Test
+  void rejectsLaunchMetadataThatConflictsWithItsRuntimeSelector() {
+    Properties wrongFeature = profileProperties(true);
+    wrongFeature.setProperty(
+        "profile.smollm2_360m_q8_0_epyc_milan_jdk25.selector.java-feature", "26");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelPerformanceProfileRegistry.fromProperties(wrongFeature));
+
+    Properties wrongRuntime = profileProperties(true);
+    wrongRuntime.setProperty(
+        "profile.smollm2_360m_q8_0_epyc_milan_jdk25.selector.compiler", "hotspot-c2");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelPerformanceProfileRegistry.fromProperties(wrongRuntime));
   }
 
   @Test
@@ -100,7 +198,13 @@ class ModelPerformanceProfileRegistryTest {
             .anyMatch(
                 profile ->
                     profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25")
-                        && profile.recommendations().get("compiler").equals("hotspot-c2")));
+                        && profile.javaLaunch().isPresent()
+                        && profile.javaLaunch().orElseThrow().runtime().equals("graal-jvmci")
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .contains("-Dvectors.gguf.q4ShortPairwise=true")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -130,8 +234,16 @@ class ModelPerformanceProfileRegistryTest {
     properties.setProperty(prefix + "selector.os", "Linux");
     properties.setProperty(prefix + "selector.architecture", "amd64");
     properties.setProperty(prefix + "selector.processors", "8");
+    properties.setProperty(prefix + "selector.java-feature", "25");
+    properties.setProperty(prefix + "selector.compiler", "graal-jvmci");
     properties.setProperty(prefix + "selector.active-vector-bits", "256");
     properties.setProperty(prefix + "recommendation.compiler", "graal-jvmci");
+    properties.setProperty(prefix + "launch.runtime", "graal-jvmci");
+    properties.setProperty(prefix + "launch.javaFeature", "25");
+    properties.setProperty(
+        prefix + "launch.jvmArgument.000", "-Djdk.graal.MaximumInliningSize=10000");
+    properties.setProperty(
+        prefix + "launch.jvmArgument.001", "-Dvectors.gguf.q4ShortPairwise=true");
     properties.setProperty(prefix + "evidence.benchmarkId", "inference-matrix-20260718");
     properties.setProperty(
         prefix + "evidence.measuredAt", "2026-07-18T18:52:34.731627458Z");

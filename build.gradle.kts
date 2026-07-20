@@ -104,6 +104,12 @@ data class CatalogPerformanceEvidence(
     val controls: Map<String, String>,
 )
 
+data class CatalogJavaLaunchProfile(
+    val runtime: String,
+    val javaFeature: Int,
+    val jvmArguments: List<String>,
+)
+
 data class CatalogPerformanceProfile(
     val id: String,
     val modelId: String,
@@ -112,6 +118,7 @@ data class CatalogPerformanceProfile(
     val backend: String,
     val selector: Map<String, String>,
     val recommendations: Map<String, String>,
+    val javaLaunch: CatalogJavaLaunchProfile?,
     val evidence: CatalogPerformanceEvidence,
     val raw: Map<String, Any?>,
 )
@@ -140,6 +147,12 @@ fun Any?.doubleMap(context: String): Map<String, Double> =
         (value as? Number)?.toDouble() ?: error("$context.$key must be a number")
     }
 
+fun Any?.stringList(context: String): List<String> =
+    (this as? List<*>)?.mapIndexed { index, value ->
+        (value as? String)?.takeIf { it.isNotBlank() }
+            ?: error("$context[$index] must be a non-blank string")
+    } ?: error("$context must be an array")
+
 fun taskSuffix(id: String): String =
     id.split('_').joinToString("") { part ->
         part.replaceFirstChar { character -> character.uppercase() }
@@ -160,6 +173,16 @@ fun CatalogPerformanceProfile.registryProperties(): String =
         }
         recommendations.toSortedMap().forEach { (name, value) ->
             appendLine("${prefix}recommendation.$name=${propertyValue(value)}")
+        }
+        javaLaunch?.let { launch ->
+            appendLine("${prefix}launch.runtime=${propertyValue(launch.runtime)}")
+            appendLine("${prefix}launch.javaFeature=${launch.javaFeature}")
+            launch.jvmArguments.forEachIndexed { index, argument ->
+                appendLine(
+                    "${prefix}launch.jvmArgument.${index.toString().padStart(3, '0')}=" +
+                        propertyValue(argument),
+                )
+            }
         }
         val evidencePrefix = "${prefix}evidence."
         appendLine("${evidencePrefix}benchmarkId=${propertyValue(evidence.benchmarkId)}")
@@ -340,6 +363,20 @@ val performanceProfiles =
                 selector = raw["selector"].stringMap("selector for ${raw["id"]}"),
                 recommendations =
                     raw["recommendations"].stringMap("recommendations for ${raw["id"]}"),
+                javaLaunch =
+                    raw["javaLaunch"]?.let { value ->
+                        val launch = value.stringKeyMap("javaLaunch for ${raw["id"]}")
+                        CatalogJavaLaunchProfile(
+                            runtime = launch.requiredString("runtime"),
+                            javaFeature =
+                                (launch["javaFeature"] as? Number)?.toInt()
+                                    ?: error("javaLaunch.javaFeature must be an integer"),
+                            jvmArguments =
+                                launch["jvmArguments"].stringList(
+                                    "javaLaunch.jvmArguments for ${raw["id"]}",
+                                ),
+                        )
+                    },
                 evidence =
                     CatalogPerformanceEvidence(
                         benchmarkId = evidence.requiredString("benchmarkId"),
@@ -404,8 +441,25 @@ performanceProfiles.forEach { profile ->
         "Performance profile backend is not supported by ${profile.modelId}: ${profile.backend}"
     }
     require(profile.selector.isNotEmpty()) { "Performance selector must not be empty: ${profile.id}" }
-    require(profile.recommendations.isNotEmpty()) {
-        "Performance recommendations must not be empty: ${profile.id}"
+    require(profile.recommendations.isNotEmpty() || profile.javaLaunch != null) {
+        "Performance recommendations and javaLaunch must not both be empty: ${profile.id}"
+    }
+    profile.javaLaunch?.let { launch ->
+        require(launch.javaFeature > 0) {
+            "javaLaunch.javaFeature must be positive: ${profile.id}"
+        }
+        require(launch.jvmArguments.distinct().size == launch.jvmArguments.size) {
+            "javaLaunch.jvmArguments must not contain duplicates: ${profile.id}"
+        }
+        require(launch.jvmArguments.all { it.startsWith("-") }) {
+            "javaLaunch.jvmArguments must contain JVM options: ${profile.id}"
+        }
+        require(profile.selector["java-feature"] == launch.javaFeature.toString()) {
+            "javaLaunch.javaFeature must match selector.java-feature: ${profile.id}"
+        }
+        require(profile.selector["compiler"].equals(launch.runtime, ignoreCase = true)) {
+            "javaLaunch.runtime must match selector.compiler: ${profile.id}"
+        }
     }
     require(profile.evidence.warmups >= 0 && profile.evidence.trials > 0) {
         "Performance trial counts are invalid: ${profile.id}"

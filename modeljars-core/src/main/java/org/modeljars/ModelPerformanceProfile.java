@@ -3,6 +3,7 @@ package org.modeljars;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Model-SHA-bound performance guidance with the evidence and runtime scope that justify it. */
 public record ModelPerformanceProfile(
@@ -13,6 +14,7 @@ public record ModelPerformanceProfile(
     String backend,
     Map<String, String> runtimeSelector,
     Map<String, String> recommendations,
+    Optional<JavaLaunchProfile> javaLaunch,
     PerformanceEvidence evidence) {
 
   public ModelPerformanceProfile {
@@ -28,12 +30,16 @@ public record ModelPerformanceProfile(
       throw new IllegalArgumentException("runtimeSelector must not be empty");
     }
     recommendations = normalizedMap(recommendations, "recommendations");
+    javaLaunch = Objects.requireNonNull(javaLaunch, "javaLaunch");
+    if (javaLaunch.isPresent()) {
+      validateLaunchSelector(runtimeSelector, javaLaunch.orElseThrow());
+    }
     evidence = Objects.requireNonNull(evidence, "evidence");
   }
 
   /** Returns true only when the recommendation passed the deterministic-output comparison. */
   public boolean safeForAutomaticSelection() {
-    return evidence.outputHashesMatch() && !recommendations.isEmpty();
+    return evidence.outputHashesMatch() && (!recommendations.isEmpty() || javaLaunch.isPresent());
   }
 
   /** Tests the exact artifact identity, backend, and every runtime selector property. */
@@ -64,6 +70,19 @@ public record ModelPerformanceProfile(
             java.util.stream.Collectors.toUnmodifiableMap(
                 entry -> requireText(entry.getKey(), name + " key"),
                 entry -> requireText(entry.getValue(), name + " value")));
+  }
+
+  private static void validateLaunchSelector(
+      Map<String, String> runtimeSelector, JavaLaunchProfile launch) {
+    String javaFeature = runtimeSelector.get("java-feature");
+    if (!Integer.toString(launch.javaFeature()).equals(javaFeature)) {
+      throw new IllegalArgumentException(
+          "javaLaunch.javaFeature must match runtimeSelector java-feature");
+    }
+    String compiler = runtimeSelector.get("compiler");
+    if (compiler == null || !launch.runtime().equalsIgnoreCase(compiler)) {
+      throw new IllegalArgumentException("javaLaunch.runtime must match runtimeSelector compiler");
+    }
   }
 
   private static String requireSha256(String value) {

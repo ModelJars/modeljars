@@ -21,11 +21,30 @@ Every profile must bind all of these values:
 - the exact marker Maven coordinate and artifact SHA-256;
 - one supported inference backend;
 - explicit runtime selector properties; and
-- recommendations backed by a controlled comparison.
+- recommendations and/or a typed Java launch profile backed by a controlled comparison.
 
 Build validation rejects unknown models, coordinate or SHA mismatches, unsupported backends,
-duplicate IDs, empty selectors, empty recommendations, invalid timestamps, and invalid metrics.
+duplicate IDs, empty selectors, profiles with neither recommendations nor launch guidance, invalid
+launch arguments, invalid timestamps, and invalid metrics.
 Runtime matching requires every selector entry to match. Extra runtime facts are allowed.
+
+## Java Launch Profiles
+
+Compiler and JVM startup options cannot be applied after the Java process starts. An optional
+`javaLaunch` object therefore carries a runtime-family identifier, recommended Java feature version,
+and an ordered list of JVM arguments. The generated properties resource uses numbered keys so order
+is stable:
+
+```properties
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.runtime=graal-jvmci
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.javaFeature=25
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.000=-Djdk.graal.MaximumInliningSize=10000
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.001=-Dvectors.gguf.q4ShortPairwise=true
+```
+
+`JavaLaunchProfile.command(...)` returns an argument list suitable for `ProcessBuilder`; it does not
+construct a shell command. `missingArguments(...)` supports startup diagnostics against the JVM's
+actual input arguments. Recommendation-only profiles do not require a `javaLaunch` block.
 
 ## Evidence
 
@@ -34,7 +53,7 @@ counts, generated-token count, baseline/candidate metric maps, run controls, and
 output hash matched. The initial profiles compare unchanged Models code under HotSpot C2 and a
 post-fix GraalVM JVMCI build on the controlled eight-vCPU AMD EPYC Milan host.
 
-The initial data deliberately demonstrates that a compiler cannot be a global default:
+The first compiler-only data deliberately demonstrated that a compiler cannot be a global default:
 
 | Model | HotSpot decode | Graal decode | Change | Recommendation |
 | --- | ---: | ---: | ---: | --- |
@@ -44,6 +63,13 @@ The initial data deliberately demonstrates that a compiler cannot be a global de
 
 All ten output hashes matched for every comparison. A separate Qwen run with six warmups remained
 at 19.75 tok/s, ruling out insufficient warmup as the explanation for its regression.
+
+The later Qwen-specific Q4 graph changed Qwen's recommendation. Under the exact post-fix GraalVM
+build and bounded launch profile above, 12 trials per mode measured 28.752 to 34.844 decode tok/s
+(+21.19%), 70.006 to 88.512 prefill tok/s (+26.43%), and 2,220.792 to 1,757.506 ms median TTFT
+(-20.86%). All token counts and output hashes matched. The catalog now publishes this profile rather
+than the obsolete default-graph HotSpot recommendation; it does not infer the same choice for other
+Q4 artifacts or Graal builds.
 
 The same exact model and runtime may have multiple profiles when each recommendation has its own
 controlled evidence. Recommendations must be non-conflicting when their selectors overlap. The
@@ -63,8 +89,8 @@ the independent Graal values and exact Models/Vectors commits.
 ## Safety Contract
 
 `ModelPerformanceProfile.safeForAutomaticSelection()` requires exact output-hash agreement and at
-least one recommendation. It is an evidence gate, not an execution mechanism. A consuming backend
-must still:
+least one backend recommendation or Java launch profile. It is an evidence gate, not an execution
+mechanism. A consuming backend must still:
 
 1. match the exact model artifact and complete runtime selector;
 2. whitelist each recommendation key and permitted value;

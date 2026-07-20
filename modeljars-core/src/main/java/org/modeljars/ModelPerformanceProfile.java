@@ -37,28 +37,6 @@ public record ModelPerformanceProfile(
     evidence = Objects.requireNonNull(evidence, "evidence");
   }
 
-  /** Backward-compatible constructor for schema-v1 profiles without startup requirements. */
-  public ModelPerformanceProfile(
-      String id,
-      String modelAlias,
-      ModelJarCoordinate markerCoordinate,
-      String artifactSha256,
-      String backend,
-      Map<String, String> runtimeSelector,
-      Map<String, String> recommendations,
-      PerformanceEvidence evidence) {
-    this(
-        id,
-        modelAlias,
-        markerCoordinate,
-        artifactSha256,
-        backend,
-        runtimeSelector,
-        recommendations,
-        Optional.empty(),
-        evidence);
-  }
-
   /** Returns true only when the recommendation passed the deterministic-output comparison. */
   public boolean safeForAutomaticSelection() {
     return evidence.outputHashesMatch() && (!recommendations.isEmpty() || javaLaunch.isPresent());

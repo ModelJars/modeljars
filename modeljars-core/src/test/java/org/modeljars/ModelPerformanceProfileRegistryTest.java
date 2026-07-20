@@ -103,7 +103,7 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
-  void legacyProfilesWithoutLaunchMetadataRemainSupported() {
+  void recommendationOnlyProfilesDoNotRequireLaunchMetadata() {
     Properties properties = profileProperties(true);
     properties.stringPropertyNames().stream()
         .filter(name -> name.contains(".launch."))

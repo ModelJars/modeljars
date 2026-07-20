@@ -44,7 +44,7 @@ profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.001=-Dvectors.gguf.q
 
 `JavaLaunchProfile.command(...)` returns an argument list suitable for `ProcessBuilder`; it does not
 construct a shell command. `missingArguments(...)` supports startup diagnostics against the JVM's
-actual input arguments. Existing schema-v1 markers without a `javaLaunch` block remain valid.
+actual input arguments. Recommendation-only profiles do not require a `javaLaunch` block.
 
 ## Evidence
 

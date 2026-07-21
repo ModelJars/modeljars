@@ -209,7 +209,12 @@ class ModelPerformanceProfileRegistryTest {
                             .equals(
                                 profile
                                     .recommendations()
-                                    .get("models.purejava.q4Kernel"))));
+                                    .get("models.purejava.q4Kernel"))
+                        && "true"
+                            .equals(
+                                profile
+                                    .runtimeSelector()
+                                    .get("q4-short-pairwise-supported"))));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

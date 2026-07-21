@@ -68,6 +68,79 @@
       }
     },
     {
+      "id": "qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_values",
+      "modelId": "qwen3_0_6b_q4_0",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1",
+      "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256",
+        "q4-short-pairwise-supported": "true"
+      },
+      "recommendations": {
+        "models.purejava.batchedAttentionValues": "true"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "-Djdk.graal.MaximumInliningSize=10000"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen-batched-attention-values-20260721",
+        "measuredAt": "2026-07-21T11:46:46.370727056Z",
+        "baseline": "graal-q4-short-batched-values-off",
+        "candidate": "graal-q4-short-batched-values-on",
+        "warmups": 1,
+        "trials": 18,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianTtftMillis": 1787.0304,
+          "medianTpotMillis": 28.2591473,
+          "medianPrefillTokensPerSecond": 87.6402147,
+          "medianDecodeTokensPerSecond": 35.3891276,
+          "meanCpuMillis": 23290.0,
+          "medianProcessPeakRssBytes": 2030571520
+        },
+        "candidateMetrics": {
+          "medianTtftMillis": 1761.0819,
+          "medianTpotMillis": 27.4973741,
+          "medianPrefillTokensPerSecond": 89.1123055,
+          "medianDecodeTokensPerSecond": 36.3672955,
+          "meanCpuMillis": 23159.4444,
+          "medianProcessPeakRssBytes": 2016835584
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "585f954e97b894c76286602563854095ce884090",
+          "vectorsCandidateCommit": "a7d294a9e38a30e8458c7577615c77bad839fa98",
+          "vectorsMergeCommit": "43d9566567964212dfaadacc465105f063c06b7a",
+          "jvmBuild": "GraalVM CE 25.0.3+9-jvmci-25.1-b19",
+          "order": "six-counterbalanced-process-pairs",
+          "trialsPerMode": "18",
+          "iterationsPerProcess": "3",
+          "warmupsPerProcess": "1",
+          "pairedOutputHashes": "18-identical",
+          "rssClaim": "none-lifecycle-sensitive"
+        }
+      }
+    },
+    {
       "id": "smollm2_360m_q8_0_epyc_milan_jdk25",
       "modelId": "smollm2_360m_instruct_q8_0",
       "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",

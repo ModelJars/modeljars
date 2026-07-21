@@ -71,6 +71,13 @@ build and bounded launch profile above, 12 trials per mode measured 28.752 to 34
 than the obsolete default-graph HotSpot recommendation; it does not infer the same choice for other
 Q4 artifacts or Graal builds.
 
+A second profile on that exact artifact and runtime measures batched attention-value accumulation
+independently. Six counterbalanced process pairs produced 18 trials per mode. Median decode improved
+from 35.389 to 36.367 tok/s (+2.76%), TPOT fell from 28.259 to 27.497 ms (-2.70%), TTFT fell from
+1,787.030 to 1,761.082 ms (-1.45%), and prefill improved from 87.640 to 89.112 tok/s (+1.68%). All
+18 paired token counts and output hashes matched. Process RSS is retained in the evidence but is not
+used as a recommendation claim because residency changed over the experiment lifetime.
+
 The same exact model and runtime may have multiple profiles when each recommendation has its own
 controlled evidence. Recommendations must be non-conflicting when their selectors overlap. The
 MiniCPM5 mixed-K profile is separate from its compiler profile because it measures a different

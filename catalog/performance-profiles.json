@@ -141,6 +141,87 @@
       }
     },
     {
+      "id": "qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_scores",
+      "modelId": "qwen3_0_6b_q4_0",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1",
+      "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256",
+        "q4-short-pairwise-supported": "true"
+      },
+      "recommendations": {
+        "models.purejava.batchedAttentionScores": "true"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "-Djdk.graal.MaximumInliningSize=10000"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen-batched-attention-scores-20260721",
+        "measuredAt": "2026-07-21T14:53:42.599233306Z",
+        "baseline": "graal-q4-short-batched-values-with-independent-scores",
+        "candidate": "graal-q4-short-batched-values-with-two-row-scores",
+        "warmups": 1,
+        "trials": 18,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianTtftMillis": 1761.9758355,
+          "medianTpotMillis": 26.5016311,
+          "medianPrefillTokensPerSecond": 89.0856841,
+          "medianDecodeTokensPerSecond": 37.7467069,
+          "meanCpuMillis": 23099.4444,
+          "medianProcessPeakRssBytes": 2023981056
+        },
+        "candidateMetrics": {
+          "medianTtftMillis": 1740.8089875,
+          "medianTpotMillis": 26.4309687,
+          "medianPrefillTokensPerSecond": 89.8670576,
+          "medianDecodeTokensPerSecond": 37.8344578,
+          "meanCpuMillis": 23123.8889,
+          "medianProcessPeakRssBytes": 2020730880
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsCommit": "e74553297f11b117c2aeefa24228321ea53d3a56",
+          "vectorsCandidateCommit": "dd2cde9c6d5e223808e39b056e75e220bd5dc186",
+          "vectorsMergeCommit": "e566d6a5a7b2f86c8db66c2ccdb9d06127509d33",
+          "jvmBuild": "GraalVM CE 25.0.3+9-jvmci-25.1-b19",
+          "order": "six-counterbalanced-process-pairs",
+          "trialsPerMode": "18",
+          "iterationsPerProcess": "3",
+          "warmupsPerProcess": "1",
+          "pairedMedianDecodeChange": "+1.8919-percent",
+          "pairedDecodeWins": "16-of-18",
+          "processPairMedianWins": "5-of-6",
+          "pairedOutputHashes": "18-identical",
+          "fixedPositionDecodePairs": "3-of-3-faster",
+          "fixedPositionDecodeBaselineMedian": "35.30-tokens-per-second",
+          "fixedPositionDecodeCandidateMedian": "36.48-tokens-per-second",
+          "fixedPositionChecksum": "514.657357",
+          "fixedPositionGcCollections": "0",
+          "rssClaim": "none-lifecycle-sensitive"
+        }
+      }
+    },
+    {
       "id": "smollm2_360m_q8_0_epyc_milan_jdk25",
       "modelId": "smollm2_360m_instruct_q8_0",
       "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",

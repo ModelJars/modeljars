@@ -78,6 +78,15 @@ from 35.389 to 36.367 tok/s (+2.76%), TPOT fell from 28.259 to 27.497 ms (-2.70%
 18 paired token counts and output hashes matched. Process RSS is retained in the evidence but is not
 used as a recommendation claim because residency changed over the experiment lifetime.
 
+A third independent profile retains exact two-row attention-score batching while keeping the value
+candidate enabled in both modes. The raw 18-trial medians moved from 37.747 to 37.834 decode tok/s,
+26.502 to 26.431 ms TPOT, and 1,761.976 to 1,740.809 ms TTFT. Pairing corresponding prompts isolates
+the smaller kernel effect: median paired decode improved 1.89%, 16 of 18 decode trials won, and five
+of six process-pair medians won. A 64-warmup/256-measure-token follow-up improved all three process
+pairs, from a 35.30 tok/s baseline median to 36.48 tok/s, with one checksum and zero GC. The profile
+therefore recommends `models.purejava.batchedAttentionScores=true` only for the same exact artifact,
+Graal build, processor, vector width, and launch arguments.
+
 The same exact model and runtime may have multiple profiles when each recommendation has its own
 controlled evidence. Recommendations must be non-conflicting when their selectors overlap. The
 MiniCPM5 mixed-K profile is separate from its compiler profile because it measures a different

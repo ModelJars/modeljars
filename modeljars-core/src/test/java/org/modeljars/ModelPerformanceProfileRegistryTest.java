@@ -205,7 +205,7 @@ class ModelPerformanceProfileRegistryTest {
                             .orElseThrow()
                             .jvmArguments()
                             .equals(List.of("-Djdk.graal.MaximumInliningSize=10000"))
-                        && "short-pairwise"
+                        && "unsigned-pairwise"
                             .equals(
                                 profile
                                     .recommendations()
@@ -214,7 +214,31 @@ class ModelPerformanceProfileRegistryTest {
                             .equals(
                                 profile
                                     .runtimeSelector()
-                                    .get("q4-short-pairwise-supported"))));
+                                    .get("q4-unsigned-pairwise-supported"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("graal-q4-unsigned-pairwise-20260721")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("7e6c1e3991f96d7a15e0228d0d0e8edf2730f3fe")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsMergeCommit")
+                            .equals("e9b98c9cd6eb90ff7f8a80091498e705923c60e0")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("batchedAttentionValues")
+                            .equals("true")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("batchedAttentionScores")
+                            .equals("true")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

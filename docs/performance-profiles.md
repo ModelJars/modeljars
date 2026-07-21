@@ -39,7 +39,7 @@ is stable:
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.runtime=graal-jvmci
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.javaFeature=25
 profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.launch.jvmArgument.000=-Djdk.graal.MaximumInliningSize=10000
-profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.recommendation.models.purejava.q4Kernel=short-pairwise
+profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.recommendation.models.purejava.q4Kernel=unsigned-pairwise
 ```
 
 `JavaLaunchProfile.command(...)` returns an argument list suitable for `ProcessBuilder`; it does not
@@ -64,12 +64,23 @@ The first compiler-only data deliberately demonstrated that a compiler cannot be
 All ten output hashes matched for every comparison. A separate Qwen run with six warmups remained
 at 19.75 tok/s, ruling out insufficient warmup as the explanation for its regression.
 
-The later Qwen-specific Q4 graph changed Qwen's recommendation. Under the exact post-fix GraalVM
-build and bounded launch profile above, 12 trials per mode measured 28.752 to 34.844 decode tok/s
-(+21.19%), 70.006 to 88.512 prefill tok/s (+26.43%), and 2,220.792 to 1,757.506 ms median TTFT
-(-20.86%). All token counts and output hashes matched. The catalog now publishes this profile rather
-than the obsolete default-graph HotSpot recommendation; it does not infer the same choice for other
-Q4 artifacts or Graal builds.
+The later Qwen-specific Q4 graph changed Qwen's recommendation. The current unsigned-nibble kernel
+computes each Q8 zero-point correction once and lets Graal lower the packed arithmetic to the AVX2
+pairwise multiply-add instruction family. Six counterbalanced process pairs produced 18 trials per
+mode: median decode improved from 37.947 to 58.036 tok/s (+52.94% by aggregate medians), prefill
+improved from 90.179 to 115.616 tok/s (+28.21%), TPOT fell from 25.527 to 17.218 ms (-32.55%), and
+TTFT fell from 1,733.321 to 1,349.070 ms (-22.17%). Every corresponding input count, output count,
+and output hash matched. The candidate won all 18 paired decode, prefill, TTFT, TPOT, and CPU
+comparisons. The catalog publishes this profile only for the exact Qwen artifact, EPYC Milan host,
+Graal build, Java feature, and vector capability; it does not infer the same choice for other Q4
+artifacts or runtimes.
+
+Fresh same-host controls measured llama.cpp `b10012-c71854292` at 101.485 tok/s and Ollama 0.32.0
+at 43.309 tok/s. The profiled Java path therefore reaches 57.19% of llama.cpp and 134.00% of Ollama
+for decode. Java prefill remains about 25.5% of both native engines, and its median TTFT remains
+3.77x llama.cpp, so this result closes the decode target for this profile without closing the prompt
+processing gap. RSS is recorded but is not a recommendation claim because compiler-lifetime
+residency differed between modes.
 
 A second profile on that exact artifact and runtime measures batched attention-value accumulation
 independently. Six counterbalanced process pairs produced 18 trials per mode. Median decode improved

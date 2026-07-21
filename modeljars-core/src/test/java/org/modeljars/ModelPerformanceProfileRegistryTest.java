@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(5, registry.profiles().size());
+    assertEquals(6, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -230,6 +230,21 @@ class ModelPerformanceProfileRegistryTest {
                             .evidence()
                             .benchmarkId()
                             .equals("qwen-batched-attention-values-20260721")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals(
+                            "qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_scores")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.batchedAttentionScores"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen-batched-attention-scores-20260721")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

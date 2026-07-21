@@ -288,6 +288,7 @@ class ModelPerformanceProfileRegistryTest {
         "llama",
         "Q8_0",
         Optional.empty(),
+        Optional.empty(),
         Optional.of(URI.create("https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")),
         Optional.empty(),
         Optional.empty(),
@@ -296,6 +297,11 @@ class ModelPerformanceProfileRegistryTest {
         Optional.of("Apache-2.0"),
         Set.of("text-generation"),
         Set.of(),
-        Map.of("pure-java", true));
+        Map.of("pure-java", true),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Set.of(),
+        ModelDimensions.unknown());
   }
 }

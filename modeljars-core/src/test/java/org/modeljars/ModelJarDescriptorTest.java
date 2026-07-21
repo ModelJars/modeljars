@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class ModelJarDescriptorTest {
   @Test
-  void legacyConstructorDefaultsFeaturesToEmptySet() {
+  void canonicalConstructorAcceptsExplicitlyEmptyOptionalMetadata() {
     ModelJarDescriptor descriptor =
         new ModelJarDescriptor(
             "example",
@@ -23,6 +23,7 @@ class ModelJarDescriptorTest {
             "llama",
             "Q4_0",
             Optional.<Path>empty(),
+            Optional.empty(),
             Optional.<URI>empty(),
             Optional.<URI>empty(),
             Optional.empty(),
@@ -30,7 +31,13 @@ class ModelJarDescriptorTest {
             Optional.empty(),
             Optional.empty(),
             Set.of("text-generation"),
-            Map.of("llama.cpp", true));
+            Set.of(),
+            Map.of("llama.cpp", true),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Set.of(),
+            ModelDimensions.unknown());
 
     assertTrue(descriptor.features().isEmpty());
     assertTrue(descriptor.classpathResource().isEmpty());

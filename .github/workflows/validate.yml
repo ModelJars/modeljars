@@ -5,12 +5,15 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -21,6 +24,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Determine whether remote catalog verification is required
+        id: remote-catalog
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          required=false
+          comparison=""
+          case "${EVENT_NAME}" in
+            schedule|workflow_dispatch)
+              required=true
+              ;;
+            pull_request)
+              comparison="${BASE_SHA}"
+              ;;
+            push)
+              comparison="${BEFORE_SHA}"
+              ;;
+            *)
+              required=true
+              ;;
+          esac
+
+          if [[ "${required}" != "true" ]]; then
+            if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
+                ! git cat-file -e "${comparison}^{commit}"; then
+              required=true
+            elif ! git diff --quiet "${comparison}" "${GITHUB_SHA}" -- catalog/models.json; then
+              required=true
+            fi
+          fi
+
+          echo "required=${required}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -47,9 +87,11 @@ jobs:
           test assemble verifyCatalog verifyFacadePublication generateSite generatePublicSite
 
       - name: Verify pinned Hugging Face metadata
+        if: steps.remote-catalog.outputs.required == 'true'
         run: ./gradlew --no-daemon verifyRemoteCatalogMetadata
 
       - name: Verify exact GGUF dimensions
+        if: steps.remote-catalog.outputs.required == 'true'
         run: npm run catalog:enrich -- --concurrency=6
 
       - name: Publish facade smoke-test artifacts to Maven Local

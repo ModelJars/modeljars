@@ -98,6 +98,38 @@ pairs, from a 35.30 tok/s baseline median to 36.48 tok/s, with one checksum and 
 therefore recommends `models.purejava.batchedAttentionScores=true` only for the same exact artifact,
 Graal build, processor, vector width, and launch arguments.
 
+A fourth profile retains the staged Q4 feed-forward schedule. It combines gate/up projection,
+exact SwiGLU, Q8 preparation, and down projection under one two-stage persistent-worker operation.
+Ten warmups and five measured prompts per process across six counterbalanced pairs produced 30
+trials per mode. Median TTFT fell from 1,345.784 to 1,249.069 ms (-7.19%) and median prefill rose
+from 115.847 to 124.822 tok/s (+7.75%); five of six process pairs won and all corresponding hashes
+matched. That profile recommends `models.purejava.stagedQ4Ffn=true` only for the exact measured
+Qwen/Graal/EPYC runtime.
+
+A fifth profile retunes prefill batch size after the unsigned-Q4 and staged-FFN graph changes. A
+counterbalanced screen covered batches 16, 24, 32, 48, 64, 96, and 128 with 15 trials per size.
+Only batch 24 advanced against the established batch-32 profile. The acceptance gate used ten
+warmups and five trials per process across six counterbalanced pairs, or 30 trials per mode:
+
+| Metric | Batch 32 | Batch 24 | Change |
+| --- | ---: | ---: | ---: |
+| Median TTFT | 1,240.231 ms | 1,206.816 ms | -2.69% aggregate; -0.68% paired median |
+| p95 TTFT | 1,278.463 ms | 1,263.832 ms | -1.14% |
+| Median prefill | 125.061 tok/s | 129.481 tok/s | +3.53% aggregate; +0.89% paired median |
+| Median CPU | 8,455 ms | 8,150 ms | -3.61% aggregate; -0.99% paired median |
+
+Batch 24 won 23 of 30 paired TTFT and prefill trials and five of six prefill process-pair medians.
+All corresponding input-token and output-hash arrays matched. RSS is recorded without a memory
+claim. The profile therefore recommends `models.purejava.prefillBatchSize=24` only for the exact
+artifact and runtime selector; Models keeps 32 as its general default and explicit deployment
+settings retain precedence.
+
+With the later generic Q4 high-nibble cleanup in Vectors, the latest current-stack Qwen checkpoints
+are 58.364 decode tok/s and 129.481 prefill tok/s. Against the recorded same-host controls, those are
+57.51% and 28.63% of llama.cpp, and 134.76% and 28.17% of Ollama, respectively. Median Java TTFT is
+3.37x llama.cpp and 2.42x Ollama. The native controls were not rerun for the batch-size gate, so
+these ratios are comparisons with the pinned prior controls rather than a new cross-engine run.
+
 The same exact model and runtime may have multiple profiles when each recommendation has its own
 controlled evidence. Recommendations must be non-conflicting when their selectors overlap. The
 MiniCPM5 mixed-K profile is separate from its compiler profile because it measures a different

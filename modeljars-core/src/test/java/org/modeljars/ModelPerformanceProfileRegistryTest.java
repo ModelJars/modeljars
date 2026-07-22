@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(7, registry.profiles().size());
+    assertEquals(8, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -302,6 +302,29 @@ class ModelPerformanceProfileRegistryTest {
                             .controls()
                             .get("vectorsMergeCommit")
                             .equals("49376ac9e2ec5b05581900596c61204dde8d0de8")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_batch_24")
+                        && "24"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.prefillBatchSize"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen-prefill-batch-24-20260722")
+                        && profile.evidence().warmups() == 10
+                        && profile.evidence().trials() == 30
+                        && profile.evidence().generatedTokens() == 1
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("64caf14fba758593a1769cfb0587da8cc20d73a2")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

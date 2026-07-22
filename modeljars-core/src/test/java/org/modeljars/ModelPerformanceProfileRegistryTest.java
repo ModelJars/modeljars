@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(8, registry.profiles().size());
+    assertEquals(9, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -325,6 +325,39 @@ class ModelPerformanceProfileRegistryTest {
                             .controls()
                             .get("vectorsMergeCommit")
                             .equals("64caf14fba758593a1769cfb0587da8cc20d73a2")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_staged_layer")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.stagedQ4Layer"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen-staged-q4-layer-20260722")
+                        && profile.evidence().warmups() == 10
+                        && profile.evidence().trials() == 30
+                        && profile.evidence().generatedTokens() == 1
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsCandidateCommit")
+                            .equals("b03bef831894b819a81aa4912f3102b953c78331")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("64caf14fba758593a1769cfb0587da8cc20d73a2")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("prefillProcessPairWins")
+                            .equals("5-of-6")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

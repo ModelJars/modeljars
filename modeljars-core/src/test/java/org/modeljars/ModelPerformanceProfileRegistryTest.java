@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(9, registry.profiles().size());
+    assertEquals(10, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -278,7 +278,7 @@ class ModelPerformanceProfileRegistryTest {
                             .equals(
                                 profile
                                     .recommendations()
-                                    .get("models.purejava.stagedQ4Ffn"))
+                                    .get("models.purejava.stagedQuantizedFfn"))
                         && "true"
                             .equals(
                                 profile
@@ -334,7 +334,7 @@ class ModelPerformanceProfileRegistryTest {
                             .equals(
                                 profile
                                     .recommendations()
-                                    .get("models.purejava.stagedQ4Layer"))
+                                    .get("models.purejava.stagedQuantizedLayer"))
                         && profile
                             .evidence()
                             .benchmarkId()
@@ -364,6 +364,34 @@ class ModelPerformanceProfileRegistryTest {
                 profile ->
                     profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25")
                         && profile.recommendations().get("compiler").equals("graal-jvmci")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_staged_layer")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.stagedQuantizedFfn"))
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.stagedQuantizedLayer"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("smollm2-staged-q8-layer-20260723")
+                        && profile.evidence().warmups() == 5
+                        && profile.evidence().trials() == 30
+                        && profile.evidence().generatedTokens() == 1
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsCandidateCommit")
+                            .equals("fa24b91ac6fa14cf5a46f47fc5d945b9b4494c35")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

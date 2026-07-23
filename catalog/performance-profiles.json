@@ -744,6 +744,106 @@
       }
     },
     {
+      "id": "smollm2_360m_q8_0_epyc_milan_jdk25_parallel_ffn",
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",
+      "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.purejava.parallelQ8FfnPreparation": "true"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "-Djdk.graal.MaximumInliningSize=10000"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "smollm2-q8-parallel-ffn-preparation-20260723",
+        "measuredAt": "2026-07-23T08:12:18Z",
+        "baseline": "graal-q8-serial-ffn-preparation",
+        "candidate": "graal-q8-parallel-ffn-preparation",
+        "warmups": 5,
+        "trials": 30,
+        "generatedTokens": 1,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianLoadMillis": 206.227875,
+          "medianTtftMillis": 913.101631,
+          "p95TtftMillis": 930.788132,
+          "medianPrefillTokensPerSecond": 172.54343371153033,
+          "medianCpuMillis": 6860.0,
+          "medianProcessPeakRssBytes": 1015816192.0,
+          "maximumProcessPeakRssBytes": 1034452992.0
+        },
+        "candidateMetrics": {
+          "medianLoadMillis": 224.767328,
+          "medianTtftMillis": 899.063924,
+          "p95TtftMillis": 914.340499,
+          "medianPrefillTokensPerSecond": 175.59153707546926,
+          "medianCpuMillis": 6840.0,
+          "medianProcessPeakRssBytes": 1013358592.0,
+          "maximumProcessPeakRssBytes": 1042341888.0
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsBaseCommit": "d07216ea1261fae968b66fd96580a5b30815148e",
+          "modelsCandidateCommit": "4887cdef57d6feedb085b709391c0f5e54755b62",
+          "modelsMergeCommit": "423621b2aac66c2561d50208ec6a0274053b1590",
+          "vectorsBaseCommit": "64a72b90b62644fc2eb02bdf9b965fc2e5c71337",
+          "vectorsCandidateCommit": "4dcf9352b9330d6c48846e6889755d78282a8ea8",
+          "vectorsMergeCommit": "523f3aa95f503a35babc02b76e5537df5f06891c",
+          "modelJarsBaseCommit": "6db5163ed1f028509d88eff83a91adbe07c1edb2",
+          "jvmBuild": "GraalVM CE 25.2.4-dev+9.1, OpenJDK 25.0.3+9-jvmci-25.1-b19",
+          "heap": "1g-fixed",
+          "activeProcessorCount": "8",
+          "prefillBatchSize": "32",
+          "stagedQuantizedFfn": "true",
+          "stagedQuantizedLayer": "true",
+          "weightConversionReuse": "true",
+          "blockMajorQ8Activations": "true",
+          "baselineParallelQ8FfnPreparation": "false",
+          "candidateParallelQ8FfnPreparation": "true",
+          "benchmarkPlanVersion": "pure-java-v14",
+          "measurementScope": "prefill-only-one-generated-token",
+          "order": "six-counterbalanced-process-pairs",
+          "trialsPerMode": "30",
+          "iterationsPerProcess": "5",
+          "warmupsPerProcess": "5",
+          "pairedOutputHashes": "30-identical",
+          "pairedTrialTtftWins": "28-of-30",
+          "pairedTrialPrefillWins": "28-of-30",
+          "pairedTrialCpuWins": "17-of-30",
+          "prefillProcessPairWins": "6-of-6",
+          "ttftProcessPairWins": "6-of-6",
+          "cpuProcessPairWins": "4-of-6",
+          "p50TtftChangePercent": "-1.537365",
+          "p95TtftChangePercent": "-1.767065",
+          "p50PrefillChangePercent": "+1.766572",
+          "p50CpuChangePercent": "-0.291545",
+          "rawReports": "/opt/modeljars-bench/q8-ffn-preparation-reports/",
+          "rssClaim": "median-improved-maximum-within-process-noise"
+        }
+      }
+    },
+    {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25",
       "modelId": "minicpm5_1b_q4_k_m",
       "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",

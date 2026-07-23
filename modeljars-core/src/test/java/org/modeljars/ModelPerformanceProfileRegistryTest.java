@@ -419,7 +419,17 @@ class ModelPerformanceProfileRegistryTest {
                             .evidence()
                             .controls()
                             .get("modelsCandidateCommit")
-                            .equals("29b51694f2c524602c3f8c868f324dde4674547d")));
+                            .equals("29b51694f2c524602c3f8c868f324dde4674547d")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("64a72b90b62644fc2eb02bdf9b965fc2e5c71337")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsMergeCommit")
+                            .equals("d07216ea1261fae968b66fd96580a5b30815148e")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

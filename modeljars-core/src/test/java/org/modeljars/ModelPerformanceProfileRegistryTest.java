@@ -470,22 +470,38 @@ class ModelPerformanceProfileRegistryTest {
                             .controls()
                             .get("modelsMergeCommit")
                             .equals("423621b2aac66c2561d50208ec6a0274053b1590")));
+    assertFalse(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                        .id()
+                        .equals("smollm2_360m_q8_0_epyc_milan_jdk25_row_accumulator")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
                 profile ->
                     profile
                             .id()
-                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_row_accumulator")
-                        && "true"
+                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_float_lane")
+                        && "float-lane-accumulated"
                             .equals(
                                 profile
                                     .recommendations()
-                                    .get("models.purejava.q8BlockMajorRowAccumulator"))
+                                    .get("models.purejava.q8BlockMajorKernel"))
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "-Djdk.graal.MaximumInliningSize=10000",
+                                    "-XX:CompileCommand=option,com.integrallis.vectors.core.PanamaVectorUtilSupport::ggufQ8_0Q8_0BlockMajorFloatLaneRow,double,CompileThresholdScaling,0.001",
+                                    "-XX:CompileCommand=option,com.integrallis.vectors.core.PanamaVectorUtilSupport::ggufQ8_0Q8_0BlockMajorFloatLaneRow,bool,BackgroundCompilation,false"))
                         && profile
                             .evidence()
                             .benchmarkId()
-                            .equals("smollm2-q8-row-accumulator-20260723")
+                            .equals("smollm2-q8-float-lane-20260723")
                         && profile.evidence().warmups() == 5
                         && profile.evidence().trials() == 30
                         && profile.evidence().generatedTokens() == 1
@@ -494,12 +510,37 @@ class ModelPerformanceProfileRegistryTest {
                             .evidence()
                             .controls()
                             .get("vectorsCandidateCommit")
-                            .equals("4e9eaca7b0ed928e183f3892a210460e3fcbe288")
+                            .equals("1f00848da50a4a11a2ef1792527590e2cc319218")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("fde9858901624d1661a1cf51195d2c59737bcf87")
                         && profile
                             .evidence()
                             .controls()
                             .get("modelsCandidateCommit")
-                            .equals("4d339450b0a82d051b9257498271119396d878f7")));
+                            .equals("2aef4dd07ff33c9841d86deb8d46a74e4a5f0828")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsMergeCommit")
+                            .equals("45afa8742f2e901b3884fe6993b5dc58887368ef")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("internallyDeterministic")
+                            .equals("true")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("crossKernelSequenceAgreement")
+                            .equals("not-required-non-associative")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("sqlFloatLaneLlamaCommonPrefix")
+                            .equals("64-of-64")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

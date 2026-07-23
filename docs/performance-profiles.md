@@ -98,12 +98,12 @@ pairs, from a 35.30 tok/s baseline median to 36.48 tok/s, with one checksum and 
 therefore recommends `models.purejava.batchedAttentionScores=true` only for the same exact artifact,
 Graal build, processor, vector width, and launch arguments.
 
-A fourth profile retains the staged Q4 feed-forward schedule. It combines gate/up projection,
+A fourth profile retains the staged quantized feed-forward schedule for Q4_0. It combines gate/up projection,
 exact SwiGLU, Q8 preparation, and down projection under one two-stage persistent-worker operation.
 Ten warmups and five measured prompts per process across six counterbalanced pairs produced 30
 trials per mode. Median TTFT fell from 1,345.784 to 1,249.069 ms (-7.19%) and median prefill rose
 from 115.847 to 124.822 tok/s (+7.75%); five of six process pairs won and all corresponding hashes
-matched. That profile recommends `models.purejava.stagedQ4Ffn=true` only for the exact measured
+matched. That profile recommends `models.purejava.stagedQuantizedFfn=true` only for the exact measured
 Qwen/Graal/EPYC runtime.
 
 A fifth profile retunes prefill batch size after the unsigned-Q4 and staged-FFN graph changes. A
@@ -123,6 +123,15 @@ All corresponding input-token and output-hash arrays matched. RSS is recorded wi
 claim. The profile therefore recommends `models.purejava.prefillBatchSize=24` only for the exact
 artifact and runtime selector; Models keeps 32 as its general default and explicit deployment
 settings retain precedence.
+
+The same staged scheduler now supports Q8_0 through format-specific Vectors row-range kernels. A
+SmolLM2 360M Instruct Q8_0 profile used GraalVM Java 25.0.3, eight EPYC-Milan processors, batch 32,
+a fixed 1 GiB heap, and six counterbalanced fresh-process pairs. Across 30 trials, median TTFT fell
+from 1,183.920 to 995.194 ms (-15.94%) and median prefill rose from 133.829 to 159.522 tok/s
+(+19.20%). All 30 paired trials and all six process medians won; input counts, output counts, and
+output SHA-256 values matched exactly. Median CPU and process RSS did not regress. The exact profile
+recommends `models.purejava.stagedQuantizedFfn=true` and
+`models.purejava.stagedQuantizedLayer=true`; unmeasured Q8_0 artifacts retain the established path.
 
 With the later generic Q4 high-nibble cleanup in Vectors, the latest current-stack Qwen checkpoints
 are 58.364 decode tok/s and 129.481 prefill tok/s. Against the recorded same-host controls, those are

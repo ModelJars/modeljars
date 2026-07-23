@@ -143,6 +143,36 @@ input count, output count, and output SHA-256 matched, with no observed RSS regr
 exact profile recommends `models.purejava.blockMajorQ8Activations=true`. The historical staged
 profile remains independent, and both must match for the complete launch plan to be selected.
 
+The next SmolLM2 gates first made Q8 FFN preparation concurrent by batch row and then changed the
+block-major arithmetic strategy. The intermediate row-local accumulator improved p50 prefill by
+2.43% over scattered updates. Its successor retains eight strided float lanes across every weight
+block and performs one horizontal reduction per completed output. On the same controlled
+EPYC-Milan/GraalVM Java 25 tuple, six counterbalanced process pairs produced:
+
+| Metric | Row-local accumulator | Eight retained float lanes | Change |
+| --- | ---: | ---: | ---: |
+| p50 TTFT | 876.832 ms | 746.621 ms | -14.85% |
+| p95 TTFT | 886.504 ms | 756.694 ms | -14.64% |
+| p50 prefill | 180.000 tok/s | 211.547 tok/s | +17.53% |
+| p50 process CPU | 6,660 ms | 5,600 ms | -15.92% |
+| median process RSS | 1,019,949,056 B | 1,038,696,448 B | +1.84% |
+| maximum process RSS | 1,044,836,352 B | 1,058,574,336 B | +1.31% |
+
+All 30 corresponding TTFT, prefill, and CPU trials and all six process-pair medians favored the
+candidate. A three-prompt, three-repeat, 64-token audit proved exact internal repeatability. The
+float-lane arithmetic order is non-associative relative to row/scattered accumulation, so the
+profile records bounded reference agreement rather than promising cross-kernel token identity. It
+requires an exact 256-bit Graal runtime, `MaximumInliningSize=10000`, and two helper-specific
+compilation commands before recommending
+`models.purejava.q8BlockMajorKernel=float-lane-accumulated`.
+
+The float-lane profile replaces the row-accumulator profile because both choose a value for the same
+typed setting on the same tuple. The row measurement remains the float profile's baseline evidence
+and remains available in repository history. Keeping both profiles active would violate the
+non-conflicting recommendation contract and cause Models to reject the launch plan. Independent
+profiles for staged scheduling, block-major activation layout, and parallel FFN preparation remain
+cumulative because they control different settings.
+
 With the later generic Q4 high-nibble cleanup in Vectors, the latest current-stack Qwen checkpoints
 are 58.364 decode tok/s and 129.481 prefill tok/s. Against the recorded same-host controls, those are
 57.51% and 28.63% of llama.cpp, and 134.76% and 28.17% of Ollama, respectively. Median Java TTFT is

@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(11, registry.profiles().size());
+    assertEquals(12, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -430,6 +430,46 @@ class ModelPerformanceProfileRegistryTest {
                             .controls()
                             .get("modelsMergeCommit")
                             .equals("d07216ea1261fae968b66fd96580a5b30815148e")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_parallel_ffn")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.parallelQ8FfnPreparation"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("smollm2-q8-parallel-ffn-preparation-20260723")
+                        && profile.evidence().warmups() == 5
+                        && profile.evidence().trials() == 30
+                        && profile.evidence().generatedTokens() == 1
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsCandidateCommit")
+                            .equals("4dcf9352b9330d6c48846e6889755d78282a8ea8")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsCandidateCommit")
+                            .equals("4887cdef57d6feedb085b709391c0f5e54755b62")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsMergeCommit")
+                            .equals("523f3aa95f503a35babc02b76e5537df5f06891c")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsMergeCommit")
+                            .equals("423621b2aac66c2561d50208ec6a0274053b1590")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

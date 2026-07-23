@@ -133,6 +133,16 @@ output SHA-256 values matched exactly. Median CPU and process RSS did not regres
 recommends `models.purejava.stagedQuantizedFfn=true` and
 `models.purejava.stagedQuantizedLayer=true`; unmeasured Q8_0 artifacts retain the established path.
 
+A subsequent SmolLM2 profile keeps that complete staged graph and changes only the prepared Q8_0
+activation layout. Vectors retains canonical packed bytes and creates one compact block-major byte
+copy so a matrix row consumes every prompt row for one quantization block contiguously. Across 30
+trials in six counterbalanced process pairs, p50 TTFT fell from 939.347 to 925.622 ms (-1.46%), p95
+TTFT fell 2.20%, p50 prefill rose from 167.890 to 170.006 tok/s (+1.26%), and p50 CPU fell 1.70%.
+Five of six process TTFT medians and 26 of 30 paired trials favored the candidate; every paired
+input count, output count, and output SHA-256 matched, with no observed RSS regression. The separate
+exact profile recommends `models.purejava.blockMajorQ8Activations=true`. The historical staged
+profile remains independent, and both must match for the complete launch plan to be selected.
+
 With the later generic Q4 high-nibble cleanup in Vectors, the latest current-stack Qwen checkpoints
 are 58.364 decode tok/s and 129.481 prefill tok/s. Against the recorded same-host controls, those are
 57.51% and 28.63% of llama.cpp, and 134.76% and 28.17% of Ollama, respectively. Median Java TTFT is

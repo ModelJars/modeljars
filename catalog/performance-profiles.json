@@ -648,6 +648,100 @@
       }
     },
     {
+      "id": "smollm2_360m_q8_0_epyc_milan_jdk25_block_major",
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1",
+      "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.purejava.blockMajorQ8Activations": "true"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "-Djdk.graal.MaximumInliningSize=10000"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "smollm2-q8-block-major-20260723",
+        "measuredAt": "2026-07-23T11:04:02.785532950Z",
+        "baseline": "graal-q8-packed-activation-batch",
+        "candidate": "graal-q8-block-major-activation-batch",
+        "warmups": 5,
+        "trials": 30,
+        "generatedTokens": 1,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianLoadMillis": 206.270747,
+          "medianTtftMillis": 939.347041,
+          "p95TtftMillis": 965.011081,
+          "medianPrefillTokensPerSecond": 167.89012244653307,
+          "medianCpuMillis": 7040.0,
+          "medianProcessPeakRssBytes": 1020530688.0,
+          "maximumProcessPeakRssBytes": 1048416256.0
+        },
+        "candidateMetrics": {
+          "medianLoadMillis": 212.109427,
+          "medianTtftMillis": 925.622282,
+          "p95TtftMillis": 943.771401,
+          "medianPrefillTokensPerSecond": 170.0060038215812,
+          "medianCpuMillis": 6920.0,
+          "medianProcessPeakRssBytes": 1018851328.0,
+          "maximumProcessPeakRssBytes": 1034276864.0
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelsBaseCommit": "735b4730dec670d99d27c87b0c97b2bcc921d7d9",
+          "modelsCandidateCommit": "29b51694f2c524602c3f8c868f324dde4674547d",
+          "vectorsBaseCommit": "6b67e1c4abb46b95c97c1d92169869ea16dbf3d5",
+          "vectorsCandidateCommit": "d295f32c0ce827a54f89fd2fa0088384926653cc",
+          "modelJarsBaseCommit": "265c6409f754b8e972c2f4c4bc12836443b5a2cb",
+          "jvmBuild": "GraalVM CE 25.0.3+9-jvmci-25.1-b19",
+          "heap": "1g-fixed",
+          "activeProcessorCount": "8",
+          "prefillBatchSize": "32",
+          "stagedQuantizedFfn": "true",
+          "stagedQuantizedLayer": "true",
+          "weightConversionReuse": "true",
+          "baselineBlockMajorQ8Activations": "false",
+          "candidateBlockMajorQ8Activations": "true",
+          "benchmarkPlanVersion": "pure-java-v12",
+          "measurementScope": "prefill-only-one-generated-token",
+          "order": "six-counterbalanced-process-pairs",
+          "trialsPerMode": "30",
+          "iterationsPerProcess": "5",
+          "warmupsPerProcess": "5",
+          "pairedOutputHashes": "30-identical",
+          "pairedTrialTtftWins": "26-of-30",
+          "pairedTrialPrefillWins": "26-of-30",
+          "pairedTrialCpuWins": "29-of-30",
+          "prefillProcessPairWins": "4-of-6",
+          "ttftProcessPairWins": "5-of-6",
+          "pairedMedianTtftChangePercent": "-1.692275",
+          "pairedMedianPrefillChangePercent": "+1.261",
+          "rawReports": "/opt/modeljars-bench/q8-block-major-reports/",
+          "rssClaim": "no-regression-observed-lifecycle-sensitive"
+        }
+      }
+    },
+    {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25",
       "modelId": "minicpm5_1b_q4_k_m",
       "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",

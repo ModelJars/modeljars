@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(10, registry.profiles().size());
+    assertEquals(11, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -392,6 +392,34 @@ class ModelPerformanceProfileRegistryTest {
                             .controls()
                             .get("vectorsCandidateCommit")
                             .equals("fa24b91ac6fa14cf5a46f47fc5d945b9b4494c35")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_block_major")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.purejava.blockMajorQ8Activations"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("smollm2-q8-block-major-20260723")
+                        && profile.evidence().warmups() == 5
+                        && profile.evidence().trials() == 30
+                        && profile.evidence().generatedTokens() == 1
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("vectorsCandidateCommit")
+                            .equals("d295f32c0ce827a54f89fd2fa0088384926653cc")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("modelsCandidateCommit")
+                            .equals("29b51694f2c524602c3f8c868f324dde4674547d")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

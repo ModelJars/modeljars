@@ -116,6 +116,29 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesQualifiedQwen3RustFfmEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen3_1_7b_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(2, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-2729c3a", qualification.backendVersion());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(21.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(12.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(17.99028698691015, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
   void rejectsInvalidSchemaCountsAndEvidence() {
     Properties wrongSchema = properties(1.0, 1.0, true);
     wrongSchema.setProperty("modeljars.qualifications.schemaVersion", "2");

@@ -93,6 +93,22 @@ class LaunchModelCatalogTest {
   }
 
   @Test
+  void exposesQualifiedQwen3RustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen3-1.7B-GGUF")
+                    .versionRange("[3.0.0,4.0.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen3_1_7b_q8_0", descriptor.alias());
+  }
+
+  @Test
   void resolvesPinnedLaunchModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

@@ -42,6 +42,7 @@ const qualification = {
   rawCorrectAnswerRate: 1,
   abstentionAccuracy: 1,
   modelAnswerRate: 1,
+  modelAnswerCorrectRate: 1,
   extractiveFallbackRate: 0,
   environment: {
     hostname: "qualification-host",
@@ -60,7 +61,7 @@ const qualification = {
 const document = {
   schemaVersion: 1,
   generatedAt: "2026-07-24T06:00:00Z",
-  policyVersion: "trusted-citation-lexical-entailment-extractive-fallback-v2",
+  policyVersion: "production-rag-model-contribution-v3",
   modelsRevision: revision,
   targetQualifiedModels: 25,
   qualifiedModels: 1,
@@ -111,5 +112,22 @@ test("rejects artifact mismatches and false qualification counts", () => {
   assert.throws(
     () => validateQualificationCatalog({ ...document, qualifiedModels: 0 }, [model]),
     /qualifiedModels/,
+  );
+  assert.throws(
+    () =>
+      validateQualificationCatalog(
+        {
+          ...document,
+          entries: [
+            {
+              ...qualification,
+              modelAnswerRate: 0,
+              modelAnswerCorrectRate: 0,
+            },
+          ],
+        },
+        [model],
+      ),
+    /model-answer contribution policy/,
   );
 });

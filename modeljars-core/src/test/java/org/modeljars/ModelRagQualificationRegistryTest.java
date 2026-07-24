@@ -32,7 +32,7 @@ class ModelRagQualificationRegistryTest {
 
     assertEquals(Instant.parse("2026-07-24T06:00:00Z"), registry.generatedAt());
     assertEquals(
-        "trusted-citation-lexical-entailment-extractive-fallback-v2",
+        "production-rag-model-contribution-v3",
         registry.policyVersion());
     assertEquals(MODELS_REVISION, registry.modelsRevision());
     assertEquals(25, registry.targetQualifiedModels());
@@ -109,6 +109,8 @@ class ModelRagQualificationRegistryTest {
     assertEquals(27, qualification.attempts());
     assertEquals(1.0, qualification.correctAnswerRate());
     assertEquals(18.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(1.0 / 3.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
     assertEquals(43.91685822892476, qualification.p50DecodeTokensPerSecond());
     assertTrue(qualification.productionUsable());
   }
@@ -138,6 +140,18 @@ class ModelRagQualificationRegistryTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ModelRagQualificationRegistry.fromProperties(insecureReport));
+
+    Properties insufficientContribution = properties(1.0, 0.32, true);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelRagQualificationRegistry.fromProperties(insufficientContribution));
+
+    Properties incorrectModelAnswers = properties(1.0, 1.0, true);
+    incorrectModelAnswers.setProperty(
+        "qualification.qwen3_0_6b_q4_0.modelAnswerCorrectRate", "0.89");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelRagQualificationRegistry.fromProperties(incorrectModelAnswers));
   }
 
   private static Properties properties(
@@ -148,7 +162,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty("modeljars.qualifications.generatedAt", "2026-07-24T06:00:00Z");
     properties.setProperty(
         "modeljars.qualifications.policyVersion",
-        "trusted-citation-lexical-entailment-extractive-fallback-v2");
+        "production-rag-model-contribution-v3");
     properties.setProperty("modeljars.qualifications.modelsRevision", MODELS_REVISION);
     properties.setProperty("modeljars.qualifications.targetQualifiedModels", "25");
     properties.setProperty("modeljars.qualifications.qualifiedModels", qualified ? "1" : "0");
@@ -182,6 +196,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty(prefix + "rawCorrectAnswerRate", Double.toString(rawCorrectAnswerRate));
     properties.setProperty(prefix + "abstentionAccuracy", "1.0");
     properties.setProperty(prefix + "modelAnswerRate", Double.toString(modelAnswerRate));
+    properties.setProperty(prefix + "modelAnswerCorrectRate", "1.0");
     properties.setProperty(
         prefix + "extractiveFallbackRate", Double.toString(1.0 - modelAnswerRate));
     properties.setProperty(prefix + "environment.hostname", "qualification-host");

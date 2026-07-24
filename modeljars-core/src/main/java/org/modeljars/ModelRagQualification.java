@@ -31,8 +31,12 @@ public record ModelRagQualification(
     double rawCorrectAnswerRate,
     double abstentionAccuracy,
     double modelAnswerRate,
+    double modelAnswerCorrectRate,
     double extractiveFallbackRate,
     ModelQualificationEnvironment environment) {
+
+  public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
+  public static final double MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90;
 
   public ModelRagQualification {
     modelId = requireIdentifier(modelId);
@@ -66,8 +70,15 @@ public record ModelRagQualification(
     rawCorrectAnswerRate = requireRate(rawCorrectAnswerRate, "rawCorrectAnswerRate");
     abstentionAccuracy = requireRate(abstentionAccuracy, "abstentionAccuracy");
     modelAnswerRate = requireRate(modelAnswerRate, "modelAnswerRate");
+    modelAnswerCorrectRate = requireRate(modelAnswerCorrectRate, "modelAnswerCorrectRate");
     extractiveFallbackRate = requireRate(extractiveFallbackRate, "extractiveFallbackRate");
     environment = Objects.requireNonNull(environment, "environment");
+    if (qualified
+        && (modelAnswerRate < MINIMUM_MODEL_ANSWER_RATE
+            || modelAnswerCorrectRate < MINIMUM_MODEL_ANSWER_CORRECT_RATE)) {
+      throw new IllegalArgumentException(
+          "qualified evidence must meet model-answer contribution and correctness floors");
+    }
   }
 
   /** Classifies how the artifact met the production quality policy. */

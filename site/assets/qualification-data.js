@@ -1,6 +1,9 @@
 import { formatDuration } from "./benchmark-data.js";
 import { formatBytes } from "./resource-profile.js";
 
+const MINIMUM_MODEL_ANSWER_RATE = 1 / 3;
+const MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.9;
+
 function requireObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error(`${label} must be an object`);
@@ -129,9 +132,17 @@ export function validateQualificationCatalog(value, models) {
       "rawCorrectAnswerRate",
       "abstentionAccuracy",
       "modelAnswerRate",
+      "modelAnswerCorrectRate",
       "extractiveFallbackRate",
     ]) {
       requireRate(entry[rate], `${modelId}.${rate}`);
+    }
+    if (
+      entry.qualified &&
+      (entry.modelAnswerRate < MINIMUM_MODEL_ANSWER_RATE ||
+        entry.modelAnswerCorrectRate < MINIMUM_MODEL_ANSWER_CORRECT_RATE)
+    ) {
+      throw new Error(`${modelId} does not meet the model-answer contribution policy`);
     }
     requireObject(entry.environment, `${modelId}.environment`);
     return {

@@ -62,3 +62,29 @@ test("documents verification and rejects obfuscation as an integrity mechanism",
   assert.match(security, /obfuscat/i);
   assert.match(security, /reproducib/i);
 });
+
+test("launch qualification requires correct model-generated answers", async () => {
+  const build = await read("build.gradle.kts");
+  const qualifications = JSON.parse(await read("catalog/qualifications.json"));
+
+  assert.match(build, /MINIMUM_MODEL_ANSWER_RATE\s*=\s*1\.0\s*\/\s*3\.0/);
+  assert.match(build, /MINIMUM_MODEL_ANSWER_CORRECT_RATE\s*=\s*0\.90/);
+  assert.match(
+    build,
+    /require\(entry\.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE\)/,
+  );
+  assert.match(
+    build,
+    /require\(entry\.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE\)/,
+  );
+  assert.equal(qualifications.policyVersion, "production-rag-model-contribution-v3");
+  assert.ok(
+    qualifications.entries
+      .filter((entry) => entry.qualified)
+      .every(
+        (entry) =>
+          entry.modelAnswerRate >= 1 / 3 &&
+          entry.modelAnswerCorrectRate >= 0.9,
+      ),
+  );
+});

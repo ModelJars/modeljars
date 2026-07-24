@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-24T19:13:05.996645974Z",
-  "policyVersion": "trusted-citation-lexical-entailment-extractive-fallback-v2",
-  "modelsRevision": "a25820ad842f347b5193433de87e12d86558e72e",
+  "generatedAt": "2026-07-24T20:14:36Z",
+  "policyVersion": "production-rag-model-contribution-v3",
+  "modelsRevision": "b39721ffc8ee0cbdea092a63651583a71f2e51bf",
   "targetQualifiedModels": 25,
   "qualifiedModels": 1,
   "rejectedModels": 0,
@@ -31,6 +31,7 @@
       "rawCorrectAnswerRate": 0.6666666666666666,
       "abstentionAccuracy": 1.0,
       "modelAnswerRate": 0.3333333333333333,
+      "modelAnswerCorrectRate": 1.0,
       "extractiveFallbackRate": 0.5555555555555556,
       "environment": {
         "hostname": "vectors-bench",

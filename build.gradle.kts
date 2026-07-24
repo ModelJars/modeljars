@@ -29,6 +29,10 @@ plugins {
     `maven-publish`
 }
 
+val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
+val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
+val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v3"
+
 data class CatalogEntry(
     val id: String,
     val name: String,
@@ -180,6 +184,7 @@ data class CatalogRagQualification(
     val rawCorrectAnswerRate: Double,
     val abstentionAccuracy: Double,
     val modelAnswerRate: Double,
+    val modelAnswerCorrectRate: Double,
     val extractiveFallbackRate: Double,
     val environment: CatalogQualificationEnvironment,
     val raw: Map<String, Any?>,
@@ -308,6 +313,7 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
         appendLine("${prefix}rawCorrectAnswerRate=$rawCorrectAnswerRate")
         appendLine("${prefix}abstentionAccuracy=$abstentionAccuracy")
         appendLine("${prefix}modelAnswerRate=$modelAnswerRate")
+        appendLine("${prefix}modelAnswerCorrectRate=$modelAnswerCorrectRate")
         appendLine("${prefix}extractiveFallbackRate=$extractiveFallbackRate")
         environment.properties("${prefix}environment.").forEach(::appendLine)
     }
@@ -645,6 +651,8 @@ val ragQualifications =
                             decimal(raw, "abstentionAccuracy", context),
                         modelAnswerRate =
                             decimal(raw, "modelAnswerRate", context),
+                        modelAnswerCorrectRate =
+                            decimal(raw, "modelAnswerCorrectRate", context),
                         extractiveFallbackRate =
                             decimal(raw, "extractiveFallbackRate", context),
                         environment =
@@ -865,6 +873,7 @@ ragQualifications?.let { qualifications ->
             qualification.rawCorrectAnswerRate,
             qualification.abstentionAccuracy,
             qualification.modelAnswerRate,
+            qualification.modelAnswerCorrectRate,
             qualification.extractiveFallbackRate,
         ).forEach { rate ->
             require(rate in 0.0..1.0) {
@@ -2182,8 +2191,8 @@ val verifyLaunchQualifications =
             require(qualifications.qualifiedModels >= 25) {
                 "At least 25 models must qualify; found ${qualifications.qualifiedModels}"
             }
-            require(qualifications.policyVersion.endsWith("-v2")) {
-                "Launch qualifications must use the current v2 grounding policy"
+            require(qualifications.policyVersion == PRODUCTION_RAG_POLICY_VERSION) {
+                "Launch qualifications must use $PRODUCTION_RAG_POLICY_VERSION"
             }
             val qualified = qualifications.entries.filter(CatalogRagQualification::qualified)
             qualified.forEach { entry ->
@@ -2201,6 +2210,12 @@ val verifyLaunchQualifications =
                 }
                 require(entry.abstentionAccuracy == 1.0) {
                     "Qualification abstention accuracy must be 100%: ${entry.modelId}"
+                }
+                require(entry.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE) {
+                    "Model-answer contribution is below one-third: ${entry.modelId}"
+                }
+                require(entry.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE) {
+                    "Accepted model-answer correctness is below 90%: ${entry.modelId}"
                 }
                 require(entry.p95TtftMillis <= 2_000) {
                     "Qualification TTFT is not interactively usable: ${entry.modelId}"

@@ -222,6 +222,7 @@ public final class ModelRagQualificationRegistry {
         decimal(properties, prefix + "rawCorrectAnswerRate"),
         decimal(properties, prefix + "abstentionAccuracy"),
         decimal(properties, prefix + "modelAnswerRate"),
+        decimal(properties, prefix + "modelAnswerCorrectRate"),
         decimal(properties, prefix + "extractiveFallbackRate"),
         new ModelQualificationEnvironment(
             required(properties, environment + "hostname"),

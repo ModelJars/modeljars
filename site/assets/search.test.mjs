@@ -17,6 +17,14 @@ const model = {
   domains: ["healthcare"],
   tags: ["clinical", "on-device"],
   dimensions: { parameterCount: 3_000_000_000 },
+  ragQualifications: [
+    {
+      qualified: true,
+      useCaseTier: "GUARDED_RAG",
+      backend: "llama.cpp",
+      performanceTier: "USABLE",
+    },
+  ],
 };
 
 test("matches catalog domains and descriptions", () => {
@@ -61,4 +69,15 @@ test("combines category, backend, architecture, size, and sort filters", () => {
   });
 
   assert.deepEqual(filtered.map((candidate) => candidate.id), ["coder"]);
+});
+
+test("filters by evidence-backed RAG qualification", () => {
+  assert.equal(
+    filterCatalog([model], { qualification: "guarded-rag" }).length,
+    1,
+  );
+  assert.equal(
+    filterCatalog([model], { qualification: "generative-rag" }).length,
+    0,
+  );
 });

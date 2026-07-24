@@ -1,4 +1,5 @@
 import { modelTerms, sizeTier } from "./taxonomy.js";
+import { primaryQualification } from "./qualification-data.js";
 
 const SEARCH_ALIASES = new Map([
   ["medical", ["healthcare", "clinical"]],
@@ -28,13 +29,24 @@ export function matches(model, query, backend) {
 }
 
 export function filterCatalog(catalog, filters = {}) {
-  const { query, domain, backend, architecture, size, sort = "name" } = filters;
+  const { query, domain, backend, architecture, size, qualification, sort = "name" } = filters;
   const filtered = catalog.filter(
-    (model) =>
-      matches(model, query, backend) &&
-      (!domain || model.domains?.includes(domain)) &&
-      (!architecture || normalize(model.architecture) === normalize(architecture)) &&
-      (!size || sizeTier(model) === size),
+    (model) => {
+      const evidence = primaryQualification(model);
+      const evidenceTier = String(evidence?.useCaseTier || "not-evaluated")
+        .toLowerCase()
+        .replaceAll("_", "-");
+      const qualificationMatches =
+        !qualification ||
+        (qualification === "production-rag" ? evidence?.qualified === true : evidenceTier === qualification);
+      return (
+        matches(model, query, backend) &&
+        (!domain || model.domains?.includes(domain)) &&
+        (!architecture || normalize(model.architecture) === normalize(architecture)) &&
+        (!size || sizeTier(model) === size) &&
+        qualificationMatches
+      );
+    },
   );
 
   const comparators = {

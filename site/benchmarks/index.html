@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inference and RAG benchmarks | ModelJars</title>
+    <meta
+      name="description"
+      content="Controlled Models, llama.cpp, Ollama, and hosted-provider inference and RAG results.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/benchmarks.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJars home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJars</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Models</a>
+          <a class="active" href="/benchmarks/">Benchmarks</a>
+          <a class="nav-secondary" href="/#using-modeljars">Docs</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="benchmark-shell">
+      <header class="benchmark-heading">
+        <p class="eyebrow">Measured evidence</p>
+        <h1>Inference and RAG benchmarks</h1>
+        <p class="lede">
+          Same-host local engine comparisons and end-to-end Java RAG measurements, including
+          local and hosted inference.
+        </p>
+        <dl class="benchmark-meta">
+          <div>
+            <dt>Published</dt>
+            <dd id="published-at">Loading...</dd>
+          </div>
+          <div>
+            <dt>Controlled host</dt>
+            <dd id="environment-summary">Loading...</dd>
+          </div>
+        </dl>
+      </header>
+
+      <section class="benchmark-section" aria-labelledby="inference-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Local inference</p>
+            <h2 id="inference-title">Models compared with native engines</h2>
+          </div>
+          <p>
+            The same GGUF bytes and generation controls were used for Models pure Java,
+            llama.cpp, and Ollama.
+          </p>
+        </div>
+
+        <div id="benchmark-summary" class="benchmark-summary" aria-label="Inference summary"></div>
+
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable local inference results">
+          <table class="benchmark-table inference-table">
+            <thead>
+              <tr>
+                <th rowspan="2" scope="col">Model</th>
+                <th rowspan="2" scope="col">Status</th>
+                <th colspan="3" scope="colgroup">TTFT p95</th>
+                <th colspan="3" scope="colgroup">Prompt p50</th>
+                <th colspan="3" scope="colgroup">Decode p50</th>
+                <th colspan="2" scope="colgroup">Java decode ratio</th>
+                <th rowspan="2" scope="col">Evidence</th>
+              </tr>
+              <tr>
+                <th scope="col">Java</th>
+                <th scope="col">llama.cpp</th>
+                <th scope="col">Ollama</th>
+                <th scope="col">Java</th>
+                <th scope="col">llama.cpp</th>
+                <th scope="col">Ollama</th>
+                <th scope="col">Java</th>
+                <th scope="col">llama.cpp</th>
+                <th scope="col">Ollama</th>
+                <th scope="col">vs llama.cpp</th>
+                <th scope="col">vs Ollama</th>
+              </tr>
+            </thead>
+            <tbody id="inference-table-body">
+              <tr><td colspan="14" class="table-loading">Loading inference evidence...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="method-grid">
+          <div>
+            <h3>Controls</h3>
+            <p>
+              CPU only, eight threads, 2,048-token context, greedy generation, two warmups, and
+              ten measured 64-token generations. Page cache was dropped at backend boundaries.
+            </p>
+          </div>
+          <div>
+            <h3>Qualification</h3>
+            <p>
+              Profiled rows are exact ModelJars launch profiles. A validated candidate passed
+              output checks but is not an automatic runtime recommendation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="benchmark-section" aria-labelledby="qualification-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Launch qualification</p>
+            <h2 id="qualification-title">Production RAG by model artifact</h2>
+          </div>
+          <p>
+            Each row is the published Models Java client driving a local engine with the exact
+            ModelJar SHA on the same controlled host.
+          </p>
+        </div>
+
+        <div
+          id="qualification-summary"
+          class="benchmark-summary"
+          aria-label="Qualification summary"></div>
+
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable model qualification results">
+          <table class="benchmark-table qualification-table">
+            <thead>
+              <tr>
+                <th scope="col">Model and backend</th>
+                <th scope="col">RAG use</th>
+                <th scope="col">TTFT p95</th>
+                <th scope="col">TPOT p95</th>
+                <th scope="col">End to end p95</th>
+                <th scope="col">Decode p50</th>
+                <th scope="col">Raw quality</th>
+                <th scope="col">Final quality</th>
+                <th scope="col">Fallback</th>
+                <th scope="col">Peak RSS</th>
+                <th scope="col">Requests</th>
+                <th scope="col">Evidence</th>
+              </tr>
+            </thead>
+            <tbody id="qualification-table-body">
+              <tr><td colspan="12" class="table-loading">Loading qualification evidence...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="method-grid">
+          <div>
+            <h3>Usability gate</h3>
+            <p>
+              Qualified rows completed every request with at least 90% grounded quality, 100%
+              unsupported-query abstention, p95 TTFT at or below two seconds, and p95 end-to-end
+              latency at or below ten seconds.
+            </p>
+          </div>
+          <div>
+            <h3>Generative and guarded</h3>
+            <p>
+              Generative RAG met the quality bar primarily from model output. Guarded RAG met the
+              same final bar with Models citation validation and deterministic extractive fallback.
+            </p>
+          </div>
+          <div>
+            <h3>Evidence identity</h3>
+            <p>
+              Model bytes, raw report bytes, Models revision, backend version, policy, host, JVM,
+              and every reported metric are preserved in versioned ModelJar metadata.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="benchmark-section" aria-labelledby="rag-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Application workload</p>
+            <h2 id="rag-title">RAG from the same Java application</h2>
+          </div>
+          <p>
+            Nine retrieval cases compare in-process Models, local native servers, and hosted
+            providers under one Java 25 benchmark harness.
+          </p>
+        </div>
+
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable RAG benchmark results">
+          <table class="benchmark-table rag-table">
+            <thead>
+              <tr>
+                <th scope="col">Engine and model</th>
+                <th scope="col">Execution</th>
+                <th scope="col">Retrieval p95</th>
+                <th scope="col">TTFT p95</th>
+                <th scope="col">TPOT p95</th>
+                <th scope="col">End to end p95</th>
+                <th scope="col">Decode p50</th>
+                <th scope="col">Strict quality</th>
+                <th scope="col">Audited quality</th>
+                <th scope="col">API cost / 1K</th>
+                <th scope="col">Data egress</th>
+                <th scope="col">Evidence</th>
+              </tr>
+            </thead>
+            <tbody id="rag-table-body">
+              <tr><td colspan="12" class="table-loading">Loading RAG evidence...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="method-grid">
+          <div>
+            <h3>Workload</h3>
+            <p id="rag-workload">
+              One warmup and three measured iterations over nine cases at concurrency one.
+            </p>
+          </div>
+          <div>
+            <h3>Quality audit</h3>
+            <p>
+              Strict quality is the unchanged automated evaluator. Audited quality accepts two
+              semantically correct referral paraphrases that did not contain the literal expected
+              phrase.
+            </p>
+          </div>
+          <div>
+            <h3>Cost and privacy</h3>
+            <p>
+              Local rows keep retrieved context in the process or on the same host and incur no
+              API charge. Hosted rows send context to a provider; costs reflect this measured token
+              and cache mix, not a fixed price quote.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <p id="benchmark-status" class="benchmark-status" aria-live="polite"></p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJars</a>
+        <span>Open model metadata for the JVM.</span>
+        <div>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

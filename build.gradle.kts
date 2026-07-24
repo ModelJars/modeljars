@@ -1198,6 +1198,9 @@ allprojects {
             .get()
 }
 
+val githubPreviewVersionPattern =
+    Regex("""\d+\.\d+\.\d+-preview\.\d+\.\d+\.[0-9a-f]{12}""")
+
 subprojects {
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
@@ -1236,6 +1239,14 @@ subprojects {
                 name = "releaseBundle"
                 url = rootProject.layout.buildDirectory.dir("central-repository").get().asFile.toURI()
             }
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/modeljars/modeljars")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
         }
         publications {
             create<MavenPublication>("maven") {
@@ -1269,6 +1280,20 @@ subprojects {
                         connection.set("scm:git:https://github.com/ModelJars/modeljars.git")
                         developerConnection.set("scm:git:ssh://git@github.com/ModelJars/modeljars.git")
                         url.set("https://github.com/ModelJars/modeljars")
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        if (name.endsWith("ToGitHubPackagesRepository")) {
+            enabled = name == "publishMavenPublicationToGitHubPackagesRepository"
+            if (enabled) {
+                doFirst {
+                    require(project.version.toString().matches(githubPreviewVersionPattern)) {
+                        "GitHub Packages previews require an immutable " +
+                            "<version>-preview.<run>.<attempt>.<sha> version"
                     }
                 }
             }
@@ -1359,6 +1384,18 @@ val verifyFacadePublication =
                 "Facade must expose modeljars-catalog in Maven runtime scope"
             }
         }
+    }
+
+val publishGitHubPackagesPreview =
+    tasks.register("publishGitHubPackagesPreview") {
+        group = "publishing"
+        description =
+            "Publish the facade, core, and aggregate catalog for invited GitHub Packages testing"
+        dependsOn(
+            ":modeljars-core:publishMavenPublicationToGitHubPackagesRepository",
+            ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",
+            ":modeljars:publishMavenPublicationToGitHubPackagesRepository",
+        )
     }
 
 val markerJarTasks = mutableListOf<TaskProvider<Jar>>()

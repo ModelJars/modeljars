@@ -126,6 +126,22 @@ class LaunchModelCatalogTest {
   }
 
   @Test
+  void exposesQualifiedSqlCoderRustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource("hf://defog/sqlcoder-7b-2")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q5_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-to-sql")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("sqlcoder_7b_2_q5_k_m", descriptor.alias());
+  }
+
+  @Test
   void resolvesPinnedLaunchModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

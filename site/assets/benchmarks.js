@@ -45,10 +45,10 @@ function evidenceCell(evidence) {
 function renderSummary(summary) {
   const values = [
     [summary.modelCount, "measured models"],
-    [summary.prefillVsLlamaCpp, "Java prompt vs llama.cpp"],
-    [summary.prefillVsOllama, "Java prompt vs Ollama"],
-    [summary.decodeVsLlamaCpp, "Java decode vs llama.cpp"],
-    [summary.decodeVsOllama, "Java decode vs Ollama"],
+    [summary.prefillVsLlamaCpp, "Models prompt vs llama.cpp"],
+    [summary.prefillVsOllama, "Models prompt vs Ollama"],
+    [summary.decodeVsLlamaCpp, "Models decode vs llama.cpp"],
+    [summary.decodeVsOllama, "Models decode vs Ollama"],
   ];
   elements.summary.innerHTML = values
     .map(
@@ -64,25 +64,27 @@ function renderSummary(summary) {
 function renderInferenceRows(rows) {
   elements.inferenceBody.innerHTML = rows
     .map((row) => {
-      const java = row.engines["pure-java"];
+      const models = row.engines.models;
       const llama = row.engines["llama.cpp"];
       const ollama = row.engines.ollama;
       return `
         <tr id="${escapeHtml(row.modelId)}">
           <th class="model-result" scope="row">
             <a href="${escapeHtml(row.modelUrl)}">${escapeHtml(row.modelName)}</a>
-            <small>Java tier: ${escapeHtml(java.performanceTier.toLowerCase())}</small>
+            <small>${escapeHtml(row.modelsBackend)} tier: ${escapeHtml(
+              models.performanceTier.toLowerCase(),
+            )}</small>
           </th>
           <td class="text-cell">
             <span class="result-status ${escapeHtml(row.statusId)}">${escapeHtml(row.status)}</span>
           </td>
-          <td>${escapeHtml(java.ttft)}</td>
+          <td>${escapeHtml(models.ttft)}</td>
           <td>${escapeHtml(llama.ttft)}</td>
           <td>${escapeHtml(ollama.ttft)}</td>
-          <td>${escapeHtml(java.prefill)}</td>
+          <td>${escapeHtml(models.prefill)}</td>
           <td>${escapeHtml(llama.prefill)}</td>
           <td>${escapeHtml(ollama.prefill)}</td>
-          <td>${escapeHtml(java.decode)}</td>
+          <td>${escapeHtml(models.decode)}</td>
           <td>${escapeHtml(llama.decode)}</td>
           <td>${escapeHtml(ollama.decode)}</td>
           <td>${escapeHtml(row.decodeVsLlamaCpp)}</td>

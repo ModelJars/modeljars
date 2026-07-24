@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "publishedAt": "2026-07-24",
+  "schemaVersion": 2,
+  "publishedAt": "2026-07-25",
   "environment": {
     "hostClass": "Hetzner dedicated-vCPU VM",
     "operatingSystem": "Ubuntu Linux 6.8",
@@ -20,7 +20,8 @@
       "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
       "status": "profiled",
       "engines": {
-        "pure-java": {
+        "models": {
+          "backend": "pure-java",
           "p95TtftMillis": 765.488,
           "p95TpotMillis": 17.280,
           "prefillTokensPerSecond": 207.678,
@@ -56,7 +57,8 @@
       "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
       "status": "profiled",
       "engines": {
-        "pure-java": {
+        "models": {
+          "backend": "pure-java",
           "p95TtftMillis": 764.853,
           "p95TpotMillis": 22.471,
           "prefillTokensPerSecond": 214.486,
@@ -92,7 +94,8 @@
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "status": "profiled",
       "engines": {
-        "pure-java": {
+        "models": {
+          "backend": "pure-java",
           "p95TtftMillis": 7167.842,
           "p95TpotMillis": 63.586,
           "prefillTokensPerSecond": 21.273,
@@ -128,7 +131,8 @@
       "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
       "status": "candidate",
       "engines": {
-        "pure-java": {
+        "models": {
+          "backend": "pure-java",
           "p95TtftMillis": 4187.041,
           "p95TpotMillis": 54.102,
           "prefillTokensPerSecond": 37.848,
@@ -156,6 +160,43 @@
       "evidence": {
         "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/inference/qwen3-1.7b-q8_0-row-candidate/comparison.json",
         "sha256": "f0e4057a49ef2ae9eb67a40339af7f0594898949b692396344d91b64742ee2a5"
+      }
+    },
+    {
+      "id": "sqlcoder-7b-q5_k_m-rust-ffm-20260725",
+      "modelId": "sqlcoder_7b_2_q5_k_m",
+      "artifactSha256": "0068f25d1fc37cb25aa6be85064432eeeb1a0754d97139c0d2eb3529fc8fc32b",
+      "status": "profiled",
+      "engines": {
+        "models": {
+          "backend": "rust-ffm",
+          "p95TtftMillis": 1409.490214,
+          "p95TpotMillis": 113.31081066666668,
+          "prefillTokensPerSecond": 14.272698357469627,
+          "decodeTokensPerSecond": 9.409409829489164,
+          "peakRssBytes": 5014872064,
+          "performanceTier": "USABLE"
+        },
+        "llama.cpp": {
+          "p95TtftMillis": 1156.207181,
+          "p95TpotMillis": 99.74684299999997,
+          "prefillTokensPerSecond": 18.213095033197916,
+          "decodeTokensPerSecond": 10.13739495225855,
+          "peakRssBytes": 5080137728,
+          "performanceTier": "USABLE"
+        },
+        "ollama": {
+          "p95TtftMillis": 1067.92858,
+          "p95TpotMillis": 99.92467099999999,
+          "prefillTokensPerSecond": 19.428078276749908,
+          "decodeTokensPerSecond": 10.10866392525317,
+          "peakRssBytes": 5139378176,
+          "performanceTier": "USABLE"
+        }
+      },
+      "evidence": {
+        "url": "https://github.com/integrallis/models/blob/c405005c0020392cfdcfb52a5bc71fc6aee451ed/benchmark-results/certified-20260724/native-q5-decode/sqlcoder-7b-q5_k_m/comparison.json",
+        "sha256": "24705f2fd6107a6a624a62730c1553a22589de30024b1437f28663a2c79db1dd"
       }
     }
   ],

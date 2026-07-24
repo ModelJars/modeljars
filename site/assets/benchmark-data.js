@@ -1,4 +1,4 @@
-const ENGINE_IDS = ["pure-java", "llama.cpp", "ollama"];
+const ENGINE_IDS = ["models", "llama.cpp", "ollama"];
 const METRICS = [
   "p95TtftMillis",
   "p95TpotMillis",
@@ -44,18 +44,19 @@ function requireEvidence(value, label) {
 
 export function validateBenchmarkCatalog(value, models) {
   const document = requireObject(value, "benchmark catalog");
-  if (document.schemaVersion !== 1) throw new Error("benchmark catalog must use schemaVersion 1");
+  if (document.schemaVersion !== 2) throw new Error("benchmark catalog must use schemaVersion 2");
   if (!Array.isArray(document.inferenceComparisons) || !document.inferenceComparisons.length) {
     throw new Error("benchmark catalog must contain inference comparisons");
   }
-  const modelIds = new Set((models || []).map((model) => model.id));
+  const modelsById = new Map((models || []).map((model) => [model.id, model]));
   const comparisonIds = new Set();
 
   for (const comparison of document.inferenceComparisons) {
     requireText(comparison.id, "inference comparison id");
     if (comparisonIds.has(comparison.id)) throw new Error(`duplicate comparison: ${comparison.id}`);
     comparisonIds.add(comparison.id);
-    if (!modelIds.has(comparison.modelId)) {
+    const model = modelsById.get(comparison.modelId);
+    if (!model) {
       throw new Error(`unknown benchmark modelId: ${comparison.modelId}`);
     }
     if (!/^[a-f0-9]{64}$/.test(comparison.artifactSha256 || "")) {
@@ -66,10 +67,16 @@ export function validateBenchmarkCatalog(value, models) {
       Object.keys(engines).length !== ENGINE_IDS.length ||
       !ENGINE_IDS.every((engine) => engines[engine])
     ) {
-      throw new Error(`${comparison.id} must contain pure-java, llama.cpp, and ollama`);
+      throw new Error(`${comparison.id} must contain models, llama.cpp, and ollama`);
     }
     for (const engine of ENGINE_IDS) {
       const metrics = requireObject(engines[engine], `${comparison.id}.${engine}`);
+      if (engine === "models") {
+        const backend = requireText(metrics.backend, `${comparison.id}.models.backend`);
+        if (model.backends?.[backend] !== true) {
+          throw new Error(`${comparison.id} uses unsupported Models backend ${backend}`);
+        }
+      }
       for (const metric of METRICS) {
         requireMetric(metrics[metric], `${comparison.id}.${engine}.${metric}`);
       }
@@ -86,7 +93,7 @@ export function validateBenchmarkCatalog(value, models) {
     requireText(row.id, "RAG row id");
     if (ragIds.has(row.id)) throw new Error(`duplicate RAG row: ${row.id}`);
     ragIds.add(row.id);
-    if (row.catalogModelId !== null && !modelIds.has(row.catalogModelId)) {
+    if (row.catalogModelId !== null && !modelsById.has(row.catalogModelId)) {
       throw new Error(`unknown RAG catalogModelId: ${row.catalogModelId}`);
     }
     for (const metric of [
@@ -121,16 +128,16 @@ export function prefillRatio(comparison, denominator) {
 
 function throughputRatio(comparison, denominator, metric, label) {
   const engines = requireObject(comparison?.engines, "comparison.engines");
-  const pureJava = requireMetric(
-    engines["pure-java"]?.[metric],
-    `pure-java ${label} throughput`,
+  const models = requireMetric(
+    engines.models?.[metric],
+    `Models ${label} throughput`,
   );
   const reference = requireMetric(
     engines[denominator]?.[metric],
     `${denominator} ${label} throughput`,
   );
   if (reference === 0) throw new Error(`${denominator} ${label} throughput must be positive`);
-  return (pureJava / reference) * 100;
+  return (models / reference) * 100;
 }
 
 export function formatDuration(value) {

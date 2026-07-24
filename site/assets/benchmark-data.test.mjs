@@ -25,7 +25,7 @@ test("benchmark metadata joins only known catalog models and carries all engine 
 
   const validated = validateBenchmarkCatalog(benchmarks, catalog.models);
 
-  assert.equal(validated.inferenceComparisons.length, 4);
+  assert.equal(validated.inferenceComparisons.length, 5);
   assert.equal(validated.ragComparison.rows.length, 7);
   assert.deepEqual(
     validated.ragComparison.rows.find((row) => row.id === "smollm2-360m-rust-ffm"),
@@ -53,10 +53,17 @@ test("benchmark metadata joins only known catalog models and carries all engine 
   for (const comparison of validated.inferenceComparisons) {
     assert.deepEqual(Object.keys(comparison.engines).sort(), [
       "llama.cpp",
+      "models",
       "ollama",
-      "pure-java",
     ]);
   }
+  const sqlCoder = validated.inferenceComparisons.find(
+    (comparison) => comparison.modelId === "sqlcoder_7b_2_q5_k_m",
+  );
+  assert.equal(sqlCoder.engines.models.backend, "rust-ffm");
+  assert.equal(sqlCoder.engines.models.decodeTokensPerSecond, 9.409409829489164);
+  assert.equal(sqlCoder.engines["llama.cpp"].decodeTokensPerSecond, 10.13739495225855);
+  assert.equal(sqlCoder.engines.ollama.decodeTokensPerSecond, 10.10866392525317);
 });
 
 test("derives model-specific Java ratios instead of storing presentation values", async () => {

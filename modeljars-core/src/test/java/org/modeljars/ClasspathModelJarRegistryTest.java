@@ -154,6 +154,15 @@ class ClasspathModelJarRegistryTest {
                     .capability("code-completion")
                     .build())
             .orElseThrow();
+    ModelJarDescriptor onePointFiveBillionQ8Rust =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
     ModelJarDescriptor threeBillion =
         registry
             .resolve(
@@ -194,6 +203,8 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow()
             .toString()
             .endsWith("qwen2.5-coder-1.5b-instruct-q4_0.gguf"));
+    assertEquals("qwen2_5_coder_1_5b_instruct_q8_0", onePointFiveBillionQ8Rust.alias());
+    assertEquals("Q8_0", onePointFiveBillionQ8Rust.quantization());
 
     assertEquals("qwen2_5_coder_3b_instruct_q4_0", threeBillion.alias());
     assertEquals("qwen2", threeBillion.architecture());

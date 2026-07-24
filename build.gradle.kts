@@ -579,8 +579,8 @@ val benchmarkDocument =
     JsonSlurper()
         .parse(file("catalog/benchmarks.json"))
         .stringKeyMap("catalog/benchmarks.json")
-require((benchmarkDocument["schemaVersion"] as? Number)?.toInt() == 1) {
-    "catalog/benchmarks.json must use schemaVersion 1"
+require((benchmarkDocument["schemaVersion"] as? Number)?.toInt() == 2) {
+    "catalog/benchmarks.json must use schemaVersion 2"
 }
 val inferenceComparisons =
     ((benchmarkDocument["inferenceComparisons"] as? List<*>)
@@ -777,11 +777,17 @@ inferenceComparisons.forEach { comparison ->
         "Inference comparison SHA-256 does not match $id"
     }
     val engines = comparison["engines"].stringKeyMap("engines for $id")
-    require(engines.keys == setOf("pure-java", "llama.cpp", "ollama")) {
-        "Inference comparison $id must contain pure-java, llama.cpp, and ollama"
+    require(engines.keys == setOf("models", "llama.cpp", "ollama")) {
+        "Inference comparison $id must contain models, llama.cpp, and ollama"
     }
     engines.forEach { (engine, rawMetrics) ->
         val metrics = rawMetrics.stringKeyMap("$id.$engine")
+        if (engine == "models") {
+            val backend = metrics.requiredString("backend")
+            require(model.backends[backend] == true) {
+                "Inference comparison $id uses unsupported Models backend $backend"
+            }
+        }
         listOf(
             "p95TtftMillis",
             "p95TpotMillis",
@@ -1462,7 +1468,7 @@ project(":modeljars-catalog") {
     val aggregatePerformanceMetadata =
         generatedResources.map { it.file("META-INF/modeljars/performance-v1.json") }
     val aggregateBenchmarkMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
     val aggregateQualificationRegistry =
         generatedResources.map {
             it.file("META-INF/modeljars/qualifications-v1.properties")
@@ -1579,7 +1585,7 @@ project(":modeljars-catalog") {
         val markerPerformanceMetadata =
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
         val markerBenchmarkMetadata =
-            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
         val markerQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/qualifications-v1.properties")
@@ -1635,7 +1641,7 @@ project(":modeljars-catalog") {
                         JsonOutput.prettyPrint(
                             JsonOutput.toJson(
                                 mapOf(
-                                    "schemaVersion" to 1,
+                                    "schemaVersion" to 2,
                                     "publishedAt" to benchmarkDocument["publishedAt"],
                                     "environment" to benchmarkDocument["environment"],
                                     "inferenceComparisons" to
@@ -1707,7 +1713,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/model.json",
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
-                        "META-INF/modeljars/benchmarks-v1.json",
+                        "META-INF/modeljars/benchmarks-v2.json",
                         "META-INF/modeljars/qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
@@ -1723,7 +1729,7 @@ project(":modeljars-catalog") {
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
-                    include("META-INF/modeljars/benchmarks-v1.json")
+                    include("META-INF/modeljars/benchmarks-v2.json")
                     include("META-INF/modeljars/qualifications-v1.json")
                 }
             }
@@ -1817,7 +1823,7 @@ val generateSiteCatalog =
                     )
                 }
                 val benchmarkMetadata =
-                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                    zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
                         ?: error("Aggregate ModelJars benchmark metadata is missing")
                 zip.getInputStream(benchmarkMetadata).use { input ->
                     Files.copy(
@@ -1950,7 +1956,7 @@ tasks.register("verifyCatalog") {
                     zip.getEntry("META-INF/modeljars/performance-v1.json")
                         ?: error("Performance profile metadata missing from $markerJar")
                 val benchmarkMetadataResource =
-                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                    zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
                         ?: error("Benchmark metadata missing from $markerJar")
                 val qualificationResource =
                     zip.getEntry("META-INF/modeljars/qualifications-v1.properties")
@@ -2010,7 +2016,7 @@ tasks.register("verifyCatalog") {
                                 .parse(it)
                                 .stringKeyMap("Benchmark metadata in $markerJar")
                         }
-                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 1) {
+                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 2) {
                     "Benchmark JSON schema mismatch in $markerJar"
                 }
                 require(

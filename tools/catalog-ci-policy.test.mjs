@@ -17,6 +17,8 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
   assert.match(validateWorkflow, /fetch-depth:\s*0/);
   assert.match(validateWorkflow, /id:\s*remote-catalog/);
   assert.match(validateWorkflow, /catalog\/models\.json/);
+  assert.match(validateWorkflow, /mode=changed/);
+  assert.match(validateWorkflow, /--changed-from="\$\{COMPARISON\}"/);
 
   const remoteCondition = /if:\s*steps\.remote-catalog\.outputs\.required == 'true'/g;
   assert.equal(validateWorkflow.match(remoteCondition)?.length, 2);

@@ -24,7 +24,7 @@ test("joins inference evidence to catalog names and preserves qualification stat
 
   const rows = buildInferenceRows(benchmarks, catalog.models);
 
-  assert.equal(rows.length, 4);
+  assert.equal(rows.length, 5);
   assert.equal(rows[0].modelName, "Qwen3 0.6B GGUF Q4_0");
   assert.equal(rows[0].status, "Profiled");
   assert.equal(rows[0].decodeVsLlamaCpp, "59.4%");
@@ -32,17 +32,21 @@ test("joins inference evidence to catalog names and preserves qualification stat
   assert.equal(rows[3].status, "Validated candidate");
   assert.match(rows[3].evidence.url, /\/blob\/[a-f0-9]{40}\//);
   assert.match(rows[3].evidence.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(rows[4].modelName, "SQLCoder-7B-2 GGUF Q5_K_M");
+  assert.equal(rows[4].modelsBackend, "Models Rust/FFM");
+  assert.equal(rows[4].decodeVsLlamaCpp, "92.8%");
+  assert.equal(rows[4].decodeVsOllama, "93.1%");
 });
 
 test("summarizes prompt and decode ratios from every measured model", async () => {
   const benchmarks = await json("catalog/benchmarks.json");
 
   assert.deepEqual(buildBenchmarkSummary(benchmarks), {
-    modelCount: 4,
-    prefillVsLlamaCpp: "29.1%",
-    prefillVsOllama: "28.8%",
-    decodeVsLlamaCpp: "50.3%",
-    decodeVsOllama: "92.2%",
+    modelCount: 5,
+    prefillVsLlamaCpp: "38.9%",
+    prefillVsOllama: "37.7%",
+    decodeVsLlamaCpp: "58.8%",
+    decodeVsOllama: "92.4%",
   });
 });
 

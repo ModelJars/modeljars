@@ -3,16 +3,17 @@ name: publish
 on:
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: Build and verify artifacts without publishing.
+      target:
+        description: Verification or explicit publication target.
         required: true
-        default: "true"
+        default: verify
         type: choice
         options:
-          - "true"
-          - "false"
+          - verify
+          - github-packages
+          - maven-central
       version:
-        description: Maven version to stage when dry_run is false.
+        description: Base version for a preview, or exact Maven Central version.
         required: true
         default: "0.1.0"
         type: string
@@ -35,7 +36,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false' && 'release' || 'verify' }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'workflow_dispatch' && inputs.target || 'verify' }}
   cancel-in-progress: false
 
 jobs:
@@ -75,9 +76,92 @@ jobs:
           verifyRemoteCatalogMetadata
           publishToMavenLocal
 
+  preview:
+    name: Publish invited preview to GitHub Packages
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'github-packages'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Resolve immutable preview version
+        id: version
+        shell: bash
+        env:
+          BASE_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
+            echo "Preview base version must use MAJOR.MINOR.PATCH syntax." >&2
+            exit 1
+          fi
+          SHORT_SHA="${GITHUB_SHA:0:12}"
+          PREVIEW_VERSION="${BASE_VERSION%-SNAPSHOT}-preview.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}.${SHORT_SHA}"
+          echo "value=${PREVIEW_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Build aggregate preview JARs
+        run: >
+          ./gradlew --no-daemon
+          clean
+          check
+          :modeljars:assemble
+          :modeljars-core:assemble
+          :modeljars-catalog:assemble
+          "-PmodeljarsVersion=${{ steps.version.outputs.value }}"
+
+      - name: Attest preview JARs
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: |
+            modeljars/build/libs/*.jar
+            modeljars-core/build/libs/*.jar
+            modeljars-catalog/build/libs/*.jar
+
+      - name: Retain preview JARs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: modeljars-preview-${{ steps.version.outputs.value }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            modeljars/build/libs/*.jar
+            modeljars-core/build/libs/*.jar
+            modeljars-catalog/build/libs/*.jar
+
+      - name: Publish aggregate preview
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          ./gradlew --no-daemon
+          publishGitHubPackagesPreview
+          "-PmodeljarsVersion=${{ steps.version.outputs.value }}"
+
+      - name: Summarize preview
+        run: |
+          {
+            echo "### ModelJars invited preview"
+            echo
+            echo "\`org.modeljars:modeljars:${{ steps.version.outputs.value }}\`"
+            echo
+            echo "Repository: \`https://maven.pkg.github.com/modeljars/modeljars\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   publish:
     name: Publish to Maven Central
-    if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false'
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'maven-central'
     needs: verify
     runs-on: ubuntu-latest
     environment: maven-central

@@ -131,7 +131,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(3, registry.qualifiedModels());
+    assertEquals(4, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-2729c3a", qualification.backendVersion());
     assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
@@ -154,7 +154,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(3, registry.qualifiedModels());
+    assertEquals(4, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-689f0d5", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -172,6 +172,37 @@ class ModelRagQualificationRegistryTest {
     assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
     assertEquals(53.01198879379568, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen3SixHundredMillionPureJavaEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen3_0_6b_q4_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(4, registry.qualifiedModels());
+    assertEquals("pure-java", qualification.backend());
+    assertEquals("models-purejava-3e759cc-q4-unsigned", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml-no-think", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(3.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(12.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(51.019240300967795, qualification.p50DecodeTokensPerSecond());
     assertTrue(qualification.productionUsable());
   }
 

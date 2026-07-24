@@ -149,7 +149,9 @@ function renderQualificationRows(qualifications, models) {
                 <span class="result-status ${row.qualified ? "profiled" : "candidate"}">
                   ${escapeHtml(row.useCase)}
                 </span>
-                <small>${escapeHtml(row.performanceTier.toLowerCase().replaceAll("_", " "))}</small>
+                <small>${escapeHtml(row.workload)} workload &middot; ${escapeHtml(
+                  row.performanceTier.toLowerCase().replaceAll("_", " "),
+                )}</small>
               </td>
               <td>${escapeHtml(row.ttft)}</td>
               <td>${escapeHtml(row.tpot)}</td>

@@ -109,6 +109,23 @@ class LaunchModelCatalogTest {
   }
 
   @Test
+  void exposesQualifiedQwen25CoderRustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,2.6.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen2_5_coder_0_5b_instruct_q8_0", descriptor.alias());
+  }
+
+  @Test
   void resolvesPinnedLaunchModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

@@ -31,7 +31,7 @@ plugins {
 
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
-val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v3"
+val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v4"
 
 data class CatalogEntry(
     val id: String,
@@ -165,6 +165,10 @@ data class CatalogRagQualification(
     val model: String,
     val backend: String,
     val backendVersion: String,
+    val workload: String,
+    val corpusSha256: String,
+    val promptTemplate: String,
+    val groundingPolicy: String,
     val artifactSha256: String,
     val artifactSizeBytes: Long,
     val reportPath: String,
@@ -288,6 +292,10 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
         appendLine("${prefix}model=${propertyValue(model)}")
         appendLine("${prefix}backend=${propertyValue(backend)}")
         appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
+        appendLine("${prefix}workload=${propertyValue(workload)}")
+        appendLine("${prefix}corpusSha256=$corpusSha256")
+        appendLine("${prefix}promptTemplate=${propertyValue(promptTemplate)}")
+        appendLine("${prefix}groundingPolicy=${propertyValue(groundingPolicy)}")
         appendLine("${prefix}artifactSha256=$artifactSha256")
         appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
         appendLine("${prefix}reportPath=${propertyValue(reportPath)}")
@@ -621,6 +629,10 @@ val ragQualifications =
                         model = raw.requiredString("model"),
                         backend = raw.requiredString("backend"),
                         backendVersion = raw.requiredString("backendVersion"),
+                        workload = raw.requiredString("workload"),
+                        corpusSha256 = raw.requiredString("corpusSha256"),
+                        promptTemplate = raw.requiredString("promptTemplate"),
+                        groundingPolicy = raw.requiredString("groundingPolicy"),
                         artifactSha256 = raw.requiredString("artifactSha256"),
                         artifactSizeBytes =
                             longValue(raw, "artifactSizeBytes", context),
@@ -839,6 +851,18 @@ ragQualifications?.let { qualifications ->
         }
         require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
             "Qualification artifact SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.workload.matches(Regex("[a-z0-9_]+"))) {
+            "Qualification workload is invalid for ${qualification.modelId}"
+        }
+        require(qualification.corpusSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Qualification corpus SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.promptTemplate.isNotBlank()) {
+            "Qualification prompt template is missing for ${qualification.modelId}"
+        }
+        require(qualification.groundingPolicy.isNotBlank()) {
+            "Qualification grounding policy is missing for ${qualification.modelId}"
         }
         require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
             "Qualification report SHA-256 is invalid for ${qualification.modelId}"

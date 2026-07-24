@@ -11,6 +11,10 @@ public record ModelRagQualification(
     String model,
     String backend,
     String backendVersion,
+    String workload,
+    String corpusSha256,
+    String promptTemplate,
+    String groundingPolicy,
     String artifactSha256,
     long artifactSizeBytes,
     String reportPath,
@@ -43,6 +47,10 @@ public record ModelRagQualification(
     model = requireText(model, "model");
     backend = requireText(backend, "backend").toLowerCase(Locale.ROOT);
     backendVersion = requireText(backendVersion, "backendVersion");
+    workload = requireIdentifier(workload, "workload");
+    corpusSha256 = requireSha256(corpusSha256, "corpusSha256");
+    promptTemplate = requireText(promptTemplate, "promptTemplate");
+    groundingPolicy = requireText(groundingPolicy, "groundingPolicy");
     artifactSha256 = requireSha256(artifactSha256, "artifactSha256");
     if (artifactSizeBytes < 1) {
       throw new IllegalArgumentException("artifactSizeBytes must be positive");
@@ -106,9 +114,13 @@ public record ModelRagQualification(
   }
 
   private static String requireIdentifier(String value) {
-    String identifier = requireText(value, "modelId");
+    return requireIdentifier(value, "modelId");
+  }
+
+  private static String requireIdentifier(String value, String name) {
+    String identifier = requireText(value, name);
     if (!identifier.matches("[a-z0-9_]+")) {
-      throw new IllegalArgumentException("modelId must be a lowercase catalog identifier");
+      throw new IllegalArgumentException(name + " must be a lowercase identifier");
     }
     return identifier;
   }

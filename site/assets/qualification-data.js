@@ -101,6 +101,10 @@ export function validateQualificationCatalog(value, models) {
     requireText(entry.model, `${modelId}.model`);
     requireText(entry.backend, `${modelId}.backend`);
     requireText(entry.backendVersion, `${modelId}.backendVersion`);
+    requireText(entry.workload, `${modelId}.workload`);
+    requireSha256(entry.corpusSha256, `${modelId}.corpusSha256`);
+    requireText(entry.promptTemplate, `${modelId}.promptTemplate`);
+    requireText(entry.groundingPolicy, `${modelId}.groundingPolicy`);
     requireSha256(entry.artifactSha256, `${modelId}.artifactSha256`);
     if (entry.artifactSha256 !== model.sha256) {
       throw new Error(`artifact SHA-256 mismatch for ${modelId}`);
@@ -190,6 +194,7 @@ export function buildQualificationRows(qualifications, models) {
         modelName: model.name,
         modelUrl: `/models/${encodeURIComponent(model.id)}/`,
         useCase: qualificationLabel(entry),
+        workload: entry.workload,
         retrieval: formatDuration(entry.p95RetrievalMillis),
         ttft: formatDuration(entry.p95TtftMillis),
         tpot: formatDuration(entry.p95TpotMillis),

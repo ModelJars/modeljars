@@ -32,6 +32,9 @@ test("summarizes exact RAG qualification evidence without hiding fallbacks", () 
     useCaseTier: "GUARDED_RAG",
     backend: "llama.cpp",
     backendVersion: "b10012-c71854292",
+    workload: "coding",
+    promptTemplate: "chatml",
+    groundingPolicy: "trusted-provenance-clause-anchors-extractive-fallback-v4",
     attempts: 27,
     p95TtftMillis: 640,
     p95TpotMillis: 20,
@@ -46,6 +49,12 @@ test("summarizes exact RAG qualification evidence without hiding fallbacks", () 
   });
 
   assert.equal(summary.label, "Guarded RAG");
+  assert.equal(summary.workload, "coding");
+  assert.equal(summary.promptTemplate, "chatml");
+  assert.equal(
+    summary.groundingPolicy,
+    "trusted-provenance-clause-anchors-extractive-fallback-v4",
+  );
   assert.equal(summary.rawQuality, "67.0%");
   assert.equal(summary.finalQuality, "100.0%");
   assert.equal(summary.fallbackRate, "33.0%");

@@ -28,8 +28,9 @@
         </a>
         <nav class="nav" aria-label="Primary">
           <a class="active" href="/">Models</a>
-          <a href="#using-modeljars">Docs</a>
-          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a class="nav-secondary" href="#using-modeljars">Docs</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
           <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
             <span class="theme-light" aria-hidden="true">&#9728;</span>
             <span class="theme-dark" aria-hidden="true">&#9790;</span>
@@ -48,6 +49,7 @@
           </div>
           <div class="catalog-stats" aria-label="Catalog statistics">
             <span><strong id="model-total">0</strong> models</span>
+            <span><strong id="rag-ready-total">0</strong> RAG qualified</span>
             <span><strong id="pure-java-total">0</strong> pure Java</span>
             <span><strong id="publisher-total">0</strong> publishers</span>
           </div>
@@ -88,6 +90,17 @@
             <label>
               <span>Model size</span>
               <select id="size-filter"><option value="">Any size</option></select>
+            </label>
+            <label>
+              <span>Production evidence</span>
+              <select id="qualification-filter">
+                <option value="">Any evidence state</option>
+                <option value="production-rag">Production RAG</option>
+                <option value="generative-rag">Generative RAG</option>
+                <option value="guarded-rag">Guarded RAG</option>
+                <option value="unqualified">Evaluated, not qualified</option>
+                <option value="not-evaluated">Not evaluated</option>
+              </select>
             </label>
             <button id="clear-filters" class="text-button" type="button">Clear filters</button>
           </div>
@@ -150,6 +163,7 @@
         <a class="footer-brand" href="/">ModelJars</a>
         <span>Open model metadata for the JVM.</span>
         <div>
+          <a href="/benchmarks/">Benchmarks</a>
           <a href="https://github.com/ModelJars/modeljars">GitHub</a>
           <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
         </div>

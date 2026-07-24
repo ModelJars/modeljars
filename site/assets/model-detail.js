@@ -1,3 +1,5 @@
+import { formatDuration } from "./benchmark-data.js";
+import { primaryQualification, qualificationLabel } from "./qualification-data.js";
 import { estimateMemory, formatBytes, formatParameters } from "./resource-profile.js";
 import { relatedModels, sizeTier, verificationProfile } from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
@@ -28,6 +30,30 @@ export function mavenSnippet(coordinate) {
   <version>${version}</version>
   <scope>runtime</scope>
 </dependency>`;
+}
+
+function formatPercent(value) {
+  return `${(Number(value) * 100).toFixed(1)}%`;
+}
+
+export function qualificationSummary(qualification) {
+  if (!qualification) return null;
+  return {
+    label: qualificationLabel(qualification),
+    backend: `${qualification.backend} ${qualification.backendVersion}`,
+    attempts: qualification.attempts,
+    ttft: formatDuration(qualification.p95TtftMillis),
+    tpot: formatDuration(qualification.p95TpotMillis),
+    endToEnd: formatDuration(qualification.p95EndToEndMillis),
+    decode: `${qualification.p50DecodeTokensPerSecond.toFixed(1)} tok/s`,
+    peakRss: formatBytes(qualification.peakRssBytes),
+    rawQuality: formatPercent(qualification.rawCorrectAnswerRate),
+    finalQuality: formatPercent(qualification.correctAnswerRate),
+    fallbackRate: formatPercent(qualification.extractiveFallbackRate),
+    evidenceUri: qualification.reportUri,
+    evidenceSha256: qualification.reportSha256,
+    qualified: qualification.qualified,
+  };
 }
 
 function escapeHtml(value) {
@@ -85,7 +111,12 @@ function checkRows(profile) {
       (check) => `
         <li>
           <span class="check-mark" aria-hidden="true">&#10003;</span>
-          <span><strong>${escapeHtml(check)}</strong><small>${escapeHtml(labels.get(check) || "Verified catalog evidence.")}</small></span>
+          <span><strong>${escapeHtml(check)}</strong><small>${escapeHtml(
+            labels.get(check) ||
+              (check.endsWith("-request RAG qualification")
+                ? "The exact artifact completed the controlled end-to-end RAG workload."
+                : "Verified catalog evidence."),
+          )}</small></span>
         </li>`,
     )
     .join("");
@@ -97,6 +128,40 @@ function copyBlock(label, value, language = "") {
       <div><span>${escapeHtml(label)}</span><button type="button" data-copy="${escapeHtml(value)}">Copy</button></div>
       <pre><code class="${escapeHtml(language)}">${escapeHtml(value)}</code></pre>
     </div>`;
+}
+
+function renderQualification(qualification) {
+  const summary = qualificationSummary(qualification);
+  if (!summary) return "";
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="rag-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="rag-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(summary.attempts)} requests</span>
+      </div>
+      <p>
+        Measured through the published Models Java client on
+        ${escapeHtml(summary.backend)}. Final quality includes the declared grounding policy;
+        raw model quality and fallback use remain visible below.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>TTFT p95</dt><dd>${escapeHtml(summary.ttft)}</dd></div>
+        <div><dt>TPOT p95</dt><dd>${escapeHtml(summary.tpot)}</dd></div>
+        <div><dt>End to end p95</dt><dd>${escapeHtml(summary.endToEnd)}</dd></div>
+        <div><dt>Decode p50</dt><dd>${escapeHtml(summary.decode)}</dd></div>
+        <div><dt>Peak RSS</dt><dd>${escapeHtml(summary.peakRss)}</dd></div>
+        <div><dt>Raw model quality</dt><dd>${escapeHtml(summary.rawQuality)}</dd></div>
+        <div><dt>Final grounded quality</dt><dd>${escapeHtml(summary.finalQuality)}</dd></div>
+        <div><dt>Extractive fallback</dt><dd>${escapeHtml(summary.fallbackRate)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw benchmark JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
 }
 
 function renderRelated(model, catalog) {
@@ -130,6 +195,7 @@ function renderModel(model, catalog) {
     ...(model.tags || []),
   ];
   const supportedBackends = Object.entries(model.backends || {}).filter(([, supported]) => supported);
+  const qualification = primaryQualification(model);
 
   document.title = `${model.name} | ModelJars`;
   document.querySelector('meta[name="description"]').content = model.description;
@@ -167,6 +233,8 @@ function renderModel(model, catalog) {
           </div>
           <ul>${checkRows(profile)}</ul>
         </section>
+
+        ${renderQualification(qualification)}
 
         <section class="detail-section" aria-labelledby="install-title">
           <p class="eyebrow">JVM dependency</p>

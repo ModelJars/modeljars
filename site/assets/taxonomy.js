@@ -1,3 +1,5 @@
+import { primaryQualification, qualificationLabel } from "./qualification-data.js";
+
 const FACET_FIELDS = {
   domains: (model) => model.domains || [],
   capabilities: (model) => model.capabilities || [],
@@ -10,6 +12,11 @@ const FACET_FIELDS = {
   quantizations: (model) => (model.quantization ? [model.quantization] : []),
   modalities: (model) => model.modalities || [],
   sizes: (model) => [sizeTier(model)],
+  qualifications: (model) => {
+    const qualification = primaryQualification(model);
+    if (!qualification) return ["not-evaluated"];
+    return [String(qualification.useCaseTier || "unqualified").toLowerCase().replaceAll("_", "-")];
+  },
 };
 
 function normalizedValues(values) {
@@ -47,6 +54,12 @@ export function modelTerms(model) {
     ...(model.tags || []),
     ...(model.languages || []),
     ...(model.modalities || []),
+    ...(model.ragQualifications || []).flatMap((qualification) => [
+      qualification.backend,
+      qualification.performanceTier,
+      qualification.verdict,
+      qualification.useCaseTier,
+    ]),
     ...FACET_FIELDS.backends(model),
   ];
 
@@ -92,14 +105,17 @@ export function verificationProfile(model) {
   const checks = [];
   const pinnedArtifact = Boolean(model.sha256 && model.revision);
   const completeMetadata = hasCompleteMetadata(model);
-  const pureJavaExecuted = model.backends?.["pure-java"] === true;
+  const qualification = primaryQualification(model);
 
   if (pinnedArtifact) checks.push("Pinned artifact");
   if (completeMetadata) checks.push("Complete metadata");
-  if (pureJavaExecuted) checks.push("Pure Java executed");
+  if (qualification) checks.push(`${qualification.attempts}-request RAG qualification`);
 
-  if (pureJavaExecuted && pinnedArtifact && completeMetadata) {
-    return { level: "executed", label: "Runtime verified", checks };
+  if (qualification?.qualified && pinnedArtifact && completeMetadata) {
+    return { level: "qualified", label: qualificationLabel(qualification), checks };
+  }
+  if (qualification && pinnedArtifact && completeMetadata) {
+    return { level: "evaluated", label: "Evaluated", checks };
   }
   if (pinnedArtifact && completeMetadata) {
     return { level: "verified", label: "Artifact verified", checks };

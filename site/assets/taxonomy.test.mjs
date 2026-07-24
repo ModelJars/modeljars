@@ -30,6 +30,16 @@ const qwenCoder = {
   sha256: "a".repeat(64),
   revision: "b".repeat(40),
   sizeBytes: 2_000_000_000,
+  ragQualifications: [
+    {
+      qualified: true,
+      attempts: 27,
+      backend: "llama.cpp",
+      performanceTier: "PRODUCTION_READY",
+      verdict: "QUALIFIED",
+      useCaseTier: "GENERATIVE_RAG",
+    },
+  ],
 };
 
 test("combines curated metadata and folksonomy tags into search terms", () => {
@@ -40,6 +50,7 @@ test("combines curated metadata and folksonomy tags into search terms", () => {
   assert.ok(terms.includes("pure-java"));
   assert.ok(terms.includes("small"));
   assert.ok(terms.includes("text"));
+  assert.ok(terms.includes("generative_rag"));
 });
 
 test("classifies local resource tiers from parameter count", () => {
@@ -69,13 +80,16 @@ test("builds stable facets with counts", () => {
     { value: "llama.cpp", count: 2 },
     { value: "pure-java", count: 1 },
   ]);
+  assert.deepEqual(facets.qualifications, [
+    { value: "generative-rag", count: 2 },
+  ]);
 });
 
 test("reports evidence without inventing a confidence score", () => {
   assert.deepEqual(verificationProfile(qwenCoder), {
-    level: "executed",
-    label: "Runtime verified",
-    checks: ["Pinned artifact", "Complete metadata", "Pure Java executed"],
+    level: "qualified",
+    label: "Generative RAG",
+    checks: ["Pinned artifact", "Complete metadata", "27-request RAG qualification"],
   });
 });
 

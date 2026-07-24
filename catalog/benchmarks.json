@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "publishedAt": "2026-07-24",
+  "environment": {
+    "hostClass": "Hetzner dedicated-vCPU VM",
+    "operatingSystem": "Ubuntu Linux 6.8",
+    "cpu": "AMD EPYC Milan",
+    "logicalProcessors": 8,
+    "memoryBytes": 32857444352,
+    "localExecution": "CPU only",
+    "localJdk": "GraalVM Community Java 25.0.3",
+    "nativeClientJdk": "Temurin Java 25.0.3",
+    "llamaCppVersion": "b10012-c71854292",
+    "ollamaVersion": "0.32.0"
+  },
+  "inferenceComparisons": [
+    {
+      "id": "qwen3-0.6b-q4_0-20260724",
+      "modelId": "qwen3_0_6b_q4_0",
+      "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+      "status": "profiled",
+      "engines": {
+        "pure-java": {
+          "p95TtftMillis": 765.488,
+          "p95TpotMillis": 17.280,
+          "prefillTokensPerSecond": 207.678,
+          "decodeTokensPerSecond": 60.342,
+          "peakRssBytes": 1344987136,
+          "performanceTier": "RESPONSIVE"
+        },
+        "llama.cpp": {
+          "p95TtftMillis": 364.905,
+          "p95TpotMillis": 13.338,
+          "prefillTokensPerSecond": 458.320,
+          "decodeTokensPerSecond": 101.569,
+          "peakRssBytes": 1275252736,
+          "performanceTier": "INTERACTIVE"
+        },
+        "ollama": {
+          "p95TtftMillis": 512.542,
+          "p95TpotMillis": 25.964,
+          "prefillTokensPerSecond": 461.139,
+          "decodeTokensPerSecond": 47.987,
+          "peakRssBytes": 1081606144,
+          "performanceTier": "RESPONSIVE"
+        }
+      },
+      "evidence": {
+        "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/inference/qwen3-0.6b-q4_0/comparison.json",
+        "sha256": "e1758e92303d9fca08c8668f4d376d47bcb09dc70b467c8432bb263f8f77d31b"
+      }
+    },
+    {
+      "id": "smollm2-360m-q8_0-20260724",
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "status": "profiled",
+      "engines": {
+        "pure-java": {
+          "p95TtftMillis": 764.853,
+          "p95TpotMillis": 22.471,
+          "prefillTokensPerSecond": 214.486,
+          "decodeTokensPerSecond": 44.859,
+          "peakRssBytes": 1054830592,
+          "performanceTier": "RESPONSIVE"
+        },
+        "llama.cpp": {
+          "p95TtftMillis": 296.816,
+          "p95TpotMillis": 11.699,
+          "prefillTokensPerSecond": 573.898,
+          "decodeTokensPerSecond": 98.308,
+          "peakRssBytes": 619126784,
+          "performanceTier": "INTERACTIVE"
+        },
+        "ollama": {
+          "p95TtftMillis": 342.999,
+          "p95TpotMillis": 26.472,
+          "prefillTokensPerSecond": 587.445,
+          "decodeTokensPerSecond": 45.023,
+          "peakRssBytes": 676794368,
+          "performanceTier": "INTERACTIVE"
+        }
+      },
+      "evidence": {
+        "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/inference/smollm2-360m-q8_0/comparison.json",
+        "sha256": "3b0179543654f28c222805854b62e31dcbb6aa54c8fd257ff4f3fd12b955526f"
+      }
+    },
+    {
+      "id": "minicpm5-1b-q4_k_m-20260724",
+      "modelId": "minicpm5_1b_q4_k_m",
+      "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "status": "profiled",
+      "engines": {
+        "pure-java": {
+          "p95TtftMillis": 7167.842,
+          "p95TpotMillis": 63.586,
+          "prefillTokensPerSecond": 21.273,
+          "decodeTokensPerSecond": 15.867,
+          "peakRssBytes": 1167147008,
+          "performanceTier": "OFFLINE"
+        },
+        "llama.cpp": {
+          "p95TtftMillis": 509.645,
+          "p95TpotMillis": 14.409,
+          "prefillTokensPerSecond": 307.426,
+          "decodeTokensPerSecond": 72.508,
+          "peakRssBytes": 1205256192,
+          "performanceTier": "RESPONSIVE"
+        },
+        "ollama": {
+          "p95TtftMillis": 630.872,
+          "p95TpotMillis": 28.814,
+          "prefillTokensPerSecond": 308.187,
+          "decodeTokensPerSecond": 41.420,
+          "peakRssBytes": 930893824,
+          "performanceTier": "RESPONSIVE"
+        }
+      },
+      "evidence": {
+        "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/inference/minicpm5-1b-q4_k_m/comparison.json",
+        "sha256": "4599fde0e448dbba0c6b15bbf4f3ae4b69547be91d3f4ebdd5f2d747ec790453"
+      }
+    },
+    {
+      "id": "qwen3-1.7b-q8_0-row-candidate-20260724",
+      "modelId": "qwen3_1_7b_q8_0",
+      "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+      "status": "candidate",
+      "engines": {
+        "pure-java": {
+          "p95TtftMillis": 4187.041,
+          "p95TpotMillis": 54.102,
+          "prefillTokensPerSecond": 37.848,
+          "decodeTokensPerSecond": 18.630,
+          "peakRssBytes": 2544861184,
+          "performanceTier": "OFFLINE"
+        },
+        "llama.cpp": {
+          "p95TtftMillis": 1123.741,
+          "p95TpotMillis": 43.607,
+          "prefillTokensPerSecond": 141.907,
+          "decodeTokensPerSecond": 25.044,
+          "peakRssBytes": 2435465216,
+          "performanceTier": "USABLE"
+        },
+        "ollama": {
+          "p95TtftMillis": 1261.262,
+          "p95TpotMillis": 61.427,
+          "prefillTokensPerSecond": 142.430,
+          "decodeTokensPerSecond": 17.743,
+          "peakRssBytes": 2487758848,
+          "performanceTier": "USABLE"
+        }
+      },
+      "evidence": {
+        "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/inference/qwen3-1.7b-q8_0-row-candidate/comparison.json",
+        "sha256": "f0e4057a49ef2ae9eb67a40339af7f0594898949b692396344d91b64742ee2a5"
+      }
+    }
+  ],
+  "ragComparison": {
+    "id": "northstar-rag-v1-20260724",
+    "description": "Nine-case, top-1 Lucene RAG workload issued from the same Java 25 application and controlled VPS.",
+    "workload": {
+      "documents": 12,
+      "cases": 9,
+      "warmups": 1,
+      "iterations": 3,
+      "measuredRequests": 27,
+      "maxOutputTokens": 64,
+      "concurrency": 1
+    },
+    "rows": [
+      {
+        "id": "qwen3-1.7b-pure-java",
+        "catalogModelId": "qwen3_1_7b_q8_0",
+        "execution": "local-in-process",
+        "engine": "pure-java",
+        "model": "Qwen3 1.7B Q8_0 row candidate",
+        "p95RetrievalMillis": 1.982,
+        "p95TtftMillis": 5347.006,
+        "p95TpotMillis": 56.263,
+        "p95EndToEndMillis": 8836.177,
+        "decodeTokensPerSecond": 18.385,
+        "strictQuality": 0.666667,
+        "auditedSemanticQuality": 0.777778,
+        "dataEgress": false,
+        "apiCostPer1kUsd": null,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/rag/qwen3-1.7b-plain-pure-java-row.json",
+          "sha256": "8b5c6e355e5454bce1a5673aad4e2065a49bef654d244d8025c11effa9ec049e"
+        }
+      },
+      {
+        "id": "qwen3-1.7b-llama-cpp",
+        "catalogModelId": "qwen3_1_7b_q8_0",
+        "execution": "local-server",
+        "engine": "llama.cpp",
+        "model": "Qwen3 1.7B Q8_0",
+        "p95RetrievalMillis": 4.010,
+        "p95TtftMillis": 1293.365,
+        "p95TpotMillis": 39.890,
+        "p95EndToEndMillis": 3746.568,
+        "decodeTokensPerSecond": 25.617,
+        "strictQuality": 0.777778,
+        "auditedSemanticQuality": 0.888889,
+        "dataEgress": false,
+        "apiCostPer1kUsd": null,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/rag/qwen3-1.7b-plain-java-llama.json",
+          "sha256": "496cf9618640c1e8ac3e86eded388bcc81874b5f8cc397da740e9d2a35a975df"
+        }
+      },
+      {
+        "id": "qwen3-1.7b-ollama",
+        "catalogModelId": "qwen3_1_7b_q8_0",
+        "execution": "local-server",
+        "engine": "ollama",
+        "model": "Qwen3 1.7B Q8_0",
+        "p95RetrievalMillis": 1.915,
+        "p95TtftMillis": 693.642,
+        "p95TpotMillis": 61.095,
+        "p95EndToEndMillis": 4030.162,
+        "decodeTokensPerSecond": 18.602,
+        "strictQuality": 0.777778,
+        "auditedSemanticQuality": 0.888889,
+        "dataEgress": false,
+        "apiCostPer1kUsd": null,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/67c194b3d1b054ab570889ec35068898fcba21a1/benchmark-results/certified-20260724/rag/qwen3-1.7b-plain-java-ollama.json",
+          "sha256": "1f17e5a0e85f55257d782922a5c7e8a25dafc036179dc941d714abe1c07940ab"
+        }
+      },
+      {
+        "id": "openai-gpt-5.4-nano",
+        "catalogModelId": null,
+        "execution": "hosted-api",
+        "engine": "openai",
+        "model": "GPT-5.4 nano 2026-03-17",
+        "p95RetrievalMillis": 2.063,
+        "p95TtftMillis": 440.936,
+        "p95TpotMillis": 10.196,
+        "p95EndToEndMillis": 727.941,
+        "decodeTokensPerSecond": 141.288,
+        "strictQuality": 1.0,
+        "auditedSemanticQuality": 1.0,
+        "dataEgress": true,
+        "apiCostPer1kUsd": 0.072389,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/6f4f59b34b6a3d6c3f4a918beb4727264ccdb9bc/benchmark-results/certified-20260724/rag/providers/certified-openai-gpt-5.4-nano.json",
+          "sha256": "70e5cea05247b3c3ed6a51f2a1a3a67ca2341ae617943c75731b4d2443472e6f"
+        }
+      },
+      {
+        "id": "anthropic-claude-haiku-4.5",
+        "catalogModelId": null,
+        "execution": "hosted-api",
+        "engine": "anthropic",
+        "model": "Claude Haiku 4.5 20251001",
+        "p95RetrievalMillis": 1.675,
+        "p95TtftMillis": 1086.105,
+        "p95TpotMillis": 11.571,
+        "p95EndToEndMillis": 1581.456,
+        "decodeTokensPerSecond": 139.297,
+        "strictQuality": 0.888889,
+        "auditedSemanticQuality": 1.0,
+        "dataEgress": true,
+        "apiCostPer1kUsd": 0.366556,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/6f4f59b34b6a3d6c3f4a918beb4727264ccdb9bc/benchmark-results/certified-20260724/rag/providers/certified-anthropic-claude-haiku-4.5.json",
+          "sha256": "9591af46a7dacd4826b0b9da19f86e29415723cde4e1317ab5f2cc9549dd46b0"
+        }
+      },
+      {
+        "id": "deepseek-v4-flash",
+        "catalogModelId": null,
+        "execution": "hosted-api",
+        "engine": "deepseek",
+        "model": "DeepSeek V4 Flash non-thinking",
+        "p95RetrievalMillis": 1.847,
+        "p95TtftMillis": 758.593,
+        "p95TpotMillis": 21.963,
+        "p95EndToEndMillis": 1118.764,
+        "decodeTokensPerSecond": 102.427,
+        "strictQuality": 0.888889,
+        "auditedSemanticQuality": 1.0,
+        "dataEgress": true,
+        "apiCostPer1kUsd": 0.013425,
+        "cacheReadInputFraction": 0.778378,
+        "uncachedApiCostPer1kUsd": 0.030987,
+        "evidence": {
+          "url": "https://github.com/integrallis/models/blob/6f4f59b34b6a3d6c3f4a918beb4727264ccdb9bc/benchmark-results/certified-20260724/rag/providers/certified-deepseek-v4-flash.json",
+          "sha256": "292276cd8b6cee61b9bdbe9d060b6b71b5b8d0ffab5bb16a1a496050b0d71f76"
+        }
+      }
+    ]
+  }
+}

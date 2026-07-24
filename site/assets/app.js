@@ -1,4 +1,6 @@
-import { estimateMemory, formatBytes, formatParameters } from "./resource-profile.js";
+import { formatDuration } from "./benchmark-data.js";
+import { formatBytes, formatParameters } from "./resource-profile.js";
+import { primaryQualification } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
 import { buildFacets, sizeTier, verificationProfile } from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
@@ -10,6 +12,7 @@ const state = {
   backend: "",
   architecture: "",
   size: "",
+  qualification: "",
   sort: "name",
 };
 
@@ -19,6 +22,7 @@ const elements = {
   backend: document.querySelector("#backend-filter"),
   architecture: document.querySelector("#architecture-filter"),
   size: document.querySelector("#size-filter"),
+  qualification: document.querySelector("#qualification-filter"),
   sort: document.querySelector("#sort-filter"),
   results: document.querySelector("#catalog-results"),
   resultCount: document.querySelector("#result-count"),
@@ -67,6 +71,7 @@ function renderEntry(model) {
   const backends = Object.entries(model.backends || {})
     .filter(([, supported]) => supported)
     .map(([backend]) => backend);
+  const qualification = primaryQualification(model);
 
   return `
     <article class="catalog-entry">
@@ -84,6 +89,8 @@ function renderEntry(model) {
         </div>
       </div>
       <div class="entry-facts" aria-label="Model properties">
+        ${qualification?.qualified ? metric("TTFT p95", formatDuration(qualification.p95TtftMillis)) : ""}
+        ${qualification?.qualified ? metric("decode", `${qualification.p50DecodeTokensPerSecond.toFixed(1)} tok/s`) : ""}
         ${metric("parameters", formatParameters(dimensions.parameterCount))}
         ${metric("download", formatBytes(model.sizeBytes))}
         ${metric("", context)}
@@ -98,7 +105,13 @@ function renderEntry(model) {
 }
 
 function activeFilterCount() {
-  return [state.domain, state.backend, state.architecture, state.size].filter(Boolean).length;
+  return [
+    state.domain,
+    state.backend,
+    state.architecture,
+    state.size,
+    state.qualification,
+  ].filter(Boolean).length;
 }
 
 function renderDomainFilters(facets) {
@@ -147,12 +160,14 @@ function clearFilters() {
     backend: "",
     architecture: "",
     size: "",
+    qualification: "",
     sort: "name",
   });
   elements.search.value = "";
   elements.backend.value = "";
   elements.architecture.value = "";
   elements.size.value = "";
+  elements.qualification.value = "";
   elements.sort.value = "name";
   render();
 }
@@ -172,6 +187,10 @@ function bindControls() {
   });
   elements.size.addEventListener("change", () => {
     state.size = elements.size.value;
+    render();
+  });
+  elements.qualification.addEventListener("change", () => {
+    state.qualification = elements.qualification.value;
     render();
   });
   elements.sort.addEventListener("change", () => {
@@ -223,6 +242,9 @@ async function loadCatalog() {
     document.querySelector("#model-total").textContent = numberFormat.format(catalog.length);
     document.querySelector("#pure-java-total").textContent = numberFormat.format(
       catalog.filter((model) => model.backends?.["pure-java"]).length,
+    );
+    document.querySelector("#rag-ready-total").textContent = numberFormat.format(
+      catalog.filter((model) => primaryQualification(model)?.qualified).length,
     );
     document.querySelector("#publisher-total").textContent = numberFormat.format(
       new Set(catalog.map(publisher)).size,

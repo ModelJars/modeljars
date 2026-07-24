@@ -17,7 +17,11 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.bundling.Zip
+import org.gradle.plugins.signing.SigningExtension
 import org.w3c.dom.Element
 
 plugins {
@@ -123,6 +127,75 @@ data class CatalogPerformanceProfile(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogQualificationEnvironment(
+    val hostname: String,
+    val osName: String,
+    val osVersion: String,
+    val architecture: String,
+    val cpuModel: String,
+    val availableProcessors: Int,
+    val totalMemoryBytes: Long,
+    val maxHeapBytes: Long,
+    val javaVersion: String,
+    val javaVendor: String,
+    val vmName: String,
+) {
+    fun properties(prefix: String): List<String> =
+        listOf(
+            "${prefix}hostname=${propertyValue(hostname)}",
+            "${prefix}osName=${propertyValue(osName)}",
+            "${prefix}osVersion=${propertyValue(osVersion)}",
+            "${prefix}architecture=${propertyValue(architecture)}",
+            "${prefix}cpuModel=${propertyValue(cpuModel)}",
+            "${prefix}availableProcessors=$availableProcessors",
+            "${prefix}totalMemoryBytes=$totalMemoryBytes",
+            "${prefix}maxHeapBytes=$maxHeapBytes",
+            "${prefix}javaVersion=${propertyValue(javaVersion)}",
+            "${prefix}javaVendor=${propertyValue(javaVendor)}",
+            "${prefix}vmName=${propertyValue(vmName)}",
+        )
+}
+
+data class CatalogRagQualification(
+    val modelId: String,
+    val model: String,
+    val backend: String,
+    val backendVersion: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val reportPath: String,
+    val reportSha256: String,
+    val performanceTier: String,
+    val verdict: String,
+    val qualified: Boolean,
+    val attempts: Int,
+    val p95RetrievalMillis: Double,
+    val p95TtftMillis: Double,
+    val p95TpotMillis: Double,
+    val p95EndToEndMillis: Double,
+    val p50PrefillTokensPerSecond: Double,
+    val p50DecodeTokensPerSecond: Double,
+    val peakRssBytes: Long,
+    val correctAnswerRate: Double,
+    val rawCorrectAnswerRate: Double,
+    val abstentionAccuracy: Double,
+    val modelAnswerRate: Double,
+    val extractiveFallbackRate: Double,
+    val environment: CatalogQualificationEnvironment,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogRagQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val targetQualifiedModels: Int,
+    val qualifiedModels: Int,
+    val rejectedModels: Int,
+    val entries: List<CatalogRagQualification>,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -201,6 +274,82 @@ fun CatalogPerformanceProfile.registryProperties(): String =
         }
         evidence.controls.toSortedMap().forEach { (name, value) ->
             appendLine("${evidencePrefix}control.$name=${propertyValue(value)}")
+        }
+    }
+
+fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
+    buildString {
+        val prefix = "qualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(model)}")
+        appendLine("${prefix}backend=${propertyValue(backend)}")
+        appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
+        appendLine("${prefix}reportPath=${propertyValue(reportPath)}")
+        appendLine(
+            "${prefix}reportUri=" +
+                propertyValue(
+                    "https://github.com/integrallis/models/blob/$modelsRevision/$reportPath",
+                ),
+        )
+        appendLine("${prefix}reportSha256=$reportSha256")
+        appendLine("${prefix}performanceTier=$performanceTier")
+        appendLine("${prefix}verdict=$verdict")
+        appendLine("${prefix}qualified=$qualified")
+        appendLine("${prefix}attempts=$attempts")
+        appendLine("${prefix}p95RetrievalMillis=$p95RetrievalMillis")
+        appendLine("${prefix}p95TtftMillis=$p95TtftMillis")
+        appendLine("${prefix}p95TpotMillis=$p95TpotMillis")
+        appendLine("${prefix}p95EndToEndMillis=$p95EndToEndMillis")
+        appendLine("${prefix}p50PrefillTokensPerSecond=$p50PrefillTokensPerSecond")
+        appendLine("${prefix}p50DecodeTokensPerSecond=$p50DecodeTokensPerSecond")
+        appendLine("${prefix}peakRssBytes=$peakRssBytes")
+        appendLine("${prefix}correctAnswerRate=$correctAnswerRate")
+        appendLine("${prefix}rawCorrectAnswerRate=$rawCorrectAnswerRate")
+        appendLine("${prefix}abstentionAccuracy=$abstentionAccuracy")
+        appendLine("${prefix}modelAnswerRate=$modelAnswerRate")
+        appendLine("${prefix}extractiveFallbackRate=$extractiveFallbackRate")
+        environment.properties("${prefix}environment.").forEach(::appendLine)
+    }
+
+fun CatalogRagQualification.siteMetadata(
+    qualifications: CatalogRagQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("policyVersion" to qualifications.policyVersion) +
+        ("useCaseTier" to
+            when {
+                !qualified -> "UNQUALIFIED"
+                rawCorrectAnswerRate >= 0.9 && modelAnswerRate >= 0.9 ->
+                    "GENERATIVE_RAG"
+                else -> "GUARDED_RAG"
+            })
+
+fun CatalogRagQualifications.registryProperties(
+    entries: List<CatalogRagQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.qualifications.schemaVersion=1")
+        appendLine("modeljars.qualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.qualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.qualifications.modelsRevision=$modelsRevision")
+        appendLine("modeljars.qualifications.targetQualifiedModels=$targetQualifiedModels")
+        appendLine(
+            "modeljars.qualifications.qualifiedModels=" +
+                entries.count(CatalogRagQualification::qualified),
+        )
+        appendLine(
+            "modeljars.qualifications.rejectedModels=" +
+                entries.count { !it.qualified },
+        )
+        entries.forEach { entry ->
+            appendLine(entry.registryProperties(modelsRevision).trimEnd())
         }
     }
 
@@ -412,6 +561,145 @@ val performanceProfiles =
             )
         }
 
+val benchmarkDocument =
+    JsonSlurper()
+        .parse(file("catalog/benchmarks.json"))
+        .stringKeyMap("catalog/benchmarks.json")
+require((benchmarkDocument["schemaVersion"] as? Number)?.toInt() == 1) {
+    "catalog/benchmarks.json must use schemaVersion 1"
+}
+val inferenceComparisons =
+    ((benchmarkDocument["inferenceComparisons"] as? List<*>)
+            ?: error("Benchmark catalog must contain inferenceComparisons"))
+        .map { value -> value.stringKeyMap("Every inference comparison") }
+val ragComparison =
+    benchmarkDocument["ragComparison"].stringKeyMap("Benchmark ragComparison")
+val ragRows =
+    ((ragComparison["rows"] as? List<*>) ?: error("Benchmark ragComparison must contain rows"))
+        .map { value -> value.stringKeyMap("Every RAG comparison row") }
+
+val qualificationCatalogFile = file("catalog/qualifications.json")
+val ragQualifications =
+    if (qualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(qualificationCatalogFile)
+                .stringKeyMap("catalog/qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/qualifications.json must use schemaVersion 1"
+        }
+
+        fun integer(values: Map<String, Any?>, name: String, context: String): Int =
+            (values[name] as? Number)?.toInt()
+                ?: error("$context.$name must be an integer")
+
+        fun longValue(values: Map<String, Any?>, name: String, context: String): Long =
+            (values[name] as? Number)?.toLong()
+                ?: error("$context.$name must be an integer")
+
+        fun decimal(values: Map<String, Any?>, name: String, context: String): Double =
+            (values[name] as? Number)?.toDouble()
+                ?: error("$context.$name must be a number")
+
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    val context = "qualification $modelId"
+                    val environment =
+                        raw["environment"].stringKeyMap("$context.environment")
+                    CatalogRagQualification(
+                        modelId = modelId,
+                        model = raw.requiredString("model"),
+                        backend = raw.requiredString("backend"),
+                        backendVersion = raw.requiredString("backendVersion"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes =
+                            longValue(raw, "artifactSizeBytes", context),
+                        reportPath = raw.requiredString("report"),
+                        reportSha256 = raw.requiredString("reportSha256"),
+                        performanceTier = raw.requiredString("performanceTier"),
+                        verdict = raw.requiredString("verdict"),
+                        qualified =
+                            raw["qualified"] as? Boolean
+                                ?: error("$context.qualified must be a boolean"),
+                        attempts = integer(raw, "attempts", context),
+                        p95RetrievalMillis =
+                            decimal(raw, "p95RetrievalMillis", context),
+                        p95TtftMillis = decimal(raw, "p95TtftMillis", context),
+                        p95TpotMillis = decimal(raw, "p95TpotMillis", context),
+                        p95EndToEndMillis =
+                            decimal(raw, "p95EndToEndMillis", context),
+                        p50PrefillTokensPerSecond =
+                            decimal(raw, "p50PrefillTokensPerSecond", context),
+                        p50DecodeTokensPerSecond =
+                            decimal(raw, "p50DecodeTokensPerSecond", context),
+                        peakRssBytes = longValue(raw, "peakRssBytes", context),
+                        correctAnswerRate =
+                            decimal(raw, "correctAnswerRate", context),
+                        rawCorrectAnswerRate =
+                            decimal(raw, "rawCorrectAnswerRate", context),
+                        abstentionAccuracy =
+                            decimal(raw, "abstentionAccuracy", context),
+                        modelAnswerRate =
+                            decimal(raw, "modelAnswerRate", context),
+                        extractiveFallbackRate =
+                            decimal(raw, "extractiveFallbackRate", context),
+                        environment =
+                            CatalogQualificationEnvironment(
+                                hostname = environment.requiredString("hostname"),
+                                osName = environment.requiredString("osName"),
+                                osVersion = environment.requiredString("osVersion"),
+                                architecture =
+                                    environment.requiredString("architecture"),
+                                cpuModel = environment.requiredString("cpuModel"),
+                                availableProcessors =
+                                    integer(
+                                        environment,
+                                        "availableProcessors",
+                                        "$context.environment",
+                                    ),
+                                totalMemoryBytes =
+                                    longValue(
+                                        environment,
+                                        "totalMemoryBytes",
+                                        "$context.environment",
+                                    ),
+                                maxHeapBytes =
+                                    longValue(
+                                        environment,
+                                        "maxHeapBytes",
+                                        "$context.environment",
+                                    ),
+                                javaVersion =
+                                    environment.requiredString("javaVersion"),
+                                javaVendor =
+                                    environment.requiredString("javaVendor"),
+                                vmName = environment.requiredString("vmName"),
+                            ),
+                        raw = raw,
+                    )
+                }
+
+        CatalogRagQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            targetQualifiedModels =
+                integer(document, "targetQualifiedModels", "qualification manifest"),
+            qualifiedModels =
+                integer(document, "qualifiedModels", "qualification manifest"),
+            rejectedModels =
+                integer(document, "rejectedModels", "qualification manifest"),
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 require(catalogEntries.isNotEmpty()) { "Catalog must contain at least one model" }
 require(catalogEntries.map(CatalogEntry::id).distinct().size == catalogEntries.size) {
     "Catalog IDs must be unique"
@@ -423,6 +711,180 @@ require(
 }
 require(performanceProfiles.map(CatalogPerformanceProfile::id).distinct().size == performanceProfiles.size) {
     "Performance profile IDs must be unique"
+}
+require(inferenceComparisons.map { it.requiredString("id") }.distinct().size == inferenceComparisons.size) {
+    "Inference comparison IDs must be unique"
+}
+require(ragRows.map { it.requiredString("id") }.distinct().size == ragRows.size) {
+    "RAG comparison IDs must be unique"
+}
+ragQualifications?.let { qualifications ->
+    require(
+        qualifications.entries.map(CatalogRagQualification::modelId).distinct().size ==
+            qualifications.entries.size,
+    ) {
+        "Qualification model IDs must be unique"
+    }
+    require(
+        qualifications.qualifiedModels ==
+            qualifications.entries.count(CatalogRagQualification::qualified),
+    ) {
+        "Qualification qualifiedModels count does not match entries"
+    }
+    require(
+        qualifications.rejectedModels ==
+            qualifications.entries.count { !it.qualified },
+    ) {
+        "Qualification rejectedModels count does not match entries"
+    }
+}
+
+fun validateEvidence(value: Any?, context: String) {
+    val evidence = value.stringKeyMap(context)
+    val evidenceUri = URI.create(evidence.requiredString("url"))
+    require(evidenceUri.scheme == "https") { "$context URL must use HTTPS" }
+    require(evidence.requiredString("sha256").matches(Regex("[a-f0-9]{64}"))) {
+        "$context SHA-256 must contain 64 lowercase hexadecimal characters"
+    }
+}
+
+inferenceComparisons.forEach { comparison ->
+    val id = comparison.requiredString("id")
+    val model =
+        catalogEntries.singleOrNull { it.id == comparison.requiredString("modelId") }
+            ?: error("Unknown modelId in inference comparison $id")
+    require(comparison.requiredString("artifactSha256") == model.sha256) {
+        "Inference comparison SHA-256 does not match $id"
+    }
+    val engines = comparison["engines"].stringKeyMap("engines for $id")
+    require(engines.keys == setOf("pure-java", "llama.cpp", "ollama")) {
+        "Inference comparison $id must contain pure-java, llama.cpp, and ollama"
+    }
+    engines.forEach { (engine, rawMetrics) ->
+        val metrics = rawMetrics.stringKeyMap("$id.$engine")
+        listOf(
+            "p95TtftMillis",
+            "p95TpotMillis",
+            "prefillTokensPerSecond",
+            "decodeTokensPerSecond",
+            "peakRssBytes",
+        ).forEach { metric ->
+            require((metrics[metric] as? Number)?.toDouble()?.let { it.isFinite() && it >= 0 } == true) {
+                "$id.$engine.$metric must be finite and non-negative"
+            }
+        }
+    }
+    validateEvidence(comparison["evidence"], "evidence for $id")
+}
+
+ragRows.forEach { row ->
+    val id = row.requiredString("id")
+    row.optionalString("catalogModelId")?.let { modelId ->
+        require(catalogEntries.any { it.id == modelId }) {
+            "Unknown catalogModelId in RAG comparison $id: $modelId"
+        }
+    }
+    listOf(
+        "p95RetrievalMillis",
+        "p95TtftMillis",
+        "p95TpotMillis",
+        "p95EndToEndMillis",
+        "decodeTokensPerSecond",
+    ).forEach { metric ->
+        require((row[metric] as? Number)?.toDouble()?.let { it.isFinite() && it >= 0 } == true) {
+            "$id.$metric must be finite and non-negative"
+        }
+    }
+    listOf("strictQuality", "auditedSemanticQuality").forEach { metric ->
+        require((row[metric] as? Number)?.toDouble()?.let { it in 0.0..1.0 } == true) {
+            "$id.$metric must be between zero and one"
+        }
+    }
+    require(row["dataEgress"] is Boolean) { "$id.dataEgress must be a boolean" }
+    validateEvidence(row["evidence"], "evidence for $id")
+}
+
+ragQualifications?.let { qualifications ->
+    Instant.parse(qualifications.generatedAt)
+    require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Qualification modelsRevision must be a 40-character Git commit"
+    }
+    require(qualifications.targetQualifiedModels > 0) {
+        "Qualification targetQualifiedModels must be positive"
+    }
+    require(qualifications.policyVersion.isNotBlank()) {
+        "Qualification policyVersion must not be blank"
+    }
+    qualifications.entries.forEach { qualification ->
+        val model =
+            catalogEntries.singleOrNull { it.id == qualification.modelId }
+                ?: error("Unknown modelId in qualification: ${qualification.modelId}")
+        require(qualification.artifactSha256 == model.sha256) {
+            "Qualification SHA-256 does not match ${qualification.modelId}"
+        }
+        require(qualification.artifactSizeBytes == model.sizeBytes) {
+            "Qualification size does not match ${qualification.modelId}"
+        }
+        require(model.backends[qualification.backend] == true) {
+            "Qualification backend is not supported by ${qualification.modelId}: " +
+                qualification.backend
+        }
+        require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Qualification artifact SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Qualification report SHA-256 is invalid for ${qualification.modelId}"
+        }
+        val reportPath = Path.of(qualification.reportPath).normalize()
+        require(
+            !reportPath.isAbsolute &&
+                !reportPath.startsWith("..") &&
+                reportPath.toString() == qualification.reportPath,
+        ) {
+            "Qualification report must be a normalized repository-relative path: " +
+                qualification.reportPath
+        }
+        require(qualification.attempts > 0) {
+            "Qualification attempts must be positive for ${qualification.modelId}"
+        }
+        listOf(
+            qualification.p95RetrievalMillis,
+            qualification.p95TtftMillis,
+            qualification.p95TpotMillis,
+            qualification.p95EndToEndMillis,
+            qualification.p50PrefillTokensPerSecond,
+            qualification.p50DecodeTokensPerSecond,
+        ).forEach { metric ->
+            require(metric.isFinite() && metric >= 0) {
+                "Qualification metrics must be finite and non-negative for " +
+                    qualification.modelId
+            }
+        }
+        listOf(
+            qualification.correctAnswerRate,
+            qualification.rawCorrectAnswerRate,
+            qualification.abstentionAccuracy,
+            qualification.modelAnswerRate,
+            qualification.extractiveFallbackRate,
+        ).forEach { rate ->
+            require(rate in 0.0..1.0) {
+                "Qualification rates must be between zero and one for " +
+                    qualification.modelId
+            }
+        }
+        require(qualification.peakRssBytes > 0) {
+            "Qualification peakRssBytes must be positive for ${qualification.modelId}"
+        }
+        require(qualification.environment.availableProcessors > 0) {
+            "Qualification processor count must be positive for ${qualification.modelId}"
+        }
+        require(qualification.environment.totalMemoryBytes > 0) {
+            "Qualification memory must be positive for ${qualification.modelId}"
+        }
+        require(qualification.environment.maxHeapBytes > 0) {
+            "Qualification heap must be positive for ${qualification.modelId}"
+        }
+    }
 }
 
 performanceProfiles.forEach { profile ->
@@ -729,12 +1191,17 @@ fun verifyHuggingFaceRevision(entries: List<CatalogEntry>) {
 
 allprojects {
     group = "org.modeljars"
-    version = "0.1.0-SNAPSHOT"
+    version =
+        providers
+            .gradleProperty("modeljarsVersion")
+            .orElse("0.1.0-SNAPSHOT")
+            .get()
 }
 
 subprojects {
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
+    apply(plugin = "signing")
 
     java {
         toolchain {
@@ -764,6 +1231,12 @@ subprojects {
     }
 
     publishing {
+        repositories {
+            maven {
+                name = "releaseBundle"
+                url = rootProject.layout.buildDirectory.dir("central-repository").get().asFile.toURI()
+            }
+        }
         publications {
             create<MavenPublication>("maven") {
                 from(components["java"])
@@ -918,15 +1391,30 @@ project(":modeljars-catalog") {
         generatedResources.map { it.file("META-INF/modeljars/performance-v1.properties") }
     val aggregatePerformanceMetadata =
         generatedResources.map { it.file("META-INF/modeljars/performance-v1.json") }
+    val aggregateBenchmarkMetadata =
+        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+    val aggregateQualificationRegistry =
+        generatedResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.properties")
+        }
+    val aggregateQualificationMetadata =
+        generatedResources.map { it.file("META-INF/modeljars/qualifications-v1.json") }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
+            inputs.file(rootProject.file("catalog/benchmarks.json"))
+            if (qualificationCatalogFile.isFile) {
+                inputs.file(qualificationCatalogFile)
+            }
             outputs.files(
                 aggregateRegistry,
                 aggregateMetadata,
                 aggregatePerformanceRegistry,
                 aggregatePerformanceMetadata,
+                aggregateBenchmarkMetadata,
+                aggregateQualificationRegistry,
+                aggregateQualificationMetadata,
             )
             doLast {
                 val registry = aggregateRegistry.get().asFile
@@ -943,7 +1431,15 @@ project(":modeljars-catalog") {
                                     ("performanceProfiles" to
                                         performanceProfiles
                                             .filter { it.modelId == entry.id }
-                                            .map(CatalogPerformanceProfile::raw))
+                                            .map(CatalogPerformanceProfile::raw)) +
+                                    ("ragQualifications" to
+                                        (ragQualifications
+                                            ?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map {
+                                                it.siteMetadata(ragQualifications)
+                                            }
+                                            ?: emptyList<Map<String, Any?>>()))
                             },
                         ),
                     ) +
@@ -965,6 +1461,27 @@ project(":modeljars-catalog") {
                     ) + "\n",
                     StandardCharsets.UTF_8,
                 )
+                aggregateBenchmarkMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(JsonOutput.toJson(benchmarkDocument)) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+                val qualificationRegistry = aggregateQualificationRegistry.get().asFile
+                val qualificationMetadata = aggregateQualificationMetadata.get().asFile
+                if (ragQualifications == null) {
+                    qualificationRegistry.delete()
+                    qualificationMetadata.delete()
+                } else {
+                    qualificationRegistry.writeText(
+                        ragQualifications.registryProperties(),
+                        StandardCharsets.ISO_8859_1,
+                    )
+                    qualificationMetadata.writeText(
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(ragQualifications.raw),
+                        ) + "\n",
+                        StandardCharsets.UTF_8,
+                    )
+                }
             }
         }
 
@@ -991,16 +1508,31 @@ project(":modeljars-catalog") {
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.properties") }
         val markerPerformanceMetadata =
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
+        val markerBenchmarkMetadata =
+            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+        val markerQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/qualifications-v1.properties")
+            }
+        val markerQualificationMetadata =
+            markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.json") }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
                 inputs.file(rootProject.file("catalog/performance-profiles.json"))
+                inputs.file(rootProject.file("catalog/benchmarks.json"))
+                if (qualificationCatalogFile.isFile) {
+                    inputs.file(qualificationCatalogFile)
+                }
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
                     markerPerformanceRegistry,
                     markerPerformanceMetadata,
+                    markerBenchmarkMetadata,
+                    markerQualificationRegistry,
+                    markerQualificationMetadata,
                     markerDocs,
                 )
                 doLast {
@@ -1027,6 +1559,59 @@ project(":modeljars-catalog") {
                         ) + "\n",
                         StandardCharsets.UTF_8,
                     )
+                    val modelRagRows =
+                        ragRows.filter { it.optionalString("catalogModelId") == entry.id }
+                    markerBenchmarkMetadata.get().asFile.writeText(
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                mapOf(
+                                    "schemaVersion" to 1,
+                                    "publishedAt" to benchmarkDocument["publishedAt"],
+                                    "environment" to benchmarkDocument["environment"],
+                                    "inferenceComparisons" to
+                                        inferenceComparisons.filter {
+                                            it.requiredString("modelId") == entry.id
+                                        },
+                                    "ragComparison" to
+                                        ragComparison +
+                                            ("rows" to modelRagRows),
+                                ),
+                            ),
+                        ) + "\n",
+                        StandardCharsets.UTF_8,
+                    )
+                    val modelQualifications =
+                        ragQualifications?.entries?.filter { it.modelId == entry.id }
+                            ?: emptyList()
+                    val qualificationRegistry = markerQualificationRegistry.get().asFile
+                    val qualificationMetadata = markerQualificationMetadata.get().asFile
+                    if (ragQualifications == null) {
+                        qualificationRegistry.delete()
+                        qualificationMetadata.delete()
+                    } else {
+                        qualificationRegistry.writeText(
+                            ragQualifications.registryProperties(modelQualifications),
+                            StandardCharsets.ISO_8859_1,
+                        )
+                        qualificationMetadata.writeText(
+                            JsonOutput.prettyPrint(
+                                JsonOutput.toJson(
+                                    ragQualifications.raw +
+                                        ("qualifiedModels" to
+                                            modelQualifications.count(
+                                                CatalogRagQualification::qualified,
+                                            )) +
+                                        ("rejectedModels" to
+                                            modelQualifications.count { !it.qualified }) +
+                                        ("entries" to
+                                            modelQualifications.map(
+                                                CatalogRagQualification::raw,
+                                            )),
+                                ),
+                            ) + "\n",
+                            StandardCharsets.UTF_8,
+                        )
+                    }
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -1052,6 +1637,9 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/model.json",
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
+                        "META-INF/modeljars/benchmarks-v1.json",
+                        "META-INF/modeljars/qualifications-v1.properties",
+                        "META-INF/modeljars/qualifications-v1.json",
                     )
                 }
             }
@@ -1065,6 +1653,8 @@ project(":modeljars-catalog") {
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
+                    include("META-INF/modeljars/benchmarks-v1.json")
+                    include("META-INF/modeljars/qualifications-v1.json")
                 }
             }
         val markerJavadocJar =
@@ -1128,20 +1718,65 @@ project(":modeljars-catalog") {
 val aggregateCatalogJar =
     project(":modeljars-catalog").tasks.named<Jar>("jar").flatMap { it.archiveFile }
 val generatedSiteCatalog = layout.buildDirectory.file("generated/site/catalog.json")
+val generatedSiteBenchmarks = layout.buildDirectory.file("generated/site/benchmarks.json")
+val generatedSiteQualifications =
+    layout.buildDirectory.file("generated/site/qualifications.json")
 val generateSiteCatalog =
     tasks.register("generateSiteCatalog") {
         dependsOn(aggregateCatalogJar)
         inputs.file(aggregateCatalogJar)
-        outputs.file(generatedSiteCatalog)
+        outputs.files(
+            generatedSiteCatalog,
+            generatedSiteBenchmarks,
+            generatedSiteQualifications,
+        )
         doLast {
-            val output = generatedSiteCatalog.get().asFile
-            output.parentFile.mkdirs()
+            val catalogOutput = generatedSiteCatalog.get().asFile
+            val benchmarkOutput = generatedSiteBenchmarks.get().asFile
+            val qualificationOutput = generatedSiteQualifications.get().asFile
+            catalogOutput.parentFile.mkdirs()
             ZipFile(aggregateCatalogJar.get().asFile).use { zip ->
-                val metadata =
+                val catalogMetadata =
                     zip.getEntry("META-INF/modeljars/catalog.json")
                         ?: error("Aggregate ModelJars catalog metadata is missing")
-                zip.getInputStream(metadata).use { input ->
-                    Files.copy(input, output.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                zip.getInputStream(catalogMetadata).use { input ->
+                    Files.copy(
+                        input,
+                        catalogOutput.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                    )
+                }
+                val benchmarkMetadata =
+                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                        ?: error("Aggregate ModelJars benchmark metadata is missing")
+                zip.getInputStream(benchmarkMetadata).use { input ->
+                    Files.copy(
+                        input,
+                        benchmarkOutput.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                    )
+                }
+                val qualificationMetadata =
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.json")
+                if (qualificationMetadata == null) {
+                    qualificationOutput.writeText(
+                        """
+                        {
+                          "schemaVersion": 1,
+                          "status": "pending",
+                          "entries": []
+                        }
+                        """.trimIndent() + "\n",
+                        StandardCharsets.UTF_8,
+                    )
+                } else {
+                    zip.getInputStream(qualificationMetadata).use { input ->
+                        Files.copy(
+                            input,
+                            qualificationOutput.toPath(),
+                            StandardCopyOption.REPLACE_EXISTING,
+                        )
+                    }
                 }
             }
         }
@@ -1153,6 +1788,8 @@ tasks.register<Sync>("generateSite") {
     from("site")
     from("media/icons")
     from(generatedSiteCatalog)
+    from(generatedSiteBenchmarks)
+    from(generatedSiteQualifications)
     into(generatedSiteDirectory)
     doLast {
         val siteRoot = generatedSiteDirectory.get().asFile.toPath()
@@ -1242,6 +1879,13 @@ tasks.register("verifyCatalog") {
                 val performanceMetadataResource =
                     zip.getEntry("META-INF/modeljars/performance-v1.json")
                         ?: error("Performance profile metadata missing from $markerJar")
+                val benchmarkMetadataResource =
+                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                        ?: error("Benchmark metadata missing from $markerJar")
+                val qualificationResource =
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.properties")
+                val qualificationMetadataResource =
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.json")
                 val metadata =
                     zip.getInputStream(metadataResource).bufferedReader(StandardCharsets.UTF_8).use {
                         JsonSlurper().parse(it).stringKeyMap("Marker metadata in $markerJar")
@@ -1287,6 +1931,85 @@ tasks.register("verifyCatalog") {
                 }
                 require((profileMetadata["profiles"] as? List<*>)?.size == expectedProfiles.size) {
                     "Performance JSON profile count mismatch in $markerJar"
+                }
+                val benchmarkMetadata =
+                    zip.getInputStream(benchmarkMetadataResource)
+                        .bufferedReader(StandardCharsets.UTF_8)
+                        .use {
+                            JsonSlurper()
+                                .parse(it)
+                                .stringKeyMap("Benchmark metadata in $markerJar")
+                        }
+                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 1) {
+                    "Benchmark JSON schema mismatch in $markerJar"
+                }
+                require(
+                    (benchmarkMetadata["inferenceComparisons"] as? List<*>)?.size ==
+                        inferenceComparisons.count { it.requiredString("modelId") == entry.id },
+                ) {
+                    "Benchmark inference comparison count mismatch in $markerJar"
+                }
+                val markerRagRows =
+                    benchmarkMetadata["ragComparison"]
+                        .stringKeyMap("Marker RAG comparison in $markerJar")["rows"] as? List<*>
+                require(
+                    markerRagRows?.size ==
+                        ragRows.count { it.optionalString("catalogModelId") == entry.id },
+                ) {
+                    "Benchmark RAG comparison count mismatch in $markerJar"
+                }
+                ragQualifications?.let { qualifications ->
+                    requireNotNull(qualificationResource) {
+                        "Qualification properties missing from $markerJar"
+                    }
+                    requireNotNull(qualificationMetadataResource) {
+                        "Qualification metadata missing from $markerJar"
+                    }
+                    val expectedQualifications =
+                        qualifications.entries.filter { it.modelId == entry.id }
+                    val qualificationProperties = Properties()
+                    zip.getInputStream(qualificationResource).use(
+                        qualificationProperties::load,
+                    )
+                    require(
+                        qualificationProperties.getProperty(
+                            "modeljars.qualifications.schemaVersion",
+                        ) == "1",
+                    ) {
+                        "Qualification properties schema mismatch in $markerJar"
+                    }
+                    expectedQualifications.forEach { qualification ->
+                        require(
+                            qualificationProperties.getProperty(
+                                "qualification.${entry.id}.artifactSha256",
+                            ) == entry.sha256,
+                        ) {
+                            "Qualification SHA-256 mismatch in $markerJar"
+                        }
+                    }
+                    val qualificationMetadata =
+                        zip.getInputStream(qualificationMetadataResource)
+                            .bufferedReader(StandardCharsets.UTF_8)
+                            .use {
+                                JsonSlurper()
+                                    .parse(it)
+                                    .stringKeyMap(
+                                        "Qualification metadata in $markerJar",
+                                    )
+                            }
+                    require(
+                        (qualificationMetadata["entries"] as? List<*>)?.size ==
+                            expectedQualifications.size,
+                    ) {
+                        "Qualification entry count mismatch in $markerJar"
+                    }
+                } ?: run {
+                    require(qualificationResource == null) {
+                        "Unexpected qualification properties in $markerJar"
+                    }
+                    require(qualificationMetadataResource == null) {
+                        "Unexpected qualification metadata in $markerJar"
+                    }
                 }
                 require(
                     properties.getProperty("model.${entry.id}.markerCoordinate") ==
@@ -1356,6 +2079,42 @@ tasks.register("verifyCatalog") {
         ) {
             "Generated site catalog performance profile count mismatch"
         }
+        val siteBenchmarks = generatedSiteBenchmarks.get().asFile
+        require(siteBenchmarks.isFile) {
+            "Generated site benchmark metadata is missing: $siteBenchmarks"
+        }
+        val generatedBenchmarks =
+            JsonSlurper()
+                .parse(siteBenchmarks)
+                .stringKeyMap("Generated site benchmark metadata")
+        require(
+            (generatedBenchmarks["inferenceComparisons"] as? List<*>)?.size ==
+                inferenceComparisons.size,
+        ) {
+            "Generated site inference comparison count mismatch"
+        }
+        require(
+            generatedBenchmarks["ragComparison"]
+                .stringKeyMap("Generated site RAG comparison")["rows"]
+                .let { it as? List<*> }
+                ?.size == ragRows.size,
+        ) {
+            "Generated site RAG comparison count mismatch"
+        }
+        val siteQualifications = generatedSiteQualifications.get().asFile
+        require(siteQualifications.isFile) {
+            "Generated site qualification metadata is missing: $siteQualifications"
+        }
+        val generatedQualifications =
+            JsonSlurper()
+                .parse(siteQualifications)
+                .stringKeyMap("Generated site qualification metadata")
+        require(
+            (generatedQualifications["entries"] as? List<*>)?.size ==
+                (ragQualifications?.entries?.size ?: 0),
+        ) {
+            "Generated site qualification count mismatch"
+        }
         val generatedSite = layout.buildDirectory.dir("site").get().asFile
         catalogEntries.forEach { entry ->
             val detailRoute = generatedSite.resolve("models/${entry.id}/index.html")
@@ -1367,7 +2126,278 @@ tasks.register("verifyCatalog") {
     }
 }
 
+val verifyLaunchQualifications =
+    tasks.register("verifyLaunchQualifications") {
+        group = "verification"
+        description =
+            "Fail unless at least 25 diverse model artifacts passed the production RAG policy"
+        if (qualificationCatalogFile.isFile) {
+            inputs.file(qualificationCatalogFile)
+        }
+        doLast {
+            val qualifications =
+                requireNotNull(ragQualifications) {
+                    "catalog/qualifications.json is required for launch"
+                }
+            require(qualifications.targetQualifiedModels >= 25) {
+                "Launch qualification target must be at least 25"
+            }
+            require(qualifications.qualifiedModels >= 25) {
+                "At least 25 models must qualify; found ${qualifications.qualifiedModels}"
+            }
+            require(qualifications.policyVersion.endsWith("-v2")) {
+                "Launch qualifications must use the current v2 grounding policy"
+            }
+            val qualified = qualifications.entries.filter(CatalogRagQualification::qualified)
+            qualified.forEach { entry ->
+                require(entry.verdict == "QUALIFIED") {
+                    "Qualified entry has a non-qualified verdict: ${entry.modelId}"
+                }
+                require(entry.performanceTier in setOf("PRODUCTION_READY", "USABLE")) {
+                    "Qualified entry has an unusable performance tier: ${entry.modelId}"
+                }
+                require(entry.attempts >= 27) {
+                    "Qualification needs at least 27 measured requests: ${entry.modelId}"
+                }
+                require(entry.correctAnswerRate >= 0.9) {
+                    "Qualification quality is below 90%: ${entry.modelId}"
+                }
+                require(entry.abstentionAccuracy == 1.0) {
+                    "Qualification abstention accuracy must be 100%: ${entry.modelId}"
+                }
+                require(entry.p95TtftMillis <= 2_000) {
+                    "Qualification TTFT is not interactively usable: ${entry.modelId}"
+                }
+                require(entry.p95TpotMillis <= 200) {
+                    "Qualification TPOT is not interactively usable: ${entry.modelId}"
+                }
+                require(entry.p95EndToEndMillis <= 10_000) {
+                    "Qualification end-to-end latency is not usable: ${entry.modelId}"
+                }
+            }
+            val qualifiedModels =
+                qualified.map { qualification ->
+                    catalogEntries.single { it.id == qualification.modelId }
+                }
+            val architectureCount =
+                qualifiedModels.map(CatalogEntry::architecture).distinct().size
+            val domainCount = qualifiedModels.flatMap(CatalogEntry::domains).distinct().size
+            require(architectureCount >= 5) {
+                "Launch set must cover at least five architectures; found $architectureCount"
+            }
+            require(domainCount >= 6) {
+                "Launch set must cover at least six domains; found $domainCount"
+            }
+            println(
+                "Verified ${qualified.size} production-usable models across " +
+                    "$architectureCount architectures and $domainCount domains",
+            )
+        }
+    }
+
 tasks.named("check") {
     dependsOn("verifyCatalog")
     dependsOn(verifyFacadePublication)
+    if (qualificationCatalogFile.isFile) {
+        dependsOn(verifyLaunchQualifications)
+    }
 }
+
+val releaseSigningKey = providers.environmentVariable("GPG_PRIVATE_KEY")
+val releaseSigningPassword = providers.environmentVariable("GPG_PASSPHRASE")
+val releaseRequested =
+    providers.gradleProperty("release").map(String::toBoolean).orElse(false)
+
+gradle.projectsEvaluated {
+    subprojects {
+        extensions.configure<SigningExtension> {
+            isRequired = releaseRequested.get()
+            if (releaseSigningKey.isPresent && releaseSigningPassword.isPresent) {
+                useInMemoryPgpKeys(releaseSigningKey.get(), releaseSigningPassword.get())
+            }
+            sign(extensions.getByType<PublishingExtension>().publications)
+        }
+    }
+}
+
+val releaseRepository = layout.buildDirectory.dir("central-repository")
+val prepareReleaseRepository =
+    tasks.register<Delete>("prepareReleaseRepository") {
+        group = "publishing"
+        description = "Remove stale files before staging the Maven Central bundle"
+        delete(releaseRepository)
+    }
+
+val releasePublicationTasks =
+    subprojects.map { project ->
+        "${project.path}:publishAllPublicationsToReleaseBundleRepository"
+    }
+subprojects {
+    tasks
+        .withType<PublishToMavenRepository>()
+        .configureEach {
+            if (repository.name == "releaseBundle") {
+                dependsOn(prepareReleaseRepository)
+            }
+        }
+}
+
+fun digest(
+    path: Path,
+    algorithm: String,
+): String {
+    val messageDigest = MessageDigest.getInstance(algorithm)
+    Files.newInputStream(path).use { input ->
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) {
+                break
+            }
+            messageDigest.update(buffer, 0, read)
+        }
+    }
+    return HexFormat.of().formatHex(messageDigest.digest())
+}
+
+fun isChecksumFile(path: Path): Boolean =
+    path.fileName.toString().let { name ->
+        name.endsWith(".md5") ||
+            name.endsWith(".sha1") ||
+            name.endsWith(".sha256") ||
+            name.endsWith(".sha512")
+    }
+
+val generateReleaseChecksums =
+    tasks.register("generateReleaseChecksums") {
+        group = "publishing"
+        description = "Generate SHA-256 and SHA-512 checksums for every staged release artifact"
+        dependsOn(releasePublicationTasks)
+        inputs.dir(releaseRepository)
+
+        doLast {
+            val repository = releaseRepository.get().asFile.toPath()
+            require(Files.isDirectory(repository)) {
+                "Release repository was not generated: $repository"
+            }
+            Files.walk(repository).use { paths ->
+                paths
+                    .filter(Files::isRegularFile)
+                    .filter { path ->
+                        val name = path.fileName.toString()
+                        !name.startsWith("maven-metadata.xml") &&
+                            !isChecksumFile(path)
+                    }.sorted()
+                    .toList()
+                    .forEach { artifact ->
+                        mapOf("SHA-256" to ".sha256", "SHA-512" to ".sha512")
+                            .forEach { (algorithm, extension) ->
+                                Files.writeString(
+                                    artifact.resolveSibling(artifact.fileName.toString() + extension),
+                                    digest(artifact, algorithm) + "\n",
+                                    StandardCharsets.US_ASCII,
+                                )
+                            }
+                    }
+            }
+            Files.walk(repository).use { paths ->
+                paths
+                    .filter(Files::isRegularFile)
+                    .filter { it.fileName.toString().startsWith("maven-metadata.xml") }
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(Files::delete)
+            }
+        }
+    }
+
+val verifyReleaseBundle =
+    tasks.register("verifyReleaseBundle") {
+        group = "verification"
+        description = "Verify staged signatures, checksums, and Central bundle layout"
+        dependsOn(generateReleaseChecksums)
+        inputs.dir(releaseRepository)
+
+        doLast {
+            require(releaseRequested.get()) {
+                "verifyReleaseBundle requires -Prelease=true"
+            }
+            require(releaseSigningKey.isPresent && releaseSigningPassword.isPresent) {
+                "GPG_PRIVATE_KEY and GPG_PASSPHRASE are required for a release bundle"
+            }
+            val repository = releaseRepository.get().asFile.toPath()
+            Files.walk(repository).use { paths ->
+                require(
+                    paths
+                        .filter(Files::isRegularFile)
+                        .noneMatch { path ->
+                            val name = path.fileName.toString()
+                            name.contains(".md5.") ||
+                                name.contains(".sha1.") ||
+                                name.contains(".sha256.") ||
+                                name.contains(".sha512.")
+                        },
+                ) {
+                    "Release repository must not contain checksums of checksum files"
+                }
+            }
+            val primaryArtifacts =
+                Files.walk(repository).use { paths ->
+                    paths
+                        .filter(Files::isRegularFile)
+                        .filter { path ->
+                            path.fileName.toString().let { name ->
+                                name.endsWith(".jar") ||
+                                    name.endsWith(".pom") ||
+                                    name.endsWith(".module")
+                            }
+                        }.sorted()
+                        .toList()
+                }
+            require(primaryArtifacts.isNotEmpty()) {
+                "Release repository contains no Maven artifacts"
+            }
+            primaryArtifacts.forEach { artifact ->
+                val name = artifact.fileName.toString()
+                val signature = artifact.resolveSibling("$name.asc")
+                require(Files.isRegularFile(signature) && Files.size(signature) > 0) {
+                    "OpenPGP signature is missing for $artifact"
+                }
+            }
+            Files.walk(repository).use { paths ->
+                paths
+                    .filter(Files::isRegularFile)
+                    .filter { path ->
+                        !isChecksumFile(path)
+                    }.forEach { artifact ->
+                        mapOf("SHA-256" to ".sha256", "SHA-512" to ".sha512")
+                            .forEach { (algorithm, extension) ->
+                                val checksum =
+                                    artifact.resolveSibling(
+                                        artifact.fileName.toString() + extension,
+                                    )
+                                require(Files.isRegularFile(checksum)) {
+                                    "$algorithm checksum is missing for $artifact"
+                                }
+                                require(
+                                    Files.readString(checksum, StandardCharsets.US_ASCII).trim() ==
+                                        digest(artifact, algorithm),
+                                ) {
+                                    "$algorithm checksum does not match $artifact"
+                                }
+                            }
+                    }
+            }
+        }
+    }
+
+val releaseBundleZip =
+    tasks.register<Zip>("releaseBundleZip") {
+        group = "publishing"
+        description = "Create the verified USER_MANAGED Maven Central deployment bundle"
+        dependsOn(verifyReleaseBundle)
+        from(releaseRepository)
+        destinationDirectory.set(layout.buildDirectory.dir("release"))
+        archiveFileName.set("modeljars-central-bundle.zip")
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }

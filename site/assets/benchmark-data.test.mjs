@@ -26,7 +26,30 @@ test("benchmark metadata joins only known catalog models and carries all engine 
   const validated = validateBenchmarkCatalog(benchmarks, catalog.models);
 
   assert.equal(validated.inferenceComparisons.length, 4);
-  assert.equal(validated.ragComparison.rows.length, 6);
+  assert.equal(validated.ragComparison.rows.length, 7);
+  assert.deepEqual(
+    validated.ragComparison.rows.find((row) => row.id === "smollm2-360m-rust-ffm"),
+    {
+      id: "smollm2-360m-rust-ffm",
+      catalogModelId: "smollm2_360m_instruct_q8_0",
+      execution: "local-in-process",
+      engine: "rust-ffm",
+      model: "SmolLM2 360M Instruct Q8_0",
+      p95RetrievalMillis: 1.7501794,
+      p95TtftMillis: 552.8256513,
+      p95TpotMillis: 23.125619260465115,
+      p95EndToEndMillis: 1934.9650668,
+      decodeTokensPerSecond: 43.91685822892476,
+      strictQuality: 0.6666666666666666,
+      auditedSemanticQuality: 1,
+      dataEgress: false,
+      apiCostPer1kUsd: null,
+      evidence: {
+        url: "https://github.com/integrallis/models/blob/a25820ad842f347b5193433de87e12d86558e72e/benchmark-results/certified-20260724/rag/native-q8-prefix-cache/smollm2-360m-q8_0/smollm2-360m-rust-ffm-prefix-cache-grounded.json",
+        sha256: "879f95209b4a25a3047affe492b679e56addf7bf361baaa28643879d525178b3",
+      },
+    },
+  );
   for (const comparison of validated.inferenceComparisons) {
     assert.deepEqual(Object.keys(comparison.engines).sort(), [
       "llama.cpp",

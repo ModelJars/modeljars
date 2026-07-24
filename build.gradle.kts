@@ -2235,9 +2235,6 @@ val verifyLaunchQualifications =
 tasks.named("check") {
     dependsOn("verifyCatalog")
     dependsOn(verifyFacadePublication)
-    if (qualificationCatalogFile.isFile) {
-        dependsOn(verifyLaunchQualifications)
-    }
 }
 
 val releaseSigningKey = providers.environmentVariable("GPG_PRIVATE_KEY")
@@ -2352,6 +2349,7 @@ val verifyReleaseBundle =
         group = "verification"
         description = "Verify staged signatures, checksums, and Central bundle layout"
         dependsOn(generateReleaseChecksums)
+        dependsOn(verifyLaunchQualifications)
         inputs.dir(releaseRepository)
 
         doLast {

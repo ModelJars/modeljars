@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-24T19:13:05.996645974Z",
+  "policyVersion": "trusted-citation-lexical-entailment-extractive-fallback-v2",
+  "modelsRevision": "a25820ad842f347b5193433de87e12d86558e72e",
+  "targetQualifiedModels": 25,
+  "qualifiedModels": 1,
+  "rejectedModels": 0,
+  "entries": [
+    {
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "model": "SmolLM2 360M Instruct Q8_0",
+      "backend": "rust-ffm",
+      "backendVersion": "models-native-2729c3a",
+      "artifactSha256": "48ab3034d0dd401fbc721eb1df3217902fee7dab9078992d66431f09b7750201",
+      "artifactSizeBytes": 386404992,
+      "report": "benchmark-results/certified-20260724/rag/native-q8-prefix-cache/smollm2-360m-q8_0/smollm2-360m-rust-ffm-prefix-cache-grounded.json",
+      "reportSha256": "879f95209b4a25a3047affe492b679e56addf7bf361baaa28643879d525178b3",
+      "performanceTier": "PRODUCTION_READY",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "attempts": 27,
+      "p95RetrievalMillis": 1.7501794,
+      "p95TtftMillis": 552.8256513,
+      "p95TpotMillis": 23.125619260465115,
+      "p95EndToEndMillis": 1934.9650668,
+      "p50PrefillTokensPerSecond": 175.63858952815946,
+      "p50DecodeTokensPerSecond": 43.91685822892476,
+      "peakRssBytes": 1263542272,
+      "correctAnswerRate": 1.0,
+      "rawCorrectAnswerRate": 0.6666666666666666,
+      "abstentionAccuracy": 1.0,
+      "modelAnswerRate": 0.3333333333333333,
+      "extractiveFallbackRate": 0.5555555555555556,
+      "environment": {
+        "hostname": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "availableProcessors": 8,
+        "totalMemoryBytes": 32857444352,
+        "maxHeapBytes": 1073741824,
+        "javaVersion": "25.0.3",
+        "javaVendor": "GraalVM Community",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    }
+  ]
+}

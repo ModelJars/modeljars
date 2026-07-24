@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(13, registry.profiles().size());
+    assertEquals(14, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -364,6 +364,35 @@ class ModelPerformanceProfileRegistryTest {
                 profile ->
                     profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25")
                         && profile.recommendations().get("compiler").equals("graal-jvmci")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_rust_ffm")
+                        && profile.backend().equals("rust-ffm")
+                        && profile.recommendations().isEmpty()
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("smollm2-q8-rust-ffm-rag-20260724")
+                        && profile.evidence().trials() == 27
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "879f95209b4a25a3047affe492b679e56addf7bf361baaa28643879d525178b3")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

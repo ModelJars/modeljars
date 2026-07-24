@@ -76,6 +76,23 @@ class LaunchModelCatalogTest {
   }
 
   @Test
+  void exposesQualifiedSmolLm2RustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("smollm2_360m_instruct_q8_0", descriptor.alias());
+  }
+
+  @Test
   void resolvesPinnedLaunchModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

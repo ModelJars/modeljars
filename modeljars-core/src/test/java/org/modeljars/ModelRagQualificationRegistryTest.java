@@ -94,6 +94,26 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesQualifiedSmolLm2RustFfmEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("smollm2_360m_instruct_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-2729c3a", qualification.backendVersion());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(18.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(43.91685822892476, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
   void rejectsInvalidSchemaCountsAndEvidence() {
     Properties wrongSchema = properties(1.0, 1.0, true);
     wrongSchema.setProperty("modeljars.qualifications.schemaVersion", "2");

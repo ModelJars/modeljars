@@ -23,6 +23,14 @@ test("requires reproducible, signed Maven publications with modern checksums", a
   assert.match(build, /withType<PublishToMavenRepository>\(\)/);
   assert.match(build, /verifyReleaseBundle/);
   assert.match(build, /releaseBundleZip/);
+  assert.match(
+    build,
+    /val verifyReleaseBundle =[\s\S]*?dependsOn\(verifyLaunchQualifications\)/,
+  );
+  assert.doesNotMatch(
+    build,
+    /tasks\.named\("check"\) \{[\s\S]{0,300}dependsOn\(verifyLaunchQualifications\)/,
+  );
 });
 
 test("attests a user-managed Central bundle from the protected release job", async () => {

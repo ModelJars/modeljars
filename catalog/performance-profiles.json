@@ -1334,6 +1334,100 @@
           "heap": "1g-fixed"
         }
       }
+    },
+    {
+      "id": "qwen2_5_coder_0_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding",
+      "modelId": "qwen2_5_coder_0_5b_instruct_q4_0",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0:2.5.0-q4_0.1",
+      "artifactSha256": "9739055e046d62a937e5b7879012209ef40ebea8a1569a96028de491f3f091d5",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256",
+        "q4-unsigned-pairwise-supported": "true"
+      },
+      "recommendations": {
+        "models.purejava.q4Kernel": "unsigned-pairwise"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED",
+          "-Djdk.graal.MaximumInliningSize=10000",
+          "-Dvectors.gguf.threads=4"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen2.5-coder-0.5b-q4-hybrid-coding-20260724",
+        "measuredAt": "2026-07-24T22:16:50.839099389Z",
+        "baseline": "rust-ffm-widened-q4-eight-workers",
+        "candidate": "rust-ffm-unsigned-pairwise-q4-four-workers",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "p50TtftMillis": 342.52444,
+          "p95TtftMillis": 402.5442746,
+          "p50TpotMillis": 42.36089672222223,
+          "p95TpotMillis": 43.8434832,
+          "p50PrefillTokensPerSecond": 188.89155792327094,
+          "p50DecodeTokensPerSecond": 23.60667685005372,
+          "p50EndToEndMillis": 1142.59821,
+          "p95EndToEndMillis": 2945.2250995,
+          "totalCpuMillis": 200160.0,
+          "peakRssBytes": 1291087872
+        },
+        "candidateMetrics": {
+          "p50TtftMillis": 339.042427,
+          "p95TtftMillis": 390.3026555,
+          "p50TpotMillis": 25.31559323529412,
+          "p95TpotMillis": 26.402893849999998,
+          "p50PrefillTokensPerSecond": 193.06359001451713,
+          "p50DecodeTokensPerSecond": 39.501345700476605,
+          "p50EndToEndMillis": 858.93161,
+          "p95EndToEndMillis": 1941.1846203,
+          "totalCpuMillis": 94530.0,
+          "peakRssBytes": 1289539584
+        },
+        "controls": {
+          "workload": "coding",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "baselineRowWorkers": "8",
+          "candidateRowWorkers": "4",
+          "corpusSha256": "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+          "seed": "42",
+          "temperature": "0",
+          "promptTemplate": "chatml",
+          "groundingPolicy": "trusted-provenance-clause-anchors-extractive-fallback-v4",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "3e759ccf968b86261a83c10db8bae0ec8d321fd3",
+          "modelsEvidenceCommit": "292ddad89f43649f0488d2e030b98eb21e585c54",
+          "vectorsCommit": "fde9858901624d1661a1cf51195d2c59737bcf87",
+          "kernelImplementation": "rust-ffm-q4_0-q8_0-v1",
+          "nativeKernelAbi": "1",
+          "baselineQ4Kernel": "widened",
+          "candidateQ4Kernel": "unsigned-pairwise",
+          "baselineReportSha256": "31c1c1670db11337c14b5f52f8345df0cd61823ec0789e59aff5f856f082c4ab",
+          "candidateReportSha256": "f09336788d9dfbead64dacbbfa68d756c34f5acb6cc4122f741bc0bcbb737f72",
+          "pairedRawOutputSha256": "e848331896d9c55b1d94f7db1dae459922ca436d876c88e1940162b0a241dd61",
+          "pairedOutputHashes": "27-identical",
+          "semanticQualityParity": "27-of-27",
+          "groundingDecisionParity": "27-of-27",
+          "jvmBuild": "GraalVM Community Java 25.0.3",
+          "heap": "1g-fixed"
+        }
+      }
     }
   ]
 }

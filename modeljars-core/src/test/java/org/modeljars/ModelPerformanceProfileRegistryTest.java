@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(16, registry.profiles().size());
+    assertEquals(17, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -470,6 +470,52 @@ class ModelPerformanceProfileRegistryTest {
                             .get("candidateReportSha256")
                             .equals(
                                 "c674fa510c1866b7425b953dcc4f15edc38a02e60f4e0e3aee50a2e46be24277")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals(
+                                "qwen2_5_coder_0_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
+                        && profile.backend().equals("rust-ffm")
+                        && profile
+                            .recommendations()
+                            .get("models.purejava.q4Kernel")
+                            .equals("unsigned-pairwise")
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000",
+                                    "-Dvectors.gguf.threads=4"))
+                        && profile.safeForAutomaticSelection()
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen2.5-coder-0.5b-q4-hybrid-coding-20260724")
+                        && profile.evidence().trials() == 27
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("workload")
+                            .equals("coding")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("baselineReportSha256")
+                            .equals(
+                                "31c1c1670db11337c14b5f52f8345df0cd61823ec0789e59aff5f856f082c4ab")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "f09336788d9dfbead64dacbbfa68d756c34f5acb6cc4122f741bc0bcbb737f72")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

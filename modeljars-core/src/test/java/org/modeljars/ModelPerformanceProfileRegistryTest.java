@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(20, registry.profiles().size());
+    assertEquals(21, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -835,6 +835,29 @@ class ModelPerformanceProfileRegistryTest {
                                 profile
                                     .recommendations()
                                     .get("models.purejava.mixedKProjections"))));
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedEuroLlmRustFfmProfile() {
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("eurollm_1_7b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "1cade17f491ea46a686dbee51fbd52442e0f001f102380c3b9d66b4a77f84093",
+        profile.artifactSha256());
+    assertEquals("64", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertTrue(profile.safeForAutomaticSelection());
   }
 
   private static Properties profileProperties(boolean outputHashesMatch) {

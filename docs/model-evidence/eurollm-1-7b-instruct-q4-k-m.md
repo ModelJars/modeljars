@@ -1,6 +1,6 @@
 # EuroLLM 1.7B Instruct Q4_K_M Acceptance Evidence
 
-Status: catalog marker and pure-Java runtime accepted
+Status: catalog marker, pure-Java oracle, and Rust/FFM guarded-RAG runtime accepted
 
 ## Artifact
 
@@ -104,3 +104,26 @@ and SHA-256, asserts the GGUF contract above, reproduces the SentencePiece and
 ChatML token IDs, and matches the six raw token IDs returned by llama.cpp
 b9960's `/completion` endpoint with `return_tokens=true`. The fixture cannot
 turn a missing artifact into a skipped or passing test.
+
+## Production Qualification
+
+The exact artifact is qualified for the versioned multilingual guarded-RAG
+workload on an 8-vCPU AMD EPYC-Milan host with GraalVM Community Java 25.0.3.
+The canonical run loaded the ModelJar alias through Models Rust/FFM without
+manual performance properties. Backend diagnostics prove that the exact
+EPYC-Milan/Java-25 profile selected its 64-token prefill batch, batched
+attention paths, final-layer prompt pruning, KV-only final-layer prefill, and
+native quantized decode.
+
+| Backend | Tier | p95 TTFT | p50 decode | p95 end to end | Correct |
+|---|---|---:|---:|---:|---:|
+| Models Rust/FFM | USABLE; qualified | 1,514.3 ms | 31.86 tok/s | 2,548.4 ms | 100% |
+| Ollama 0.32.0 | PRODUCTION_READY | 537.9 ms | 29.02 tok/s | 1,709.6 ms | 100% |
+| llama.cpp b10012 | USABLE | 1,104.3 ms | 49.06 tok/s | 1,804.7 ms | 100% |
+
+Models reaches 109.8% of Ollama and 64.9% of llama.cpp decode. Its p95
+end-to-end latency is 1.491x Ollama and 1.412x llama.cpp, within the unchanged
+production policy ceilings of 1.5x and 2.0x. All 27 grounded answers were
+correct; all 21 model answers accepted by the grounding policy were also
+correct. This claim is SHA-bound to the artifact and scoped to the committed
+multilingual RAG workload, not arbitrary ungrounded generation.

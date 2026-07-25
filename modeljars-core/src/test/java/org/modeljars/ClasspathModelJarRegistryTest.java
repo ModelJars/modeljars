@@ -604,6 +604,16 @@ class ClasspathModelJarRegistryTest {
                     .backend("pure-java")
                     .build())
             .isPresent());
+    assertTrue(
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .build())
+            .isPresent());
   }
 
   @Test

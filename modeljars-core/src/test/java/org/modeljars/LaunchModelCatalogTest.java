@@ -76,6 +76,72 @@ class LaunchModelCatalogTest {
   }
 
   @Test
+  void exposesQualifiedSmolLm2RustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("smollm2_360m_instruct_q8_0", descriptor.alias());
+  }
+
+  @Test
+  void exposesQualifiedQwen3RustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen3-1.7B-GGUF")
+                    .versionRange("[3.0.0,4.0.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen3_1_7b_q8_0", descriptor.alias());
+  }
+
+  @Test
+  void exposesQualifiedQwen25CoderRustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,2.6.0)")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen2_5_coder_0_5b_instruct_q8_0", descriptor.alias());
+  }
+
+  @Test
+  void exposesQualifiedSqlCoderRustFfmBackend() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource("hf://defog/sqlcoder-7b-2")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q5_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-to-sql")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("sqlcoder_7b_2_q5_k_m", descriptor.alias());
+  }
+
+  @Test
   void resolvesPinnedLaunchModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

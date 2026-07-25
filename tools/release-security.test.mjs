@@ -23,6 +23,14 @@ test("requires reproducible, signed Maven publications with modern checksums", a
   assert.match(build, /withType<PublishToMavenRepository>\(\)/);
   assert.match(build, /verifyReleaseBundle/);
   assert.match(build, /releaseBundleZip/);
+  assert.match(
+    build,
+    /val verifyReleaseBundle =[\s\S]*?dependsOn\(verifyLaunchQualifications\)/,
+  );
+  assert.doesNotMatch(
+    build,
+    /tasks\.named\("check"\) \{[\s\S]{0,300}dependsOn\(verifyLaunchQualifications\)/,
+  );
 });
 
 test("attests a user-managed Central bundle from the protected release job", async () => {
@@ -53,4 +61,30 @@ test("documents verification and rejects obfuscation as an integrity mechanism",
   assert.match(security, /SHA-256/);
   assert.match(security, /obfuscat/i);
   assert.match(security, /reproducib/i);
+});
+
+test("launch qualification requires correct model-generated answers", async () => {
+  const build = await read("build.gradle.kts");
+  const qualifications = JSON.parse(await read("catalog/qualifications.json"));
+
+  assert.match(build, /MINIMUM_MODEL_ANSWER_RATE\s*=\s*1\.0\s*\/\s*3\.0/);
+  assert.match(build, /MINIMUM_MODEL_ANSWER_CORRECT_RATE\s*=\s*0\.90/);
+  assert.match(
+    build,
+    /require\(entry\.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE\)/,
+  );
+  assert.match(
+    build,
+    /require\(entry\.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE\)/,
+  );
+  assert.equal(qualifications.policyVersion, "production-rag-model-contribution-v4");
+  assert.ok(
+    qualifications.entries
+      .filter((entry) => entry.qualified)
+      .every(
+        (entry) =>
+          entry.modelAnswerRate >= 1 / 3 &&
+          entry.modelAnswerCorrectRate >= 0.9,
+      ),
+  );
 });

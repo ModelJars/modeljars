@@ -1,50 +1,62 @@
+import { execFile } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
+import { promisify } from "node:util";
 
 import { gguf } from "@huggingface/gguf";
 
+import {
+  changedGgufModelIds,
+  createRetryingFetch,
+} from "./catalog-enrichment.mjs";
 import { extractGgufDimensions } from "./gguf-metadata.mjs";
 
 const catalogPath = new URL("../catalog/models.json", import.meta.url);
 const write = process.argv.includes("--write");
 const concurrencyArgument = process.argv.find((argument) => argument.startsWith("--concurrency="));
 const concurrency = Number.parseInt(concurrencyArgument?.split("=")[1] || "3", 10);
+const changedFromArgument = process.argv.find((argument) => argument.startsWith("--changed-from="));
+const changedFrom = changedFromArgument?.slice("--changed-from=".length);
 
 if (!Number.isSafeInteger(concurrency) || concurrency <= 0) {
   throw new Error("--concurrency must be a positive integer");
 }
+if (changedFromArgument && !changedFrom) {
+  throw new Error("--changed-from must name a Git revision");
+}
 
 const document = JSON.parse(await readFile(catalogPath, "utf8"));
-const targets = document.models.filter((model) => model.format === "gguf");
+let targetIds;
+if (changedFrom) {
+  const runGit = promisify(execFile);
+  const { stdout } = await runGit(
+    "git",
+    ["show", `${changedFrom}:catalog/models.json`],
+    { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+  );
+  targetIds = new Set(changedGgufModelIds(JSON.parse(stdout), document));
+}
+const targets = document.models.filter(
+  (model) => model.format === "gguf" && (!targetIds || targetIds.has(model.id)),
+);
 const dimensions = new Map();
 const failures = [];
 let nextIndex = 0;
+const retryingFetch = createRetryingFetch();
 
 async function inspect(model) {
-  let lastFailure;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      const parsed = await gguf(model.downloadUri, {
-        computeParametersCount: true,
-        additionalFetchHeaders: { "User-Agent": "ModelJars-Catalog-Enricher/0.1" },
-      });
-      const remoteArchitecture = parsed.metadata["general.architecture"];
-      if (remoteArchitecture !== model.architecture) {
-        throw new Error(
-          `architecture mismatch: catalog=${model.architecture}, GGUF=${remoteArchitecture}`,
-        );
-      }
-      return extractGgufDimensions(parsed.metadata, parsed.parameterCount, parsed.tensorInfos);
-    } catch (failure) {
-      lastFailure = failure;
-      if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, attempt * 500));
-      }
-    }
-  }
-  throw new Error(`Unable to inspect ${model.id}: ${lastFailure?.message}`, {
-    cause: lastFailure,
+  const parsed = await gguf(model.downloadUri, {
+    computeParametersCount: true,
+    fetch: retryingFetch,
+    additionalFetchHeaders: { "User-Agent": "ModelJars-Catalog-Enricher/0.1" },
   });
+  const remoteArchitecture = parsed.metadata["general.architecture"];
+  if (remoteArchitecture !== model.architecture) {
+    throw new Error(
+      `architecture mismatch: catalog=${model.architecture}, GGUF=${remoteArchitecture}`,
+    );
+  }
+  return extractGgufDimensions(parsed.metadata, parsed.parameterCount, parsed.tensorInfos);
 }
 
 async function worker() {
@@ -57,8 +69,11 @@ async function worker() {
       dimensions.set(model.id, profile);
       process.stderr.write(`[${dimensions.size}/${targets.length}] ${model.id}\n`);
     } catch (failure) {
-      failures.push(failure);
-      process.stderr.write(`FAILED ${model.id}: ${failure.message}\n`);
+      const wrapped = new Error(`Unable to inspect ${model.id}: ${failure.message}`, {
+        cause: failure,
+      });
+      failures.push(wrapped);
+      process.stderr.write(`FAILED ${model.id}: ${wrapped.message}\n`);
     }
   }
 }
@@ -83,9 +98,9 @@ for (const model of targets) {
 
 if (write) {
   await writeFile(catalogPath, `${JSON.stringify(document, null, 2)}\n`, "utf8");
-  process.stdout.write(`Updated ${targets.length} GGUF resource profiles.\n`);
+  process.stdout.write(`Updated ${targets.length} selected GGUF resource profiles.\n`);
 } else if (differences > 0) {
   throw new Error(`${differences} GGUF resource profiles need regeneration`);
 } else {
-  process.stdout.write(`Verified ${targets.length} GGUF resource profiles.\n`);
+  process.stdout.write(`Verified ${targets.length} selected GGUF resource profiles.\n`);
 }

@@ -23,6 +23,10 @@ const qualification = {
   model: model.name,
   backend: "llama.cpp",
   backendVersion: "b10012-c71854292",
+  workload: "general",
+  corpusSha256: "d".repeat(64),
+  promptTemplate: "chatml",
+  groundingPolicy: "trusted-provenance-clause-anchors-extractive-fallback-v4",
   artifactSha256: sha,
   artifactSizeBytes: model.sizeBytes,
   report: "benchmark-results/certified-20260724/rag/launch-campaign-v2/qwen.json",
@@ -42,6 +46,7 @@ const qualification = {
   rawCorrectAnswerRate: 1,
   abstentionAccuracy: 1,
   modelAnswerRate: 1,
+  modelAnswerCorrectRate: 1,
   extractiveFallbackRate: 0,
   environment: {
     hostname: "qualification-host",
@@ -60,7 +65,7 @@ const qualification = {
 const document = {
   schemaVersion: 1,
   generatedAt: "2026-07-24T06:00:00Z",
-  policyVersion: "trusted-citation-lexical-entailment-extractive-fallback-v2",
+  policyVersion: "production-rag-model-contribution-v4",
   modelsRevision: revision,
   targetQualifiedModels: 25,
   qualifiedModels: 1,
@@ -74,6 +79,7 @@ test("validates immutable qualification evidence and joins exact artifacts", () 
   assert.equal(validated.entries[0].reportUri,
     `https://github.com/integrallis/models/blob/${revision}/${qualification.report}`);
   assert.equal(validated.entries[0].useCaseTier, "GENERATIVE_RAG");
+  assert.equal(validated.entries[0].workload, "general");
 });
 
 test("builds transparent production RAG rows", () => {
@@ -111,5 +117,33 @@ test("rejects artifact mismatches and false qualification counts", () => {
   assert.throws(
     () => validateQualificationCatalog({ ...document, qualifiedModels: 0 }, [model]),
     /qualifiedModels/,
+  );
+  assert.throws(
+    () =>
+      validateQualificationCatalog(
+        {
+          ...document,
+          entries: [
+            {
+              ...qualification,
+              modelAnswerRate: 0,
+              modelAnswerCorrectRate: 0,
+            },
+          ],
+        },
+        [model],
+      ),
+    /model-answer contribution policy/,
+  );
+  assert.throws(
+    () =>
+      validateQualificationCatalog(
+        {
+          ...document,
+          entries: [{ ...qualification, workload: undefined }],
+        },
+        [model],
+      ),
+    /workload/,
   );
 });

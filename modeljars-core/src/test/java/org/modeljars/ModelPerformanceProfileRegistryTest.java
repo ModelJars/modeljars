@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(13, registry.profiles().size());
+    assertEquals(20, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -364,6 +364,290 @@ class ModelPerformanceProfileRegistryTest {
                 profile ->
                     profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25")
                         && profile.recommendations().get("compiler").equals("graal-jvmci")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_rust_ffm")
+                        && profile.backend().equals("rust-ffm")
+                        && profile.recommendations().isEmpty()
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("smollm2-q8-rust-ffm-rag-20260724")
+                        && profile.evidence().trials() == 27
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "879f95209b4a25a3047affe492b679e56addf7bf361baaa28643879d525178b3")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals("qwen3_1_7b_q8_0_epyc_milan_jdk25_rust_ffm")
+                        && profile.backend().equals("rust-ffm")
+                        && profile.recommendations().isEmpty()
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen3-1.7b-q8-rust-ffm-rag-20260724")
+                        && profile.evidence().trials() == 27
+                        && !profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("semanticQualityParity")
+                            .equals("27-of-27")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "bdf55206cbd49e81e9ce1681f526a406ead2b6e0412811fbe51c3e56f95ac323")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals(
+                                "qwen2_5_coder_0_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
+                        && profile.backend().equals("rust-ffm")
+                        && profile.recommendations().isEmpty()
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(List.of("--enable-native-access=ALL-UNNAMED"))
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen2.5-coder-0.5b-q8-rust-ffm-coding-20260724")
+                        && profile.evidence().trials() == 27
+                        && !profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("workload")
+                            .equals("coding")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("finalGroundedAnswerParity")
+                            .equals("27-of-27")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("baselineReportSha256")
+                            .equals(
+                                "7b4a7865b1a545067fab9eb266448312afc5d45ba65abfafeda3542f43ab87f2")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "c674fa510c1866b7425b953dcc4f15edc38a02e60f4e0e3aee50a2e46be24277")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals(
+                                "qwen2_5_coder_0_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
+                        && profile.backend().equals("rust-ffm")
+                        && profile
+                            .recommendations()
+                            .get("models.purejava.q4Kernel")
+                            .equals("unsigned-pairwise")
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000",
+                                    "-Dvectors.gguf.threads=4"))
+                        && profile.safeForAutomaticSelection()
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen2.5-coder-0.5b-q4-hybrid-coding-20260724")
+                        && profile.evidence().trials() == 27
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("workload")
+                            .equals("coding")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("baselineReportSha256")
+                            .equals(
+                                "31c1c1670db11337c14b5f52f8345df0cd61823ec0789e59aff5f856f082c4ab")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "f09336788d9dfbead64dacbbfa68d756c34f5acb6cc4122f741bc0bcbb737f72")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals(
+                                "qwen2_5_coder_1_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
+                        && profile.backend().equals("rust-ffm")
+                        && profile
+                            .recommendations()
+                            .get("models.purejava.q4Kernel")
+                            .equals("unsigned-pairwise")
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-Djdk.graal.MaximumInliningSize=10000",
+                                    "-Dvectors.gguf.threads=4"))
+                        && profile.safeForAutomaticSelection()
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen2.5-coder-1.5b-q4-hybrid-coding-20260724")
+                        && profile.evidence().trials() == 27
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("pairedRawOutputSha256")
+                            .equals(
+                                "6371b16b864fbe846dd7f2b03e0439f89ff357733e0d9443f9a45f9d63d47fdc")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("baselineReportSha256")
+                            .equals(
+                                "a2d6e6d5bcd91886595424b28487378dd7e75aa0e8f00f6ce9abbb7930979e45")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "9e98947ae5747ef7d433b88fc4b174863667f4a7b4b6b82ed4eeb448adf18e31")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals(
+                                "qwen2_5_coder_1_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
+                        && profile.backend().equals("rust-ffm")
+                        && profile.recommendations().isEmpty()
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(List.of("--enable-native-access=ALL-UNNAMED"))
+                        && !profile.safeForAutomaticSelection()
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("qwen2.5-coder-1.5b-q8-rust-ffm-coding-20260724")
+                        && profile.evidence().trials() == 27
+                        && !profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("pairedRawOutputs")
+                            .equals("different-semantic-parity-verified")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("baselineReportSha256")
+                            .equals(
+                                "87034690196fdc3ecf3d506de039df9eed2e9e138528488d9f0dc16c67ff3f54")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "8aae6eb24601b031acaaf33998f39e5c753eab106a27ec99242c2db2bd13db66")));
+    assertTrue(
+        registry.profiles().stream()
+            .anyMatch(
+                profile ->
+                    profile
+                            .id()
+                            .equals("sqlcoder_7b_2_q5_k_m_epyc_milan_jdk25_rust_ffm")
+                        && profile.backend().equals("rust-ffm")
+                        && "true"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.native.quantizedDecode"))
+                        && "4"
+                            .equals(
+                                profile
+                                    .recommendations()
+                                    .get("models.native.kernels.threads"))
+                        && profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .jvmArguments()
+                            .equals(
+                                List.of(
+                                    "--enable-native-access=ALL-UNNAMED",
+                                    "-XX:ActiveProcessorCount=4"))
+                        && profile.safeForAutomaticSelection()
+                        && profile
+                            .evidence()
+                            .benchmarkId()
+                            .equals("sqlcoder-q5-k-native-decode-20260725")
+                        && profile.evidence().trials() == 10
+                        && profile.evidence().generatedTokens() == 4
+                        && profile.evidence().outputHashesMatch()
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("candidateReportSha256")
+                            .equals(
+                                "a20e25c0afa2371b83eed5cc1b65e2c85857c31dbdbf2e88e2a6f761280939c0")
+                        && profile
+                            .evidence()
+                            .controls()
+                            .get("comparisonReportSha256")
+                            .equals(
+                                "24705f2fd6107a6a624a62730c1553a22589de30024b1437f28663a2c79db1dd")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(

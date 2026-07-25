@@ -35,10 +35,12 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           required=false
+          mode=none
           comparison=""
           case "${EVENT_NAME}" in
             schedule|workflow_dispatch)
               required=true
+              mode=full
               ;;
             pull_request)
               comparison="${BASE_SHA}"
@@ -55,12 +57,16 @@ jobs:
             if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
                 ! git cat-file -e "${comparison}^{commit}"; then
               required=true
+              mode=full
             elif ! git diff --quiet "${comparison}" "${GITHUB_SHA}" -- catalog/models.json; then
               required=true
+              mode=changed
             fi
           fi
 
           echo "required=${required}" >> "${GITHUB_OUTPUT}"
+          echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+          echo "comparison=${comparison}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -92,7 +98,15 @@ jobs:
 
       - name: Verify exact GGUF dimensions
         if: steps.remote-catalog.outputs.required == 'true'
-        run: npm run catalog:enrich -- --concurrency=6
+        env:
+          MODE: ${{ steps.remote-catalog.outputs.mode }}
+          COMPARISON: ${{ steps.remote-catalog.outputs.comparison }}
+        run: |
+          if [[ "${MODE}" == "changed" ]]; then
+            npm run catalog:enrich -- --concurrency=2 --changed-from="${COMPARISON}"
+          else
+            npm run catalog:enrich -- --concurrency=3
+          fi
 
       - name: Publish facade smoke-test artifacts to Maven Local
         run: >

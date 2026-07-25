@@ -67,6 +67,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -110,6 +111,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -152,6 +154,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -194,6 +197,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -236,6 +240,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -361,6 +366,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -661,6 +667,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {

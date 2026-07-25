@@ -66,8 +66,8 @@
             <h2 id="inference-title">Models compared with native engines</h2>
           </div>
           <p>
-            The same GGUF bytes and generation controls were used for Models pure Java,
-            llama.cpp, and Ollama.
+            Each row uses the same GGUF bytes and generation controls across the selected Models
+            backend, llama.cpp, and Ollama.
           </p>
         </div>
 
@@ -82,17 +82,17 @@
                 <th colspan="3" scope="colgroup">TTFT p95</th>
                 <th colspan="3" scope="colgroup">Prompt p50</th>
                 <th colspan="3" scope="colgroup">Decode p50</th>
-                <th colspan="2" scope="colgroup">Java decode ratio</th>
+                <th colspan="2" scope="colgroup">Models decode ratio</th>
                 <th rowspan="2" scope="col">Evidence</th>
               </tr>
               <tr>
-                <th scope="col">Java</th>
+                <th scope="col">Models</th>
                 <th scope="col">llama.cpp</th>
                 <th scope="col">Ollama</th>
-                <th scope="col">Java</th>
+                <th scope="col">Models</th>
                 <th scope="col">llama.cpp</th>
                 <th scope="col">Ollama</th>
-                <th scope="col">Java</th>
+                <th scope="col">Models</th>
                 <th scope="col">llama.cpp</th>
                 <th scope="col">Ollama</th>
                 <th scope="col">vs llama.cpp</th>
@@ -109,8 +109,8 @@
           <div>
             <h3>Controls</h3>
             <p>
-              CPU only, eight threads, 2,048-token context, greedy generation, two warmups, and
-              ten measured 64-token generations. Page cache was dropped at backend boundaries.
+              CPU-only retained runs pin processor limits, context, sampling, warmups, and trial
+              counts in their evidence. Every row compares identical prompts and artifact bytes.
             </p>
           </div>
           <div>

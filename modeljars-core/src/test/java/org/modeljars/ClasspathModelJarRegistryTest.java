@@ -127,12 +127,39 @@ class ClasspathModelJarRegistryTest {
                     .capability("code-completion")
                     .build())
             .orElseThrow();
+    ModelJarDescriptor halfBillionRust =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
     ModelJarDescriptor onePointFiveBillion =
         registry
             .resolve(
                 ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+    ModelJarDescriptor onePointFiveBillionRust =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
+    ModelJarDescriptor onePointFiveBillionQ8Rust =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                    .variant("q8_0")
+                    .backend("rust-ffm")
                     .capability("code-completion")
                     .build())
             .orElseThrow();
@@ -156,6 +183,7 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow();
 
     assertEquals("qwen2_5_coder_0_5b_instruct_q4_0", halfBillion.alias());
+    assertEquals(halfBillion, halfBillionRust);
     assertEquals("qwen2", halfBillion.architecture());
     assertEquals("Q4_0", halfBillion.quantization());
     assertTrue(
@@ -166,6 +194,7 @@ class ClasspathModelJarRegistryTest {
             .endsWith("qwen2.5-coder-0.5b-instruct-q4_0.gguf"));
 
     assertEquals("qwen2_5_coder_1_5b_instruct_q4_0", onePointFiveBillion.alias());
+    assertEquals(onePointFiveBillion, onePointFiveBillionRust);
     assertEquals("qwen2", onePointFiveBillion.architecture());
     assertEquals("Q4_0", onePointFiveBillion.quantization());
     assertTrue(
@@ -174,6 +203,8 @@ class ClasspathModelJarRegistryTest {
             .orElseThrow()
             .toString()
             .endsWith("qwen2.5-coder-1.5b-instruct-q4_0.gguf"));
+    assertEquals("qwen2_5_coder_1_5b_instruct_q8_0", onePointFiveBillionQ8Rust.alias());
+    assertEquals("Q8_0", onePointFiveBillionQ8Rust.quantization());
 
     assertEquals("qwen2_5_coder_3b_instruct_q4_0", threeBillion.alias());
     assertEquals("qwen2", threeBillion.architecture());

@@ -1,6 +1,9 @@
 import { formatDuration } from "./benchmark-data.js";
 import { formatBytes } from "./resource-profile.js";
 
+const MINIMUM_MODEL_ANSWER_RATE = 1 / 3;
+const MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.9;
+
 function requireObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error(`${label} must be an object`);
@@ -98,6 +101,10 @@ export function validateQualificationCatalog(value, models) {
     requireText(entry.model, `${modelId}.model`);
     requireText(entry.backend, `${modelId}.backend`);
     requireText(entry.backendVersion, `${modelId}.backendVersion`);
+    requireText(entry.workload, `${modelId}.workload`);
+    requireSha256(entry.corpusSha256, `${modelId}.corpusSha256`);
+    requireText(entry.promptTemplate, `${modelId}.promptTemplate`);
+    requireText(entry.groundingPolicy, `${modelId}.groundingPolicy`);
     requireSha256(entry.artifactSha256, `${modelId}.artifactSha256`);
     if (entry.artifactSha256 !== model.sha256) {
       throw new Error(`artifact SHA-256 mismatch for ${modelId}`);
@@ -129,9 +136,17 @@ export function validateQualificationCatalog(value, models) {
       "rawCorrectAnswerRate",
       "abstentionAccuracy",
       "modelAnswerRate",
+      "modelAnswerCorrectRate",
       "extractiveFallbackRate",
     ]) {
       requireRate(entry[rate], `${modelId}.${rate}`);
+    }
+    if (
+      entry.qualified &&
+      (entry.modelAnswerRate < MINIMUM_MODEL_ANSWER_RATE ||
+        entry.modelAnswerCorrectRate < MINIMUM_MODEL_ANSWER_CORRECT_RATE)
+    ) {
+      throw new Error(`${modelId} does not meet the model-answer contribution policy`);
     }
     requireObject(entry.environment, `${modelId}.environment`);
     return {
@@ -179,6 +194,7 @@ export function buildQualificationRows(qualifications, models) {
         modelName: model.name,
         modelUrl: `/models/${encodeURIComponent(model.id)}/`,
         useCase: qualificationLabel(entry),
+        workload: entry.workload,
         retrieval: formatDuration(entry.p95RetrievalMillis),
         ttft: formatDuration(entry.p95TtftMillis),
         tpot: formatDuration(entry.p95TpotMillis),

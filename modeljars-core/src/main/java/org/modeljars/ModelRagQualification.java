@@ -11,6 +11,10 @@ public record ModelRagQualification(
     String model,
     String backend,
     String backendVersion,
+    String workload,
+    String corpusSha256,
+    String promptTemplate,
+    String groundingPolicy,
     String artifactSha256,
     long artifactSizeBytes,
     String reportPath,
@@ -31,14 +35,22 @@ public record ModelRagQualification(
     double rawCorrectAnswerRate,
     double abstentionAccuracy,
     double modelAnswerRate,
+    double modelAnswerCorrectRate,
     double extractiveFallbackRate,
     ModelQualificationEnvironment environment) {
+
+  public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
+  public static final double MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90;
 
   public ModelRagQualification {
     modelId = requireIdentifier(modelId);
     model = requireText(model, "model");
     backend = requireText(backend, "backend").toLowerCase(Locale.ROOT);
     backendVersion = requireText(backendVersion, "backendVersion");
+    workload = requireIdentifier(workload, "workload");
+    corpusSha256 = requireSha256(corpusSha256, "corpusSha256");
+    promptTemplate = requireText(promptTemplate, "promptTemplate");
+    groundingPolicy = requireText(groundingPolicy, "groundingPolicy");
     artifactSha256 = requireSha256(artifactSha256, "artifactSha256");
     if (artifactSizeBytes < 1) {
       throw new IllegalArgumentException("artifactSizeBytes must be positive");
@@ -66,8 +78,15 @@ public record ModelRagQualification(
     rawCorrectAnswerRate = requireRate(rawCorrectAnswerRate, "rawCorrectAnswerRate");
     abstentionAccuracy = requireRate(abstentionAccuracy, "abstentionAccuracy");
     modelAnswerRate = requireRate(modelAnswerRate, "modelAnswerRate");
+    modelAnswerCorrectRate = requireRate(modelAnswerCorrectRate, "modelAnswerCorrectRate");
     extractiveFallbackRate = requireRate(extractiveFallbackRate, "extractiveFallbackRate");
     environment = Objects.requireNonNull(environment, "environment");
+    if (qualified
+        && (modelAnswerRate < MINIMUM_MODEL_ANSWER_RATE
+            || modelAnswerCorrectRate < MINIMUM_MODEL_ANSWER_CORRECT_RATE)) {
+      throw new IllegalArgumentException(
+          "qualified evidence must meet model-answer contribution and correctness floors");
+    }
   }
 
   /** Classifies how the artifact met the production quality policy. */
@@ -95,9 +114,13 @@ public record ModelRagQualification(
   }
 
   private static String requireIdentifier(String value) {
-    String identifier = requireText(value, "modelId");
+    return requireIdentifier(value, "modelId");
+  }
+
+  private static String requireIdentifier(String value, String name) {
+    String identifier = requireText(value, name);
     if (!identifier.matches("[a-z0-9_]+")) {
-      throw new IllegalArgumentException("modelId must be a lowercase catalog identifier");
+      throw new IllegalArgumentException(name + " must be a lowercase identifier");
     }
     return identifier;
   }

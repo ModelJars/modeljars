@@ -202,6 +202,10 @@ public final class ModelRagQualificationRegistry {
         required(properties, prefix + "model"),
         required(properties, prefix + "backend"),
         required(properties, prefix + "backendVersion"),
+        required(properties, prefix + "workload"),
+        required(properties, prefix + "corpusSha256"),
+        required(properties, prefix + "promptTemplate"),
+        required(properties, prefix + "groundingPolicy"),
         required(properties, prefix + "artifactSha256"),
         longValue(properties, prefix + "artifactSizeBytes"),
         required(properties, prefix + "reportPath"),
@@ -222,6 +226,7 @@ public final class ModelRagQualificationRegistry {
         decimal(properties, prefix + "rawCorrectAnswerRate"),
         decimal(properties, prefix + "abstentionAccuracy"),
         decimal(properties, prefix + "modelAnswerRate"),
+        decimal(properties, prefix + "modelAnswerCorrectRate"),
         decimal(properties, prefix + "extractiveFallbackRate"),
         new ModelQualificationEnvironment(
             required(properties, environment + "hostname"),

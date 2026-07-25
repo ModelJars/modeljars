@@ -41,6 +41,9 @@ export function qualificationSummary(qualification) {
   return {
     label: qualificationLabel(qualification),
     backend: `${qualification.backend} ${qualification.backendVersion}`,
+    workload: qualification.workload,
+    promptTemplate: qualification.promptTemplate,
+    groundingPolicy: qualification.groundingPolicy,
     attempts: qualification.attempts,
     ttft: formatDuration(qualification.p95TtftMillis),
     tpot: formatDuration(qualification.p95TpotMillis),
@@ -144,8 +147,10 @@ function renderQualification(qualification) {
       </div>
       <p>
         Measured through the published Models Java client on
-        ${escapeHtml(summary.backend)}. Final quality includes the declared grounding policy;
-        raw model quality and fallback use remain visible below.
+        ${escapeHtml(summary.backend)} for the ${escapeHtml(summary.workload)} workload using
+        ${escapeHtml(summary.promptTemplate)}. Final quality includes
+        ${escapeHtml(summary.groundingPolicy)}; raw model quality and fallback use remain visible
+        below.
       </p>
       <dl class="dimension-grid qualification-metrics">
         <div><dt>TTFT p95</dt><dd>${escapeHtml(summary.ttft)}</dd></div>

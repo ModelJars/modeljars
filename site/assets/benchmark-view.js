@@ -27,6 +27,7 @@ function formatRate(value) {
 
 function formatEngine(engine) {
   if (engine === "pure-java") return "Models pure Java";
+  if (engine === "rust-ffm") return "Models Rust/FFM";
   if (engine === "openai") return "OpenAI";
   if (engine === "anthropic") return "Anthropic";
   if (engine === "deepseek") return "DeepSeek";
@@ -57,6 +58,7 @@ export function buildInferenceRows(benchmarks, models) {
       status: comparison.status === "candidate" ? "Validated candidate" : "Profiled",
       statusId: comparison.status,
       artifactSha256: comparison.artifactSha256,
+      modelsBackend: formatEngine(comparison.engines.models.backend),
       engines: Object.fromEntries(
         Object.entries(comparison.engines).map(([engine, metrics]) => [
           engine,

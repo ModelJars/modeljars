@@ -32,7 +32,7 @@ class ModelRagQualificationRegistryTest {
 
     assertEquals(Instant.parse("2026-07-24T06:00:00Z"), registry.generatedAt());
     assertEquals(
-        "trusted-citation-lexical-entailment-extractive-fallback-v2",
+        "production-rag-model-contribution-v4",
         registry.policyVersion());
     assertEquals(MODELS_REVISION, registry.modelsRevision());
     assertEquals(25, registry.targetQualifiedModels());
@@ -42,6 +42,12 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualification qualification = registry.qualifications().getFirst();
     assertEquals("qwen3_0_6b_q4_0", qualification.modelId());
     assertEquals("llama.cpp", qualification.backend());
+    assertEquals("general", qualification.workload());
+    assertEquals("d".repeat(64), qualification.corpusSha256());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
     assertEquals(27, qualification.attempts());
     assertEquals(101.569, qualification.p50DecodeTokensPerSecond());
     assertEquals(
@@ -94,6 +100,205 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesQualifiedSmolLm2RustFfmEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("smollm2_360m_instruct_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-2729c3a", qualification.backendVersion());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(18.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(1.0 / 3.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(43.91685822892476, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen3RustFfmEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen3_1_7b_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-2729c3a", qualification.backendVersion());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(21.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(12.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(17.99028698691015, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen25CoderRustFfmEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen2_5_coder_0_5b_instruct_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-689f0d5", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(0.0, qualification.rawCorrectAnswerRate());
+    assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(53.01198879379568, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen3SixHundredMillionPureJavaEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen3_0_6b_q4_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("pure-java", qualification.backend());
+    assertEquals("models-purejava-3e759cc-q4-unsigned", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml-no-think", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(3.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(12.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(51.019240300967795, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen25CoderQ4HybridEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen2_5_coder_0_5b_instruct_q4_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(0.0, qualification.rawCorrectAnswerRate());
+    assertEquals(12.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(39.501345700476605, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen25Coder15BQ4HybridEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen2_5_coder_1_5b_instruct_q4_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals(
+        "trusted-provenance-clause-anchors-extractive-fallback-v4",
+        qualification.groundingPolicy());
+    assertEquals("USABLE", qualification.performanceTier());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(3.0 / 27.0, qualification.rawCorrectAnswerRate());
+    assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(23.71799920784686, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen25Coder15BQ8RustEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen2_5_coder_1_5b_instruct_q8_0"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(7, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("models-native-3e759cc-q8", qualification.backendVersion());
+    assertEquals("coding", qualification.workload());
+    assertEquals(
+        "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
+        qualification.corpusSha256());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals("USABLE", qualification.performanceTier());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(0.0, qualification.rawCorrectAnswerRate());
+    assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(19.69807730818983, qualification.p50DecodeTokensPerSecond());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
   void rejectsInvalidSchemaCountsAndEvidence() {
     Properties wrongSchema = properties(1.0, 1.0, true);
     wrongSchema.setProperty("modeljars.qualifications.schemaVersion", "2");
@@ -118,6 +323,18 @@ class ModelRagQualificationRegistryTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ModelRagQualificationRegistry.fromProperties(insecureReport));
+
+    Properties insufficientContribution = properties(1.0, 0.32, true);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelRagQualificationRegistry.fromProperties(insufficientContribution));
+
+    Properties incorrectModelAnswers = properties(1.0, 1.0, true);
+    incorrectModelAnswers.setProperty(
+        "qualification.qwen3_0_6b_q4_0.modelAnswerCorrectRate", "0.89");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelRagQualificationRegistry.fromProperties(incorrectModelAnswers));
   }
 
   private static Properties properties(
@@ -128,7 +345,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty("modeljars.qualifications.generatedAt", "2026-07-24T06:00:00Z");
     properties.setProperty(
         "modeljars.qualifications.policyVersion",
-        "trusted-citation-lexical-entailment-extractive-fallback-v2");
+        "production-rag-model-contribution-v4");
     properties.setProperty("modeljars.qualifications.modelsRevision", MODELS_REVISION);
     properties.setProperty("modeljars.qualifications.targetQualifiedModels", "25");
     properties.setProperty("modeljars.qualifications.qualifiedModels", qualified ? "1" : "0");
@@ -136,6 +353,12 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty(prefix + "model", "Qwen3 0.6B Q4_0");
     properties.setProperty(prefix + "backend", "llama.cpp");
     properties.setProperty(prefix + "backendVersion", "b10012-c71854292");
+    properties.setProperty(prefix + "workload", "general");
+    properties.setProperty(prefix + "corpusSha256", "d".repeat(64));
+    properties.setProperty(prefix + "promptTemplate", "chatml");
+    properties.setProperty(
+        prefix + "groundingPolicy",
+        "trusted-provenance-clause-anchors-extractive-fallback-v4");
     properties.setProperty(prefix + "artifactSha256", ARTIFACT_SHA);
     properties.setProperty(prefix + "artifactSizeBytes", "429496729");
     properties.setProperty(
@@ -162,6 +385,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty(prefix + "rawCorrectAnswerRate", Double.toString(rawCorrectAnswerRate));
     properties.setProperty(prefix + "abstentionAccuracy", "1.0");
     properties.setProperty(prefix + "modelAnswerRate", Double.toString(modelAnswerRate));
+    properties.setProperty(prefix + "modelAnswerCorrectRate", "1.0");
     properties.setProperty(
         prefix + "extractiveFallbackRate", Double.toString(1.0 - modelAnswerRate));
     properties.setProperty(prefix + "environment.hostname", "qualification-host");

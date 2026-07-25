@@ -29,6 +29,10 @@ plugins {
     `maven-publish`
 }
 
+val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
+val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
+val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v4"
+
 data class CatalogEntry(
     val id: String,
     val name: String,
@@ -161,6 +165,10 @@ data class CatalogRagQualification(
     val model: String,
     val backend: String,
     val backendVersion: String,
+    val workload: String,
+    val corpusSha256: String,
+    val promptTemplate: String,
+    val groundingPolicy: String,
     val artifactSha256: String,
     val artifactSizeBytes: Long,
     val reportPath: String,
@@ -180,6 +188,7 @@ data class CatalogRagQualification(
     val rawCorrectAnswerRate: Double,
     val abstentionAccuracy: Double,
     val modelAnswerRate: Double,
+    val modelAnswerCorrectRate: Double,
     val extractiveFallbackRate: Double,
     val environment: CatalogQualificationEnvironment,
     val raw: Map<String, Any?>,
@@ -283,6 +292,10 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
         appendLine("${prefix}model=${propertyValue(model)}")
         appendLine("${prefix}backend=${propertyValue(backend)}")
         appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
+        appendLine("${prefix}workload=${propertyValue(workload)}")
+        appendLine("${prefix}corpusSha256=$corpusSha256")
+        appendLine("${prefix}promptTemplate=${propertyValue(promptTemplate)}")
+        appendLine("${prefix}groundingPolicy=${propertyValue(groundingPolicy)}")
         appendLine("${prefix}artifactSha256=$artifactSha256")
         appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
         appendLine("${prefix}reportPath=${propertyValue(reportPath)}")
@@ -308,6 +321,7 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
         appendLine("${prefix}rawCorrectAnswerRate=$rawCorrectAnswerRate")
         appendLine("${prefix}abstentionAccuracy=$abstentionAccuracy")
         appendLine("${prefix}modelAnswerRate=$modelAnswerRate")
+        appendLine("${prefix}modelAnswerCorrectRate=$modelAnswerCorrectRate")
         appendLine("${prefix}extractiveFallbackRate=$extractiveFallbackRate")
         environment.properties("${prefix}environment.").forEach(::appendLine)
     }
@@ -565,8 +579,8 @@ val benchmarkDocument =
     JsonSlurper()
         .parse(file("catalog/benchmarks.json"))
         .stringKeyMap("catalog/benchmarks.json")
-require((benchmarkDocument["schemaVersion"] as? Number)?.toInt() == 1) {
-    "catalog/benchmarks.json must use schemaVersion 1"
+require((benchmarkDocument["schemaVersion"] as? Number)?.toInt() == 2) {
+    "catalog/benchmarks.json must use schemaVersion 2"
 }
 val inferenceComparisons =
     ((benchmarkDocument["inferenceComparisons"] as? List<*>)
@@ -615,6 +629,10 @@ val ragQualifications =
                         model = raw.requiredString("model"),
                         backend = raw.requiredString("backend"),
                         backendVersion = raw.requiredString("backendVersion"),
+                        workload = raw.requiredString("workload"),
+                        corpusSha256 = raw.requiredString("corpusSha256"),
+                        promptTemplate = raw.requiredString("promptTemplate"),
+                        groundingPolicy = raw.requiredString("groundingPolicy"),
                         artifactSha256 = raw.requiredString("artifactSha256"),
                         artifactSizeBytes =
                             longValue(raw, "artifactSizeBytes", context),
@@ -645,6 +663,8 @@ val ragQualifications =
                             decimal(raw, "abstentionAccuracy", context),
                         modelAnswerRate =
                             decimal(raw, "modelAnswerRate", context),
+                        modelAnswerCorrectRate =
+                            decimal(raw, "modelAnswerCorrectRate", context),
                         extractiveFallbackRate =
                             decimal(raw, "extractiveFallbackRate", context),
                         environment =
@@ -757,11 +777,17 @@ inferenceComparisons.forEach { comparison ->
         "Inference comparison SHA-256 does not match $id"
     }
     val engines = comparison["engines"].stringKeyMap("engines for $id")
-    require(engines.keys == setOf("pure-java", "llama.cpp", "ollama")) {
-        "Inference comparison $id must contain pure-java, llama.cpp, and ollama"
+    require(engines.keys == setOf("models", "llama.cpp", "ollama")) {
+        "Inference comparison $id must contain models, llama.cpp, and ollama"
     }
     engines.forEach { (engine, rawMetrics) ->
         val metrics = rawMetrics.stringKeyMap("$id.$engine")
+        if (engine == "models") {
+            val backend = metrics.requiredString("backend")
+            require(model.backends[backend] == true) {
+                "Inference comparison $id uses unsupported Models backend $backend"
+            }
+        }
         listOf(
             "p95TtftMillis",
             "p95TpotMillis",
@@ -832,6 +858,18 @@ ragQualifications?.let { qualifications ->
         require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
             "Qualification artifact SHA-256 is invalid for ${qualification.modelId}"
         }
+        require(qualification.workload.matches(Regex("[a-z0-9_]+"))) {
+            "Qualification workload is invalid for ${qualification.modelId}"
+        }
+        require(qualification.corpusSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Qualification corpus SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.promptTemplate.isNotBlank()) {
+            "Qualification prompt template is missing for ${qualification.modelId}"
+        }
+        require(qualification.groundingPolicy.isNotBlank()) {
+            "Qualification grounding policy is missing for ${qualification.modelId}"
+        }
         require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
             "Qualification report SHA-256 is invalid for ${qualification.modelId}"
         }
@@ -865,6 +903,7 @@ ragQualifications?.let { qualifications ->
             qualification.rawCorrectAnswerRate,
             qualification.abstentionAccuracy,
             qualification.modelAnswerRate,
+            qualification.modelAnswerCorrectRate,
             qualification.extractiveFallbackRate,
         ).forEach { rate ->
             require(rate in 0.0..1.0) {
@@ -1429,7 +1468,7 @@ project(":modeljars-catalog") {
     val aggregatePerformanceMetadata =
         generatedResources.map { it.file("META-INF/modeljars/performance-v1.json") }
     val aggregateBenchmarkMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
     val aggregateQualificationRegistry =
         generatedResources.map {
             it.file("META-INF/modeljars/qualifications-v1.properties")
@@ -1546,7 +1585,7 @@ project(":modeljars-catalog") {
         val markerPerformanceMetadata =
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
         val markerBenchmarkMetadata =
-            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v1.json") }
+            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
         val markerQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/qualifications-v1.properties")
@@ -1602,7 +1641,7 @@ project(":modeljars-catalog") {
                         JsonOutput.prettyPrint(
                             JsonOutput.toJson(
                                 mapOf(
-                                    "schemaVersion" to 1,
+                                    "schemaVersion" to 2,
                                     "publishedAt" to benchmarkDocument["publishedAt"],
                                     "environment" to benchmarkDocument["environment"],
                                     "inferenceComparisons" to
@@ -1674,7 +1713,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/model.json",
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
-                        "META-INF/modeljars/benchmarks-v1.json",
+                        "META-INF/modeljars/benchmarks-v2.json",
                         "META-INF/modeljars/qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
@@ -1690,7 +1729,7 @@ project(":modeljars-catalog") {
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
-                    include("META-INF/modeljars/benchmarks-v1.json")
+                    include("META-INF/modeljars/benchmarks-v2.json")
                     include("META-INF/modeljars/qualifications-v1.json")
                 }
             }
@@ -1784,7 +1823,7 @@ val generateSiteCatalog =
                     )
                 }
                 val benchmarkMetadata =
-                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                    zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
                         ?: error("Aggregate ModelJars benchmark metadata is missing")
                 zip.getInputStream(benchmarkMetadata).use { input ->
                     Files.copy(
@@ -1917,7 +1956,7 @@ tasks.register("verifyCatalog") {
                     zip.getEntry("META-INF/modeljars/performance-v1.json")
                         ?: error("Performance profile metadata missing from $markerJar")
                 val benchmarkMetadataResource =
-                    zip.getEntry("META-INF/modeljars/benchmarks-v1.json")
+                    zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
                         ?: error("Benchmark metadata missing from $markerJar")
                 val qualificationResource =
                     zip.getEntry("META-INF/modeljars/qualifications-v1.properties")
@@ -1977,7 +2016,7 @@ tasks.register("verifyCatalog") {
                                 .parse(it)
                                 .stringKeyMap("Benchmark metadata in $markerJar")
                         }
-                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 1) {
+                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 2) {
                     "Benchmark JSON schema mismatch in $markerJar"
                 }
                 require(
@@ -2182,8 +2221,8 @@ val verifyLaunchQualifications =
             require(qualifications.qualifiedModels >= 25) {
                 "At least 25 models must qualify; found ${qualifications.qualifiedModels}"
             }
-            require(qualifications.policyVersion.endsWith("-v2")) {
-                "Launch qualifications must use the current v2 grounding policy"
+            require(qualifications.policyVersion == PRODUCTION_RAG_POLICY_VERSION) {
+                "Launch qualifications must use $PRODUCTION_RAG_POLICY_VERSION"
             }
             val qualified = qualifications.entries.filter(CatalogRagQualification::qualified)
             qualified.forEach { entry ->
@@ -2201,6 +2240,12 @@ val verifyLaunchQualifications =
                 }
                 require(entry.abstentionAccuracy == 1.0) {
                     "Qualification abstention accuracy must be 100%: ${entry.modelId}"
+                }
+                require(entry.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE) {
+                    "Model-answer contribution is below one-third: ${entry.modelId}"
+                }
+                require(entry.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE) {
+                    "Accepted model-answer correctness is below 90%: ${entry.modelId}"
                 }
                 require(entry.p95TtftMillis <= 2_000) {
                     "Qualification TTFT is not interactively usable: ${entry.modelId}"
@@ -2235,9 +2280,6 @@ val verifyLaunchQualifications =
 tasks.named("check") {
     dependsOn("verifyCatalog")
     dependsOn(verifyFacadePublication)
-    if (qualificationCatalogFile.isFile) {
-        dependsOn(verifyLaunchQualifications)
-    }
 }
 
 val releaseSigningKey = providers.environmentVariable("GPG_PRIVATE_KEY")
@@ -2352,6 +2394,7 @@ val verifyReleaseBundle =
         group = "verification"
         description = "Verify staged signatures, checksums, and Central bundle layout"
         dependsOn(generateReleaseChecksums)
+        dependsOn(verifyLaunchQualifications)
         inputs.dir(releaseRepository)
 
         doLast {

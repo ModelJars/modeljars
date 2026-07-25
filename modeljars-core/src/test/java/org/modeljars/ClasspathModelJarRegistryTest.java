@@ -663,6 +663,29 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQualifiedUmarTransitMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://umarfarookm/UmarTransit-1B")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("umarfarookm_umartransit_1b_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "db1a4489626110145274f508b3fa30439516a47b4e721fe02d67df4679db5b9a",
+        descriptor.sha256().orElseThrow());
+    assertEquals(986_048_096L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsAndVerifiesCanonicalWordTourPayloadFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

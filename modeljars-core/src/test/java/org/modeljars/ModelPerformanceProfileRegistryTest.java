@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(23, registry.profiles().size());
+    assertEquals(24, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -896,6 +896,30 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+        profile.artifactSha256());
+    assertEquals("64", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedUmarTransitRustFfmProfile() {
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("umartransit_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "db1a4489626110145274f508b3fa30439516a47b4e721fe02d67df4679db5b9a",
         profile.artifactSha256());
     assertEquals("64", profile.recommendations().get("models.purejava.prefillBatchSize"));
     assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionScores"));

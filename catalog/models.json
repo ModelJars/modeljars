@@ -2118,6 +2118,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [

@@ -1717,6 +1717,106 @@
       }
     },
     {
+      "id": "qwen2_5_0_5b_q4_k_m_epyc_milan_jdk25_rust_ffm",
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "artifactSha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen2.5-0.5b-rust-ffm-general-rag-20260725",
+        "measuredAt": "2026-07-25T18:42:49.923800447Z",
+        "baseline": "rust-ffm-v9-native-decode-disabled",
+        "candidate": "rust-ffm-v9-native-decode-enabled",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 283.032001,
+          "p50TtftMillis": 417.412277,
+          "p95TtftMillis": 520.1189665999999,
+          "p50TpotMillis": 43.86800875,
+          "p95TpotMillis": 62.37081114999998,
+          "p50PrefillTokensPerSecond": 162.15164330199033,
+          "p50DecodeTokensPerSecond": 22.795655159524422,
+          "p50EndToEndMillis": 1409.678185,
+          "p95EndToEndMillis": 1820.1867084,
+          "peakRssBytes": 1362149376
+        },
+        "candidateMetrics": {
+          "loadMillis": 409.764852,
+          "p50TtftMillis": 419.244188,
+          "p95TtftMillis": 519.6800355,
+          "p50TpotMillis": 14.807282749999999,
+          "p95TpotMillis": 20.88092665,
+          "p50PrefillTokensPerSecond": 164.10037268264855,
+          "p50DecodeTokensPerSecond": 67.53433542693713,
+          "p50EndToEndMillis": 731.868543,
+          "p95EndToEndMillis": 933.6420475,
+          "peakRssBytes": 913850368
+        },
+        "controls": {
+          "workload": "general",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "promptTemplate": "chatml",
+          "groundingPolicy": "trusted-provenance-clause-anchors-extractive-fallback-v5",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "0e3b8a7a3c8bed0653f9deba7890301e2182210e",
+          "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
+          "kernelImplementation": "rust-ffm-quantized-v8",
+          "nativeKernelAbi": "2",
+          "baselinePlanVersion": "rust-ffm-v9",
+          "candidatePlanVersion": "rust-ffm-v9",
+          "baselineNativeQuantizedDecode": "false",
+          "candidateNativeQuantizedDecode": "true",
+          "baselineReportSha256": "f5e06f7f002fb6473bd195cf41a6be7faa727a215c3b802931c85cccd1f8dd2e",
+          "candidateReportSha256": "621093bc1e6b8199c326d724ee6a0b1bb8e179b3fcd28f6c8a69879af7098869",
+          "llamaCppReportSha256": "acfbe1d2da3ff2d1395d6c0f3c7e0e4f91833012638c8755faec8094960b7242",
+          "ollamaReportSha256": "c07496ff3a0d5a86b36648522d8b20bdda566dde3e54c92d74fee124b4c1d252",
+          "qualificationReportSha256": "115ab8b816baab5af0d8661f1f8256d0653575e62d4cba1b73ce4c67975ef85a",
+          "pairedOutputHashes": "27-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.4444444444444444",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToLlamaCpp": "0.6887787450151601",
+          "decodeRatioToOllama": "1.466491961193893",
+          "endToEndRatioToLlamaCpp": "1.1918408996398773",
+          "endToEndRatioToOllama": "0.8581285896323735",
+          "jvmBuild": "GraalVM Community 25.0.3+9-jvmci-25.1-b19",
+          "heap": "host-default"
+        }
+      }
+    },
+    {
       "id": "sqlcoder_7b_2_q5_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "sqlcoder_7b_2_q5_k_m",
       "markerCoordinate": "org.modeljars.huggingface:defog.sqlcoder-7b-2.gguf.q5_k_m:2.0.0-q5_k_m.1",

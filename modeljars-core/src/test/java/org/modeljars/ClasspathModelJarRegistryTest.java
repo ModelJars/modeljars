@@ -508,7 +508,7 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
-  void loadsFinR1MarkerWithoutPrematurePureJavaClaim() {
+  void loadsFinR1MarkerWithAcceptedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 
     ModelJarDescriptor descriptor =
@@ -555,11 +555,11 @@ class ClasspathModelJarRegistryTest {
                     .variant("q4_k_m")
                     .backend("pure-java")
                     .build())
-            .isEmpty());
+            .isPresent());
   }
 
   @Test
-  void loadsEuroLlmMarkerWithoutPrematurePureJavaClaim() {
+  void loadsEuroLlmMarkerWithAcceptedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 
     ModelJarDescriptor descriptor =
@@ -603,7 +603,7 @@ class ClasspathModelJarRegistryTest {
                     .variant("q4_k_m")
                     .backend("pure-java")
                     .build())
-            .isEmpty());
+            .isPresent());
   }
 
   @Test

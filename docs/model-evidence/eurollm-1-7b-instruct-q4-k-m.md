@@ -1,6 +1,6 @@
 # EuroLLM 1.7B Instruct Q4_K_M Acceptance Evidence
 
-Status: catalog marker accepted; pure-Java runtime acceptance pending
+Status: catalog marker and pure-Java runtime accepted
 
 ## Artifact
 
@@ -80,7 +80,7 @@ Rendered prompt token IDs, including the configured BOS token:
 Greedy continuation at temperature 0, including the end-of-generation token:
 
 ```text
-[697, 83672, 775, 35784, 119735, 4]
+[119802, 83672, 775, 35784, 119735, 4]
 ```
 
 Decoded continuation:
@@ -96,10 +96,11 @@ preferences and may produce hallucinated, harmful, or false output. The marker
 therefore includes `unaligned-output-warning`. Catalog inclusion is not an
 endorsement of generated or translated content.
 
-## Runtime Gate
+## Runtime Acceptance
 
-The ModelJars marker intentionally advertises `pure-java=false`. Enabling it
-requires a mandatory models-library job that downloads this exact artifact,
-verifies size and SHA-256, asserts the GGUF contract above, reproduces the
-SentencePiece and ChatML token IDs, and matches the greedy multilingual
-continuation. The test must not skip when the artifact is absent.
+The ModelJars marker advertises `pure-java=true`. The mandatory
+`EuroLlmModelJarsIntegrationTest` downloads this exact artifact, verifies size
+and SHA-256, asserts the GGUF contract above, reproduces the SentencePiece and
+ChatML token IDs, and matches the six raw token IDs returned by llama.cpp
+b9960's `/completion` endpoint with `return_tokens=true`. The fixture cannot
+turn a missing artifact into a skipped or passing test.

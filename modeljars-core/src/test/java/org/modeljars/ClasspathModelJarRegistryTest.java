@@ -604,6 +604,85 @@ class ClasspathModelJarRegistryTest {
                     .backend("pure-java")
                     .build())
             .isPresent());
+    assertTrue(
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .build())
+            .isPresent());
+  }
+
+  @Test
+  void loadsQualifiedQwen25GeneralMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-0.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        descriptor.sha256().orElseThrow());
+    assertEquals(491_400_032L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsQualifiedQwen25OnePointFiveBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-1.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_117_320_736L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsQualifiedUmarTransitMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://umarfarookm/UmarTransit-1B")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("umarfarookm_umartransit_1b_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "db1a4489626110145274f508b3fa30439516a47b4e721fe02d67df4679db5b9a",
+        descriptor.sha256().orElseThrow());
+    assertEquals(986_048_096L, descriptor.sizeBytes().orElseThrow());
   }
 
   @Test

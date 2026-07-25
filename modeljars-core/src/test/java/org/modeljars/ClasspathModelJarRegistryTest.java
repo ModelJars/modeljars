@@ -640,6 +640,29 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQualifiedQwen25OnePointFiveBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-1.5B-Instruct-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_117_320_736L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsAndVerifiesCanonicalWordTourPayloadFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

@@ -472,6 +472,23 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsMiniCpm5OfficialMarkerForQualifiedRustFfmInference() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource("hf://openbmb/MiniCPM5-1B-GGUF")
+                    .versionRange("[5.0.0,6.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("minicpm5_1b_q4_k_m", descriptor.alias());
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+  }
+
+  @Test
   void loadsHuatuoGptO1SevenBillionMarkerWithVerifiedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

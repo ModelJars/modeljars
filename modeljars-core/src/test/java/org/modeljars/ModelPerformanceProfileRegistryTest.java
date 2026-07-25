@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(24, registry.profiles().size());
+    assertEquals(25, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -920,6 +920,32 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "db1a4489626110145274f508b3fa30439516a47b4e721fe02d67df4679db5b9a",
+        profile.artifactSha256());
+    assertEquals("64", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedMiniCpm5RustFfmProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(25, registry.profiles().size());
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
         profile.artifactSha256());
     assertEquals("64", profile.recommendations().get("models.purejava.prefillBatchSize"));
     assertEquals("true", profile.recommendations().get("models.purejava.batchedAttentionScores"));

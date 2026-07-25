@@ -446,7 +446,7 @@ class ModelRagQualificationRegistryTest {
     assertEquals(3.0 / 27.0, qualification.rawCorrectAnswerRate());
     assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
-    assertEquals(38.99485081885763, qualification.p50DecodeTokensPerSecond());
+    assertEquals(38.728329822527606, qualification.p50DecodeTokensPerSecond());
     assertTrue(qualification.productionUsable());
   }
 

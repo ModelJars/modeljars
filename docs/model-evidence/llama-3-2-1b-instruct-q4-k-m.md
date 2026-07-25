@@ -23,12 +23,12 @@ requests. Each backend ran in an isolated process.
 | Backend | Tier | p95 TTFT | p50 decode | p95 end to end | Correct |
 |---|---|---:|---:|---:|---:|
 | Models Rust/FFM, default prefill | USABLE | 1,348.4 ms | 37.71 tok/s | 2,023.1 ms | 100% |
-| Models Rust/FFM, profiled | USABLE; qualified | 1,315.2 ms | 38.99 tok/s | 1,958.8 ms | 100% |
+| Models Rust/FFM, profiled | USABLE; qualified | 1,312.6 ms | 38.73 tok/s | 1,962.3 ms | 100% |
 | Ollama 0.32.0 | PRODUCTION_READY | 543.3 ms | 34.75 tok/s | 1,640.1 ms | 100% |
 | llama.cpp b10012 | PRODUCTION_READY | 799.4 ms | 57.06 tok/s | 1,412.5 ms | 100% |
 
-Models reaches 112.2% of Ollama and 68.3% of llama.cpp decode throughput. Its
-p95 end-to-end latency is 1.194x Ollama and 1.387x llama.cpp. These ratios are
+Models reaches 111.4% of Ollama and 67.9% of llama.cpp decode throughput. Its
+p95 end-to-end latency is 1.196x Ollama and 1.389x llama.cpp. These ratios are
 same-host comparator results; they do not claim equivalent ratios on different
 CPU architectures, JDKs, or operating systems.
 
@@ -36,8 +36,8 @@ CPU architectures, JDKs, or operating systems.
 
 The retained profile selects a 64-token prefill batch, batched attention score
 and value paths, eight native kernel workers, and native quantized decode. The
-profile improves median decode throughput by 3.4%, p95 TTFT by 2.5%, and p95
-end-to-end latency by 3.2% over the default prefill controls. All 27 raw
+profile improves median decode throughput by 2.7%, p95 TTFT by 2.7%, and p95
+end-to-end latency by 3.0% over the default prefill controls. All 27 raw
 generations, grounding decisions, evaluations, and final answers are identical
 between the default and profiled Models runs.
 

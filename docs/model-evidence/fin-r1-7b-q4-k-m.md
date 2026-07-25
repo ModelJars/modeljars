@@ -1,6 +1,6 @@
 # Fin-R1 7B Q4_K_M Acceptance Evidence
 
-Status: catalog marker accepted; pure-Java runtime acceptance pending
+Status: catalog marker and pure-Java runtime accepted
 
 ## Artifact
 
@@ -93,11 +93,11 @@ The model card says its advice and analysis are reference material rather than
 a replacement for professional financial judgment. Catalog inclusion is not
 an endorsement of its financial output.
 
-## Runtime Gate
+## Runtime Acceptance
 
-The ModelJars marker intentionally advertises `pure-java=false`. Enabling it
-requires a mandatory models-library job that downloads this exact artifact,
-verifies size and SHA-256, asserts the GGUF contract above, applies ChatML,
-matches the rendered prompt and greedy token IDs, and retains the financial
-advice and license-provenance warnings. The test must not skip when the
-artifact is absent.
+The ModelJars marker advertises `pure-java=true`. The mandatory
+`FinR1LargeModelJarsSlowTest` downloads this exact artifact, verifies size and
+SHA-256, asserts the GGUF contract above, applies ChatML, and matches the
+rendered prompt plus all 12 raw token IDs returned by llama.cpp b9960. The
+marker retains the financial-advice and license-provenance warnings. The
+fixture cannot turn a missing artifact into a skipped or passing test.

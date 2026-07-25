@@ -33,6 +33,56 @@ val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
 val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v4"
 
+fun isNormalizedRepositoryRelativePath(path: String): Boolean {
+    if (
+        path.isBlank() ||
+            path.startsWith("/") ||
+            path.contains('\\') ||
+            path.contains('\u0000') ||
+            Regex("^[A-Za-z]:($|/)").containsMatchIn(path)
+    ) {
+        return false
+    }
+
+    return path.split('/').all { segment ->
+        segment.isNotEmpty() && segment != "." && segment != ".."
+    }
+}
+
+val testCatalogReportPathValidation =
+    tasks.register("testCatalogReportPathValidation") {
+        group = "verification"
+        description = "Tests portable repository-relative catalog report path validation."
+
+        doLast {
+            listOf(
+                    "benchmark-results/report.json",
+                    "benchmark-results/certified/rag/report.json",
+                )
+                .forEach { path ->
+                    require(isNormalizedRepositoryRelativePath(path)) {
+                        "Expected a valid repository-relative path: $path"
+                    }
+                }
+
+            listOf(
+                    "",
+                    "/benchmark-results/report.json",
+                    "C:/benchmark-results/report.json",
+                    "../benchmark-results/report.json",
+                    "benchmark-results/../report.json",
+                    "benchmark-results/./report.json",
+                    "benchmark-results//report.json",
+                    "benchmark-results\\report.json",
+                )
+                .forEach { path ->
+                    require(!isNormalizedRepositoryRelativePath(path)) {
+                        "Expected an invalid repository-relative path: $path"
+                    }
+                }
+        }
+    }
+
 data class CatalogEntry(
     val id: String,
     val name: String,
@@ -873,12 +923,7 @@ ragQualifications?.let { qualifications ->
         require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
             "Qualification report SHA-256 is invalid for ${qualification.modelId}"
         }
-        val reportPath = Path.of(qualification.reportPath).normalize()
-        require(
-            !reportPath.isAbsolute &&
-                !reportPath.startsWith("..") &&
-                reportPath.toString() == qualification.reportPath,
-        ) {
+        require(isNormalizedRepositoryRelativePath(qualification.reportPath)) {
             "Qualification report must be a normalized repository-relative path: " +
                 qualification.reportPath
         }
@@ -1938,6 +1983,7 @@ tasks.register("verifyRemoteCatalogMetadata") {
 tasks.register("verifyCatalog") {
     dependsOn(markerJarTasks)
     dependsOn("generateSite")
+    dependsOn(testCatalogReportPathValidation)
     doLast {
         catalogEntries.zip(markerJarTasks).forEach { (entry, markerTask) ->
             val markerJar = markerTask.get().archiveFile.get().asFile

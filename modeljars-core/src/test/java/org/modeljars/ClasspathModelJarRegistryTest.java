@@ -489,6 +489,28 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsLlama32OneBillionMarkerForQualifiedRustFfmInference() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/Llama-3.2-1B-Instruct-GGUF")
+                    .versionRange("[3.2.0,3.3.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("bartowski_llama_3_2_1b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals(
+        "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
+        descriptor.sha256().orElseThrow());
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+  }
+
+  @Test
   void loadsHuatuoGptO1SevenBillionMarkerWithVerifiedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

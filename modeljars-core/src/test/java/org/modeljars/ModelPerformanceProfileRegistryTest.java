@@ -1206,6 +1206,14 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "d4083f981c07f71ac89855568d7405a7658fbeaf6fbc912e05ea8ab347599f4f",
         profile.evidence().controls().get("baselineReportSha256"));
+    assertEquals(
+        "ef419f16217b83d76db30acd312292b63b74f90ce1f81173601d31a0c1cedb36",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "372defe", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals(
+        "6756812c16ff795dc21ff09f44be8287a74950f5",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals("chatml-no-think", profile.evidence().controls().get("promptTemplate"));
     assertEquals(
         "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v14",

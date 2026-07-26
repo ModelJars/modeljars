@@ -1386,6 +1386,21 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "49442a85ab0330f86eb81bf8d54b5aef9a67b4c00b8ffb00c7ae0fa974851ae5",
         profile.evidence().controls().get("baselineReportSha256"));
+    assertEquals(
+        "468f7ede0fdc8487201515b639df8bbeeb73fbdae1af70a42a4517681065140b",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "d7cd35faab7c57e40649b9df905eb30c46c1939fc34d7292e47667c55f53b8ac",
+        profile.evidence().controls().get("qualificationReportSha256"));
+    assertEquals(
+        "55209cec9532b8d629b4eb3a5c37fd798163f028",
+        profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals(
+        "cd2337780ae1940c2b403e6202bb1c2f58a5d6f8",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertEquals(
+        29.37754596980454,
+        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertEquals("healthcare", profile.evidence().controls().get("workload"));
     assertEquals(" So the answer is", profile.evidence().controls().get("stopSequences"));
     assertEquals("chatml-direct", profile.evidence().controls().get("promptTemplate"));

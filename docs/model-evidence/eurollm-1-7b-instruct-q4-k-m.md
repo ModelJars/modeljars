@@ -109,8 +109,11 @@ turn a missing artifact into a skipped or passing test.
 
 The exact artifact is qualified for the versioned multilingual guarded-RAG
 workload on an 8-vCPU AMD EPYC-Milan host with GraalVM Community Java 25.0.3.
-The canonical run loaded the ModelJar alias through Models Rust/FFM without
-manual performance properties. Backend diagnostics prove that the exact
+Every row below was measured sequentially on that same host, against the same
+GGUF bytes, corpus, prompts, context, token limit, sampling controls, warmup,
+and 27 measured requests. Each backend ran in an isolated process. The
+canonical run loaded the ModelJar alias through Models Rust/FFM without manual
+performance properties. Backend diagnostics prove that the exact
 EPYC-Milan/Java-25 profile selected its 64-token prefill batch, batched
 attention paths, final-layer prompt pruning, KV-only final-layer prefill, and
 native quantized decode.
@@ -126,4 +129,6 @@ end-to-end latency is 1.491x Ollama and 1.412x llama.cpp, within the unchanged
 production policy ceilings of 1.5x and 2.0x. All 27 grounded answers were
 correct; all 21 model answers accepted by the grounding policy were also
 correct. This claim is SHA-bound to the artifact and scoped to the committed
-multilingual RAG workload, not arbitrary ungrounded generation.
+multilingual RAG workload, not arbitrary ungrounded generation. These ratios
+are same-host comparator results; they do not claim equivalent ratios on
+different CPU architectures, JDKs, or operating systems.

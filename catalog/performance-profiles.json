@@ -3443,6 +3443,118 @@
           "heap": "host-default"
         }
       }
+    },
+    {
+      "id": "king3djbl_nexus_medical_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm",
+      "modelId": "king3djbl_nexus_medical_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-medical-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "artifactSha256": "f26138b8e049e91a3e006f215a3618e3da0fef28755f73fe83bea19f73c700ea",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.3+9-LTS",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "false",
+        "models.purejava.batchedAttentionValues": "false"
+      },
+      "javaLaunch": {
+        "runtime": "hotspot-c2",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "nexus-medical-1.5b-rust-ffm-healthcare-rag-20260726",
+        "measuredAt": "2026-07-26T21:14:54.860453445Z",
+        "baseline": "rust-ffm-v10-explicit-settings",
+        "candidate": "rust-ffm-v10-modeljar-profile",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 307.719196,
+          "p50TtftMillis": 633.485483,
+          "p95TtftMillis": 706.8697198,
+          "p50TpotMillis": 34.17161549180328,
+          "p95TpotMillis": 45.16717080769231,
+          "p50PrefillTokensPerSecond": 96.45605480248474,
+          "p50DecodeTokensPerSecond": 29.26405397016917,
+          "p50EndToEndMillis": 2709.061765,
+          "p95EndToEndMillis": 2821.1096085,
+          "peakRssBytes": 1441124352
+        },
+        "candidateMetrics": {
+          "loadMillis": 307.719196,
+          "p50TtftMillis": 633.485483,
+          "p95TtftMillis": 706.8697198,
+          "p50TpotMillis": 34.17161549180328,
+          "p95TpotMillis": 45.16717080769231,
+          "p50PrefillTokensPerSecond": 96.45605480248474,
+          "p50DecodeTokensPerSecond": 29.26405397016917,
+          "p50EndToEndMillis": 2709.061765,
+          "p95EndToEndMillis": 2821.1096085,
+          "peakRssBytes": 1441124352
+        },
+        "controls": {
+          "workload": "healthcare",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "corpusSha256": "50b20fdae13db749bdf1bc029c681d53fff8895fb11aa3a177264ab3e6fd62f0",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "repetitionPenalty": "1.0",
+          "stopSequences": " So the answer is",
+          "promptTemplate": "chatml-direct",
+          "groundingPolicy": "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v18",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "b21567803a5832b5aa54f75f030cdb6dc77df3eb",
+          "modelJarsCommitAtMeasurement": "9b7e64e",
+          "modelsEvidenceCommit": "b21567803a5832b5aa54f75f030cdb6dc77df3eb",
+          "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
+          "kernelImplementation": "rust-ffm-quantized-v10",
+          "nativeKernelAbi": "2",
+          "baselinePlanVersion": "rust-ffm-v10",
+          "candidatePlanVersion": "rust-ffm-v10",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "false",
+          "batchedAttentionValues": "false",
+          "nativeQuantizedDecode": "true",
+          "baselineReportSha256": "49442a85ab0330f86eb81bf8d54b5aef9a67b4c00b8ffb00c7ae0fa974851ae5",
+          "candidateReportSha256": "49442a85ab0330f86eb81bf8d54b5aef9a67b4c00b8ffb00c7ae0fa974851ae5",
+          "llamaCppReportSha256": "84226f6d37753b6886141b9eb3982abb628796a8a6b554a47be6bc473214a2d2",
+          "ollamaReportSha256": "250571b5c681d377d7025da2d520489863aa69fcae6e9222f17b6d5c31d4e275",
+          "qualificationReportSha256": "450fc2134d50338e86b48d46cc8884444dcbff53741932f6f929a449a7addd8b",
+          "pairedOutputHashes": "27-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.4444444444444444",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToLlamaCpp": "0.6444334151544434",
+          "decodeRatioToOllama": "1.086580076389276",
+          "endToEndRatioToLlamaCpp": "1.1051223269187491",
+          "endToEndRatioToOllama": "0.7185179492784308",
+          "comparatorExecution": "same-host-sequential-process-isolated",
+          "llamaCppVersion": "b10012-c71854292",
+          "ollamaVersion": "0.32.0",
+          "jvmBuild": "Eclipse Adoptium 25.0.3+9-LTS",
+          "heap": "host-default"
+        }
+      }
     }
   ]
 }

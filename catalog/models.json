@@ -5135,7 +5135,9 @@
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "rust-ffm": true,
+        "llama.cpp": true,
+        "ollama": true
       },
       "domains": [
         "legal"

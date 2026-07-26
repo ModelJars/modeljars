@@ -2445,6 +2445,113 @@
           "heap": "8g-fixed"
         }
       }
+    },
+    {
+      "id": "indian_legal_qwen2_5_3b_q4_k_m_epyc_milan_jdk25_rust_ffm",
+      "modelId": "gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:gsms-b.indian-legal-qwen2.5-3b-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "artifactSha256": "20e09a60606859d9a5401f4d261d02c1a1c57b75ee322a10b034cdbf2506fcb5",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "graal-jvmci",
+        "vm-version": "25.0.3+9-jvmci-25.1-b19",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "false",
+        "models.purejava.batchedAttentionValues": "false"
+      },
+      "javaLaunch": {
+        "runtime": "graal-jvmci",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "indian-legal-qwen2.5-3b-rust-ffm-legal-rag-20260726",
+        "measuredAt": "2026-07-26T02:13:53.814233028Z",
+        "baseline": "rust-ffm-v10-explicit-settings",
+        "candidate": "rust-ffm-v10-modeljar-profile",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 417.309833,
+          "p50TtftMillis": 1224.094846,
+          "p95TtftMillis": 1322.2574886,
+          "p50TpotMillis": 63.894773727272735,
+          "p95TpotMillis": 83.11116859999997,
+          "p50PrefillTokensPerSecond": 46.70535232389897,
+          "p50DecodeTokensPerSecond": 15.650732316047966,
+          "p50EndToEndMillis": 3058.251193,
+          "p95EndToEndMillis": 3565.0731982,
+          "peakRssBytes": 2428801024
+        },
+        "candidateMetrics": {
+          "loadMillis": 417.309833,
+          "p50TtftMillis": 1224.094846,
+          "p95TtftMillis": 1322.2574886,
+          "p50TpotMillis": 63.894773727272735,
+          "p95TpotMillis": 83.11116859999997,
+          "p50PrefillTokensPerSecond": 46.70535232389897,
+          "p50DecodeTokensPerSecond": 15.650732316047966,
+          "p50EndToEndMillis": 3058.251193,
+          "p95EndToEndMillis": 3565.0731982,
+          "peakRssBytes": 2428801024
+        },
+        "controls": {
+          "workload": "legal",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "corpusSha256": "a3499a08589094e7cb36299785bf128d5dad4a781fee96651878c267d61d0c2b",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "promptTemplate": "chatml",
+          "groundingPolicy": "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v11",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "8f98d8fd9d838b4386d8de47faaf9a4a3e71fa58",
+          "modelsEvidenceCommit": "2aff1fd",
+          "modelJarsCommitAtMeasurement": "c2f567c5de81d353cb3ff96eefaf5433a5fcb39d",
+          "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
+          "kernelImplementation": "rust-ffm-quantized-v10",
+          "nativeKernelAbi": "2",
+          "baselinePlanVersion": "rust-ffm-v10",
+          "candidatePlanVersion": "rust-ffm-v10",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "false",
+          "batchedAttentionValues": "false",
+          "nativeQuantizedDecode": "true",
+          "baselineReportSha256": "f64d7ddb0b7dfa907ae883b0165f8b8efd5ed9b1cd248d298913d829d335ccc0",
+          "candidateReportSha256": "f64d7ddb0b7dfa907ae883b0165f8b8efd5ed9b1cd248d298913d829d335ccc0",
+          "llamaCppReportSha256": "497fb1d767164536ec2608492adaf91730190506dd7c57d2b24f43e4eacf4e5f",
+          "ollamaReportSha256": "510136559c0cb4aff1b236265a976ae8f1b52e6d41b97cb08c399bca58f0d372",
+          "qualificationReportSha256": "dc9b2510fb73ecc4fcb79d68a1113afbbdab6d73763f94af9e91e632f0b4c296",
+          "pairedOutputHashes": "27-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.4444444444444444",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToLlamaCpp": "0.6456860369310896",
+          "decodeRatioToOllama": "0.8465482976245089",
+          "endToEndRatioToLlamaCpp": "0.9973046195021842",
+          "endToEndRatioToOllama": "1.1944203900236474",
+          "jvmBuild": "GraalVM Community 25.0.3+9-jvmci-25.1-b19",
+          "heap": "host-default"
+        }
+      }
     }
   ]
 }

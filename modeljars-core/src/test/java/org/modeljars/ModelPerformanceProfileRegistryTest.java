@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(27, registry.profiles().size());
+    assertEquals(28, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +942,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(27, registry.profiles().size());
+    assertEquals(28, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +968,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(27, registry.profiles().size());
+    assertEquals(28, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1003,6 +1003,30 @@ class ModelPerformanceProfileRegistryTest {
     assertFalse(profile.recommendations().containsKey("models.purejava.prefillBatchSize"));
     assertFalse(profile.recommendations().containsKey("models.purejava.batchedAttentionScores"));
     assertFalse(profile.recommendations().containsKey("models.purejava.batchedAttentionValues"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedIndianLegalQwenThreeBillionRustFfmProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "indian_legal_qwen2_5_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "20e09a60606859d9a5401f4d261d02c1a1c57b75ee322a10b034cdbf2506fcb5",
+        profile.artifactSha256());
+    assertEquals("32", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

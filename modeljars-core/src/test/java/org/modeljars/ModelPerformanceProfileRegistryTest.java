@@ -1061,6 +1061,12 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
     assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals(
+        "5b1ba2c93ec7ea793fc0e74ed796d06729bf56689d0dc65a293264b5bdc07624",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
+    assertEquals(
+        "0.9894992519851347", profile.evidence().controls().get("decodeRatioToOllama"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(30, registry.profiles().size());
+    assertEquals(31, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +942,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(30, registry.profiles().size());
+    assertEquals(31, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +968,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(30, registry.profiles().size());
+    assertEquals(31, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1099,6 +1099,44 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "dd75d510ceebf71606e69aa80d6d7624173755e9",
         profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedLlama32ThreeBillionRustFfmProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("llama_3_2_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+        profile.artifactSha256());
+    assertEquals("32", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals(
+        "86d77fe27372764fe0d60c88bf1be7a0ef4b767f8cb03c891bc6e3d470c4a42c",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "e1d568fbf36bf87b8e1e2ee6d245e6374be7cd8865c0c11e1d2464c966a296c6",
+        profile.evidence().controls().get("rejectedAttentionReportSha256"));
+    assertEquals(
+        "ce2cafecd145ae37fbd879fcc4c8cf7b721b51c3ad90ab56fc35b6ff0d705b93",
+        profile.evidence().controls().get("directReportSha256"));
+    assertEquals(
+        "ad3d2d4d68403fe8fea544877d421097e0fc65f7",
+        profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

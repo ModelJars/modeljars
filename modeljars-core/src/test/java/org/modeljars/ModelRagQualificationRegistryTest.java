@@ -18,6 +18,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
+  private static final int AGGREGATE_QUALIFIED_MODELS = 24;
+  private static final String AGGREGATE_MODELS_REVISION =
+      "cd2337780ae1940c2b403e6202bb1c2f58a5d6f8";
+
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -131,7 +135,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-2729c3a", qualification.backendVersion());
     assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
@@ -154,7 +158,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-689f0d5", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -185,7 +189,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("pure-java", qualification.backend());
     assertEquals("models-purejava-3e759cc-q4-unsigned", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -216,7 +220,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -247,7 +251,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -279,7 +283,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q8", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -308,7 +312,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@180fae9+modeljars@06da6f6+vectors@c298a0b", qualification.backendVersion());
@@ -360,7 +364,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("chatml", qualification.promptTemplate());
@@ -385,7 +389,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("transportation", qualification.workload());
     assertEquals("chatml", qualification.promptTemplate());
@@ -409,7 +413,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("coding", qualification.workload());
     assertEquals("minicpm5-no-think", qualification.promptTemplate());
@@ -435,7 +439,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("llama3", qualification.promptTemplate());
@@ -461,7 +465,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("gemma", qualification.promptTemplate());
@@ -568,7 +572,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@49b848f3e594d07322cbe2ea8418e9312609dd33 "
@@ -605,8 +609,8 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
-    assertEquals("79181e6561875a5e7ca0f324fe261fef49391b84", registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@9c08ebd866d2c35b5e4695992f6ff62e4b0bf8d8 "
@@ -653,8 +657,8 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
-    assertEquals("79181e6561875a5e7ca0f324fe261fef49391b84", registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@20733a0cd7cf9207e5641d7f749458a3021fc245 "
@@ -701,8 +705,8 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(21, registry.qualifiedModels());
-    assertEquals("79181e6561875a5e7ca0f324fe261fef49391b84", registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@5c59bdf30ce29b039dfcce461b490f95b929976a "
@@ -738,6 +742,51 @@ class ModelRagQualificationRegistryTest {
                 + "tinyllama-1.1b-q4_0/models-rust-ffm-marker.json"),
         qualification.reportUri());
     assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedNexusVerticalEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification finance =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("king3djbl_nexus_finance_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    ModelRagQualification legal =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("king3djbl_nexus_legal_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    ModelRagQualification medical =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("king3djbl_nexus_medical_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals("finance", finance.workload());
+    assertEquals(5.0 / 9.0, finance.modelAnswerRate());
+    assertEquals(30.16945787255821, finance.p50DecodeTokensPerSecond());
+    assertEquals(
+        "42035af3e519215887dfb2633588c8ea04a1e5dc29ff55456517b0464dc1e9be",
+        finance.reportSha256());
+    assertEquals("legal", legal.workload());
+    assertEquals(4.0 / 9.0, legal.modelAnswerRate());
+    assertEquals(27.75538941546097, legal.p50DecodeTokensPerSecond());
+    assertEquals(
+        "68a57876f44b951fa5f6a67f8554ab76a46279f16f17d6dca3d4eca3439a1ad7",
+        legal.reportSha256());
+    assertEquals("healthcare", medical.workload());
+    assertEquals(4.0 / 9.0, medical.modelAnswerRate());
+    assertEquals(29.37754596980454, medical.p50DecodeTokensPerSecond());
+    assertEquals(
+        "468f7ede0fdc8487201515b639df8bbeeb73fbdae1af70a42a4517681065140b",
+        medical.reportSha256());
+    assertTrue(finance.productionUsable());
+    assertTrue(legal.productionUsable());
+    assertTrue(medical.productionUsable());
   }
 
   @Test

@@ -1,6 +1,7 @@
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -389,7 +390,7 @@ class ClasspathModelJarRegistryTest {
                         "hf://bartowski/Qwen2.5-Math-1.5B-Instruct-GGUF")
                     .versionRange("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
-                    .backend("pure-java")
+                    .backend("rust-ffm")
                     .capability("math")
                     .build())
             .orElseThrow();
@@ -403,6 +404,9 @@ class ClasspathModelJarRegistryTest {
         "9614a50f03c897028920ca0dc4365da570bf587f9ee7768261216fe370b37e8e",
         descriptor.sha256().orElseThrow());
     assertEquals(986_048_832L, descriptor.sizeBytes().orElseThrow());
+    assertFalse(descriptor.supportsBackend("pure-java"));
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+    assertTrue(descriptor.supportsBackend("ollama"));
     assertTrue(
         descriptor
             .localPath()

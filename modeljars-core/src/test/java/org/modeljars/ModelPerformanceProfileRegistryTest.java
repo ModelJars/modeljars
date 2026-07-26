@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(34, registry.profiles().size());
+    assertEquals(35, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +942,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(34, registry.profiles().size());
+    assertEquals(35, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +968,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(34, registry.profiles().size());
+    assertEquals(35, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1255,6 +1255,38 @@ class ModelPerformanceProfileRegistryTest {
         "79181e6561875a5e7ca0f324fe261fef49391b84",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals("zephyr", profile.evidence().controls().get("promptTemplate"));
+    assertEquals(
+        "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v15",
+        profile.evidence().controls().get("groundingPolicy"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesNexusFinanceProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "king3djbl_nexus_finance_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
+        profile.artifactSha256());
+    assertEquals("32", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("finance", profile.evidence().controls().get("workload"));
+    assertEquals("\\n", profile.evidence().controls().get("stopSequences"));
+    assertEquals("chatml-no-think", profile.evidence().controls().get("promptTemplate"));
     assertEquals(
         "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v15",
         profile.evidence().controls().get("groundingPolicy"));

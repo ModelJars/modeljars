@@ -3219,6 +3219,118 @@
           "heap": "host-default"
         }
       }
+    },
+    {
+      "id": "king3djbl_nexus_finance_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm",
+      "modelId": "king3djbl_nexus_finance_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-finance-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "artifactSha256": "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.3+9-LTS",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "false",
+        "models.purejava.batchedAttentionValues": "false"
+      },
+      "javaLaunch": {
+        "runtime": "hotspot-c2",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "nexus-finance-1.5b-rust-ffm-finance-rag-20260726",
+        "measuredAt": "2026-07-26T19:49:11.349208838Z",
+        "baseline": "rust-ffm-v10-explicit-settings",
+        "candidate": "rust-ffm-v10-modeljar-profile",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 290.451721,
+          "p50TtftMillis": 703.758113,
+          "p95TtftMillis": 779.2755533999999,
+          "p50TpotMillis": 32.7464846,
+          "p95TpotMillis": 33.64301244196429,
+          "p50PrefillTokensPerSecond": 95.54450574269144,
+          "p50DecodeTokensPerSecond": 30.53762906812904,
+          "p50EndToEndMillis": 1472.800049,
+          "p95EndToEndMillis": 2228.2687588,
+          "peakRssBytes": 1437442048
+        },
+        "candidateMetrics": {
+          "loadMillis": 290.451721,
+          "p50TtftMillis": 703.758113,
+          "p95TtftMillis": 779.2755533999999,
+          "p50TpotMillis": 32.7464846,
+          "p95TpotMillis": 33.64301244196429,
+          "p50PrefillTokensPerSecond": 95.54450574269144,
+          "p50DecodeTokensPerSecond": 30.53762906812904,
+          "p50EndToEndMillis": 1472.800049,
+          "p95EndToEndMillis": 2228.2687588,
+          "peakRssBytes": 1437442048
+        },
+        "controls": {
+          "workload": "finance",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "corpusSha256": "923a8686ef45df6c09c08c0bd80e08ab40a96ad0b4d37fb356729dbd6738befc",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "repetitionPenalty": "1.0",
+          "stopSequences": "\\n",
+          "promptTemplate": "chatml-no-think",
+          "groundingPolicy": "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v15",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "5c59bdf30ce29b039dfcce461b490f95b929976a",
+          "modelJarsCommitAtMeasurement": "4b1b182",
+          "modelsEvidenceCommit": "35b3623d5b0d331eb02ac88660ab3ab8687d7918",
+          "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
+          "kernelImplementation": "rust-ffm-quantized-v10",
+          "nativeKernelAbi": "2",
+          "baselinePlanVersion": "rust-ffm-v10",
+          "candidatePlanVersion": "rust-ffm-v10",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "false",
+          "batchedAttentionValues": "false",
+          "nativeQuantizedDecode": "true",
+          "baselineReportSha256": "0e88f62c8c265053deff2e929d41d797ddf83c7073d4bdc881d8633c5dc78221",
+          "candidateReportSha256": "0e88f62c8c265053deff2e929d41d797ddf83c7073d4bdc881d8633c5dc78221",
+          "llamaCppReportSha256": "5d6e4abfc3c0151205eebacea1336ec1110bbfc8cce657f50dd5b12418ac9fd4",
+          "ollamaReportSha256": "7f842fd90892e4d197bae4ae292c57293abc3028431c262dbcf409976e5e98a8",
+          "qualificationReportSha256": "0d4c8d5de246a83d96ff3690895b076faf1a88a4782640c76e2e2f2ef8cb09b2",
+          "pairedOutputHashes": "27-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.5555555555555556",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToLlamaCpp": "0.6688972181270703",
+          "decodeRatioToOllama": "1.0170749229548535",
+          "endToEndRatioToLlamaCpp": "0.904804906830799",
+          "endToEndRatioToOllama": "0.7488586223681497",
+          "comparatorExecution": "same-host-sequential-process-isolated",
+          "llamaCppVersion": "b10012-c71854292",
+          "ollamaVersion": "0.32.0",
+          "jvmBuild": "Eclipse Adoptium 25.0.3+9-LTS",
+          "heap": "host-default"
+        }
+      }
     }
   ]
 }

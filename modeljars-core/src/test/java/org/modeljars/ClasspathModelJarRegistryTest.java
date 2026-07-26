@@ -303,6 +303,30 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsNexusFinanceRustFfmCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://King3Djbl/nexus-finance-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("king3djbl_nexus_finance_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals(
+        "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
+        descriptor.sha256().orElseThrow());
+    assertEquals(986_045_632L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsDeepSeekCoderMixedQuantCandidateMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

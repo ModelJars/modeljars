@@ -1168,6 +1168,14 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "2755a19a7b1f0c6538c3e835bef104b6de8a0c843ccae266a79567c2eb280d83",
         profile.evidence().controls().get("baselineReportSha256"));
+    assertEquals(
+        "6d4f78972e2f4ec3f9646a312ec05837fbb1d948a6f6e26ae122b33005595cc1",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "0b50df8", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals(
+        "6cea1f5d58861d898f1f4fab6f0b97bef3fd33ba",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals("deepseek", profile.evidence().controls().get("promptTemplate"));
     assertEquals(
         "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v14",

@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(35, registry.profiles().size());
+    assertEquals(36, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +942,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(35, registry.profiles().size());
+    assertEquals(36, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +968,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(35, registry.profiles().size());
+    assertEquals(36, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1288,7 +1288,38 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("\\n", profile.evidence().controls().get("stopSequences"));
     assertEquals("chatml-no-think", profile.evidence().controls().get("promptTemplate"));
     assertEquals(
-        "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v15",
+        "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v17",
+        profile.evidence().controls().get("groundingPolicy"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesNexusLegalProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("king3djbl_nexus_legal_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "309437dc5aa980fd7025fc29b3a25740564244e124a0d806967ee05ed01b6d93",
+        profile.artifactSha256());
+    assertEquals("32", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("legal", profile.evidence().controls().get("workload"));
+    assertEquals(" Therefore", profile.evidence().controls().get("stopSequences"));
+    assertEquals("chatml-direct", profile.evidence().controls().get("promptTemplate"));
+    assertEquals(
+        "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v17",
         profile.evidence().controls().get("groundingPolicy"));
     assertTrue(profile.safeForAutomaticSelection());
   }

@@ -290,8 +290,10 @@ fun taskSuffix(id: String): String =
         part.replaceFirstChar { character -> character.uppercase() }
     }
 
-fun propertyValue(value: String): String =
-    value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+fun propertyValue(value: String): String {
+    val escaped = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+    return if (escaped.startsWith(" ")) "\\$escaped" else escaped
+}
 
 fun CatalogPerformanceProfile.registryProperties(): String =
     buildString {

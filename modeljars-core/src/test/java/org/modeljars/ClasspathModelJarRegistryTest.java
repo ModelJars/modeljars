@@ -511,6 +511,28 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsGemma3OneBillionMarkerForQualifiedRustFfmInference() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/google_gemma-3-1b-it-GGUF")
+                    .versionRange("[3.0.0,4.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m", descriptor.alias());
+    assertEquals("gemma3", descriptor.architecture());
+    assertEquals(
+        "12bf0fff8815d5f73a3c9b586bd8fee8e7b248c935de70dec367679873d0f29d",
+        descriptor.sha256().orElseThrow());
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+  }
+
+  @Test
   void loadsHuatuoGptO1SevenBillionMarkerWithVerifiedPureJavaClaim() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

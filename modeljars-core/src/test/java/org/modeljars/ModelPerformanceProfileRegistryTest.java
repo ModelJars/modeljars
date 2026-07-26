@@ -1093,9 +1093,12 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
     assertEquals(
-        "d7292d2deddb7d1f4e730d7cea6cc477867e95d7df044432aa3d61caae527ba3",
+        "ac0e13ea84dc179ecbbb16e345191f992de43c8729f13b66521656a7289d9e61",
         profile.evidence().controls().get("candidateReportSha256"));
     assertEquals(". ", profile.evidence().controls().get("stopSequences"));
+    assertEquals(
+        "dd75d510ceebf71606e69aa80d6d7624173755e9",
+        profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

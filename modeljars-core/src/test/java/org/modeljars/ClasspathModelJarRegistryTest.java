@@ -952,6 +952,82 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsSmolLmTwoOnePointSevenBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals(
+        "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals(
+        "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_055_609_536L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsH2oDanubeThreeFiveHundredMillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://h2oai/h2o-danube3-500m-chat-GGUF")
+                    .versionRange("[3.0.0,4.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals(
+        "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals(
+        "021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43",
+        descriptor.sha256().orElseThrow());
+    assertEquals(317_877_408L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsH2oDanubeTwoOnePointEightBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://h2oai/h2o-danube2-1.8b-chat-GGUF")
+                    .versionRange("[2.0.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals(
+        "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals(
+        "6a303ee6b94a961aa43e48eb11629e933c4438fae5e6db336318a5d33fe57d79",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_112_145_056L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsAndVerifiesCanonicalWordTourPayloadFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

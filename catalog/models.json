@@ -5400,6 +5400,147 @@
       }
     },
     {
+      "id": "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m",
+      "name": "SmolLM2 1.7B Instruct GGUF Q4_K_M",
+      "description": "First-party SmolLM2 1.7B Instruct GGUF artifact pinned by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF",
+      "sourceUri": "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF",
+      "downloadUri": "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF/resolve/2d4a76a30b4af41ecd395c35725ac11688d4cfe4/smollm2-1.7b-instruct-q4_k_m.gguf",
+      "revision": "2d4a76a30b4af41ecd395c35725ac11688d4cfe4",
+      "markerCoordinate": "org.modeljars.huggingface:huggingfacetb.smollm2-1.7b-instruct-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/smollm2-1.7b-instruct-q4_k_m.gguf",
+      "sha256": "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33",
+      "sizeBytes": 1055609536,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "first-party-gguf",
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1711376384,
+        "contextLength": 8192,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 8192,
+        "attentionBlockCount": 24
+      }
+    },
+    {
+      "id": "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m",
+      "name": "H2O Danube3 500M Chat GGUF Q4_K_M",
+      "description": "First-party H2O Danube3 500M Chat GGUF artifact pinned by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://h2oai/h2o-danube3-500m-chat-GGUF",
+      "sourceUri": "https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF",
+      "downloadUri": "https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF/resolve/73d306884d4f4ed09fa6d146fe3260e3b739dc74/h2o-danube3-500m-chat-Q4_K_M.gguf",
+      "revision": "73d306884d4f4ed09fa6d146fe3260e3b739dc74",
+      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube3-500m-chat-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "modelVersion": "3.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/h2o-danube3-500m-chat-Q4_K_M.gguf",
+      "sha256": "021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43",
+      "sizeBytes": 317877408,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "first-party-gguf",
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 513590784,
+        "contextLength": 8192,
+        "embeddingLength": 1536,
+        "blockCount": 16,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 4096,
+        "attentionBlockCount": 16
+      }
+    },
+    {
+      "id": "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m",
+      "name": "H2O Danube2 1.8B Chat GGUF Q4_K_M",
+      "description": "First-party H2O Danube2 1.8B Chat GGUF artifact pinned by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://h2oai/h2o-danube2-1.8b-chat-GGUF",
+      "sourceUri": "https://huggingface.co/h2oai/h2o-danube2-1.8b-chat-GGUF",
+      "downloadUri": "https://huggingface.co/h2oai/h2o-danube2-1.8b-chat-GGUF/resolve/8683c1aff099497d64785336532113f61ddf161d/h2o-danube2-1.8b-chat-Q4_K_M.gguf",
+      "revision": "8683c1aff099497d64785336532113f61ddf161d",
+      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube2-1.8b-chat-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/h2o-danube2-1.8b-chat-Q4_K_M.gguf",
+      "sha256": "6a303ee6b94a961aa43e48eb11629e933c4438fae5e6db336318a5d33fe57d79",
+      "sizeBytes": 1112145056,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "first-party-gguf",
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 1831201280,
+        "contextLength": 8192,
+        "embeddingLength": 2560,
+        "blockCount": 24,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 8,
+        "feedForwardLength": 6912,
+        "attentionBlockCount": 24
+      }
+    },
+    {
       "id": "wordtour_glove_6b_300d_optimal",
       "name": "WordTour GloVe 6B 300d Optimal",
       "description": "Proven-optimal cyclic semantic ordering of the 40,000-word GloVe 6B 300d vocabulary for compact pure-Java neighbor lookup and blurred bag-of-words.",

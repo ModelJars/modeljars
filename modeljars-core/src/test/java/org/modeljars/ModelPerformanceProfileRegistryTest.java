@@ -192,7 +192,7 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(28, registry.profiles().size());
+    assertEquals(29, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +942,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(28, registry.profiles().size());
+    assertEquals(29, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +968,7 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(28, registry.profiles().size());
+    assertEquals(29, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1035,6 +1035,38 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
     assertEquals(
         "0.8425535918769786", profile.evidence().controls().get("decodeRatioToOllama"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedDeepSeekR1DistillQwenOnePointFiveBillionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "deepseek_r1_distill_qwen_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "1741e5b2d062b07acf048bf0d2c514dadf2a48f94e2b4aa0cfe069af3838ee2f",
+        profile.artifactSha256());
+    assertEquals("32", profile.recommendations().get("models.purejava.prefillBatchSize"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals(
+        "5b1ba2c93ec7ea793fc0e74ed796d06729bf56689d0dc65a293264b5bdc07624",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
+    assertEquals(
+        "0.9894992519851347", profile.evidence().controls().get("decodeRatioToOllama"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

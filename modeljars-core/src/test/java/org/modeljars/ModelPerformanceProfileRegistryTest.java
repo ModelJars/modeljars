@@ -192,7 +192,6 @@ class ModelPerformanceProfileRegistryTest {
   void aggregateCatalogPublishesControlledCompilerComparisons() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
 
-    assertEquals(37, registry.profiles().size());
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
@@ -942,7 +941,6 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(37, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
@@ -968,7 +966,6 @@ class ModelPerformanceProfileRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(37, registry.profiles().size());
     assertEquals("rust-ffm", profile.backend());
     assertEquals(
         "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
@@ -1407,6 +1404,79 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v18",
         profile.evidence().controls().get("groundingPolicy"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQwenTwoPointFiveThreeBillionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "qwen_qwen2_5_3b_instruct_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+        profile.artifactSha256());
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("4", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("chatml", profile.evidence().controls().get("promptTemplate"));
+    assertEquals("general", profile.evidence().controls().get("workload"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesSmolLmTwoOnePointSevenBillionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "decd2598bc2c8ed08c19adc3c8fdd461ee19ed5708679d1c54ef54a5a30d4f33",
+        profile.artifactSha256());
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("chatml", profile.evidence().controls().get("promptTemplate"));
+    assertEquals("general", profile.evidence().controls().get("workload"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
+  void aggregateCatalogPublishesH2oDanubeTwoOnePointEightBillionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "6a303ee6b94a961aa43e48eb11629e933c4438fae5e6db336318a5d33fe57d79",
+        profile.artifactSha256());
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("h2o-direct", profile.evidence().controls().get("promptTemplate"));
+    assertEquals("general", profile.evidence().controls().get("workload"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

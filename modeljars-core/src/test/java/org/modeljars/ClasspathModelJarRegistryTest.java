@@ -281,6 +281,28 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsTinyLlamaRustFfmCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_0")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("tinyllama_1_1b_chat_v1_0_q4_0", descriptor.alias());
+    assertEquals(
+        "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
+        descriptor.sha256().orElseThrow());
+  }
+
+  @Test
   void loadsDeepSeekCoderMixedQuantCandidateMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

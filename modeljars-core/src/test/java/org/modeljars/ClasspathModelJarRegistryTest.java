@@ -724,6 +724,31 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsQualifiedIndianLegalQwen25ThreeBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals(
+        "20e09a60606859d9a5401f4d261d02c1a1c57b75ee322a10b034cdbf2506fcb5",
+        descriptor.sha256().orElseThrow());
+    assertEquals(1_929_902_560L, descriptor.sizeBytes().orElseThrow());
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+    assertTrue(descriptor.supportsBackend("ollama"));
+  }
+
+  @Test
   void loadsQualifiedUmarTransitMarkerWithRustFfmSupport() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

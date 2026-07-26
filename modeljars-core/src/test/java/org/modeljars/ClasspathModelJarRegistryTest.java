@@ -173,6 +173,15 @@ class ClasspathModelJarRegistryTest {
                     .capability("code-completion")
                     .build())
             .orElseThrow();
+    ModelJarDescriptor threeBillionRust =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
+                    .variant("q4_0")
+                    .backend("rust-ffm")
+                    .capability("code-completion")
+                    .build())
+            .orElseThrow();
     ModelJarDescriptor sevenBillion =
         registry
             .resolve(
@@ -208,6 +217,7 @@ class ClasspathModelJarRegistryTest {
     assertEquals("Q8_0", onePointFiveBillionQ8Rust.quantization());
 
     assertEquals("qwen2_5_coder_3b_instruct_q4_0", threeBillion.alias());
+    assertEquals(threeBillion, threeBillionRust);
     assertEquals("qwen2", threeBillion.architecture());
     assertEquals("Q4_0", threeBillion.quantization());
     assertTrue(
@@ -843,6 +853,54 @@ class ClasspathModelJarRegistryTest {
         "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
         descriptor.sha256().orElseThrow());
     assertEquals(1_117_320_736L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsQwen25ThreeBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-3B-Instruct-GGUF")
+                    .versionRange("[2.5.0,3.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("qwen_qwen2_5_3b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals(
+        "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+        descriptor.sha256().orElseThrow());
+    assertEquals(2_104_932_768L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
+  void loadsJanV35FourBillionMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://janhq/Jan-v3.5-4B-gguf")
+                    .versionRange("[3.5.0,4.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("janhq_jan_v3_5_4b_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen3", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals(
+        "2f5305d93100ad9105eeb47c45ef1af99ba6d568c734fc267b0628b3be41c07a",
+        descriptor.sha256().orElseThrow());
+    assertEquals(2_716_066_656L, descriptor.sizeBytes().orElseThrow());
   }
 
   @Test

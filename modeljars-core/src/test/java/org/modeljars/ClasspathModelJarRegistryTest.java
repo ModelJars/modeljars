@@ -327,6 +327,30 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsNexusMedicalRustFfmCandidateMarkerFromClasspath() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://King3Djbl/nexus-medical-GGUF")
+                    .versionRange("[1.0.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("king3djbl_nexus_medical_gguf_q4_k_m", descriptor.alias());
+    assertEquals("qwen2", descriptor.architecture());
+    assertEquals("Q4_K_M", descriptor.quantization());
+    assertEquals(
+        "f26138b8e049e91a3e006f215a3618e3da0fef28755f73fe83bea19f73c700ea",
+        descriptor.sha256().orElseThrow());
+    assertEquals(986_045_632L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsNexusLegalRustFfmCandidateMarkerFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

@@ -614,8 +614,10 @@
         "chat-template"
       ],
       "backends": {
-        "pure-java": true,
-        "llama.cpp": true
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true,
+        "ollama": true
       },
       "dimensions": {
         "parameterCount": 1543714304,

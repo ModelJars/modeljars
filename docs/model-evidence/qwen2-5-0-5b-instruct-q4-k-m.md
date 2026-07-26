@@ -16,9 +16,12 @@ Status: catalog marker and Rust/FFM guarded-RAG runtime accepted
 ## Production Qualification
 
 The exact artifact is qualified for the versioned general guarded-RAG workload
-on an 8-vCPU AMD EPYC-Milan host with GraalVM Community Java 25.0.3. The
-canonical run loaded the ModelJar alias through Models Rust/FFM without manual
-performance properties. Backend diagnostics prove that the exact
+on an 8-vCPU AMD EPYC-Milan host with GraalVM Community Java 25.0.3. Every row
+below was measured sequentially on that same host, against the same GGUF bytes,
+corpus, prompts, context, token limit, sampling controls, warmup, and 27
+measured requests. Each backend ran in an isolated process. The canonical run
+loaded the ModelJar alias through Models Rust/FFM without manual performance
+properties. Backend diagnostics prove that the exact
 EPYC-Milan/Java-25 profile enabled eight native kernel workers and quantized
 decode.
 
@@ -32,7 +35,9 @@ Models reaches 146.6% of Ollama and 68.9% of llama.cpp decode throughput. Its
 p95 end-to-end latency is 0.858x Ollama and 1.192x llama.cpp. All 27 grounded
 answers were correct; all 12 model answers accepted by the grounding policy
 were also correct. This claim is SHA-bound to the artifact and scoped to the
-committed general RAG workload, not arbitrary ungrounded generation.
+committed general RAG workload, not arbitrary ungrounded generation. These
+ratios are same-host comparator results; they do not claim equivalent ratios
+on different CPU architectures, JDKs, or operating systems.
 
 ## Profile Evidence
 

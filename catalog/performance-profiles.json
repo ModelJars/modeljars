@@ -2851,6 +2851,7 @@
           "qualificationPolicy": "production-rag-model-contribution-v4",
           "promptCache": "longest-common-prefix",
           "modelsCommit": "49b848f3e594d07322cbe2ea8418e9312609dd33",
+          "modelsEvidenceCommit": "60e441df4a3e3d0f6798851c6861f85f8c885933",
           "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
           "kernelImplementation": "rust-ffm-quantized-v10",
           "nativeKernelAbi": "2",

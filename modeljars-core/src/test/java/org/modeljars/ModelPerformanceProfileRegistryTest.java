@@ -1136,6 +1136,9 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "ad3d2d4d68403fe8fea544877d421097e0fc65f7",
         profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals(
+        "60e441df4a3e3d0f6798851c6861f85f8c885933",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
     assertTrue(profile.safeForAutomaticSelection());
   }

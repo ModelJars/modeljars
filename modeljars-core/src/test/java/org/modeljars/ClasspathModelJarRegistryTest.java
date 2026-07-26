@@ -515,6 +515,30 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsLlama32ThreeBillionMarkerForQualifiedRustFfmInference() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJarRequirement.forSource(
+                        "hf://bartowski/Llama-3.2-3B-Instruct-GGUF")
+                    .versionRange("[3.2.0,3.3.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("text-generation")
+                    .build())
+            .orElseThrow();
+
+    assertEquals("bartowski_llama_3_2_3b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals(
+        "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+        descriptor.sha256().orElseThrow());
+    assertFalse(descriptor.supportsBackend("pure-java"));
+    assertTrue(descriptor.supportsBackend("rust-ffm"));
+    assertTrue(descriptor.supportsBackend("ollama"));
+  }
+
+  @Test
   void loadsGemma3OneBillionMarkerForQualifiedRustFfmInference() {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()

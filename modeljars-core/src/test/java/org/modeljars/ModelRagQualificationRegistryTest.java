@@ -131,7 +131,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-2729c3a", qualification.backendVersion());
     assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
@@ -154,7 +154,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-689f0d5", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -185,7 +185,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("pure-java", qualification.backend());
     assertEquals("models-purejava-3e759cc-q4-unsigned", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -216,7 +216,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -247,7 +247,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q4-unsigned-t4", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -279,7 +279,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("models-native-3e759cc-q8", qualification.backendVersion());
     assertEquals("coding", qualification.workload());
@@ -308,7 +308,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@180fae9+modeljars@06da6f6+vectors@c298a0b", qualification.backendVersion());
@@ -360,7 +360,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("chatml", qualification.promptTemplate());
@@ -385,7 +385,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("transportation", qualification.workload());
     assertEquals("chatml", qualification.promptTemplate());
@@ -409,7 +409,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("coding", qualification.workload());
     assertEquals("minicpm5-no-think", qualification.promptTemplate());
@@ -435,7 +435,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("llama3", qualification.promptTemplate());
@@ -461,7 +461,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals(17, registry.qualifiedModels());
+    assertEquals(18, registry.qualifiedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("gemma", qualification.promptTemplate());
@@ -553,6 +553,44 @@ class ModelRagQualificationRegistryTest {
     assertEquals(2_079.1374404, qualification.p95EndToEndMillis());
     assertEquals(
         "ac0e13ea84dc179ecbbb16e345191f992de43c8729f13b66521656a7289d9e61",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedLlama32ThreeBillionEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(
+                entry ->
+                    entry.modelId().equals("bartowski_llama_3_2_3b_instruct_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(18, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals(
+        "models@49b848f3e594d07322cbe2ea8418e9312609dd33 "
+            + "modeljars@ad3d2d4d68403fe8fea544877d421097e0fc65f7 "
+            + "vectors@c298a0b73970468794c1ba403022e2adc517e57e",
+        qualification.backendVersion());
+    assertEquals("general", qualification.workload());
+    assertEquals(
+        "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+        qualification.corpusSha256());
+    assertEquals("llama3", qualification.promptTemplate());
+    assertEquals("USABLE", qualification.performanceTier());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(1.0, qualification.rawCorrectAnswerRate());
+    assertEquals(2.0 / 3.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(15.697249150115727, qualification.p50DecodeTokensPerSecond());
+    assertEquals(3_789.2577145, qualification.p95EndToEndMillis());
+    assertEquals(
+        "86d77fe27372764fe0d60c88bf1be7a0ef4b767f8cb03c891bc6e3d470c4a42c",
         qualification.reportSha256());
     assertTrue(qualification.productionUsable());
   }

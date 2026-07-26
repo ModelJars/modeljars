@@ -1244,6 +1244,16 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("false", profile.recommendations().get("models.purejava.batchedAttentionValues"));
     assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals(
+        "550b366eea1e3a8f38de7cbf3661d7d7707d7b472901337fba4336af56d35901",
+        profile.evidence().controls().get("baselineReportSha256"));
+    assertEquals(
+        "5e4f6a778fbaa509be93d81747c1406abd282dc4521f8f442baf39d0d6ab465c",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals("a2a9120", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals(
+        "79181e6561875a5e7ca0f324fe261fef49391b84",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals("zephyr", profile.evidence().controls().get("promptTemplate"));
     assertEquals(
         "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v15",

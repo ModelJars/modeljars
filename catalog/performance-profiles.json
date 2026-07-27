@@ -3891,6 +3891,118 @@
           "heap": "host-default"
         }
       }
+    },
+    {
+      "id": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm",
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.1",
+      "artifactSha256": "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.3+9-LTS",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "false",
+        "models.purejava.batchedAttentionValues": "false"
+      },
+      "javaLaunch": {
+        "runtime": "hotspot-c2",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "yi-coder-1.5b-rust-ffm-general-rag-20260727",
+        "measuredAt": "2026-07-27T00:23:00.705432271Z",
+        "baseline": "rust-ffm-v10-explicit-path",
+        "candidate": "rust-ffm-v10-modeljar-explicit-settings",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 219.56909,
+          "p50TtftMillis": 900.116561,
+          "p95TtftMillis": 1122.2505231999999,
+          "p50TpotMillis": 33.42031293181819,
+          "p95TpotMillis": 33.98214756554622,
+          "p50PrefillTokensPerSecond": 88.35981047019463,
+          "p50DecodeTokensPerSecond": 29.921922096903486,
+          "p50EndToEndMillis": 1968.685823,
+          "p95EndToEndMillis": 3222.8827545999998,
+          "peakRssBytes": 1529925632
+        },
+        "candidateMetrics": {
+          "loadMillis": 384.156307,
+          "p50TtftMillis": 912.164044,
+          "p95TtftMillis": 1131.8351510999998,
+          "p50TpotMillis": 33.802655484848486,
+          "p95TpotMillis": 34.40797356577539,
+          "p50PrefillTokensPerSecond": 87.04682308287896,
+          "p50DecodeTokensPerSecond": 29.5834746015216,
+          "p50EndToEndMillis": 1989.035255,
+          "p95EndToEndMillis": 3251.5334515,
+          "peakRssBytes": 1538191360
+        },
+        "controls": {
+          "workload": "general",
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "repetitionPenalty": "1.0",
+          "promptTemplate": "chatml-answer",
+          "groundingPolicy": "trusted-title-provenance-statement-anchors-safe-discourse-explicit-abstention-v18",
+          "qualificationPolicy": "production-rag-model-contribution-v4",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "03238c90419d0883a15b6868ea4308d8167d6379",
+          "modelJarsCommitAtMeasurement": "e185659e4bdf0aaa2aef6cd5f9e676436bf3ccf1",
+          "vectorsCommit": "c298a0b73970468794c1ba403022e2adc517e57e",
+          "kernelImplementation": "rust-ffm-quantized-v10",
+          "nativeKernelAbi": "2",
+          "baselinePlanVersion": "rust-ffm-v10",
+          "candidatePlanVersion": "rust-ffm-v10",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "false",
+          "batchedAttentionValues": "false",
+          "nativeQuantizedDecode": "true",
+          "baselineNativeThreads": "8",
+          "candidateNativeThreads": "8",
+          "baselineReportSha256": "a02b625500d2d81fb410820037bf98f6ceb73571f4adae9bf08b2da215e8bf01",
+          "candidateReportSha256": "397d1a87a176298c89fa724c03cfbdf76236af2bcc01d72bc1f740e29d98f653",
+          "llamaCppReportSha256": "5ee69b74e9b88dd47b6dbb41a336ed0a9ed967a8a2686e31fa192c2647343005",
+          "ollamaReportSha256": "8202da53c9dd179ab6821a906c10641cf6487d6f416026d74e47f55b54954246",
+          "qualificationReportSha256": "bd072e675b01d609892aee1687d9e26c70cdfec94471985fc08b02775feb69a3",
+          "pairedOutputHashes": "27-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.5555555555555556",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToLlamaCpp": "0.603944821180481",
+          "decodeRatioToOllama": "1.0205364723838624",
+          "endToEndRatioToLlamaCpp": "1.3433427906810695",
+          "endToEndRatioToOllama": "1.111815835890076",
+          "comparatorExecution": "same-host-sequential-process-isolated",
+          "llamaCppVersion": "b10012-c71854292",
+          "ollamaVersion": "0.32.0",
+          "jvmBuild": "Eclipse Adoptium 25.0.3+9-LTS",
+          "heap": "host-default"
+        }
+      }
     }
   ]
 }

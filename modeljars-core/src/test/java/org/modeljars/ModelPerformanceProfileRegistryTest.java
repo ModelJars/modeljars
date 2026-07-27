@@ -1453,6 +1453,18 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
     assertEquals("chatml", profile.evidence().controls().get("promptTemplate"));
     assertEquals("general", profile.evidence().controls().get("workload"));
+    assertEquals(
+        "128dce8b4c8b5eae1e1c1be7cca8c155b144506e33c37b1cb0479dd928af0968",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "ed318ae25016964eaf54e5290aac424cac7222d8c3651d4e346bb73b027ad893",
+        profile.evidence().controls().get("qualificationReportSha256"));
+    assertEquals(
+        "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertEquals(
+        22.83409323014655,
+        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1477,6 +1489,18 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
     assertEquals("h2o-direct", profile.evidence().controls().get("promptTemplate"));
     assertEquals("general", profile.evidence().controls().get("workload"));
+    assertEquals(
+        "3fca8449921c16205d24d60cff87b9162ed933fb3871748b1dcada56ff77686e",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "a07a5094c406135bfefa60e3eb1587448f93611e4d35f67f1b518467c0db4c82",
+        profile.evidence().controls().get("qualificationReportSha256"));
+    assertEquals(
+        "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertEquals(
+        26.092233851604476,
+        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1501,6 +1525,18 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
     assertEquals("chatml-answer", profile.evidence().controls().get("promptTemplate"));
     assertEquals("general", profile.evidence().controls().get("workload"));
+    assertEquals(
+        "7213773355906a05cf1e9c42991246c78265cb775cac2bc87e05e209e787f612",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "7ab43ac5ca496f04753dab5cdd46099a32a4d27e1199c690e9e1f25393bab24f",
+        profile.evidence().controls().get("qualificationReportSha256"));
+    assertEquals(
+        "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertEquals(
+        29.737367126827113,
+        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 

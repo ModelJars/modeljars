@@ -1480,6 +1480,30 @@ class ModelPerformanceProfileRegistryTest {
     assertTrue(profile.safeForAutomaticSelection());
   }
 
+  @Test
+  void aggregateCatalogPublishesYiCoderOnePointFiveBillionChatProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
+        profile.artifactSha256());
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("chatml-answer", profile.evidence().controls().get("promptTemplate"));
+    assertEquals("general", profile.evidence().controls().get("workload"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
   private static Properties profileProperties(boolean outputHashesMatch) {
     String prefix = "profile.smollm2_360m_q8_0_epyc_milan_jdk25.";
     Properties properties = new Properties();

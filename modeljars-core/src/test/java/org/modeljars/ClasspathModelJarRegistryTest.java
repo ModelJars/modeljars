@@ -1028,6 +1028,31 @@ class ClasspathModelJarRegistryTest {
   }
 
   @Test
+  void loadsYiCoderOnePointFiveBillionChatMarkerWithRustFfmSupport() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+
+    ModelJarDescriptor descriptor =
+        registry
+            .resolve(
+                ModelJarRequirement.forSource("hf://bartowski/Yi-Coder-1.5B-Chat-GGUF")
+                    .versionRange("[1.5.0,2.0.0)")
+                    .variant("q4_k_m")
+                    .backend("rust-ffm")
+                    .capability("chat")
+                    .build())
+            .orElseThrow();
+
+    assertEquals(
+        "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("llama", descriptor.architecture());
+    assertEquals("Apache-2.0", descriptor.license().orElseThrow());
+    assertEquals(
+        "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
+        descriptor.sha256().orElseThrow());
+    assertEquals(963_674_304L, descriptor.sizeBytes().orElseThrow());
+  }
+
+  @Test
   void loadsAndVerifiesCanonicalWordTourPayloadFromClasspath() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 

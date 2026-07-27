@@ -5541,6 +5541,55 @@
       }
     },
     {
+      "id": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
+      "name": "Yi-Coder 1.5B Chat GGUF Q4_K_M",
+      "description": "Apache-2.0 Yi-Coder 1.5B Chat imatrix GGUF artifact pinned by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://bartowski/Yi-Coder-1.5B-Chat-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Yi-Coder-1.5B-Chat-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Yi-Coder-1.5B-Chat-GGUF/resolve/442545c4f577cfdab9a70b38fec719c47d393b8b/Yi-Coder-1.5B-Chat-Q4_K_M.gguf",
+      "revision": "442545c4f577cfdab9a70b38fec719c47d393b8b",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.1",
+      "modelVersion": "1.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Yi-Coder-1.5B-Chat-Q4_K_M.gguf",
+      "sha256": "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
+      "sizeBytes": 963674304,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ],
+      "features": [
+        "imatrix",
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general",
+        "code"
+      ],
+      "dimensions": {
+        "parameterCount": 1476495360,
+        "contextLength": 131072,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 16,
+        "feedForwardLength": 5504,
+        "attentionBlockCount": 24
+      }
+    },
+    {
       "id": "wordtour_glove_6b_300d_optimal",
       "name": "WordTour GloVe 6B 300d Optimal",
       "description": "Proven-optimal cyclic semantic ordering of the 40,000-word GloVe 6B 300d vocabulary for compact pure-Java neighbor lookup and blurred bag-of-words.",

@@ -2254,7 +2254,7 @@ val verifyLaunchQualifications =
     tasks.register("verifyLaunchQualifications") {
         group = "verification"
         description =
-            "Fail unless at least 25 diverse model artifacts passed the production RAG policy"
+            "Fail unless at least 25 distinct upstream models passed the production RAG policy"
         if (qualificationCatalogFile.isFile) {
             inputs.file(qualificationCatalogFile)
         }
@@ -2312,6 +2312,12 @@ val verifyLaunchQualifications =
             val architectureCount =
                 qualifiedModels.map(CatalogEntry::architecture).distinct().size
             val domainCount = qualifiedModels.flatMap(CatalogEntry::domains).distinct().size
+            val distinctSourceCount =
+                qualifiedModels.map(CatalogEntry::sourceId).distinct().size
+            require(distinctSourceCount >= qualifications.targetQualifiedModels) {
+                "Launch set must contain at least ${qualifications.targetQualifiedModels} " +
+                    "distinct upstream models; found $distinctSourceCount"
+            }
             require(architectureCount >= 5) {
                 "Launch set must cover at least five architectures; found $architectureCount"
             }
@@ -2319,8 +2325,9 @@ val verifyLaunchQualifications =
                 "Launch set must cover at least six domains; found $domainCount"
             }
             println(
-                "Verified ${qualified.size} production-usable models across " +
-                    "$architectureCount architectures and $domainCount domains",
+                "Verified ${qualified.size} production-usable artifacts from " +
+                    "$distinctSourceCount upstream models across $architectureCount " +
+                    "architectures and $domainCount domains",
             )
         }
     }

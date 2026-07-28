@@ -4,13 +4,19 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -69,7 +75,189 @@ class ModelJarInstallerTest {
     assertEquals(false, Files.exists(destination));
   }
 
+  @Test
+  void resumesAnInterruptedHttpDownload() throws IOException {
+    byte[] modelBytes = modelBytes();
+    int interruptionOffset = 97 * 1024;
+    AtomicInteger requests = new AtomicInteger();
+    AtomicReference<String> resumeRange = new AtomicReference<>();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/model.gguf",
+        exchange -> {
+          int request = requests.incrementAndGet();
+          if (request == 1) {
+            exchange.sendResponseHeaders(200, modelBytes.length);
+            try {
+              exchange.getResponseBody().write(modelBytes, 0, interruptionOffset);
+            } finally {
+              exchange.close();
+            }
+            return;
+          }
+
+          String range = exchange.getRequestHeaders().getFirst("Range");
+          resumeRange.set(range);
+          int offset = Integer.parseInt(range.substring("bytes=".length(), range.length() - 1));
+          exchange
+              .getResponseHeaders()
+              .set(
+                  "Content-Range",
+                  "bytes " + offset + "-" + (modelBytes.length - 1) + "/" + modelBytes.length);
+          exchange.sendResponseHeaders(206, modelBytes.length - offset);
+          try {
+            exchange.getResponseBody().write(modelBytes, offset, modelBytes.length - offset);
+          } finally {
+            exchange.close();
+          }
+        });
+    server.start();
+
+    try {
+      Path destination = tempDir.resolve("cache/model.gguf");
+      ModelJarDescriptor descriptor =
+          descriptor(modelUri(server), destination, modelBytes.length, sha256(modelBytes));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(new InMemoryModelJarRegistry(java.util.List.of(descriptor)));
+
+      Path installed = installer.install(ModelJar.of("hf://example/model"));
+
+      assertEquals(2, requests.get());
+      assertEquals("bytes=" + interruptionOffset + "-", resumeRange.get());
+      assertArrayEquals(modelBytes, Files.readAllBytes(installed));
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void restartsWhenAnHttpServerIgnoresTheResumeRange() throws IOException {
+    byte[] modelBytes = modelBytes();
+    int interruptionOffset = 97 * 1024;
+    AtomicInteger requests = new AtomicInteger();
+    AtomicReference<String> resumeRange = new AtomicReference<>();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/model.gguf",
+        exchange -> {
+          if (requests.incrementAndGet() == 1) {
+            exchange.sendResponseHeaders(200, modelBytes.length);
+            try {
+              exchange.getResponseBody().write(modelBytes, 0, interruptionOffset);
+            } finally {
+              exchange.close();
+            }
+            return;
+          }
+
+          resumeRange.set(exchange.getRequestHeaders().getFirst("Range"));
+          exchange.sendResponseHeaders(200, modelBytes.length);
+          try {
+            exchange.getResponseBody().write(modelBytes);
+          } finally {
+            exchange.close();
+          }
+        });
+    server.start();
+
+    try {
+      Path destination = tempDir.resolve("cache/model.gguf");
+      ModelJarDescriptor descriptor =
+          descriptor(modelUri(server), destination, modelBytes.length, sha256(modelBytes));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(new InMemoryModelJarRegistry(java.util.List.of(descriptor)));
+
+      Path installed = installer.install(ModelJar.of("hf://example/model"));
+
+      assertEquals(2, requests.get());
+      assertEquals("bytes=" + interruptionOffset + "-", resumeRange.get());
+      assertArrayEquals(modelBytes, Files.readAllBytes(installed));
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void stopsAfterThreeInterruptedHttpResponses() throws IOException {
+    byte[] modelBytes = modelBytes();
+    AtomicInteger requests = new AtomicInteger();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/model.gguf",
+        exchange -> {
+          requests.incrementAndGet();
+          String range = exchange.getRequestHeaders().getFirst("Range");
+          int offset =
+              range == null
+                  ? 0
+                  : Integer.parseInt(
+                      range.substring("bytes=".length(), range.length() - 1));
+          if (range == null) {
+            exchange.sendResponseHeaders(200, modelBytes.length);
+          } else {
+            exchange
+                .getResponseHeaders()
+                .set(
+                    "Content-Range",
+                    "bytes "
+                        + offset
+                        + "-"
+                        + (modelBytes.length - 1)
+                        + "/"
+                        + modelBytes.length);
+            exchange.sendResponseHeaders(206, modelBytes.length - offset);
+          }
+          int bytesToWrite = Math.min(32 * 1024, modelBytes.length - offset);
+          try {
+            exchange.getResponseBody().write(modelBytes, offset, bytesToWrite);
+          } finally {
+            exchange.close();
+          }
+        });
+    server.start();
+
+    try {
+      Path destination = tempDir.resolve("cache/model.gguf");
+      ModelJarDescriptor descriptor =
+          descriptor(modelUri(server), destination, modelBytes.length, sha256(modelBytes));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(new InMemoryModelJarRegistry(java.util.List.of(descriptor)));
+
+      assertThrows(
+          ModelJarException.class, () -> installer.install(ModelJar.of("hf://example/model")));
+
+      assertEquals(3, requests.get());
+      assertEquals(false, Files.exists(destination));
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  private static URI modelUri(HttpServer server) {
+    String host = server.getAddress().getAddress().getHostAddress();
+    if (host.contains(":")) {
+      host = "[" + host + "]";
+    }
+    return URI.create("http://" + host + ":" + server.getAddress().getPort() + "/model.gguf");
+  }
+
+  private static byte[] modelBytes() {
+    byte[] modelBytes = new byte[256 * 1024];
+    for (int index = 0; index < modelBytes.length; index++) {
+      modelBytes[index] = (byte) (index * 31);
+    }
+    return modelBytes;
+  }
+
   private static ModelJarDescriptor descriptor(Path source, Path destination, String sha256) {
+    return descriptor(source.toUri(), destination, fileSize(source), sha256);
+  }
+
+  private static ModelJarDescriptor descriptor(
+      URI source, Path destination, long sizeBytes, String sha256) {
     Properties properties = new Properties();
     properties.setProperty("model.example.sourceId", "hf://example/model");
     properties.setProperty(
@@ -82,10 +270,10 @@ class ModelJarInstallerTest {
     properties.setProperty("model.example.quantization", "Q8_0");
     properties.setProperty("model.example.path", destination.toString());
     properties.setProperty("model.example.sourceUri", "https://example.invalid/model");
-    properties.setProperty("model.example.downloadUri", source.toUri().toString());
+    properties.setProperty("model.example.downloadUri", source.toString());
     properties.setProperty("model.example.revision", "0123456789abcdef0123456789abcdef01234567");
     properties.setProperty("model.example.sha256", sha256);
-    properties.setProperty("model.example.sizeBytes", Long.toString(fileSize(source)));
+    properties.setProperty("model.example.sizeBytes", Long.toString(sizeBytes));
     properties.setProperty("model.example.license", "Apache-2.0");
     properties.setProperty("model.example.capabilities", "text-generation");
     properties.setProperty("model.example.backend.pure-java", "true");

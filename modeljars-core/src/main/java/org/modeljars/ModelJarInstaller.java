@@ -23,14 +23,21 @@ public final class ModelJarInstaller {
   private static final int BUFFER_SIZE = 1024 * 1024;
   private static final int CONNECT_TIMEOUT_MILLIS = 30_000;
   private static final int READ_TIMEOUT_MILLIS = 60_000;
-  private static final int MAX_DOWNLOAD_ATTEMPTS = 3;
+  private static final int MAX_DOWNLOAD_ATTEMPTS = 5;
+  private static final long INITIAL_RETRY_DELAY_MILLIS = 1_000;
   private static final Pattern CONTENT_RANGE =
       Pattern.compile("bytes (\\d+)-(\\d+)/(\\d+)");
 
   private final ModelJarRegistry registry;
+  private final RetryDelay retryDelay;
 
   public ModelJarInstaller(ModelJarRegistry registry) {
+    this(registry, ModelJarInstaller::pauseBeforeRetry);
+  }
+
+  ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
     this.registry = Objects.requireNonNull(registry, "registry");
+    this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
   }
 
   /** Resolves, downloads when necessary, and verifies a model artifact. */
@@ -137,7 +144,7 @@ public final class ModelJarInstaller {
     }
   }
 
-  private static void download(URI source, Path destination, long expectedSize) throws IOException {
+  private void download(URI source, Path destination, long expectedSize) throws IOException {
     IOException lastFailure = null;
     for (int attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt++) {
       long downloaded = Files.size(destination);
@@ -163,6 +170,9 @@ public final class ModelJarInstaller {
       } catch (IOException e) {
         lastFailure = e;
       }
+      if (attempt < MAX_DOWNLOAD_ATTEMPTS) {
+        retryDelay.pause(attempt);
+      }
     }
 
     long downloaded = Files.size(destination);
@@ -174,6 +184,16 @@ public final class ModelJarInstaller {
             + " attempts; received "
             + downloaded,
         lastFailure);
+  }
+
+  private static void pauseBeforeRetry(int failedAttempt) throws IOException {
+    long delayMillis = INITIAL_RETRY_DELAY_MILLIS << (failedAttempt - 1);
+    try {
+      Thread.sleep(delayMillis);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while waiting to retry the model download", e);
+    }
   }
 
   private static void downloadAttempt(URI source, Path destination, long expectedSize)
@@ -250,6 +270,11 @@ public final class ModelJarInstaller {
     Files.newOutputStream(
             destination, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)
         .close();
+  }
+
+  @FunctionalInterface
+  interface RetryDelay {
+    void pause(int failedAttempt) throws IOException;
   }
 
   private static String sha256(Path artifact) throws IOException {

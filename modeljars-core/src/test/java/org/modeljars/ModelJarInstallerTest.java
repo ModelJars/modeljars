@@ -13,7 +13,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -180,9 +182,10 @@ class ModelJarInstallerTest {
   }
 
   @Test
-  void stopsAfterThreeInterruptedHttpResponses() throws IOException {
+  void backsOffAndStopsAfterFiveInterruptedHttpResponses() throws IOException {
     byte[] modelBytes = modelBytes();
     AtomicInteger requests = new AtomicInteger();
+    List<Integer> failedAttempts = new ArrayList<>();
     HttpServer server =
         HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
     server.createContext(
@@ -224,12 +227,14 @@ class ModelJarInstallerTest {
       ModelJarDescriptor descriptor =
           descriptor(modelUri(server), destination, modelBytes.length, sha256(modelBytes));
       ModelJarInstaller installer =
-          new ModelJarInstaller(new InMemoryModelJarRegistry(java.util.List.of(descriptor)));
+          new ModelJarInstaller(
+              new InMemoryModelJarRegistry(java.util.List.of(descriptor)), failedAttempts::add);
 
       assertThrows(
           ModelJarException.class, () -> installer.install(ModelJar.of("hf://example/model")));
 
-      assertEquals(3, requests.get());
+      assertEquals(5, requests.get());
+      assertEquals(List.of(1, 2, 3, 4), failedAttempts);
       assertEquals(false, Files.exists(destination));
     } finally {
       server.stop(0);

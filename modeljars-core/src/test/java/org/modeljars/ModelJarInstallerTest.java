@@ -28,8 +28,7 @@ class ModelJarInstallerTest {
     ModelJarInstaller installer =
         new ModelJarInstaller(new InMemoryModelJarRegistry(java.util.List.of(descriptor)));
 
-    Path installed =
-        installer.install(ModelJarRequirement.forSource("hf://example/model").build());
+    Path installed = installer.install(ModelJar.of("hf://example/model"));
 
     assertEquals(destination, installed);
     assertArrayEquals(modelBytes, Files.readAllBytes(installed));
@@ -50,8 +49,7 @@ class ModelJarInstallerTest {
                 java.util.List.of(descriptor(source, destination, sha256(modelBytes)))));
 
     assertThrows(
-        ModelJarException.class,
-        () -> installer.install(ModelJarRequirement.forSource("hf://example/model").build()));
+        ModelJarException.class, () -> installer.install(ModelJar.of("hf://example/model")));
   }
 
   @Test
@@ -67,8 +65,7 @@ class ModelJarInstallerTest {
                 java.util.List.of(descriptor(source, destination, "0".repeat(64)))));
 
     assertThrows(
-        ModelJarException.class,
-        () -> installer.install(ModelJarRequirement.forSource("hf://example/model").build()));
+        ModelJarException.class, () -> installer.install(ModelJar.of("hf://example/model")));
     assertEquals(false, Files.exists(destination));
   }
 
@@ -76,7 +73,8 @@ class ModelJarInstallerTest {
     Properties properties = new Properties();
     properties.setProperty("model.example.sourceId", "hf://example/model");
     properties.setProperty(
-        "model.example.markerCoordinate", "org.modeljars.huggingface:example.model.q8_0:1.0.0-q8_0.1");
+        "model.example.markerCoordinate",
+        "org.modeljars.huggingface:example.model.q8_0:1.0.0-q8_0.1");
     properties.setProperty("model.example.modelVersion", "1.0.0");
     properties.setProperty("model.example.variant", "q8_0");
     properties.setProperty("model.example.format", "gguf");

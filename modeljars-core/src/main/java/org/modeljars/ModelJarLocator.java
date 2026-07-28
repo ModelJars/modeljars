@@ -13,11 +13,11 @@ public final class ModelJarLocator {
     this.registry = Objects.requireNonNull(registry, "registry");
   }
 
-  public Optional<Path> localPath(ModelJarRequirement requirement) {
+  public Optional<Path> localPath(ModelJar requirement) {
     return registry.resolve(requirement).flatMap(ModelJarDescriptor::localPath);
   }
 
-  public Path requireLocalPath(ModelJarRequirement requirement) {
+  public Path requireLocalPath(ModelJar requirement) {
     Path path =
         localPath(requirement)
             .orElseThrow(() -> new ModelJarException("No local path for " + requirement.source()));
@@ -27,4 +27,3 @@ public final class ModelJarLocator {
     return path;
   }
 }
-

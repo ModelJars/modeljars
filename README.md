@@ -105,13 +105,13 @@ org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ```java
 ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 
-ModelJarDescriptor descriptor = registry.resolve(
-    ModelJarRequirement.forSource("hf://ggml-org/Qwen3-0.6B-GGUF")
-        .variant("q4_0")
-        .backend("pure-java")
-        .capability("text-generation")
-        .build()
-).orElseThrow();
+ModelJarDescriptor descriptor =
+    registry.resolve(
+        ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
+            .variant("q4_0")
+            .backend("pure-java")
+            .capability("text-generation"))
+        .orElseThrow();
 
 Path model = descriptor.localPath().orElseThrow();
 Set<String> requiredFeatures = descriptor.features();
@@ -153,11 +153,9 @@ To download and verify the pinned artifact instead of requiring it to exist alre
 
 ```java
 Path model = new ModelJarInstaller(registry).install(
-    ModelJarRequirement.forSource("hf://ggml-org/Qwen3-0.6B-GGUF")
+    ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
         .variant("q4_0")
-        .backend("pure-java")
-        .build()
-);
+        .backend("pure-java"));
 ```
 
 `ModelJarInstaller` verifies both the byte size and SHA-256 digest before atomically moving the
@@ -166,12 +164,12 @@ download into the local cache.
 Compact bundled payloads use the same verification contract without an installation step:
 
 ```java
-ModelJarDescriptor descriptor = registry.resolve(
-    ModelJarRequirement.forSource("github://joisino/wordtour")
-        .variant("optimal")
-        .backend("semantic-order")
-        .build()
-).orElseThrow();
+ModelJarDescriptor descriptor =
+    registry.resolve(
+        ModelJar.of("github://joisino/wordtour")
+            .variant("optimal")
+            .backend("semantic-order"))
+        .orElseThrow();
 
 byte[] payload = new ModelJarResourceLoader(
     Thread.currentThread().getContextClassLoader()

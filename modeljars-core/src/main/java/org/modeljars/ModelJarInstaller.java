@@ -27,12 +27,13 @@ public final class ModelJarInstaller {
   }
 
   /** Resolves, downloads when necessary, and verifies a model artifact. */
-  public Path install(ModelJarRequirement requirement) {
+  public Path install(ModelJar requirement) {
     Objects.requireNonNull(requirement, "requirement");
     ModelJarDescriptor descriptor =
         registry
             .resolve(requirement)
-            .orElseThrow(() -> new ModelJarException("No ModelJars descriptor matched " + requirement));
+            .orElseThrow(
+                () -> new ModelJarException("No ModelJars descriptor matched " + requirement));
     return install(descriptor);
   }
 

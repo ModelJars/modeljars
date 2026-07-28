@@ -64,12 +64,11 @@ class LaunchModelCatalogTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource("hf://ggml-org/SmolLM3-3B-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://ggml-org/SmolLM3-3B-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("smollm3_3b_q4_k_m", descriptor.alias());
@@ -80,13 +79,11 @@ class LaunchModelCatalogTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
-                    .versionRange("[2.0.0,3.0.0)")
+                ModelJar.of("hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
+                    .version("[2.0.0,3.0.0)")
                     .variant("q8_0")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("smollm2_360m_instruct_q8_0", descriptor.alias());
@@ -97,12 +94,11 @@ class LaunchModelCatalogTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen3-1.7B-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://Qwen/Qwen3-1.7B-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("q8_0")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("qwen3_1_7b_q8_0", descriptor.alias());
@@ -113,13 +109,11 @@ class LaunchModelCatalogTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
-                    .versionRange("[2.5.0,2.6.0)")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                    .version("[2.5.0,2.6.0)")
                     .variant("q8_0")
                     .backend("rust-ffm")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
 
     assertEquals("qwen2_5_coder_0_5b_instruct_q8_0", descriptor.alias());
@@ -130,12 +124,11 @@ class LaunchModelCatalogTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource("hf://defog/sqlcoder-7b-2")
-                    .versionRange("[2.0.0,3.0.0)")
+                ModelJar.of("hf://defog/sqlcoder-7b-2")
+                    .version("[2.0.0,3.0.0)")
                     .variant("q5_k_m")
                     .backend("rust-ffm")
-                    .capability("text-to-sql")
-                    .build())
+                    .capability("text-to-sql"))
             .orElseThrow();
 
     assertEquals("sqlcoder_7b_2_q5_k_m", descriptor.alias());
@@ -149,13 +142,13 @@ class LaunchModelCatalogTest {
       ModelJarDescriptor descriptor =
           registry
               .resolve(
-                  ModelJarRequirement.forSource(expected.sourceId())
-                      .versionRange(expected.versionRange())
+                  ModelJar.of(expected.sourceId())
+                      .version(expected.versionRange())
                       .variant(expected.variant())
                       .backend("llama.cpp")
-                      .capability("text-generation")
-                      .build())
-              .orElseThrow(() -> new AssertionError("Missing launch model: " + expected.sourceId()));
+                      .capability("text-generation"))
+              .orElseThrow(
+                  () -> new AssertionError("Missing launch model: " + expected.sourceId()));
 
       assertEquals(expected.alias(), descriptor.alias());
       assertEquals(expected.architecture(), descriptor.architecture());

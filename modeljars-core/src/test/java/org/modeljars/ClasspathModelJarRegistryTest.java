@@ -48,11 +48,10 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://ggml-org/Qwen3-0.6B-GGUF")
+                ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("qwen3_0_6b_q4_0", descriptor.alias());
@@ -74,11 +73,10 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen3-1.7B-GGUF")
+                ModelJar.of("hf://Qwen/Qwen3-1.7B-GGUF")
                     .variant("q8_0")
                     .backend("pure-java")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("qwen3_1_7b_q8_0", descriptor.alias());
@@ -94,12 +92,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen3-8B-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://Qwen/Qwen3-8B-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("qwen3_8b_q4_k_m", descriptor.alias());
@@ -111,8 +108,7 @@ class ClasspathModelJarRegistryTest {
         "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
         descriptor.sha256().orElseThrow());
     assertEquals(5_027_783_488L, descriptor.sizeBytes().orElseThrow());
-    assertTrue(
-        descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-8B-Q4_K_M.gguf"));
+    assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("Qwen3-8B-Q4_K_M.gguf"));
   }
 
   @Test
@@ -122,74 +118,66 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor halfBillion =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor halfBillionRust =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-0.5B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("rust-ffm")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor onePointFiveBillion =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor onePointFiveBillionRust =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("rust-ffm")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor onePointFiveBillionQ8Rust =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF")
                     .variant("q8_0")
                     .backend("rust-ffm")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor threeBillion =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor threeBillionRust =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-3B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("rust-ffm")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
     ModelJarDescriptor sevenBillion =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-Coder-7B-Instruct-GGUF")
+                ModelJar.of("hf://Qwen/Qwen2.5-Coder-7B-Instruct-GGUF")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
 
     assertEquals("qwen2_5_coder_0_5b_instruct_q4_0", halfBillion.alias());
@@ -245,18 +233,21 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
+                ModelJar.of("hf://HuggingFaceTB/SmolLM2-360M-Instruct-GGUF")
                     .variant("q8_0")
                     .backend("pure-java")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("smollm2_360m_instruct_q8_0", descriptor.alias());
     assertEquals("llama", descriptor.architecture());
     assertEquals("Q8_0", descriptor.quantization());
     assertTrue(
-        descriptor.localPath().orElseThrow().toString().endsWith("smollm2-360m-instruct-q8_0.gguf"));
+        descriptor
+            .localPath()
+            .orElseThrow()
+            .toString()
+            .endsWith("smollm2-360m-instruct-q8_0.gguf"));
   }
 
   @Test
@@ -266,13 +257,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_0")
                     .backend("pure-java")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("tinyllama_1_1b_chat_v1_0_q4_0", descriptor.alias());
@@ -297,13 +286,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_0")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("tinyllama_1_1b_chat_v1_0_q4_0", descriptor.alias());
@@ -319,12 +306,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://King3Djbl/nexus-finance-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://King3Djbl/nexus-finance-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("king3djbl_nexus_finance_gguf_q4_k_m", descriptor.alias());
@@ -343,12 +329,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://King3Djbl/nexus-medical-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://King3Djbl/nexus-medical-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("king3djbl_nexus_medical_gguf_q4_k_m", descriptor.alias());
@@ -367,12 +352,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://King3Djbl/nexus-legal-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://King3Djbl/nexus-legal-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("king3djbl_nexus_legal_gguf_q4_k_m", descriptor.alias());
@@ -391,13 +375,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://TheBloke/deepseek-coder-1.3b-instruct-GGUF")
-                    .versionRange("[1.3.0,2.0.0)")
+                ModelJar.of("hf://TheBloke/deepseek-coder-1.3b-instruct-GGUF")
+                    .version("[1.3.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
 
     assertEquals("deepseek_coder_1_3b_instruct_q4_k_m", descriptor.alias());
@@ -424,13 +406,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://TheBloke/deepseek-coder-6.7B-instruct-GGUF")
-                    .versionRange("[6.7.0,7.0.0)")
+                ModelJar.of("hf://TheBloke/deepseek-coder-6.7B-instruct-GGUF")
+                    .version("[6.7.0,7.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("code-completion")
-                    .build())
+                    .capability("code-completion"))
             .orElseThrow();
 
     assertEquals("deepseek_coder_6_7b_instruct_q4_k_m", descriptor.alias());
@@ -457,13 +437,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://bartowski/DeepSeek-R1-Distill-Qwen-7B-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("reasoning")
-                    .build())
+                    .capability("reasoning"))
             .orElseThrow();
 
     assertEquals("deepseek_r1_distill_qwen_7b_q4_k_m", descriptor.alias());
@@ -490,13 +468,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/Qwen2.5-Math-1.5B-Instruct-GGUF")
-                    .versionRange("[2.5.0,3.0.0)")
+                ModelJar.of("hf://bartowski/Qwen2.5-Math-1.5B-Instruct-GGUF")
+                    .version("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("math")
-                    .build())
+                    .capability("math"))
             .orElseThrow();
 
     assertEquals("qwen2_5_math_1_5b_instruct_q4_k_m", descriptor.alias());
@@ -526,12 +502,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://defog/sqlcoder-7b-2")
-                    .versionRange("[2.0.0,3.0.0)")
+                ModelJar.of("hf://defog/sqlcoder-7b-2")
+                    .version("[2.0.0,3.0.0)")
                     .variant("q5_k_m")
                     .backend("pure-java")
-                    .capability("text-to-sql")
-                    .build())
+                    .capability("text-to-sql"))
             .orElseThrow();
 
     assertEquals("sqlcoder_7b_2_q5_k_m", descriptor.alias());
@@ -543,8 +518,7 @@ class ClasspathModelJarRegistryTest {
         "0068f25d1fc37cb25aa6be85064432eeeb1a0754d97139c0d2eb3529fc8fc32b",
         descriptor.sha256().orElseThrow());
     assertEquals(4_783_256_288L, descriptor.sizeBytes().orElseThrow());
-    assertTrue(
-        descriptor.localPath().orElseThrow().toString().endsWith("sqlcoder-7b-q5_k_m.gguf"));
+    assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("sqlcoder-7b-q5_k_m.gguf"));
   }
 
   @Test
@@ -554,12 +528,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://openbmb/MiniCPM5-1B-GGUF")
-                    .versionRange("[5.0.0,6.0.0)")
+                ModelJar.of("hf://openbmb/MiniCPM5-1B-GGUF")
+                    .version("[5.0.0,6.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("minicpm5_1b_q4_k_m", descriptor.alias());
@@ -571,12 +544,7 @@ class ClasspathModelJarRegistryTest {
         "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
         descriptor.sha256().orElseThrow());
     assertEquals(688_065_920L, descriptor.sizeBytes().orElseThrow());
-    assertTrue(
-        descriptor
-            .localPath()
-            .orElseThrow()
-            .toString()
-            .endsWith("MiniCPM5-1B-Q4_K_M.gguf"));
+    assertTrue(descriptor.localPath().orElseThrow().toString().endsWith("MiniCPM5-1B-Q4_K_M.gguf"));
   }
 
   @Test
@@ -584,12 +552,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource("hf://openbmb/MiniCPM5-1B-GGUF")
-                    .versionRange("[5.0.0,6.0.0)")
+                ModelJar.of("hf://openbmb/MiniCPM5-1B-GGUF")
+                    .version("[5.0.0,6.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("minicpm5_1b_q4_k_m", descriptor.alias());
@@ -601,13 +568,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/Llama-3.2-1B-Instruct-GGUF")
-                    .versionRange("[3.2.0,3.3.0)")
+                ModelJar.of("hf://bartowski/Llama-3.2-1B-Instruct-GGUF")
+                    .version("[3.2.0,3.3.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("bartowski_llama_3_2_1b_instruct_gguf_q4_k_m", descriptor.alias());
@@ -623,13 +588,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/Llama-3.2-3B-Instruct-GGUF")
-                    .versionRange("[3.2.0,3.3.0)")
+                ModelJar.of("hf://bartowski/Llama-3.2-3B-Instruct-GGUF")
+                    .version("[3.2.0,3.3.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("bartowski_llama_3_2_3b_instruct_gguf_q4_k_m", descriptor.alias());
@@ -647,13 +610,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/google_gemma-3-1b-it-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://bartowski/google_gemma-3-1b-it-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("text-generation")
-                    .build())
+                    .capability("text-generation"))
             .orElseThrow();
 
     assertEquals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m", descriptor.alias());
@@ -671,12 +632,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://bartowski/HuatuoGPT-o1-7B-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("pure-java")
-                    .capability("medical-reasoning")
-                    .build())
+                    .capability("medical-reasoning"))
             .orElseThrow();
 
     assertEquals("huatuogpt_o1_7b_q4_k_m", descriptor.alias());
@@ -691,11 +651,7 @@ class ClasspathModelJarRegistryTest {
     assertTrue(
         descriptor.features().containsAll(Set.of("community-conversion", "medical-use-warning")));
     assertTrue(
-        descriptor
-            .localPath()
-            .orElseThrow()
-            .toString()
-            .endsWith("HuatuoGPT-o1-7B-Q4_K_M.gguf"));
+        descriptor.localPath().orElseThrow().toString().endsWith("HuatuoGPT-o1-7B-Q4_K_M.gguf"));
     assertTrue(descriptor.supportsBackend("pure-java"));
     assertTrue(descriptor.supportsBackend("llama.cpp"));
   }
@@ -707,13 +663,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("llama.cpp")
-                    .capability("financial-reasoning")
-                    .build())
+                    .capability("financial-reasoning"))
             .orElseThrow();
 
     assertEquals("fin_r1_7b_q4_k_m", descriptor.alias());
@@ -729,10 +683,7 @@ class ClasspathModelJarRegistryTest {
         descriptor
             .features()
             .containsAll(
-                Set.of(
-                    "community-conversion",
-                    "financial-advice-warning",
-                    "license-card-only")));
+                Set.of("community-conversion", "financial-advice-warning", "license-card-only")));
     assertTrue(
         descriptor
             .localPath()
@@ -742,12 +693,10 @@ class ClasspathModelJarRegistryTest {
     assertTrue(
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://bartowski/SUFE-AIFLM-Lab_Fin-R1-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
-                    .backend("pure-java")
-                    .build())
+                    .backend("pure-java"))
             .isPresent());
   }
 
@@ -758,13 +707,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("llama.cpp")
-                    .capability("translation")
-                    .build())
+                    .capability("translation"))
             .orElseThrow();
 
     assertEquals("eurollm_1_7b_instruct_q4_k_m", descriptor.alias());
@@ -790,22 +737,18 @@ class ClasspathModelJarRegistryTest {
     assertTrue(
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
-                    .backend("pure-java")
-                    .build())
+                    .backend("pure-java"))
             .isPresent());
     assertTrue(
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://mradermacher/EuroLLM-1.7B-Instruct-GGUF")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
-                    .backend("rust-ffm")
-                    .build())
+                    .backend("rust-ffm"))
             .isPresent());
   }
 
@@ -816,12 +759,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-0.5B-Instruct-GGUF")
-                    .versionRange("[2.5.0,3.0.0)")
+                ModelJar.of("hf://Qwen/Qwen2.5-0.5B-Instruct-GGUF")
+                    .version("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m", descriptor.alias());
@@ -839,12 +781,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-1.5B-Instruct-GGUF")
-                    .versionRange("[2.5.0,3.0.0)")
+                ModelJar.of("hf://Qwen/Qwen2.5-1.5B-Instruct-GGUF")
+                    .version("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m", descriptor.alias());
@@ -862,12 +803,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://Qwen/Qwen2.5-3B-Instruct-GGUF")
-                    .versionRange("[2.5.0,3.0.0)")
+                ModelJar.of("hf://Qwen/Qwen2.5-3B-Instruct-GGUF")
+                    .version("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("qwen_qwen2_5_3b_instruct_gguf_q4_k_m", descriptor.alias());
@@ -886,12 +826,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://janhq/Jan-v3.5-4B-gguf")
-                    .versionRange("[3.5.0,4.0.0)")
+                ModelJar.of("hf://janhq/Jan-v3.5-4B-gguf")
+                    .version("[3.5.0,4.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("janhq_jan_v3_5_4b_gguf_q4_k_m", descriptor.alias());
@@ -910,12 +849,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF")
-                    .versionRange("[2.5.0,3.0.0)")
+                ModelJar.of("hf://GSMS-B/Indian-Legal-Qwen2.5-3B-GGUF")
+                    .version("[2.5.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m", descriptor.alias());
@@ -935,12 +873,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://umarfarookm/UmarTransit-1B")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("hf://umarfarookm/UmarTransit-1B")
+                    .version("[1.0.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("umarfarookm_umartransit_1b_q4_k_m", descriptor.alias());
@@ -958,17 +895,14 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource(
-                        "hf://HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF")
-                    .versionRange("[2.0.0,3.0.0)")
+                ModelJar.of("hf://HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF")
+                    .version("[2.0.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
-    assertEquals(
-        "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m", descriptor.alias());
+    assertEquals("huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m", descriptor.alias());
     assertEquals("llama", descriptor.architecture());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
     assertEquals(
@@ -984,16 +918,14 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://h2oai/h2o-danube3-500m-chat-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://h2oai/h2o-danube3-500m-chat-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
-    assertEquals(
-        "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("h2oai_h2o_danube3_500m_chat_gguf_q4_k_m", descriptor.alias());
     assertEquals("llama", descriptor.architecture());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
     assertEquals(
@@ -1009,16 +941,14 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://h2oai/h2o-danube2-1.8b-chat-GGUF")
-                    .versionRange("[2.0.0,3.0.0)")
+                ModelJar.of("hf://h2oai/h2o-danube2-1.8b-chat-GGUF")
+                    .version("[2.0.0,3.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
-    assertEquals(
-        "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m", descriptor.alias());
     assertEquals("llama", descriptor.architecture());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
     assertEquals(
@@ -1034,16 +964,14 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("hf://bartowski/Yi-Coder-1.5B-Chat-GGUF")
-                    .versionRange("[1.5.0,2.0.0)")
+                ModelJar.of("hf://bartowski/Yi-Coder-1.5B-Chat-GGUF")
+                    .version("[1.5.0,2.0.0)")
                     .variant("q4_k_m")
                     .backend("rust-ffm")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
-    assertEquals(
-        "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m", descriptor.alias());
+    assertEquals("bartowski_yi_coder_1_5b_chat_gguf_q4_k_m", descriptor.alias());
     assertEquals("llama", descriptor.architecture());
     assertEquals("Apache-2.0", descriptor.license().orElseThrow());
     assertEquals(
@@ -1059,12 +987,11 @@ class ClasspathModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         registry
             .resolve(
-                ModelJarRequirement.forSource("github://joisino/wordtour")
-                    .versionRange("[1.0.0,2.0.0)")
+                ModelJar.of("github://joisino/wordtour")
+                    .version("[1.0.0,2.0.0)")
                     .variant("optimal")
                     .backend("semantic-order")
-                    .capability("semantic-neighbors")
-                    .build())
+                    .capability("semantic-neighbors"))
             .orElseThrow();
 
     assertEquals("wordtour_glove_6b_300d_optimal", descriptor.alias());

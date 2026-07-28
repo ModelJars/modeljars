@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface ModelJarRegistry {
   List<ModelJarDescriptor> descriptors();
 
-  Optional<ModelJarDescriptor> resolve(ModelJarRequirement requirement);
+  Optional<ModelJarDescriptor> resolve(ModelJar requirement);
 
   static ModelJarRegistry fromClasspath() {
     return ClasspathModelJarRegistry.load();
@@ -27,4 +27,3 @@ public interface ModelJarRegistry {
     return new CompositeModelJarRegistry(Arrays.asList(registries));
   }
 }
-

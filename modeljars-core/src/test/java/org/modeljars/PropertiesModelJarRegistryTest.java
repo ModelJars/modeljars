@@ -54,12 +54,11 @@ class PropertiesModelJarRegistryTest {
     ModelJarDescriptor descriptor =
         modelRegistry
             .resolve(
-                ModelJarRequirement.forSource("hf://ggml-org/Qwen3-0.6B-GGUF")
-                    .versionRange("[3.0.0,4.0.0)")
+                ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
+                    .version("[3.0.0,4.0.0)")
                     .variant("Q4_0")
                     .backend("pure-java")
-                    .capability("chat")
-                    .build())
+                    .capability("chat"))
             .orElseThrow();
 
     assertEquals("qwen", descriptor.alias());
@@ -70,8 +69,7 @@ class PropertiesModelJarRegistryTest {
             "https://huggingface.co/ggml-org/Qwen3-0.6B-GGUF/resolve/"
                 + "a41486f827d17edd055fe6b3b0ba3f8d427c0519/Qwen3-0.6B-Q4_0.gguf"),
         descriptor.downloadUri().orElseThrow());
-    assertEquals(
-        "a41486f827d17edd055fe6b3b0ba3f8d427c0519", descriptor.revision().orElseThrow());
+    assertEquals("a41486f827d17edd055fe6b3b0ba3f8d427c0519", descriptor.revision().orElseThrow());
     assertEquals(
         "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
         descriptor.sha256().orElseThrow());

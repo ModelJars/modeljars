@@ -20,7 +20,7 @@ public class InMemoryModelJarRegistry implements ModelJarRegistry {
   }
 
   @Override
-  public Optional<ModelJarDescriptor> resolve(ModelJarRequirement requirement) {
+  public Optional<ModelJarDescriptor> resolve(ModelJar requirement) {
     Objects.requireNonNull(requirement, "requirement");
     List<ModelJarDescriptor> matches = new ArrayList<>();
     for (ModelJarDescriptor descriptor : descriptors) {
@@ -30,10 +30,12 @@ public class InMemoryModelJarRegistry implements ModelJarRegistry {
     }
 
     return matches.stream()
-        .max(Comparator.comparing(ModelJarDescriptor::modelVersion).thenComparing(ModelJarDescriptor::alias));
+        .max(
+            Comparator.comparing(ModelJarDescriptor::modelVersion)
+                .thenComparing(ModelJarDescriptor::alias));
   }
 
-  private static boolean matches(ModelJarRequirement requirement, ModelJarDescriptor descriptor) {
+  private static boolean matches(ModelJar requirement, ModelJarDescriptor descriptor) {
     if (!descriptor.matchesSource(requirement.source())) {
       return false;
     }
@@ -53,4 +55,3 @@ public class InMemoryModelJarRegistry implements ModelJarRegistry {
         || descriptor.capabilities().contains(requirement.capability().orElseThrow());
   }
 }
-

@@ -11,9 +11,10 @@ function read(relativePath) {
 }
 
 test("publishes an immutable aggregate-only private preview", async () => {
-  const [build, workflow] = await Promise.all([
+  const [build, workflow, consumerSettings] = await Promise.all([
     read("build.gradle.kts"),
     read(".github/workflows/publish.yml"),
+    read("smoke-tests/facade-consumer/settings.gradle.kts"),
   ]);
 
   assert.match(build, /name = "GitHubPackages"/);
@@ -51,8 +52,21 @@ test("publishes an immutable aggregate-only private preview", async () => {
   );
   assert.match(workflow, /publishGitHubPackagesPreview/);
   assert.match(workflow, /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/);
+  assert.match(workflow, /Consume published preview/);
+  assert.match(workflow, /-p smoke-tests\/facade-consumer[\s\S]*?run/);
+  assert.match(
+    workflow,
+    /-PmodeljarsVersion=\$\{\{ steps\.version\.outputs\.value \}\}/,
+  );
   assert.match(workflow, /actions\/attest@[a-f0-9]{40}/);
   assert.match(workflow, /actions\/upload-artifact@[a-f0-9]{40}/);
+
+  assert.match(
+    consumerSettings,
+    /https:\/\/maven\.pkg\.github\.com\/modeljars\/modeljars/,
+  );
+  assert.match(consumerSettings, /System\.getenv\("GITHUB_ACTOR"\)/);
+  assert.match(consumerSettings, /System\.getenv\("GITHUB_TOKEN"\)/);
 });
 
 test("documents one-time credentials without embedding a token", async () => {
@@ -60,6 +74,7 @@ test("documents one-time credentials without embedding a token", async () => {
 
   assert.match(guide, /read:packages/);
   assert.match(guide, /personal access token \(classic\)/i);
+  assert.match(guide, /gh auth refresh -h github\.com -s read:packages/);
   assert.match(guide, /~\/\.gradle\/gradle\.properties/);
   assert.match(guide, /~\/\.m2\/settings\.xml/);
   assert.match(guide, /org\.modeljars:modeljars/);

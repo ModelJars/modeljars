@@ -149,6 +149,17 @@ jobs:
           publishGitHubPackagesPreview
           "-PmodeljarsVersion=${{ steps.version.outputs.value }}"
 
+      - name: Consume published preview
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          ./gradlew --no-daemon
+          -p smoke-tests/facade-consumer
+          run
+          --refresh-dependencies
+          "-PmodeljarsVersion=${{ steps.version.outputs.value }}"
+
       - name: Summarize preview
         run: |
           {

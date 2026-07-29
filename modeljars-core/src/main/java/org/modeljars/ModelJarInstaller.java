@@ -31,6 +31,11 @@ public final class ModelJarInstaller {
   private final ModelJarRegistry registry;
   private final RetryDelay retryDelay;
 
+  /**
+   * Creates an installer backed by a model registry.
+   *
+   * @param registry registry used to resolve model selectors
+   */
   public ModelJarInstaller(ModelJarRegistry registry) {
     this(registry, ModelJarInstaller::pauseBeforeRetry);
   }
@@ -40,7 +45,12 @@ public final class ModelJarInstaller {
     this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
   }
 
-  /** Resolves, downloads when necessary, and verifies a model artifact. */
+  /**
+   * Resolves, downloads when necessary, and verifies a model artifact.
+   *
+   * @param requirement model selection constraints
+   * @return verified local model path
+   */
   public Path install(ModelJar requirement) {
     Objects.requireNonNull(requirement, "requirement");
     ModelJarDescriptor descriptor =
@@ -51,7 +61,12 @@ public final class ModelJarInstaller {
     return install(descriptor);
   }
 
-  /** Downloads when necessary and verifies the artifact described by a marker. */
+  /**
+   * Downloads when necessary and verifies the artifact described by a marker.
+   *
+   * @param descriptor immutable model marker metadata
+   * @return verified local model path
+   */
   public Path install(ModelJarDescriptor descriptor) {
     Objects.requireNonNull(descriptor, "descriptor");
     Path destination =
@@ -103,7 +118,12 @@ public final class ModelJarInstaller {
     }
   }
 
-  /** Verifies an artifact against the immutable size and SHA-256 metadata in its marker. */
+  /**
+   * Verifies an artifact against the immutable size and SHA-256 metadata in its marker.
+   *
+   * @param artifact local model artifact
+   * @param descriptor immutable model marker metadata
+   */
   public void verify(Path artifact, ModelJarDescriptor descriptor) {
     Objects.requireNonNull(artifact, "artifact");
     Objects.requireNonNull(descriptor, "descriptor");

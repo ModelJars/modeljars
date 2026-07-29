@@ -5,7 +5,19 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Model-SHA-bound performance guidance with the evidence and runtime scope that justify it. */
+/**
+ * Model-SHA-bound performance guidance with the evidence and runtime scope that justify it.
+ *
+ * @param id stable profile identifier
+ * @param modelAlias catalog alias of the measured model
+ * @param markerCoordinate exact marker coordinate for the measured model
+ * @param artifactSha256 SHA-256 digest of the measured model artifact
+ * @param backend normalized execution backend identifier
+ * @param runtimeSelector runtime properties that must match before applying the profile
+ * @param recommendations backend settings supported by the benchmark evidence
+ * @param javaLaunch Java runtime requirements, when the profile selects JVM settings
+ * @param evidence reproducible benchmark comparison supporting the recommendations
+ */
 public record ModelPerformanceProfile(
     String id,
     String modelAlias,
@@ -17,6 +29,7 @@ public record ModelPerformanceProfile(
     Optional<JavaLaunchProfile> javaLaunch,
     PerformanceEvidence evidence) {
 
+  /** Validates profile identity, artifact binding, runtime selectors, and launch requirements. */
   public ModelPerformanceProfile {
     if (id == null || !id.matches("[a-z0-9][a-z0-9_-]*")) {
       throw new IllegalArgumentException("id must be a lowercase profile identifier: " + id);
@@ -37,12 +50,23 @@ public record ModelPerformanceProfile(
     evidence = Objects.requireNonNull(evidence, "evidence");
   }
 
-  /** Returns true only when the recommendation passed the deterministic-output comparison. */
+  /**
+   * Returns true only when the recommendation passed the deterministic-output comparison.
+   *
+   * @return whether the profile can be selected automatically
+   */
   public boolean safeForAutomaticSelection() {
     return evidence.outputHashesMatch() && (!recommendations.isEmpty() || javaLaunch.isPresent());
   }
 
-  /** Tests the exact artifact identity, backend, and every runtime selector property. */
+  /**
+   * Tests the exact artifact identity, backend, and every runtime selector property.
+   *
+   * @param descriptor candidate model descriptor
+   * @param requestedBackend selected inference backend
+   * @param runtime normalized properties of the active runtime
+   * @return whether this profile applies to the candidate execution
+   */
   public boolean matches(
       ModelJarDescriptor descriptor, String requestedBackend, Map<String, String> runtime) {
     Objects.requireNonNull(descriptor, "descriptor");

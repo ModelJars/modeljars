@@ -21,6 +21,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.plugins.signing.SigningExtension
 import org.w3c.dom.Element
 
@@ -1305,6 +1306,13 @@ subprojects {
     tasks.withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
         options.compilerArgs.addAll(listOf("-parameters", "-Xlint:all", "-Werror"))
+    }
+
+    tasks.withType<Javadoc>().configureEach {
+        (options as StandardJavadocDocletOptions).apply {
+            addBooleanOption("Werror", true)
+            addStringOption("Xmaxwarns", "1000")
+        }
     }
 
     tasks.withType<Test>().configureEach {

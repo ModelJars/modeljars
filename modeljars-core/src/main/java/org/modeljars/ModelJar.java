@@ -4,7 +4,15 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Immutable selector used to resolve one compatible model variant from a registry. */
+/**
+ * Immutable selector used to resolve one compatible model variant from a registry.
+ *
+ * @param source upstream model source ID or marker coordinate
+ * @param versionRange accepted model-version range, when constrained
+ * @param variant normalized model variant, when constrained
+ * @param backend required inference backend, when constrained
+ * @param capability required model capability, when constrained
+ */
 public record ModelJar(
     String source,
     Optional<VersionRange> versionRange,
@@ -12,6 +20,7 @@ public record ModelJar(
     Optional<String> backend,
     Optional<String> capability) {
 
+  /** Validates and normalizes the selection constraints. */
   public ModelJar {
     if (source == null || source.isBlank()) {
       throw new IllegalArgumentException("source must not be blank");
@@ -23,28 +32,53 @@ public record ModelJar(
     capability = normalize(capability, "capability");
   }
 
-  /** Creates a selector for an upstream model source. */
+  /**
+   * Creates a selector for an upstream model source.
+   *
+   * @param source upstream model source ID or marker coordinate
+   * @return an unconstrained selector for the source
+   */
   public static ModelJar of(String source) {
     return new ModelJar(source, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
-  /** Returns a selector constrained by a Maven-style model version range. */
+  /**
+   * Returns a selector constrained by a Maven-style model version range.
+   *
+   * @param value exact version or Maven-style range
+   * @return a copy of this selector with the version constraint
+   */
   public ModelJar version(String value) {
     return new ModelJar(
         source, Optional.of(VersionRange.parse(value)), variant, backend, capability);
   }
 
-  /** Returns a selector constrained to a normalized model variant such as {@code q4_k_m}. */
+  /**
+   * Returns a selector constrained to a normalized model variant such as {@code q4_k_m}.
+   *
+   * @param value model variant
+   * @return a copy of this selector with the variant constraint
+   */
   public ModelJar variant(String value) {
     return new ModelJar(source, versionRange, required(value, "variant"), backend, capability);
   }
 
-  /** Returns a selector constrained to a normalized runtime backend. */
+  /**
+   * Returns a selector constrained to a normalized runtime backend.
+   *
+   * @param value inference backend identifier
+   * @return a copy of this selector with the backend constraint
+   */
   public ModelJar backend(String value) {
     return new ModelJar(source, versionRange, variant, required(value, "backend"), capability);
   }
 
-  /** Returns a selector constrained to a normalized model capability. */
+  /**
+   * Returns a selector constrained to a normalized model capability.
+   *
+   * @param value model capability
+   * @return a copy of this selector with the capability constraint
+   */
   public ModelJar capability(String value) {
     return new ModelJar(source, versionRange, variant, backend, required(value, "capability"));
   }

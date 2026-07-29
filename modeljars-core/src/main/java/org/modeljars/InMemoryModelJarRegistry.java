@@ -10,6 +10,11 @@ import java.util.Optional;
 public class InMemoryModelJarRegistry implements ModelJarRegistry {
   private final List<ModelJarDescriptor> descriptors;
 
+  /**
+   * Creates an immutable registry from model descriptors.
+   *
+   * @param descriptors descriptors exposed by the registry
+   */
   public InMemoryModelJarRegistry(List<ModelJarDescriptor> descriptors) {
     this.descriptors = List.copyOf(Objects.requireNonNull(descriptors, "descriptors"));
   }

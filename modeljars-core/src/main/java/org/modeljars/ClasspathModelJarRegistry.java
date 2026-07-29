@@ -11,16 +11,28 @@ import java.util.Properties;
 
 /** Loads ModelJars descriptors from marker JAR resources on the classpath. */
 public final class ClasspathModelJarRegistry extends InMemoryModelJarRegistry {
+  /** Classpath location used by marker JARs to advertise model descriptors. */
   public static final String REGISTRY_RESOURCE = "META-INF/modeljars/registry.properties";
 
   private ClasspathModelJarRegistry(List<ModelJarDescriptor> descriptors) {
     super(descriptors);
   }
 
+  /**
+   * Loads every marker visible to the current thread context class loader.
+   *
+   * @return the combined classpath registry
+   */
   public static ClasspathModelJarRegistry load() {
     return load(Thread.currentThread().getContextClassLoader());
   }
 
+  /**
+   * Loads every marker visible to the supplied class loader.
+   *
+   * @param classLoader class loader to inspect, or {@code null} to use this class's loader
+   * @return the combined classpath registry
+   */
   public static ClasspathModelJarRegistry load(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null ? ClasspathModelJarRegistry.class.getClassLoader() : classLoader;

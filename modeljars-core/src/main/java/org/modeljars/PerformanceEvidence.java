@@ -4,7 +4,21 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
-/** Reproducible before/after benchmark evidence attached to a model performance profile. */
+/**
+ * Reproducible before/after benchmark evidence attached to a model performance profile.
+ *
+ * @param benchmarkId stable benchmark identifier
+ * @param measuredAt timestamp at which the benchmark was measured
+ * @param baseline name of the baseline configuration
+ * @param candidate name of the candidate configuration
+ * @param warmups number of unmeasured warm-up runs
+ * @param trials number of measured runs
+ * @param generatedTokens generated tokens per measured run
+ * @param outputHashesMatch whether baseline and candidate output hashes matched
+ * @param baselineMetrics named measurements from the baseline
+ * @param candidateMetrics named measurements from the candidate
+ * @param controls fixed workload and runtime controls
+ */
 public record PerformanceEvidence(
     String benchmarkId,
     Instant measuredAt,
@@ -18,6 +32,7 @@ public record PerformanceEvidence(
     Map<String, Double> candidateMetrics,
     Map<String, String> controls) {
 
+  /** Validates benchmark counts, metrics, and immutable control metadata. */
   public PerformanceEvidence {
     benchmarkId = requireText(benchmarkId, "benchmarkId");
     measuredAt = Objects.requireNonNull(measuredAt, "measuredAt");

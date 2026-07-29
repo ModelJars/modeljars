@@ -35,8 +35,23 @@ publishes only community-owned `org.modeljars` artifacts.
 ## Create a read token
 
 GitHub requires authentication to download Maven packages, including packages
-associated with a public repository. Create a personal access token (classic)
-with only the `read:packages` scope:
+associated with a public repository. An existing GitHub CLI OAuth login can add
+the required scope through the browser authorization flow:
+
+```bash
+gh auth refresh -h github.com -s read:packages
+```
+
+For a short-lived shell session, expose that OAuth identity to Maven or Gradle
+without placing the token in command history:
+
+```bash
+export MODELJARS_GITHUB_USER="$(gh api user --jq .login)"
+export MODELJARS_GITHUB_TOKEN="$(gh auth token)"
+```
+
+Alternatively, create a personal access token (classic) with only the
+`read:packages` scope:
 
 <https://github.com/settings/tokens/new?scopes=read:packages&description=ModelJars%20Preview>
 

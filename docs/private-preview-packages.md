@@ -8,8 +8,8 @@ org.modeljars:modeljars-core:<preview-version>
 org.modeljars:modeljars-catalog:<preview-version>
 ```
 
-The facade is the intended application dependency. It brings in the core API and
-the generated catalog at runtime:
+The facade is the intended Java 25 application dependency. It brings in the core
+API, Models 0.1.0, its native and Java execution paths, and the generated catalog:
 
 ```kotlin
 dependencies {
@@ -23,13 +23,14 @@ Each workflow run creates an immutable version such as:
 0.1.0-preview.42.1.0123456789ab
 ```
 
-The invitation provides the exact version. Individual model marker publications
-are deliberately excluded from this temporary channel. Every catalog descriptor
-is still available through the aggregate `modeljars-catalog` JAR.
+The invitation provides the exact version. The aggregate preview workflow does
+not publish individual marker coordinates. The model-artifact workflow publishes
+those immutable coordinates independently. Every catalog descriptor is also
+available through the aggregate `modeljars-catalog` JAR.
 
-`com.integrallis:models` and `com.integrallis:vectors` are separate Integrallis
-runtime libraries and resolve from Maven Central. The ModelJars repository
-contains only community-owned `org.modeljars` artifacts.
+`com.integrallis:models` and its Vectors dependencies remain separately
+maintained Integrallis libraries and resolve from Maven Central. ModelJars
+publishes only community-owned `org.modeljars` artifacts.
 
 ## Create a read token
 

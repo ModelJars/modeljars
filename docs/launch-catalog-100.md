@@ -6,11 +6,12 @@ Status: July 2026 implementation baseline
 
 The metadata-driven catalog currently contains:
 
-- 112 marker artifacts;
-- 111 pinned GGUF files;
-- 109 distinct Hugging Face model repositories;
+- 116 marker artifacts;
+- 115 pinned GGUF files;
+- 114 distinct upstream model repositories;
 - 24 GGUF architecture identifiers;
-- 19 artifacts from 17 sources with a verified `pure-java` backend claim; and
+- 20 artifacts from 18 sources with a `pure-java` backend claim;
+- 31 artifacts from 29 sources with a `rust-ffm` backend claim; and
 - one bundled WordTour semantic-order model.
 
 Distinct models are counted by upstream `sourceId`. Multiple quantizations are separate artifacts,
@@ -39,9 +40,10 @@ List<ModelJarDescriptor> models =
     ModelJarRegistry.fromClasspath().descriptors();
 ```
 
-The `org.modeljars:modeljars` facade brings both the API and aggregate catalog at runtime. Explicit
-marker dependencies can still serve as model-version declarations; exact duplicates are removed
-when the classpath registry loads them.
+The Java 25 `org.modeljars:modeljars` facade brings the registry API, aggregate catalog, Models
+runtime, and native execution backend. The native backend retains the Java backend as its fallback.
+Explicit marker dependencies can still serve as model-version declarations; exact duplicates are
+removed when the classpath registry loads them.
 
 ## Metadata contract
 

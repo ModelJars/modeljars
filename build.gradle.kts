@@ -1284,6 +1284,8 @@ allprojects {
             .get()
 }
 
+val modelsVersion = providers.gradleProperty("modelsVersion").get()
+
 val githubPreviewVersionPattern =
     Regex("""\d+\.\d+\.\d+-preview\.\d+\.\d+\.[0-9a-f]{12}""")
 
@@ -1374,8 +1376,11 @@ subprojects {
 
     tasks.withType<PublishToMavenRepository>().configureEach {
         if (name.endsWith("ToGitHubPackagesRepository")) {
-            enabled = name == "publishMavenPublicationToGitHubPackagesRepository"
-            if (enabled) {
+            val isModelMarker = name.startsWith("publishMarker")
+            enabled =
+                isModelMarker ||
+                name == "publishMavenPublicationToGitHubPackagesRepository"
+            if (enabled && !isModelMarker) {
                 doFirst {
                     require(project.version.toString().matches(githubPreviewVersionPattern)) {
                         "GitHub Packages previews require an immutable " +
@@ -1398,8 +1403,16 @@ project(":modeljars-core") {
 project(":modeljars") {
     description = "Application-facing ModelJars dependency facade"
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
     dependencies {
         api(project(":modeljars-core"))
+        api("com.integrallis:models:$modelsVersion")
+        runtimeOnly("com.integrallis:backend-native:$modelsVersion")
         runtimeOnly(project(":modeljars-catalog"))
     }
 }
@@ -1439,8 +1452,8 @@ val verifyFacadePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 2) {
-                "Facade must publish modeljars-core and the runtime catalog"
+            require(dependencies.length == 4) {
+                "Facade must publish ModelJars, Models, and the selected execution backend"
             }
 
             fun dependency(artifactId: String): Element =
@@ -1469,6 +1482,28 @@ val verifyFacadePublication =
             require(catalogDependency.childText("scope") == "runtime") {
                 "Facade must expose modeljars-catalog in Maven runtime scope"
             }
+
+            val modelsDependency = dependency("models")
+            require(modelsDependency.childText("groupId") == "com.integrallis") {
+                "Facade must expose the Models runtime"
+            }
+            require(modelsDependency.childText("version") == modelsVersion) {
+                "Facade must use the configured Models version"
+            }
+            require(modelsDependency.childText("scope") == "compile") {
+                "Facade must expose Models in Maven compile scope"
+            }
+
+            val backendDependency = dependency("backend-native")
+            require(backendDependency.childText("groupId") == "com.integrallis") {
+                "Facade backend must come from the Models project"
+            }
+            require(backendDependency.childText("version") == modelsVersion) {
+                "Facade backend and Models versions must match"
+            }
+            require(backendDependency.childText("scope") == "runtime") {
+                "Facade must provide the measured native backend at runtime"
+            }
         }
     }
 
@@ -1485,6 +1520,8 @@ val publishGitHubPackagesPreview =
     }
 
 val markerJarTasks = mutableListOf<TaskProvider<Jar>>()
+val markerPomTaskNames = mutableListOf<String>()
+val markerPomFiles = mutableMapOf<CatalogEntry, Provider<RegularFile>>()
 
 project(":modeljars-catalog") {
     description = "Generated aggregate and individual ModelJars marker metadata"
@@ -1631,31 +1668,16 @@ project(":modeljars-catalog") {
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.properties") }
         val markerPerformanceMetadata =
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
-        val markerBenchmarkMetadata =
-            markerRoot.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
-        val markerQualificationRegistry =
-            markerRoot.map {
-                it.file("META-INF/modeljars/qualifications-v1.properties")
-            }
-        val markerQualificationMetadata =
-            markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.json") }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
                 inputs.file(rootProject.file("catalog/performance-profiles.json"))
-                inputs.file(rootProject.file("catalog/benchmarks.json"))
-                if (qualificationCatalogFile.isFile) {
-                    inputs.file(qualificationCatalogFile)
-                }
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
                     markerPerformanceRegistry,
                     markerPerformanceMetadata,
-                    markerBenchmarkMetadata,
-                    markerQualificationRegistry,
-                    markerQualificationMetadata,
                     markerDocs,
                 )
                 doLast {
@@ -1682,59 +1704,6 @@ project(":modeljars-catalog") {
                         ) + "\n",
                         StandardCharsets.UTF_8,
                     )
-                    val modelRagRows =
-                        ragRows.filter { it.optionalString("catalogModelId") == entry.id }
-                    markerBenchmarkMetadata.get().asFile.writeText(
-                        JsonOutput.prettyPrint(
-                            JsonOutput.toJson(
-                                mapOf(
-                                    "schemaVersion" to 2,
-                                    "publishedAt" to benchmarkDocument["publishedAt"],
-                                    "environment" to benchmarkDocument["environment"],
-                                    "inferenceComparisons" to
-                                        inferenceComparisons.filter {
-                                            it.requiredString("modelId") == entry.id
-                                        },
-                                    "ragComparison" to
-                                        ragComparison +
-                                            ("rows" to modelRagRows),
-                                ),
-                            ),
-                        ) + "\n",
-                        StandardCharsets.UTF_8,
-                    )
-                    val modelQualifications =
-                        ragQualifications?.entries?.filter { it.modelId == entry.id }
-                            ?: emptyList()
-                    val qualificationRegistry = markerQualificationRegistry.get().asFile
-                    val qualificationMetadata = markerQualificationMetadata.get().asFile
-                    if (ragQualifications == null) {
-                        qualificationRegistry.delete()
-                        qualificationMetadata.delete()
-                    } else {
-                        qualificationRegistry.writeText(
-                            ragQualifications.registryProperties(modelQualifications),
-                            StandardCharsets.ISO_8859_1,
-                        )
-                        qualificationMetadata.writeText(
-                            JsonOutput.prettyPrint(
-                                JsonOutput.toJson(
-                                    ragQualifications.raw +
-                                        ("qualifiedModels" to
-                                            modelQualifications.count(
-                                                CatalogRagQualification::qualified,
-                                            )) +
-                                        ("rejectedModels" to
-                                            modelQualifications.count { !it.qualified }) +
-                                        ("entries" to
-                                            modelQualifications.map(
-                                                CatalogRagQualification::raw,
-                                            )),
-                                ),
-                            ) + "\n",
-                            StandardCharsets.UTF_8,
-                        )
-                    }
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -1760,9 +1729,6 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/model.json",
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
-                        "META-INF/modeljars/benchmarks-v2.json",
-                        "META-INF/modeljars/qualifications-v1.properties",
-                        "META-INF/modeljars/qualifications-v1.json",
                     )
                 }
             }
@@ -1776,8 +1742,6 @@ project(":modeljars-catalog") {
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
-                    include("META-INF/modeljars/benchmarks-v2.json")
-                    include("META-INF/modeljars/qualifications-v1.json")
                 }
             }
         val markerJavadocJar =
@@ -1835,8 +1799,37 @@ project(":modeljars-catalog") {
                 }
             }
         }
+        markerPomTaskNames.add(
+            ":modeljars-catalog:generatePomFileForMarker${suffix}Publication",
+        )
+        markerPomFiles[entry] =
+            layout.buildDirectory.file("publications/marker$suffix/pom-default.xml")
     }
 }
+
+val verifyMarkerPublicationIndependence =
+    tasks.register("verifyMarkerPublicationIndependence") {
+        group = "verification"
+        description = "Verify each model marker publication has no runtime dependencies"
+        dependsOn(markerPomTaskNames)
+        inputs.files(markerPomFiles.values)
+
+        doLast {
+            val documentBuilderFactory = DocumentBuilderFactory.newInstance()
+            documentBuilderFactory.setFeature(
+                "http://apache.org/xml/features/disallow-doctype-decl",
+                true,
+            )
+            markerPomFiles.forEach { (entry, pomFile) ->
+                val pom = pomFile.get().asFile
+                require(pom.isFile) { "Marker POM was not generated: $pom" }
+                val document = documentBuilderFactory.newDocumentBuilder().parse(pom)
+                require(document.getElementsByTagName("dependency").length == 0) {
+                    "Model marker ${entry.markerCoordinate} must not depend on Models or any runtime"
+                }
+            }
+        }
+    }
 
 val aggregateCatalogJar =
     project(":modeljars-catalog").tasks.named<Jar>("jar").flatMap { it.archiveFile }
@@ -2003,13 +1996,15 @@ tasks.register("verifyCatalog") {
                 val performanceMetadataResource =
                     zip.getEntry("META-INF/modeljars/performance-v1.json")
                         ?: error("Performance profile metadata missing from $markerJar")
-                val benchmarkMetadataResource =
-                    zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
-                        ?: error("Benchmark metadata missing from $markerJar")
-                val qualificationResource =
-                    zip.getEntry("META-INF/modeljars/qualifications-v1.properties")
-                val qualificationMetadataResource =
-                    zip.getEntry("META-INF/modeljars/qualifications-v1.json")
+                require(zip.getEntry("META-INF/modeljars/benchmarks-v2.json") == null) {
+                    "Dynamic benchmark evidence must not be embedded in $markerJar"
+                }
+                require(
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.properties") == null &&
+                        zip.getEntry("META-INF/modeljars/qualifications-v1.json") == null,
+                ) {
+                    "Dynamic qualification evidence must not be embedded in $markerJar"
+                }
                 val metadata =
                     zip.getInputStream(metadataResource).bufferedReader(StandardCharsets.UTF_8).use {
                         JsonSlurper().parse(it).stringKeyMap("Marker metadata in $markerJar")
@@ -2055,85 +2050,6 @@ tasks.register("verifyCatalog") {
                 }
                 require((profileMetadata["profiles"] as? List<*>)?.size == expectedProfiles.size) {
                     "Performance JSON profile count mismatch in $markerJar"
-                }
-                val benchmarkMetadata =
-                    zip.getInputStream(benchmarkMetadataResource)
-                        .bufferedReader(StandardCharsets.UTF_8)
-                        .use {
-                            JsonSlurper()
-                                .parse(it)
-                                .stringKeyMap("Benchmark metadata in $markerJar")
-                        }
-                require((benchmarkMetadata["schemaVersion"] as? Number)?.toInt() == 2) {
-                    "Benchmark JSON schema mismatch in $markerJar"
-                }
-                require(
-                    (benchmarkMetadata["inferenceComparisons"] as? List<*>)?.size ==
-                        inferenceComparisons.count { it.requiredString("modelId") == entry.id },
-                ) {
-                    "Benchmark inference comparison count mismatch in $markerJar"
-                }
-                val markerRagRows =
-                    benchmarkMetadata["ragComparison"]
-                        .stringKeyMap("Marker RAG comparison in $markerJar")["rows"] as? List<*>
-                require(
-                    markerRagRows?.size ==
-                        ragRows.count { it.optionalString("catalogModelId") == entry.id },
-                ) {
-                    "Benchmark RAG comparison count mismatch in $markerJar"
-                }
-                ragQualifications?.let { qualifications ->
-                    requireNotNull(qualificationResource) {
-                        "Qualification properties missing from $markerJar"
-                    }
-                    requireNotNull(qualificationMetadataResource) {
-                        "Qualification metadata missing from $markerJar"
-                    }
-                    val expectedQualifications =
-                        qualifications.entries.filter { it.modelId == entry.id }
-                    val qualificationProperties = Properties()
-                    zip.getInputStream(qualificationResource).use(
-                        qualificationProperties::load,
-                    )
-                    require(
-                        qualificationProperties.getProperty(
-                            "modeljars.qualifications.schemaVersion",
-                        ) == "1",
-                    ) {
-                        "Qualification properties schema mismatch in $markerJar"
-                    }
-                    expectedQualifications.forEach { qualification ->
-                        require(
-                            qualificationProperties.getProperty(
-                                "qualification.${entry.id}.artifactSha256",
-                            ) == entry.sha256,
-                        ) {
-                            "Qualification SHA-256 mismatch in $markerJar"
-                        }
-                    }
-                    val qualificationMetadata =
-                        zip.getInputStream(qualificationMetadataResource)
-                            .bufferedReader(StandardCharsets.UTF_8)
-                            .use {
-                                JsonSlurper()
-                                    .parse(it)
-                                    .stringKeyMap(
-                                        "Qualification metadata in $markerJar",
-                                    )
-                            }
-                    require(
-                        (qualificationMetadata["entries"] as? List<*>)?.size ==
-                            expectedQualifications.size,
-                    ) {
-                        "Qualification entry count mismatch in $markerJar"
-                    }
-                } ?: run {
-                    require(qualificationResource == null) {
-                        "Unexpected qualification properties in $markerJar"
-                    }
-                    require(qualificationMetadataResource == null) {
-                        "Unexpected qualification metadata in $markerJar"
-                    }
                 }
                 require(
                     properties.getProperty("model.${entry.id}.markerCoordinate") ==
@@ -2335,6 +2251,7 @@ val verifyLaunchQualifications =
 tasks.named("check") {
     dependsOn("verifyCatalog")
     dependsOn(verifyFacadePublication)
+    dependsOn(verifyMarkerPublicationIndependence)
 }
 
 val releaseSigningKey = providers.environmentVariable("GPG_PRIVATE_KEY")
@@ -2363,8 +2280,33 @@ val prepareReleaseRepository =
     }
 
 val releasePublicationTasks =
-    subprojects.map { project ->
-        "${project.path}:publishAllPublicationsToReleaseBundleRepository"
+    listOf(
+        ":modeljars-core:publishMavenPublicationToReleaseBundleRepository",
+        ":modeljars-catalog:publishMavenPublicationToReleaseBundleRepository",
+        ":modeljars:publishMavenPublicationToReleaseBundleRepository",
+    )
+val modeljarsMarkerIds =
+    providers
+        .gradleProperty("modeljarsMarkerIds")
+        .map { value ->
+            value.split(',').map(String::trim).filter(String::isNotEmpty)
+        }
+        .orElse(emptyList())
+        .get()
+val duplicateMarkerIds =
+    modeljarsMarkerIds.groupingBy(String::toString).eachCount().filterValues { it > 1 }.keys
+require(duplicateMarkerIds.isEmpty()) {
+    "modeljarsMarkerIds contains duplicates: ${duplicateMarkerIds.sorted().joinToString()}"
+}
+val selectedMarkerEntries =
+    modeljarsMarkerIds.map { id ->
+        catalogEntries.singleOrNull { it.id == id }
+            ?: error("Unknown modeljarsMarkerIds catalog id: $id")
+    }
+val markerReleasePublicationTasks =
+    selectedMarkerEntries.map { entry ->
+        val suffix = taskSuffix(entry.id)
+        ":modeljars-catalog:publishMarker${suffix}PublicationToReleaseBundleRepository"
     }
 subprojects {
     tasks
@@ -2402,6 +2344,39 @@ fun isChecksumFile(path: Path): Boolean =
             name.endsWith(".sha512")
     }
 
+fun generateChecksums(repository: Path) {
+    require(Files.isDirectory(repository)) {
+        "Release repository was not generated: $repository"
+    }
+    Files.walk(repository).use { paths ->
+        paths
+            .filter(Files::isRegularFile)
+            .filter { path ->
+                val name = path.fileName.toString()
+                !name.startsWith("maven-metadata.xml") &&
+                    !isChecksumFile(path)
+            }.sorted()
+            .toList()
+            .forEach { artifact ->
+                mapOf("SHA-256" to ".sha256", "SHA-512" to ".sha512")
+                    .forEach { (algorithm, extension) ->
+                        Files.writeString(
+                            artifact.resolveSibling(artifact.fileName.toString() + extension),
+                            digest(artifact, algorithm) + "\n",
+                            StandardCharsets.US_ASCII,
+                        )
+                    }
+            }
+    }
+    Files.walk(repository).use { paths ->
+        paths
+            .filter(Files::isRegularFile)
+            .filter { it.fileName.toString().startsWith("maven-metadata.xml") }
+            .sorted(Comparator.reverseOrder())
+            .forEach(Files::delete)
+    }
+}
+
 val generateReleaseChecksums =
     tasks.register("generateReleaseChecksums") {
         group = "publishing"
@@ -2410,37 +2385,24 @@ val generateReleaseChecksums =
         inputs.dir(releaseRepository)
 
         doLast {
-            val repository = releaseRepository.get().asFile.toPath()
-            require(Files.isDirectory(repository)) {
-                "Release repository was not generated: $repository"
+            generateChecksums(releaseRepository.get().asFile.toPath())
+        }
+    }
+
+val generateMarkerReleaseChecksums =
+    tasks.register("generateMarkerReleaseChecksums") {
+        group = "publishing"
+        description = "Generate checksums for selected model marker publications"
+        dependsOn(markerReleasePublicationTasks)
+        inputs.dir(releaseRepository)
+
+        doFirst {
+            require(selectedMarkerEntries.isNotEmpty()) {
+                "markerReleaseBundleZip requires -PmodeljarsMarkerIds=<catalog-id>[,<catalog-id>]"
             }
-            Files.walk(repository).use { paths ->
-                paths
-                    .filter(Files::isRegularFile)
-                    .filter { path ->
-                        val name = path.fileName.toString()
-                        !name.startsWith("maven-metadata.xml") &&
-                            !isChecksumFile(path)
-                    }.sorted()
-                    .toList()
-                    .forEach { artifact ->
-                        mapOf("SHA-256" to ".sha256", "SHA-512" to ".sha512")
-                            .forEach { (algorithm, extension) ->
-                                Files.writeString(
-                                    artifact.resolveSibling(artifact.fileName.toString() + extension),
-                                    digest(artifact, algorithm) + "\n",
-                                    StandardCharsets.US_ASCII,
-                                )
-                            }
-                    }
-            }
-            Files.walk(repository).use { paths ->
-                paths
-                    .filter(Files::isRegularFile)
-                    .filter { it.fileName.toString().startsWith("maven-metadata.xml") }
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(Files::delete)
-            }
+        }
+        doLast {
+            generateChecksums(releaseRepository.get().asFile.toPath())
         }
     }
 
@@ -2525,6 +2487,107 @@ val verifyReleaseBundle =
         }
     }
 
+val verifyMarkerReleaseBundle =
+    tasks.register("verifyMarkerReleaseBundle") {
+        group = "verification"
+        description = "Verify a signed Central bundle containing only selected model markers"
+        dependsOn(generateMarkerReleaseChecksums)
+        inputs.dir(releaseRepository)
+
+        doLast {
+            require(releaseRequested.get()) {
+                "verifyMarkerReleaseBundle requires -Prelease=true"
+            }
+            require(releaseSigningKey.isPresent && releaseSigningPassword.isPresent) {
+                "GPG_PRIVATE_KEY and GPG_PASSPHRASE are required for a marker release bundle"
+            }
+            val repository = releaseRepository.get().asFile.toPath()
+            val expectedCoordinates =
+                selectedMarkerEntries
+                    .map { Triple(it.groupId, it.artifactId, it.markerVersion) }
+                    .toSet()
+            require(expectedCoordinates.isNotEmpty()) {
+                "No model marker publications were selected"
+            }
+
+            val documentBuilderFactory = DocumentBuilderFactory.newInstance()
+            documentBuilderFactory.setFeature(
+                "http://apache.org/xml/features/disallow-doctype-decl",
+                true,
+            )
+            val poms =
+                Files.walk(repository).use { paths ->
+                    paths
+                        .filter(Files::isRegularFile)
+                        .filter { it.fileName.toString().endsWith(".pom") }
+                        .sorted()
+                        .toList()
+                }
+            val actualCoordinates =
+                poms.map { pom ->
+                    val document = documentBuilderFactory.newDocumentBuilder().parse(pom.toFile())
+                    require(document.getElementsByTagName("dependency").length == 0) {
+                        "Model marker POM must not contain runtime dependencies: $pom"
+                    }
+                    val project = document.documentElement
+                    fun text(name: String): String =
+                        project.getElementsByTagName(name).item(0)?.textContent
+                            ?: error("Marker POM is missing <$name>: $pom")
+                    Triple(text("groupId"), text("artifactId"), text("version"))
+                }.toSet()
+            require(actualCoordinates == expectedCoordinates) {
+                "Marker release bundle coordinates differ: " +
+                    "expected=$expectedCoordinates, actual=$actualCoordinates"
+            }
+
+            val primaryArtifacts =
+                Files.walk(repository).use { paths ->
+                    paths
+                        .filter(Files::isRegularFile)
+                        .filter { path ->
+                            path.fileName.toString().let { name ->
+                                name.endsWith(".jar") ||
+                                    name.endsWith(".pom") ||
+                                    name.endsWith(".module")
+                            }
+                        }.sorted()
+                        .toList()
+                }
+            require(primaryArtifacts.isNotEmpty()) {
+                "Marker release repository contains no Maven artifacts"
+            }
+            primaryArtifacts.forEach { artifact ->
+                val signature = artifact.resolveSibling("${artifact.fileName}.asc")
+                require(Files.isRegularFile(signature) && Files.size(signature) > 0) {
+                    "OpenPGP signature is missing for $artifact"
+                }
+            }
+            Files.walk(repository).use { paths ->
+                paths
+                    .filter(Files::isRegularFile)
+                    .filter { !isChecksumFile(it) }
+                    .forEach { artifact ->
+                        mapOf("SHA-256" to ".sha256", "SHA-512" to ".sha512")
+                            .forEach { (algorithm, extension) ->
+                                val checksum =
+                                    artifact.resolveSibling(
+                                        artifact.fileName.toString() + extension,
+                                    )
+                                require(Files.isRegularFile(checksum)) {
+                                    "$algorithm checksum is missing for $artifact"
+                                }
+                                require(
+                                    Files.readString(checksum, StandardCharsets.US_ASCII).trim() ==
+                                        digest(artifact, algorithm),
+                                ) {
+                                    "$algorithm checksum does not match $artifact"
+                                }
+                            }
+                    }
+            }
+        }
+    }
+
 val releaseBundleZip =
     tasks.register<Zip>("releaseBundleZip") {
         group = "publishing"
@@ -2536,3 +2599,14 @@ val releaseBundleZip =
         isPreserveFileTimestamps = false
         isReproducibleFileOrder = true
     }
+
+tasks.register<Zip>("markerReleaseBundleZip") {
+    group = "publishing"
+    description = "Create a verified Central bundle for selected model marker artifacts"
+    dependsOn(verifyMarkerReleaseBundle)
+    from(releaseRepository)
+    destinationDirectory.set(layout.buildDirectory.dir("release"))
+    archiveFileName.set("modeljars-marker-bundle.zip")
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}

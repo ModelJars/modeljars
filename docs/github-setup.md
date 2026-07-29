@@ -72,10 +72,17 @@ After the namespace is verified, generate a dedicated Central Portal user token 
 continuity, but the namespace is authorized through DNS rather than the mailbox address. The
 Gradle Plugin Portal is not involved unless ModelJars later publishes a Gradle plugin.
 
-Publishing should remain blocked until Central Portal upload and signing are wired into the build.
-The facade release must contain these coordinates and transitive dependency:
+The `publish` workflow stages the facade, core, and aggregate catalog as one signed USER_MANAGED
+Central deployment. The `Model artifacts` workflow publishes accepted marker coordinates
+independently. Its `model_ids` input accepts exact comma-separated catalog IDs; the reserved `all`
+value bootstraps the complete accepted catalog. Use `verify` before either publication target.
+
+The facade release contains these coordinates and transitive dependencies:
 
 ```text
 org.modeljars:modeljars:0.1.0
   -> org.modeljars:modeljars-core:0.1.0
+  -> org.modeljars:modeljars-catalog:0.1.0
+  -> com.integrallis:models:0.1.0
+  -> com.integrallis:backend-native:0.1.0
 ```

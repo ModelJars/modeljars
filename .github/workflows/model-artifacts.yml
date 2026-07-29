@@ -1,0 +1,293 @@
+name: Model artifacts
+
+on:
+  pull_request:
+    paths:
+      - catalog/models.json
+      - catalog/performance-profiles.json
+      - tools/model-publications.mjs
+      - tools/model-publications.test.mjs
+      - tools/independent-model-publication.test.mjs
+      - tools/plan-model-publications.mjs
+      - build.gradle.kts
+      - gradle.properties
+      - package.json
+      - package-lock.json
+      - settings.gradle.kts
+      - .github/workflows/model-artifacts.yml
+  push:
+    branches:
+      - main
+    paths:
+      - catalog/models.json
+      - catalog/performance-profiles.json
+      - tools/model-publications.mjs
+      - tools/model-publications.test.mjs
+      - tools/independent-model-publication.test.mjs
+      - tools/plan-model-publications.mjs
+      - build.gradle.kts
+      - gradle.properties
+      - package.json
+      - package-lock.json
+      - settings.gradle.kts
+      - .github/workflows/model-artifacts.yml
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Verification or explicit publication target.
+        required: true
+        default: verify
+        type: choice
+        options:
+          - verify
+          - github-packages
+          - maven-central
+      model_ids:
+        description: Comma-separated catalog model IDs, or all.
+        required: true
+        default: all
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: model-artifacts-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan immutable model publications
+    runs-on: ubuntu-latest
+    outputs:
+      count: ${{ steps.plan.outputs.count }}
+      has_publications: ${{ steps.plan.outputs.has_publications }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      removed: ${{ steps.plan.outputs.removed }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install catalog tooling
+        run: npm ci
+
+      - name: Resolve model publication plan
+        id: plan
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          REQUESTED_MODEL_IDS: ${{ inputs.model_ids }}
+        run: |
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            node tools/plan-model-publications.mjs \
+              --current catalog/models.json \
+              --ids "${REQUESTED_MODEL_IDS}" \
+              --github-output "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          comparison="${BASE_SHA}"
+          if [[ "${EVENT_NAME}" == "push" ]]; then
+            comparison="${BEFORE_SHA}"
+          fi
+          previous_catalog="${RUNNER_TEMP}/models-before.json"
+          previous_profiles="${RUNNER_TEMP}/performance-profiles-before.json"
+          if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
+              ! git cat-file -e "${comparison}^{commit}"; then
+            printf '%s\n' '{"schemaVersion":2,"models":[]}' > "${previous_catalog}"
+            printf '%s\n' '{"schemaVersion":1,"profiles":[]}' > "${previous_profiles}"
+          else
+            git show "${comparison}:catalog/models.json" > "${previous_catalog}"
+            git show "${comparison}:catalog/performance-profiles.json" > "${previous_profiles}"
+          fi
+          node tools/plan-model-publications.mjs \
+            --previous "${previous_catalog}" \
+            --current catalog/models.json \
+            --previous-profiles "${previous_profiles}" \
+            --current-profiles catalog/performance-profiles.json \
+            --github-output "${GITHUB_OUTPUT}"
+
+      - name: Summarize plan
+        env:
+          COUNT: ${{ steps.plan.outputs.count }}
+          REMOVED: ${{ steps.plan.outputs.removed }}
+        run: |
+          {
+            echo "### Model artifact plan"
+            echo
+            echo "Independent publications: ${COUNT}"
+            echo
+            echo "Catalog removals: \`${REMOVED}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  verify:
+    name: Verify selected model artifacts
+    needs: plan
+    if: needs.plan.outputs.has_publications == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install catalog tooling
+        run: npm ci
+
+      - name: Test publication policy and generated artifacts
+        run: |
+          npm test
+          ./gradlew --no-daemon test verifyCatalog verifyMarkerPublicationIndependence
+
+  github-packages:
+    name: Publish ${{ matrix.id }} to GitHub Packages
+    needs: [plan, verify]
+    if: >-
+      needs.plan.outputs.has_publications == 'true' &&
+      (
+        github.event_name == 'push' ||
+        (github.event_name == 'workflow_dispatch' && inputs.target == 'github-packages')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+
+      - name: Build independent model JAR
+        run: ./gradlew --no-daemon "${{ matrix.jarTask }}"
+
+      - name: Attest model JAR
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: ${{ matrix.jarPath }}
+
+      - name: Publish model JAR and Maven metadata
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew --no-daemon "${{ matrix.githubTask }}"
+
+  maven-central:
+    name: Stage ${{ matrix.id }} for Maven Central
+    needs: [plan, verify]
+    if: >-
+      needs.plan.outputs.has_publications == 'true' &&
+      github.event_name == 'workflow_dispatch' &&
+      inputs.target == 'maven-central'
+    runs-on: ubuntu-latest
+    environment: maven-central
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+
+      - name: Verify release credentials
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          test -n "${CENTRAL_USERNAME}"
+          test -n "${CENTRAL_PASSWORD}"
+          test -n "${GPG_PRIVATE_KEY}"
+          test -n "${GPG_PASSPHRASE}"
+
+      - name: Build signed model release bundle
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: >-
+          ./gradlew --no-daemon
+          markerReleaseBundleZip
+          -Prelease=true
+          "-PmodeljarsMarkerIds=${{ matrix.id }}"
+
+      - name: Attest Central bundle
+        uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
+        with:
+          subject-path: build/release/modeljars-marker-bundle.zip
+
+      - name: Retain verified Central bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: modeljars-central-${{ matrix.id }}-${{ github.sha }}
+          path: build/release/modeljars-marker-bundle.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload USER_MANAGED deployment
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MODEL_ID: ${{ matrix.id }}
+        run: |
+          authorization="$(printf '%s:%s' "${CENTRAL_USERNAME}" "${CENTRAL_PASSWORD}" | base64 | tr -d '\n')"
+          deployment_id="$(
+            curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer ${authorization}" \
+              --form "bundle=@build/release/modeljars-marker-bundle.zip;type=application/octet-stream" \
+              "https://central.sonatype.com/api/v1/publisher/upload?name=modeljars-${MODEL_ID}-${GITHUB_RUN_ID}&publishingType=USER_MANAGED"
+          )"
+          if ! printf '%s' "${deployment_id}" | grep -Eq '^[0-9a-fA-F-]{36}$'; then
+            echo "Central returned an invalid deployment ID." >&2
+            exit 1
+          fi
+          {
+            echo "### Maven Central model deployment"
+            echo
+            echo "Uploaded \`${MODEL_ID}\` as USER_MANAGED deployment \`${deployment_id}\`."
+          } >> "${GITHUB_STEP_SUMMARY}"

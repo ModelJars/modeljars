@@ -60,14 +60,20 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core` and the aggregate `modeljars-catalog` at runtime. This makes the
-complete catalog discoverable with one ergonomic dependency. Explicit marker dependencies remain
-useful as build-time model-version declarations; duplicate descriptors from the aggregate and an
+`modeljars` exposes `modeljars-core`, Models 0.1.0, the aggregate `modeljars-catalog`, and the
+Models native backend. The native backend includes the Java backend as its fallback, so one
+application dependency provides model discovery and both execution paths. Applications using the
+facade require Java 25. `modeljars-core` remains usable by Java 21 registry and build tooling
+without the Models runtime.
+
+Explicit marker dependencies remain useful as build-time model-version declarations. Marker JARs
+contain metadata and no runtime dependencies; duplicate descriptors from the aggregate and an
 individual marker are deduplicated by marker coordinate.
 
-## Supported markers
+## Example markers
 
-The first catalog marker is the model already used by `projects/models` integration tests:
+The complete generated catalog is searchable at [modeljars.org](https://modeljars.org). A compact
+Qwen marker is:
 
 ```text
 org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1
@@ -85,7 +91,7 @@ and the local path:
 ${user.home}/.jvllm/models/Qwen3-0.6B-Q4_0.gguf
 ```
 
-The first pure-Java coder targets are Qwen2.5-Coder small GGUF variants:
+Qwen2.5-Coder markers include:
 
 ```text
 org.modeljars.huggingface:qwen.qwen2.5-coder-0.5b-instruct-gguf.q4_0:2.5.0-q4_0.1
@@ -94,7 +100,7 @@ org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q4_0:2.5.0-q4_0.
 org.modeljars.huggingface:qwen.qwen2.5-coder-1.5b-instruct-gguf.q8_0:2.5.0-q8_0.1
 ```
 
-The first bundled semantic-order model is the proven-optimal 40,000-term WordTour artifact:
+The catalog also includes the bundled 40,000-term WordTour semantic-order artifact:
 
 ```text
 org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1

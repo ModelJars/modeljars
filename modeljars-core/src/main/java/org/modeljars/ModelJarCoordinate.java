@@ -3,9 +3,18 @@ package org.modeljars;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Maven-like coordinate for a marker JAR or model artifact. */
+/**
+ * Maven-like coordinate for a marker JAR or model artifact.
+ *
+ * @param groupId Maven group ID
+ * @param artifactId Maven artifact ID
+ * @param version artifact version
+ * @param classifier optional artifact classifier
+ * @param type artifact extension, normally {@code jar}
+ */
 public record ModelJarCoordinate(
     String groupId, String artifactId, String version, Optional<String> classifier, String type) {
+  /** Validates the coordinate and supplies the default {@code jar} type. */
   public ModelJarCoordinate {
     groupId = requireText(groupId, "groupId");
     artifactId = requireText(artifactId, "artifactId");
@@ -14,6 +23,12 @@ public record ModelJarCoordinate(
     type = type == null || type.isBlank() ? "jar" : type.trim();
   }
 
+  /**
+   * Parses {@code groupId:artifactId:version[:classifier][@type]} notation.
+   *
+   * @param value coordinate notation
+   * @return parsed coordinate
+   */
   public static ModelJarCoordinate parse(String value) {
     String coordinate = requireText(value, "coordinate");
     String type = "jar";
@@ -49,4 +64,3 @@ public record ModelJarCoordinate(
     return value.trim();
   }
 }
-

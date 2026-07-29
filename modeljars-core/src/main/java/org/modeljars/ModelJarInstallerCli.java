@@ -4,6 +4,11 @@ package org.modeljars;
 public final class ModelJarInstallerCli {
   private ModelJarInstallerCli() {}
 
+  /**
+   * Resolves and installs the model selected by command-line arguments.
+   *
+   * @param args model source followed by optional selection constraints
+   */
   public static void main(String[] args) {
     if (args.length == 0) {
       throw new IllegalArgumentException(

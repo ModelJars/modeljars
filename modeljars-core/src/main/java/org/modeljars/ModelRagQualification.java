@@ -5,7 +5,41 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Production RAG evidence bound to one immutable model artifact and execution backend. */
+/**
+ * Production RAG evidence bound to one immutable model artifact and execution backend.
+ *
+ * @param modelId catalog alias of the qualified model
+ * @param model display name and variant of the qualified model
+ * @param backend normalized execution backend identifier
+ * @param backendVersion exact backend version or build
+ * @param workload stable qualification-workload identifier
+ * @param corpusSha256 SHA-256 digest of the retrieval corpus
+ * @param promptTemplate prompt template used by the qualification
+ * @param groundingPolicy policy used to accept, abstain, or extract an answer
+ * @param artifactSha256 SHA-256 digest of the qualified model artifact
+ * @param artifactSizeBytes qualified model artifact size in bytes
+ * @param reportPath repository-relative qualification report path
+ * @param reportUri canonical HTTPS location of the qualification report
+ * @param reportSha256 SHA-256 digest of the qualification report
+ * @param performanceTier measured performance classification
+ * @param verdict qualification verdict
+ * @param qualified whether the artifact passed the production policy
+ * @param attempts measured workload attempts
+ * @param p95RetrievalMillis p95 retrieval latency in milliseconds
+ * @param p95TtftMillis p95 time to first token in milliseconds
+ * @param p95TpotMillis p95 time per output token in milliseconds
+ * @param p95EndToEndMillis p95 end-to-end latency in milliseconds
+ * @param p50PrefillTokensPerSecond p50 prompt-prefill throughput
+ * @param p50DecodeTokensPerSecond p50 decode throughput
+ * @param peakRssBytes peak resident-set size in bytes
+ * @param correctAnswerRate accepted-answer correctness rate
+ * @param rawCorrectAnswerRate model-only correctness rate before grounding-policy fallback
+ * @param abstentionAccuracy accuracy of unsupported-question abstentions
+ * @param modelAnswerRate fraction of attempts answered directly by the model
+ * @param modelAnswerCorrectRate correctness rate among direct model answers
+ * @param extractiveFallbackRate fraction of attempts answered by extractive fallback
+ * @param environment controlled host and JVM identity
+ */
 public record ModelRagQualification(
     String modelId,
     String model,
@@ -42,6 +76,7 @@ public record ModelRagQualification(
   public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
   public static final double MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90;
 
+  /** Validates immutable evidence, metrics, rates, and the production policy floor. */
   public ModelRagQualification {
     modelId = requireIdentifier(modelId);
     model = requireText(model, "model");
@@ -89,7 +124,11 @@ public record ModelRagQualification(
     }
   }
 
-  /** Classifies how the artifact met the production quality policy. */
+  /**
+   * Classifies how the artifact met the production quality policy.
+   *
+   * @return the highest supported RAG use-case tier
+   */
   public RagUseCaseTier useCaseTier() {
     if (!qualified) {
       return RagUseCaseTier.UNQUALIFIED;
@@ -100,12 +139,21 @@ public record ModelRagQualification(
     return RagUseCaseTier.GUARDED_RAG;
   }
 
-  /** Returns true only when the exact artifact passed the production policy. */
+  /**
+   * Returns true only when the exact artifact passed the production policy.
+   *
+   * @return whether the exact model artifact is production usable
+   */
   public boolean productionUsable() {
     return qualified;
   }
 
-  /** Tests the descriptor alias, artifact digest, and advertised backend support. */
+  /**
+   * Tests the descriptor alias, artifact digest, and advertised backend support.
+   *
+   * @param descriptor candidate model descriptor
+   * @return whether this qualification applies to the exact descriptor
+   */
   public boolean matches(ModelJarDescriptor descriptor) {
     Objects.requireNonNull(descriptor, "descriptor");
     return modelId.equals(descriptor.alias())

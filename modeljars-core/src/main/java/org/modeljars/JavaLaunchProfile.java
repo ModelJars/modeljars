@@ -6,9 +6,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Java runtime and startup arguments required by a measured model performance profile. */
+/**
+ * Java runtime and startup arguments required by a measured model performance profile.
+ *
+ * @param runtime normalized JVM or compiler identifier
+ * @param javaFeature required Java feature version
+ * @param jvmArguments required JVM startup arguments
+ */
 public record JavaLaunchProfile(String runtime, int javaFeature, List<String> jvmArguments) {
 
+  /** Validates and normalizes the runtime identifier and JVM arguments. */
   public JavaLaunchProfile {
     if (runtime == null || runtime.isBlank()) {
       throw new IllegalArgumentException("runtime must not be blank");
@@ -27,7 +34,13 @@ public record JavaLaunchProfile(String runtime, int javaFeature, List<String> jv
     }
   }
 
-  /** Builds process arguments without shell parsing or quoting. */
+  /**
+   * Builds process arguments without shell parsing or quoting.
+   *
+   * @param javaExecutable Java executable path or command
+   * @param applicationArguments arguments appended after the JVM options
+   * @return immutable process argument list
+   */
   public List<String> command(String javaExecutable, List<String> applicationArguments) {
     if (javaExecutable == null || javaExecutable.isBlank()) {
       throw new IllegalArgumentException("javaExecutable must not be blank");
@@ -42,7 +55,12 @@ public record JavaLaunchProfile(String runtime, int javaFeature, List<String> jv
     return List.copyOf(command);
   }
 
-  /** Returns required startup arguments absent from the supplied JVM input arguments. */
+  /**
+   * Returns required startup arguments absent from the supplied JVM input arguments.
+   *
+   * @param actualArguments JVM input arguments active in the current process
+   * @return required arguments not present in {@code actualArguments}
+   */
   public List<String> missingArguments(Collection<String> actualArguments) {
     Objects.requireNonNull(actualArguments, "actualArguments");
     return jvmArguments.stream().filter(argument -> !actualArguments.contains(argument)).toList();

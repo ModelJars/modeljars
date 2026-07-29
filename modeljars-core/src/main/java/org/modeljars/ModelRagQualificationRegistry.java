@@ -20,7 +20,10 @@ import java.util.TreeSet;
 
 /** Loads production RAG qualifications from versioned ModelJars resources. */
 public final class ModelRagQualificationRegistry {
+  /** Classpath location of RAG qualification metadata. */
   public static final String RESOURCE = "META-INF/modeljars/qualifications-v1.properties";
+
+  /** Supported RAG qualification schema version. */
   public static final int SCHEMA_VERSION = 1;
 
   private static final String ROOT_PREFIX = "modeljars.qualifications.";
@@ -55,47 +58,96 @@ public final class ModelRagQualificationRegistry {
     }
   }
 
+  /**
+   * Returns when this qualification catalog was generated.
+   *
+   * @return catalog generation timestamp
+   */
   public Instant generatedAt() {
     return generatedAt;
   }
 
+  /**
+   * Returns the production policy version applied by the qualification run.
+   *
+   * @return qualification policy version
+   */
   public String policyVersion() {
     return policyVersion;
   }
 
+  /**
+   * Returns the Models source revision used by the qualification run.
+   *
+   * @return 40-character Models Git commit
+   */
   public String modelsRevision() {
     return modelsRevision;
   }
 
+  /**
+   * Returns the catalog's declared qualification target.
+   *
+   * @return target qualified-model count
+   */
   public int targetQualifiedModels() {
     return targetQualifiedModels;
   }
 
+  /**
+   * Returns the number of artifacts that passed the policy.
+   *
+   * @return qualified artifact count
+   */
   public int qualifiedModels() {
     return Math.toIntExact(qualifications.stream().filter(ModelRagQualification::qualified).count());
   }
 
+  /**
+   * Returns the number of evaluated artifacts that failed the policy.
+   *
+   * @return rejected artifact count
+   */
   public int rejectedModels() {
     return qualifications.size() - qualifiedModels();
   }
 
-  /** Returns all evaluated artifacts in stable model-ID order. */
+  /**
+   * Returns all evaluated artifacts in stable model-ID order.
+   *
+   * @return immutable qualification entries
+   */
   public List<ModelRagQualification> qualifications() {
     return qualifications;
   }
 
-  /** Returns only artifacts that passed the production qualification policy. */
+  /**
+   * Returns only artifacts that passed the production qualification policy.
+   *
+   * @return production-usable qualification entries
+   */
   public List<ModelRagQualification> qualified() {
     return qualifications.stream().filter(ModelRagQualification::productionUsable).toList();
   }
 
-  /** Returns qualifications bound to the descriptor's exact alias, digest, and backend. */
+  /**
+   * Returns qualifications bound to the descriptor's exact alias, digest, and backend.
+   *
+   * @param descriptor model descriptor to match
+   * @return qualifications for the exact model artifact
+   */
   public List<ModelRagQualification> qualificationsFor(ModelJarDescriptor descriptor) {
     return qualifications.stream()
         .filter(qualification -> qualification.matches(descriptor))
         .toList();
   }
 
+  /**
+   * Loads RAG qualifications from a properties file.
+   *
+   * @param path qualification properties file
+   * @return parsed qualification registry
+   */
   public static ModelRagQualificationRegistry load(Path path) {
     Properties properties = new Properties();
     try (InputStream input = Files.newInputStream(path)) {
@@ -106,10 +158,21 @@ public final class ModelRagQualificationRegistry {
     return fromProperties(properties);
   }
 
+  /**
+   * Loads qualifications visible to the current thread context class loader.
+   *
+   * @return combined classpath qualification registry
+   */
   public static ModelRagQualificationRegistry fromClasspath() {
     return fromClasspath(Thread.currentThread().getContextClassLoader());
   }
 
+  /**
+   * Loads qualifications visible to a class loader.
+   *
+   * @param classLoader class loader to inspect, or {@code null} to use this class's loader
+   * @return combined classpath qualification registry
+   */
   public static ModelRagQualificationRegistry fromClasspath(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null ? ModelRagQualificationRegistry.class.getClassLoader() : classLoader;
@@ -152,6 +215,12 @@ public final class ModelRagQualificationRegistry {
         List.copyOf(qualifications.values()));
   }
 
+  /**
+   * Parses RAG qualifications from their versioned properties representation.
+   *
+   * @param properties qualification properties
+   * @return parsed qualification registry
+   */
   public static ModelRagQualificationRegistry fromProperties(Properties properties) {
     Objects.requireNonNull(properties, "properties");
     int schemaVersion = integer(properties, ROOT_PREFIX + "schemaVersion");

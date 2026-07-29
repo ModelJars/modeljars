@@ -3,7 +3,22 @@ package org.modeljars;
 import java.util.Objects;
 import java.util.Optional;
 
-/** GGUF model dimensions used for discovery and deterministic resource estimates. */
+/**
+ * GGUF model dimensions used for discovery and deterministic resource estimates.
+ *
+ * @param parameterCount number of model parameters
+ * @param contextLength maximum context length in tokens
+ * @param embeddingLength hidden-state width
+ * @param blockCount total transformer block count
+ * @param attentionHeadCount query attention-head count
+ * @param keyValueHeadCount key/value attention-head count
+ * @param feedForwardLength feed-forward hidden-state width
+ * @param expertCount mixture-of-experts expert count
+ * @param expertUsedCount experts selected for each token
+ * @param keyLength width of each key head
+ * @param valueLength width of each value head
+ * @param attentionBlockCount blocks that allocate KV-cache state
+ */
 public record ModelDimensions(
     Optional<Long> parameterCount,
     Optional<Integer> contextLength,
@@ -17,6 +32,7 @@ public record ModelDimensions(
     Optional<Integer> keyLength,
     Optional<Integer> valueLength,
     Optional<Integer> attentionBlockCount) {
+  /** Validates that every advertised dimension is positive. */
   public ModelDimensions {
     parameterCount = positiveLong(parameterCount, "parameterCount");
     contextLength = positiveInt(contextLength, "contextLength");
@@ -32,6 +48,19 @@ public record ModelDimensions(
     attentionBlockCount = positiveInt(attentionBlockCount, "attentionBlockCount");
   }
 
+  /**
+   * Creates dimensions for metadata that predates explicit key, value, and attention-block sizes.
+   *
+   * @param parameterCount number of model parameters
+   * @param contextLength maximum context length in tokens
+   * @param embeddingLength hidden-state width
+   * @param blockCount total transformer block count
+   * @param attentionHeadCount query attention-head count
+   * @param keyValueHeadCount key/value attention-head count
+   * @param feedForwardLength feed-forward hidden-state width
+   * @param expertCount mixture-of-experts expert count
+   * @param expertUsedCount experts selected for each token
+   */
   public ModelDimensions(
       Optional<Long> parameterCount,
       Optional<Integer> contextLength,
@@ -57,6 +86,11 @@ public record ModelDimensions(
         Optional.empty());
   }
 
+  /**
+   * Returns dimensions with every value unknown.
+   *
+   * @return empty model dimensions
+   */
   public static ModelDimensions unknown() {
     return new ModelDimensions(
         Optional.empty(),
@@ -77,6 +111,11 @@ public record ModelDimensions(
    * Estimates model-file bytes plus a conventional transformer KV cache.
    *
    * <p>The estimate is unavailable for architectures that do not advertise enough dimensions.
+   *
+   * @param contextTokens context-window size to estimate
+   * @param precision precision of each KV-cache element
+   * @param weightBytes model-weight storage in bytes
+   * @return the lower-bound estimate, or empty when required dimensions are unavailable
    */
   public Optional<ModelMemoryEstimate> estimateMemory(
       int contextTokens, KvCachePrecision precision, long weightBytes) {

@@ -1,6 +1,20 @@
 package org.modeljars;
 
-/** Controlled host and JVM identity captured with a model qualification. */
+/**
+ * Controlled host and JVM identity captured with a model qualification.
+ *
+ * @param hostname host name recorded by the qualification runner
+ * @param osName operating-system name
+ * @param osVersion operating-system version
+ * @param architecture processor architecture reported by the JVM
+ * @param cpuModel processor model
+ * @param availableProcessors logical processors available to the JVM
+ * @param totalMemoryBytes host memory in bytes
+ * @param maxHeapBytes maximum JVM heap in bytes
+ * @param javaVersion Java runtime version
+ * @param javaVendor Java runtime vendor
+ * @param vmName JVM implementation name
+ */
 public record ModelQualificationEnvironment(
     String hostname,
     String osName,
@@ -14,6 +28,7 @@ public record ModelQualificationEnvironment(
     String javaVendor,
     String vmName) {
 
+  /** Validates and normalizes the captured host and JVM identity. */
   public ModelQualificationEnvironment {
     hostname = requireText(hostname, "hostname");
     osName = requireText(osName, "osName");

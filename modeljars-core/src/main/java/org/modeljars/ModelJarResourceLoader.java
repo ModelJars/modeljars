@@ -14,11 +14,21 @@ public final class ModelJarResourceLoader {
 
   private final ClassLoader classLoader;
 
+  /**
+   * Creates a loader for bundled model resources.
+   *
+   * @param classLoader class loader containing marker resources
+   */
   public ModelJarResourceLoader(ClassLoader classLoader) {
     this.classLoader = Objects.requireNonNull(classLoader, "classLoader");
   }
 
-  /** Loads a bundled payload after verifying its declared byte count and SHA-256 digest. */
+  /**
+   * Loads a bundled payload after verifying its declared byte count and SHA-256 digest.
+   *
+   * @param descriptor marker metadata identifying the bundled payload
+   * @return verified payload bytes
+   */
   public byte[] readVerified(ModelJarDescriptor descriptor) {
     Objects.requireNonNull(descriptor, "descriptor");
     String resource =

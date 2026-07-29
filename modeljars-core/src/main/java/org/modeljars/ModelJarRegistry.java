@@ -7,22 +7,56 @@ import java.util.Optional;
 
 /** Registry of model marker descriptors. */
 public interface ModelJarRegistry {
+  /**
+   * Returns every descriptor in this registry.
+   *
+   * @return immutable model descriptors
+   */
   List<ModelJarDescriptor> descriptors();
 
+  /**
+   * Resolves the highest compatible model version.
+   *
+   * @param requirement model selection constraints
+   * @return the selected descriptor, or empty when no descriptor matches
+   */
   Optional<ModelJarDescriptor> resolve(ModelJar requirement);
 
+  /**
+   * Loads markers visible to the current thread context class loader.
+   *
+   * @return the combined classpath registry
+   */
   static ModelJarRegistry fromClasspath() {
     return ClasspathModelJarRegistry.load();
   }
 
+  /**
+   * Loads a registry from a marker properties file.
+   *
+   * @param path marker properties file
+   * @return the parsed registry
+   */
   static ModelJarRegistry fromProperties(Path path) {
     return PropertiesModelJarRegistry.load(path);
   }
 
+  /**
+   * Creates an immutable in-memory registry.
+   *
+   * @param descriptors descriptors exposed by the registry
+   * @return the in-memory registry
+   */
   static ModelJarRegistry of(List<ModelJarDescriptor> descriptors) {
     return new InMemoryModelJarRegistry(descriptors);
   }
 
+  /**
+   * Combines registries in source-priority order.
+   *
+   * @param registries ordered registries to combine
+   * @return the composite registry
+   */
   static ModelJarRegistry composite(ModelJarRegistry... registries) {
     return new CompositeModelJarRegistry(Arrays.asList(registries));
   }

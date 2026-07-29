@@ -22,6 +22,12 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
     super(descriptors);
   }
 
+  /**
+   * Loads model descriptors from a marker properties file.
+   *
+   * @param path marker properties file
+   * @return parsed registry
+   */
   public static PropertiesModelJarRegistry load(Path path) {
     Properties properties = new Properties();
     try (InputStream input = Files.newInputStream(path)) {
@@ -32,6 +38,12 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
     return fromProperties(properties);
   }
 
+  /**
+   * Parses model descriptors from marker properties.
+   *
+   * @param properties marker properties
+   * @return parsed registry
+   */
   public static PropertiesModelJarRegistry fromProperties(Properties properties) {
     Set<String> aliases = aliases(properties);
     List<ModelJarDescriptor> descriptors =

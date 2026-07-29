@@ -20,7 +20,10 @@ import java.util.TreeSet;
 
 /** Loads versioned, dependency-free performance profiles from ModelJars marker resources. */
 public final class ModelPerformanceProfileRegistry {
+  /** Classpath location of performance-profile metadata. */
   public static final String RESOURCE = "META-INF/modeljars/performance-v1.properties";
+
+  /** Supported performance-profile schema version. */
   public static final int SCHEMA_VERSION = 1;
 
   private static final String SCHEMA_PROPERTY = "modeljars.performance.schemaVersion";
@@ -33,12 +36,21 @@ public final class ModelPerformanceProfileRegistry {
         profiles.stream().sorted(Comparator.comparing(ModelPerformanceProfile::id)).toList();
   }
 
-  /** Returns every profile in stable profile-ID order. */
+  /**
+   * Returns every profile in stable profile-ID order.
+   *
+   * @return immutable performance profiles
+   */
   public List<ModelPerformanceProfile> profiles() {
     return profiles;
   }
 
-  /** Returns profiles bound to the descriptor's exact coordinate and model SHA. */
+  /**
+   * Returns profiles bound to the descriptor's exact coordinate and model SHA.
+   *
+   * @param descriptor model descriptor to match
+   * @return profiles measured against the exact model artifact
+   */
   public List<ModelPerformanceProfile> profilesFor(ModelJarDescriptor descriptor) {
     Objects.requireNonNull(descriptor, "descriptor");
     return profiles.stream()
@@ -48,7 +60,14 @@ public final class ModelPerformanceProfileRegistry {
         .toList();
   }
 
-  /** Returns profiles whose artifact, backend, and complete runtime selector match. */
+  /**
+   * Returns profiles whose artifact, backend, and complete runtime selector match.
+   *
+   * @param descriptor model descriptor to match
+   * @param backend selected inference backend
+   * @param runtime normalized properties of the active runtime
+   * @return applicable performance profiles
+   */
   public List<ModelPerformanceProfile> matching(
       ModelJarDescriptor descriptor, String backend, Map<String, String> runtime) {
     return profiles.stream()
@@ -56,6 +75,12 @@ public final class ModelPerformanceProfileRegistry {
         .toList();
   }
 
+  /**
+   * Loads performance profiles from a properties file.
+   *
+   * @param path performance-profile properties file
+   * @return parsed profile registry
+   */
   public static ModelPerformanceProfileRegistry load(Path path) {
     Properties properties = new Properties();
     try (InputStream input = Files.newInputStream(path)) {
@@ -66,10 +91,21 @@ public final class ModelPerformanceProfileRegistry {
     return fromProperties(properties);
   }
 
+  /**
+   * Loads profiles visible to the current thread context class loader.
+   *
+   * @return combined classpath profile registry
+   */
   public static ModelPerformanceProfileRegistry fromClasspath() {
     return fromClasspath(Thread.currentThread().getContextClassLoader());
   }
 
+  /**
+   * Loads profiles visible to a class loader.
+   *
+   * @param classLoader class loader to inspect, or {@code null} to use this class's loader
+   * @return combined classpath profile registry
+   */
   public static ModelPerformanceProfileRegistry fromClasspath(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null ? ModelPerformanceProfileRegistry.class.getClassLoader() : classLoader;
@@ -95,6 +131,12 @@ public final class ModelPerformanceProfileRegistry {
     return new ModelPerformanceProfileRegistry(List.copyOf(profiles.values()));
   }
 
+  /**
+   * Parses performance profiles from their versioned properties representation.
+   *
+   * @param properties profile properties
+   * @return parsed profile registry
+   */
   public static ModelPerformanceProfileRegistry fromProperties(Properties properties) {
     Objects.requireNonNull(properties, "properties");
     int schemaVersion = parseInt(SCHEMA_PROPERTY, required(properties, SCHEMA_PROPERTY));

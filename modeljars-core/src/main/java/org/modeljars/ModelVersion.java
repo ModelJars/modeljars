@@ -28,6 +28,12 @@ public final class ModelVersion implements Comparable<ModelVersion> {
     this.value = value;
   }
 
+  /**
+   * Parses a semantic model-lineage version.
+   *
+   * @param value semantic version text
+   * @return parsed model version
+   */
   public static ModelVersion parse(String value) {
     if (value == null) {
       throw new IllegalArgumentException("version must not be null");
@@ -45,10 +51,20 @@ public final class ModelVersion implements Comparable<ModelVersion> {
         value.trim());
   }
 
+  /**
+   * Returns the optional semantic-version pre-release identifier.
+   *
+   * @return pre-release identifier, or {@code null} when absent
+   */
   public String preRelease() {
     return preRelease;
   }
 
+  /**
+   * Returns the optional semantic-version build metadata.
+   *
+   * @return build metadata, or {@code null} when absent
+   */
   public String buildMetadata() {
     return buildMetadata;
   }
@@ -132,4 +148,3 @@ public final class ModelVersion implements Comparable<ModelVersion> {
     return value;
   }
 }
-

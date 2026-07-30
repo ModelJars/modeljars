@@ -72,7 +72,8 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     index,
     /Discover the power of small and medium-sized models for local, in-JVM inference/,
   );
-  assert.match(index, />Models JVM inference library<\/a>/);
+  assert.match(index, />Models<\/a> JVM inference library/);
+  assert.doesNotMatch(index, />Models JVM inference library<\/a>/);
   assert.match(index, /Think of WebJars, but for AI models/);
   assert.doesNotMatch(index, /apple-runtime-notice|apple-runtime-band/);
   assert.match(index, /id="catalog-search"/);
@@ -177,25 +178,27 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(highlighter, /registerLanguage\("kotlin"/);
 });
 
-test("links every primary navigation to the Java guide with the Java brand icon", async () => {
+test("links every primary navigation to the Java guide with a simple monochrome cup icon", async () => {
   const [index, model, benchmarks, apple, contribution, javaIcon, styles] = await Promise.all([
     read("site/index.html"),
     read("site/model.html"),
     read("site/benchmarks/index.html"),
     read("site/apple/index.html"),
     read("site/contribute/index.html"),
-    read("site/assets/fontawesome-java.svg"),
+    read("site/assets/fontawesome-mug-hot.svg"),
     read("site/assets/styles.css"),
   ]);
 
   for (const page of [index, model, benchmarks, apple, contribution]) {
     assert.match(
       page,
-      /<a class="nav-java" href="\/#using-modeljars"[^>]*>[\s\S]*?class="nav-java-icon"[\s\S]*?<span>Use from Java<\/span>[\s\S]*?<\/a>/,
+      /<a class="nav-java" href="\/#using-modeljars"[^>]*>[\s\S]*?<span class="nav-java-icon" aria-hidden="true"><\/span>[\s\S]*?<span>Use from Java<\/span>[\s\S]*?<\/a>/,
     );
   }
 
   assert.match(javaIcon, /Font Awesome Free 7\.3\.1/);
-  assert.match(javaIcon, /viewBox="0 0 384 512"/);
-  assert.match(styles, /mask:\s*url\("\/assets\/fontawesome-java\.svg"\)/);
+  assert.match(javaIcon, /viewBox="0 0 576 512"/);
+  assert.equal((javaIcon.match(/<path /g) ?? []).length, 1);
+  assert.match(styles, /background:\s*currentColor/);
+  assert.match(styles, /mask:\s*url\("\/assets\/fontawesome-mug-hot\.svg"\)/);
 });

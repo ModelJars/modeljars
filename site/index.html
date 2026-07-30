@@ -139,15 +139,15 @@
             <p class="eyebrow">Use from Java</p>
             <h2 id="guide-title">Run a qualified model in Java</h2>
             <p>
-              A marker JAR identifies and verifies model weights; it is not an inference engine.
-              The ModelJars facade brings Integrallis Models and its Java and Rust/FFM execution
+              A model JAR identifies and verifies model weights; it is not an inference engine.
+              The ModelJars JVM runtime brings Integrallis Models and its Java and Rust/FFM execution
               backends, then resolves the qualified profile for the exact artifact.
             </p>
           </div>
           <div class="guide-steps">
             <article>
               <span class="step-number">01</span>
-              <h3>Add the facade and marker</h3>
+              <h3>Add the JVM runtime and the model</h3>
               <pre><code>dependencies {
   implementation("org.modeljars:modeljars:0.1.0")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")

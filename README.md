@@ -38,7 +38,7 @@ publication.
 
 ## Dependency
 
-Applications use the stable facade artifact and add one marker dependency for every model they
+Applications use the stable JVM runtime artifact and add one model dependency for every model they
 intend to ship:
 
 ```kotlin
@@ -67,7 +67,7 @@ dependencies {
 
 `modeljars` exposes `modeljars-core`, Models 0.1.0, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
-Java reference. Applications using the facade require Java 25. `modeljars-core` remains usable by
+Java reference. Applications using the JVM runtime require Java 25. `modeljars-core` remains usable by
 Java 21 registry and build tooling without the Models runtime.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
@@ -89,7 +89,7 @@ It resolves the upstream source:
 hf://ggml-org/Qwen3-0.6B-GGUF
 ```
 
-The facade stores downloaded weights in a content-addressed cache below
+The JVM runtime stores downloaded weights in a content-addressed cache below
 `${user.home}/.modeljars/cache/sha256/`. Application code never constructs or passes that path.
 
 Qwen2.5-Coder markers include:
@@ -184,7 +184,7 @@ ModelPerformanceProfileRegistry profiles =
 List<ModelPerformanceProfile> measured = profiles.profilesFor(descriptor);
 ```
 
-The ModelJars facade calls `matching(descriptor, backend, runtimeFacts)` with the complete
+The ModelJars JVM runtime calls `matching(descriptor, backend, runtimeFacts)` with the complete
 structured runtime fingerprint before loading the selected Models backend.
 
 `safeForAutomaticSelection()` means the profile has recommendations and exact output hashes

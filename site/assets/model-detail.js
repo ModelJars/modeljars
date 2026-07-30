@@ -267,11 +267,11 @@ function renderModel(model, catalog) {
 
         <section class="detail-section" aria-labelledby="install-title">
           <p class="eyebrow">JVM dependency</p>
-          <h2 id="install-title">Install this marker</h2>
+          <h2 id="install-title">Install this model</h2>
           <p>
-            Add the ModelJars facade and this marker to the application. The facade brings
+            Add the ModelJars JVM runtime and this model to the application. The runtime brings
             the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a>
-            and its execution backends. The marker provides the generated Java reference, pinned
+            and its execution backends. The model JAR provides the generated Java reference, pinned
             model location, checksum, and qualification metadata; weights are downloaded to the
             verified local cache when first opened.
           </p>

@@ -113,6 +113,7 @@ jobs:
           ./gradlew --no-daemon
           :modeljars-core:publishMavenPublicationToMavenLocal
           :modeljars-catalog:publishMavenPublicationToMavenLocal
+          :modeljars-catalog:publishMarkerQwen306bQ40PublicationToMavenLocal
           :modeljars:publishMavenPublicationToMavenLocal
 
       - name: Consume facade from Maven Local

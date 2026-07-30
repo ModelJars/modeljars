@@ -2,6 +2,7 @@ package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.sun.net.httpserver.HttpServer;
@@ -40,6 +41,45 @@ class ModelJarInstallerTest {
 
     assertEquals(destination, installed);
     assertArrayEquals(modelBytes, Files.readAllBytes(installed));
+  }
+
+  @Test
+  void installsIntoAnExplicitContentAddressedCachePath() throws IOException {
+    byte[] modelBytes = "content addressed model".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    Path source = tempDir.resolve("upstream.gguf");
+    Path markerDestination = tempDir.resolve("legacy/model.gguf");
+    Path cacheDestination = tempDir.resolve("sha256/ab/abcdef/model.gguf");
+    Files.write(source, modelBytes);
+    ModelJarDescriptor descriptor =
+        descriptor(source, markerDestination, sha256(modelBytes));
+    ModelJarInstaller installer =
+        new ModelJarInstaller(new InMemoryModelJarRegistry(List.of(descriptor)));
+
+    Path installed = installer.install(descriptor, cacheDestination);
+
+    assertEquals(cacheDestination, installed);
+    assertArrayEquals(modelBytes, Files.readAllBytes(installed));
+    assertFalse(Files.exists(markerDestination));
+  }
+
+  @Test
+  void verifiesAnOfflineArtifactWithoutAttemptingADownload() throws IOException {
+    byte[] modelBytes = "offline model".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    Path source = tempDir.resolve("missing-upstream.gguf");
+    Path markerDestination = tempDir.resolve("legacy/model.gguf");
+    Path cacheDestination = tempDir.resolve("sha256/ab/abcdef/model.gguf");
+    Files.createDirectories(cacheDestination.getParent());
+    Files.write(cacheDestination, modelBytes);
+    ModelJarDescriptor descriptor =
+        descriptor(source.toUri(), markerDestination, modelBytes.length, sha256(modelBytes));
+    ModelJarInstaller installer =
+        new ModelJarInstaller(new InMemoryModelJarRegistry(List.of(descriptor)));
+
+    assertEquals(cacheDestination, installer.verifyCached(descriptor, cacheDestination));
+    Files.delete(cacheDestination);
+    assertThrows(
+        ModelJarException.class,
+        () -> installer.verifyCached(descriptor, cacheDestination));
   }
 
   @Test

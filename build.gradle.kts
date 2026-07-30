@@ -291,6 +291,11 @@ fun taskSuffix(id: String): String =
         part.replaceFirstChar { character -> character.uppercase() }
     }
 
+fun markerReferenceClassName(id: String): String =
+    id.split('_').joinToString("_") { part ->
+        part.replaceFirstChar { character -> character.uppercase() }
+    }
+
 fun propertyValue(value: String): String {
     val escaped = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
     return if (escaped.startsWith(" ")) "\\$escaped" else escaped
@@ -781,6 +786,12 @@ require(
     catalogEntries.map(CatalogEntry::markerCoordinate).distinct().size == catalogEntries.size,
 ) {
     "Marker coordinates must be unique"
+}
+require(
+    catalogEntries.map { markerReferenceClassName(it.id) }.distinct().size ==
+        catalogEntries.size,
+) {
+    "Generated marker reference class names must be unique"
 }
 require(performanceProfiles.map(CatalogPerformanceProfile::id).distinct().size == performanceProfiles.size) {
     "Performance profile IDs must be unique"
@@ -1566,7 +1577,7 @@ project(":modeljars") {
         api("com.integrallis:models:$modelsVersion")
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
-        runtimeOnly(project(":modeljars-catalog"))
+        testImplementation(project(":modeljars-catalog"))
     }
 }
 
@@ -1605,8 +1616,8 @@ val verifyFacadePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 5) {
-                "Facade must publish ModelJars, Models, and both execution backends"
+            require(dependencies.length == 4) {
+                "Facade must publish ModelJars Core, Models, and both execution backends"
             }
 
             fun dependency(artifactId: String): Element =
@@ -1623,17 +1634,6 @@ val verifyFacadePublication =
             }
             require(coreDependency.childText("scope") == "compile") {
                 "Facade must expose modeljars-core in Maven compile scope"
-            }
-
-            val catalogDependency = dependency("modeljars-catalog")
-            require(catalogDependency.childText("groupId") == "org.modeljars") {
-                "Catalog dependency groupId must be org.modeljars"
-            }
-            require(catalogDependency.childText("version") == facadePublicationVersion) {
-                "Facade and modeljars-catalog versions must match"
-            }
-            require(catalogDependency.childText("scope") == "runtime") {
-                "Facade must expose modeljars-catalog in Maven runtime scope"
             }
 
             val modelsDependency = dependency("models")
@@ -1689,6 +1689,40 @@ val markerPomFiles = mutableMapOf<CatalogEntry, Provider<RegularFile>>()
 
 project(":modeljars-catalog") {
     description = "Qualified aggregate catalog and generated ModelJars candidate markers"
+
+    val generatedMarkerReferenceSources =
+        layout.buildDirectory.dir("generated/sources/marker-references/java/main")
+    val generateMarkerReferenceSources =
+        tasks.register("generateMarkerReferenceSources") {
+            inputs.file(rootProject.file("catalog/models.json"))
+            outputs.dir(generatedMarkerReferenceSources)
+
+            doLast {
+                val sourceRoot = generatedMarkerReferenceSources.get().asFile
+                project.delete(sourceRoot)
+                catalogEntries.forEach { entry ->
+                    val className = markerReferenceClassName(entry.id)
+                    require(className.matches(Regex("[A-Z][A-Za-z0-9_]*"))) {
+                        "Catalog ID cannot become a Java class name: ${entry.id}"
+                    }
+                    val source =
+                        sourceRoot.resolve("org/modeljars/catalog/$className.java")
+                    source.parentFile.mkdirs()
+                    source.writeText(
+                        "package org.modeljars.catalog;\n\n" +
+                            "import org.modeljars.ModelJar;\n\n" +
+                            "/** Type-safe reference carried by the ${entry.id} marker JAR. */\n" +
+                            "public final class $className {\n" +
+                            "  /** Exact marker coordinate for this model artifact. */\n" +
+                            "  public static final ModelJar MODEL =\n" +
+                            "      ModelJar.of(\"${entry.markerCoordinate}\");\n\n" +
+                            "  private $className() {}\n" +
+                            "}\n",
+                        StandardCharsets.UTF_8,
+                    )
+                }
+            }
+        }
 
     val generatedCatalogResources =
         layout.buildDirectory.dir("generated/catalog-resources/main")
@@ -1826,18 +1860,58 @@ project(":modeljars-catalog") {
 
     extensions.configure<SourceSetContainer> {
         named("main") {
+            java.srcDir(generatedMarkerReferenceSources)
             resources.srcDir(generatedCatalogResources)
             resources.srcDir(generatedPayloadResources)
         }
+    }
+    tasks.named("compileJava") {
+        dependsOn(generateMarkerReferenceSources)
     }
     tasks.named("processResources") {
         dependsOn(generateCatalogResources)
         dependsOn(bundledPayloadTasks.values)
     }
-    tasks.named("sourcesJar") {
+    tasks.named<Jar>("sourcesJar") {
+        dependsOn(generateMarkerReferenceSources)
         dependsOn(generateCatalogResources)
         dependsOn(bundledPayloadTasks.values)
+        catalogEntries
+            .filter { it.id !in publicModelIds }
+            .forEach { entry ->
+                exclude(
+                    "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.java",
+                )
+            }
     }
+    tasks.named<Jar>("jar") {
+        catalogEntries
+            .filter { it.id !in publicModelIds }
+            .forEach { entry ->
+                exclude(
+                    "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.class",
+                )
+            }
+    }
+    tasks.named<Javadoc>("javadoc") {
+        dependsOn(generateMarkerReferenceSources)
+        setSource(
+            publicCatalogEntries.map { entry ->
+                generatedMarkerReferenceSources.map {
+                    it.file(
+                        "org/modeljars/catalog/" +
+                            "${markerReferenceClassName(entry.id)}.java",
+                    )
+                }
+            },
+        )
+    }
+
+    dependencies {
+        api(project(":modeljars-core"))
+    }
+
+    val mainSourceSet = extensions.getByType<SourceSetContainer>().named("main")
 
     catalogEntries.forEach { entry ->
         val suffix = taskSuffix(entry.id)
@@ -1861,20 +1935,31 @@ project(":modeljars-catalog") {
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.properties") }
         val markerPerformanceMetadata =
             markerRoot.map { it.file("META-INF/modeljars/performance-v1.json") }
+        val markerQualificationRegistry =
+            markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.properties") }
+        val markerQualificationMetadata =
+            markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.json") }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
                 inputs.file(rootProject.file("catalog/performance-profiles.json"))
+                inputs.file(qualificationCatalogFile)
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
                     markerPerformanceRegistry,
                     markerPerformanceMetadata,
+                    markerQualificationRegistry,
+                    markerQualificationMetadata,
                     markerDocs,
                 )
                 doLast {
                     val modelProfiles = performanceProfiles.filter { it.modelId == entry.id }
+                    val modelQualifications =
+                        requireNotNull(ragQualifications).entries.filter {
+                            it.modelId == entry.id
+                        }
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
@@ -1897,6 +1982,31 @@ project(":modeljars-catalog") {
                         ) + "\n",
                         StandardCharsets.UTF_8,
                     )
+                    markerQualificationRegistry.get().asFile.writeText(
+                        requireNotNull(ragQualifications)
+                            .registryProperties(modelQualifications),
+                        StandardCharsets.ISO_8859_1,
+                    )
+                    markerQualificationMetadata.get().asFile.writeText(
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                requireNotNull(ragQualifications).raw +
+                                    mapOf(
+                                        "entries" to
+                                            modelQualifications.map(
+                                                CatalogRagQualification::raw,
+                                            ),
+                                        "qualifiedModels" to
+                                            modelQualifications.count(
+                                                CatalogRagQualification::qualified,
+                                            ),
+                                        "rejectedModels" to
+                                            modelQualifications.count { !it.qualified },
+                                    ),
+                            ),
+                        ) + "\n",
+                        StandardCharsets.UTF_8,
+                    )
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -1907,6 +2017,7 @@ project(":modeljars-catalog") {
         val markerJar =
             tasks.register<Jar>("markerJar$suffix") {
                 dependsOn(generateMarker)
+                dependsOn(tasks.named("compileJava"))
                 markerPayloadTask?.let { payloadTask ->
                     dependsOn(payloadTask)
                     from(markerRoot) {
@@ -1922,12 +2033,20 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/model.json",
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
+                        "META-INF/modeljars/qualifications-v1.properties",
+                        "META-INF/modeljars/qualifications-v1.json",
+                    )
+                }
+                from(mainSourceSet.map { it.output.classesDirs }) {
+                    include(
+                        "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.class",
                     )
                 }
             }
         val markerSourcesJar =
             tasks.register<Jar>("markerSourcesJar$suffix") {
                 dependsOn(generateMarker)
+                dependsOn(generateMarkerReferenceSources)
                 archiveBaseName.set(entry.artifactId)
                 archiveVersion.set(entry.markerVersion)
                 archiveClassifier.set("sources")
@@ -1935,6 +2054,12 @@ project(":modeljars-catalog") {
                 from(markerRoot) {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
+                    include("META-INF/modeljars/qualifications-v1.json")
+                }
+                from(generatedMarkerReferenceSources) {
+                    include(
+                        "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.java",
+                    )
                 }
             }
         val markerJavadocJar =
@@ -2213,14 +2338,19 @@ tasks.register("verifyCatalog") {
                 val performanceMetadataResource =
                     zip.getEntry("META-INF/modeljars/performance-v1.json")
                         ?: error("Performance profile metadata missing from $markerJar")
+                val qualificationResource =
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.properties")
+                        ?: error("Qualification resource missing from $markerJar")
+                val qualificationMetadataResource =
+                    zip.getEntry("META-INF/modeljars/qualifications-v1.json")
+                        ?: error("Qualification metadata missing from $markerJar")
+                val referenceClass =
+                    "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.class"
+                require(zip.getEntry(referenceClass) != null) {
+                    "Generated marker reference class missing from $markerJar: $referenceClass"
+                }
                 require(zip.getEntry("META-INF/modeljars/benchmarks-v2.json") == null) {
                     "Dynamic benchmark evidence must not be embedded in $markerJar"
-                }
-                require(
-                    zip.getEntry("META-INF/modeljars/qualifications-v1.properties") == null &&
-                        zip.getEntry("META-INF/modeljars/qualifications-v1.json") == null,
-                ) {
-                    "Dynamic qualification evidence must not be embedded in $markerJar"
                 }
                 val metadata =
                     zip.getInputStream(metadataResource).bufferedReader(StandardCharsets.UTF_8).use {
@@ -2267,6 +2397,49 @@ tasks.register("verifyCatalog") {
                 }
                 require((profileMetadata["profiles"] as? List<*>)?.size == expectedProfiles.size) {
                     "Performance JSON profile count mismatch in $markerJar"
+                }
+                val qualificationProperties = Properties()
+                zip.getInputStream(qualificationResource).use(qualificationProperties::load)
+                val expectedQualifications =
+                    requireNotNull(ragQualifications).entries.filter {
+                        it.modelId == entry.id
+                    }
+                require(
+                    qualificationProperties.getProperty(
+                        "modeljars.qualifications.schemaVersion",
+                    ) == "1",
+                ) {
+                    "Qualification schema mismatch in $markerJar"
+                }
+                require(
+                    qualificationProperties.getProperty(
+                        "modeljars.qualifications.qualifiedModels",
+                    ) == expectedQualifications.count(CatalogRagQualification::qualified).toString(),
+                ) {
+                    "Qualification count mismatch in $markerJar"
+                }
+                expectedQualifications.forEach { qualification ->
+                    require(
+                        qualificationProperties.getProperty(
+                            "qualification.${entry.id}.artifactSha256",
+                        ) == entry.sha256,
+                    ) {
+                        "Qualification SHA-256 mismatch in $markerJar"
+                    }
+                }
+                val qualificationMetadata =
+                    zip.getInputStream(qualificationMetadataResource)
+                        .bufferedReader(StandardCharsets.UTF_8)
+                        .use {
+                            JsonSlurper()
+                                .parse(it)
+                                .stringKeyMap("Qualification metadata in $markerJar")
+                        }
+                require(
+                    (qualificationMetadata["entries"] as? List<*>)?.size ==
+                        expectedQualifications.size,
+                ) {
+                    "Qualification JSON entry count mismatch in $markerJar"
                 }
                 require(
                     properties.getProperty("model.${entry.id}.markerCoordinate") ==
@@ -2321,6 +2494,26 @@ tasks.register("verifyCatalog") {
                         verifySemanticOrderPayload(entry, payload)
                     }
                 }
+            }
+        }
+        ZipFile(aggregateCatalogJar.get().asFile).use { zip ->
+            val referenceClasses =
+                zip.entries().asSequence()
+                    .map { it.name }
+                    .filter {
+                        it.startsWith("org/modeljars/catalog/") &&
+                            it.endsWith(".class")
+                    }
+                    .toSet()
+            val expectedReferenceClasses =
+                publicCatalogEntries
+                    .map {
+                        "org/modeljars/catalog/" +
+                            "${markerReferenceClassName(it.id)}.class"
+                    }
+                    .toSet()
+            require(referenceClasses == expectedReferenceClasses) {
+                "Aggregate catalog must expose references only for qualified artifacts"
             }
         }
         val siteCatalog = generatedSiteCatalog.get().asFile

@@ -74,6 +74,22 @@ public final class ModelJarInstaller {
             .localPath()
             .orElseThrow(
                 () -> new ModelJarException("Marker has no local path: " + descriptor.alias()));
+    return install(descriptor, destination);
+  }
+
+  /**
+   * Downloads when necessary and verifies the artifact at an explicit destination.
+   *
+   * <p>This overload lets higher-level runtimes use content-addressed caches without changing the
+   * immutable marker metadata.
+   *
+   * @param descriptor immutable model marker metadata
+   * @param destination local artifact destination
+   * @return verified local model path
+   */
+  public Path install(ModelJarDescriptor descriptor, Path destination) {
+    Objects.requireNonNull(descriptor, "descriptor");
+    Objects.requireNonNull(destination, "destination");
 
     if (Files.exists(destination)) {
       verify(destination, descriptor);
@@ -116,6 +132,24 @@ public final class ModelJarInstaller {
         }
       }
     }
+  }
+
+  /**
+   * Verifies an artifact already present in an offline cache.
+   *
+   * @param descriptor immutable model marker metadata
+   * @param artifact cached model artifact
+   * @return the verified cached model path
+   */
+  public Path verifyCached(ModelJarDescriptor descriptor, Path artifact) {
+    Objects.requireNonNull(descriptor, "descriptor");
+    Objects.requireNonNull(artifact, "artifact");
+    if (!Files.isRegularFile(artifact)) {
+      throw new ModelJarException(
+          "Model artifact is not available in the offline cache: " + artifact);
+    }
+    verify(artifact, descriptor);
+    return artifact;
   }
 
   /**

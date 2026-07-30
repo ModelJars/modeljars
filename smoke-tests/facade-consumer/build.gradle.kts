@@ -7,6 +7,11 @@ val modeljarsVersion =
 
 dependencies {
     implementation("org.modeljars:modeljars:${modeljarsVersion.get()}")
+    implementation(
+        "org.modeljars.huggingface:" +
+            "ggml-org.qwen3-0.6b-gguf.q4_0:" +
+            "3.0.0-q4_0.1",
+    )
 }
 
 java {

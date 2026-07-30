@@ -76,9 +76,9 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
   assert.match(index, /org\.modeljars:modeljars:0\.1\.0/);
-  assert.match(index, /ModelJarRegistry\.fromClasspath/);
-  assert.match(index, /ModelJarInstaller/);
-  assert.match(index, /RustFfmBackend|PureJavaBackend/);
+  assert.match(index, /Qwen3_0_6b_Q4_0\.MODEL/);
+  assert.match(index, /ModelJars\.open/);
+  assert.doesNotMatch(index, /ModelJarInstaller|PureJavaBackend\.load|RustFfmBackend\.load/);
   assert.doesNotMatch(index, /Not evaluated|Evaluated, not qualified/);
 
   assert.match(benchmarks, /qualified artifacts with controlled cross-engine studies/i);

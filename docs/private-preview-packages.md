@@ -9,11 +9,13 @@ org.modeljars:modeljars-catalog:<preview-version>
 ```
 
 The facade is the intended Java 25 application dependency. It brings in the core
-API, Models 0.1.0, its native and Java execution paths, and the generated catalog:
+API, Models 0.1.0, and its native and Java execution paths. Add the independently
+published marker for every model used by the application:
 
 ```kotlin
 dependencies {
     implementation("org.modeljars:modeljars:<preview-version>")
+    implementation("<invited-marker-coordinate>")
 }
 ```
 
@@ -23,10 +25,10 @@ Each workflow run creates an immutable version such as:
 0.1.0-preview.42.1.0123456789ab
 ```
 
-The invitation provides the exact version. The aggregate preview workflow does
+The invitation provides the exact versions. The aggregate preview workflow does
 not publish individual marker coordinates. The model-artifact workflow publishes
-those immutable coordinates independently. Every catalog descriptor is also
-available through the aggregate `modeljars-catalog` JAR.
+those immutable coordinates independently. `modeljars-catalog` remains available
+for catalog tooling but is not a transitive facade dependency.
 
 `com.integrallis:models` and its Vectors dependencies remain separately
 maintained Integrallis libraries and resolve from Maven Central. ModelJars

@@ -238,6 +238,49 @@ export function selectCatalogPublications(catalog, ids) {
   return { publications, removed: [] };
 }
 
+export function filterQualifiedPublications(delta, catalog, qualifications) {
+  assertCatalog(catalog, "Catalog");
+  if (
+    qualifications === null ||
+    typeof qualifications !== "object" ||
+    qualifications.schemaVersion !== 1 ||
+    !Array.isArray(qualifications.entries)
+  ) {
+    throw new Error("Qualifications must be a ModelJars schemaVersion 1 manifest");
+  }
+
+  const modelsById = new Map(catalog.models.map((model) => [model.id, model]));
+  const qualifiedIds = new Set();
+  const qualificationIds = new Set();
+  for (const qualification of qualifications.entries) {
+    const id = qualification?.modelId;
+    if (typeof id !== "string" || qualificationIds.has(id)) {
+      throw new Error(`Invalid or duplicate qualification model id: ${id}`);
+    }
+    qualificationIds.add(id);
+    const model = modelsById.get(id);
+    if (model === undefined) {
+      throw new Error(`Qualification references unknown catalog model: ${id}`);
+    }
+    if (qualification.artifactSha256 !== model.sha256) {
+      throw new Error(`Qualification SHA-256 does not match catalog model ${id}`);
+    }
+    if (qualification.artifactSizeBytes !== model.sizeBytes) {
+      throw new Error(`Qualification size does not match catalog model ${id}`);
+    }
+    if (qualification.qualified === true) {
+      qualifiedIds.add(id);
+    }
+  }
+
+  return {
+    ...delta,
+    publications: (delta.publications || []).filter((publication) =>
+      qualifiedIds.has(publication.id),
+    ),
+  };
+}
+
 function publication(model, change) {
   return {
     change,

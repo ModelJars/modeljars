@@ -4,6 +4,7 @@ import { appendFile, readFile } from "node:fs/promises";
 
 import {
   catalogPublicationDelta,
+  filterQualifiedPublications,
   githubPublicationOutputs,
   selectCatalogPublications,
 } from "./model-publications.mjs";
@@ -19,6 +20,7 @@ function parseArguments(argumentsList) {
         "--current",
         "--previous-profiles",
         "--current-profiles",
+        "--qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -28,6 +30,7 @@ function parseArguments(argumentsList) {
         "Usage: plan-model-publications.mjs --current FILE " +
           "(--previous FILE | --ids ID[,ID...]) " +
           "[--previous-profiles FILE --current-profiles FILE] " +
+          "[--qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -67,7 +70,7 @@ async function main() {
             argumentsMap.get("--current-profiles"),
           ),
         };
-  const delta =
+  const planned =
     previousPath === undefined
       ? selectCatalogPublications(
           current,
@@ -81,6 +84,15 @@ async function main() {
           await readCatalog(previousPath),
           current,
           profileOptions,
+        );
+  const qualificationPath = argumentsMap.get("--qualifications");
+  const delta =
+    qualificationPath === undefined
+      ? planned
+      : filterQualifiedPublications(
+          planned,
+          current,
+          await readCatalog(qualificationPath),
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

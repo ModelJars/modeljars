@@ -34,7 +34,7 @@ const qwenCoder = {
     {
       qualified: true,
       attempts: 27,
-      backend: "llama.cpp",
+      backend: "pure-java",
       performanceTier: "PRODUCTION_READY",
       verdict: "QUALIFIED",
       useCaseTier: "GENERATIVE_RAG",
@@ -69,6 +69,12 @@ test("builds stable facets with counts", () => {
       architecture: "llama",
       domains: ["healthcare"],
       backends: { "llama.cpp": true },
+      ragQualifications: [
+        {
+          ...qwenCoder.ragQualifications[0],
+          backend: "rust-ffm",
+        },
+      ],
     },
   ]);
 
@@ -77,8 +83,8 @@ test("builds stable facets with counts", () => {
     { value: "healthcare", count: 1 },
   ]);
   assert.deepEqual(facets.backends, [
-    { value: "llama.cpp", count: 2 },
     { value: "pure-java", count: 1 },
+    { value: "rust-ffm", count: 1 },
   ]);
   assert.deepEqual(facets.qualifications, [
     { value: "generative-rag", count: 2 },

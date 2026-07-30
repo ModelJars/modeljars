@@ -4,10 +4,10 @@ const FACET_FIELDS = {
   domains: (model) => model.domains || [],
   capabilities: (model) => model.capabilities || [],
   tags: (model) => model.tags || [],
-  backends: (model) =>
-    Object.entries(model.backends || {})
-      .filter(([, supported]) => supported === true)
-      .map(([backend]) => backend),
+  backends: (model) => {
+    const qualification = primaryQualification(model);
+    return qualification?.qualified ? [qualification.backend] : [];
+  },
   architectures: (model) => (model.architecture ? [model.architecture] : []),
   quantizations: (model) => (model.quantization ? [model.quantization] : []),
   modalities: (model) => model.modalities || [],

@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   catalogPublicationDelta,
+  filterQualifiedPublications,
   githubPublicationOutputs,
   publicationTaskName,
   selectCatalogPublications,
@@ -38,6 +39,10 @@ function catalog(models) {
 
 function profiles(entries) {
   return { schemaVersion: 1, profiles: entries };
+}
+
+function qualifications(entries) {
+  return { schemaVersion: 1, entries };
 }
 
 const toolsDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -271,6 +276,60 @@ test("selects every accepted catalog identity for an explicit bootstrap publicat
   assert.deepEqual(
     selection.publications.map((publication) => publication.id),
     [first.id, second.id],
+  );
+});
+
+test("publishes only exact artifacts that passed production qualification", () => {
+  const qualified = model();
+  const candidate = model({
+    id: "candidate_model",
+    markerCoordinate:
+      "org.modeljars.huggingface:example.candidate.q4_k_m:1.0.0-q4_k_m.1",
+    sha256: "c".repeat(64),
+  });
+  const delta = selectCatalogPublications(
+    catalog([qualified, candidate]),
+    ["all"],
+  );
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([qualified, candidate]),
+    qualifications([
+      {
+        modelId: qualified.id,
+        artifactSha256: qualified.sha256,
+        artifactSizeBytes: qualified.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [qualified.id],
+  );
+});
+
+test("rejects stale qualification evidence for changed artifact bytes", () => {
+  const entry = model();
+  const delta = selectCatalogPublications(catalog([entry]), ["all"]);
+
+  assert.throws(
+    () =>
+      filterQualifiedPublications(
+        delta,
+        catalog([entry]),
+        qualifications([
+          {
+            modelId: entry.id,
+            artifactSha256: "f".repeat(64),
+            artifactSizeBytes: entry.sizeBytes,
+            qualified: true,
+          },
+        ]),
+      ),
+    /qualification SHA-256 does not match/i,
   );
 });
 

@@ -22,6 +22,27 @@ Run `./gradlew test verifyCatalog` before opening a pull request. CI generates e
 the website catalog from the metadata, then rejects duplicate coordinates, mutable download URLs,
 invalid versions, missing integrity fields, or inconsistent filenames.
 
+## Qualification
+
+Catalog registration is not publication approval. A marker appears on ModelJARs.org and becomes
+eligible for GitHub Packages or Maven Central only when the exact artifact has a qualified entry in
+`catalog/qualifications.json`.
+
+Qualification requires:
+
+- exact-artifact parser, tokenizer, tensor-layout, and generation tests in
+  [`integrallis/models`](https://github.com/integrallis/models);
+- a controlled Java 25 run using
+  `scripts/run-controlled-rag-qualification.sh` from the Models repository;
+- identical GGUF bytes, prompts, controls, and host hardware for Models, Ollama, and llama.cpp
+  comparator reports;
+- raw report files, artifact and report SHA-256 values, environment identity, and a passing
+  `production-rag-model-contribution-v4` verdict.
+
+The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
+acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not
+been completed; it does not mean the candidate failed.
+
 ## Review
 
 Catalog metadata changes require approval from `@modeljars/catalog-maintainers`.

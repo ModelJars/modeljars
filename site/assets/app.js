@@ -68,10 +68,8 @@ function renderEntry(model) {
     ...(model.domains || []),
     ...(model.capabilities || []).slice(0, 2),
   ].slice(0, 4);
-  const backends = Object.entries(model.backends || {})
-    .filter(([, supported]) => supported)
-    .map(([backend]) => backend);
   const qualification = primaryQualification(model);
+  const modelsBackend = qualification?.backend;
 
   return `
     <article class="catalog-entry">
@@ -98,7 +96,7 @@ function renderEntry(model) {
       </div>
       <div class="entry-runtime">
         <span>${escapeHtml(model.architecture)}</span>
-        ${backends.map((backend) => `<span class="runtime-label">${escapeHtml(backend)}</span>`).join("")}
+        ${modelsBackend ? `<span class="runtime-label">Models ${escapeHtml(modelsBackend)}</span>` : ""}
         <a class="entry-arrow" href="${detailPath(model)}" aria-label="View ${escapeHtml(model.name)}">&#8594;</a>
       </div>
     </article>`;
@@ -144,7 +142,8 @@ function render() {
   const filtered = filterCatalog(catalog, state);
   elements.results.innerHTML = filtered.map(renderEntry).join("");
   elements.results.setAttribute("aria-busy", "false");
-  elements.resultCount.textContent = `${numberFormat.format(filtered.length)} model${filtered.length === 1 ? "" : "s"}`;
+  elements.resultCount.textContent =
+    `${numberFormat.format(filtered.length)} qualified artifact${filtered.length === 1 ? "" : "s"}`;
   elements.emptyState.hidden = filtered.length > 0;
 
   const count = activeFilterCount();
@@ -232,7 +231,11 @@ async function loadCatalog() {
     const response = await fetch("/catalog.json");
     if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
     const payload = await response.json();
-    catalog.push(...(Array.isArray(payload) ? payload : payload.models || []));
+    const models = Array.isArray(payload) ? payload : payload.models || [];
+    if (models.some((model) => !primaryQualification(model)?.qualified)) {
+      throw new Error("Public catalog contains an artifact without production qualification");
+    }
+    catalog.push(...models);
     const facets = buildFacets(catalog);
 
     populateSelect(elements.backend, facets.backends);
@@ -240,11 +243,11 @@ async function loadCatalog() {
     populateSelect(elements.size, facets.sizes, (value) => value.replace("-", " "));
 
     document.querySelector("#model-total").textContent = numberFormat.format(catalog.length);
-    document.querySelector("#pure-java-total").textContent = numberFormat.format(
-      catalog.filter((model) => model.backends?.["pure-java"]).length,
+    document.querySelector("#identity-total").textContent = numberFormat.format(
+      new Set(catalog.map((model) => model.sourceId)).size,
     );
-    document.querySelector("#rag-ready-total").textContent = numberFormat.format(
-      catalog.filter((model) => primaryQualification(model)?.qualified).length,
+    document.querySelector("#pure-java-total").textContent = numberFormat.format(
+      catalog.filter((model) => primaryQualification(model)?.backend === "pure-java").length,
     );
     document.querySelector("#publisher-total").textContent = numberFormat.format(
       new Set(catalog.map(publisher)).size,

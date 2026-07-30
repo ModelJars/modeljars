@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Explore models | ModelJars</title>
+    <title>Explore qualified models | ModelJARs.org</title>
     <meta
       name="description"
       content="Search versioned, verified model markers for JVM applications.">
@@ -22,14 +22,15 @@
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="/" aria-label="ModelJars home">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
           <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
-          <span>ModelJars</span>
+          <span>ModelJARs.org</span>
         </a>
         <nav class="nav" aria-label="Primary">
           <a class="active" href="/">Models</a>
           <a href="/benchmarks/">Benchmarks</a>
-          <a class="nav-secondary" href="#using-modeljars">Docs</a>
+          <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a class="nav-secondary" href="/contribute/">Contribute</a>
           <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
           <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
             <span class="theme-light" aria-hidden="true">&#9728;</span>
@@ -44,16 +45,35 @@
         <div class="catalog-heading">
           <div>
             <p class="eyebrow">Community model registry</p>
-            <h1 id="catalog-title">Explore models</h1>
-            <p class="lede">Versioned model artifacts with JVM-ready metadata and verified runtime support.</p>
+            <h1 id="catalog-title">Explore qualified models</h1>
+            <p class="lede">
+              Versioned model artifacts for
+              <a href="https://integrallis.github.io/models/">Integrallis' Models JVM inference library</a>,
+              with immutable metadata and measured runtime support.
+            </p>
           </div>
           <div class="catalog-stats" aria-label="Catalog statistics">
-            <span><strong id="model-total">0</strong> models</span>
-            <span><strong id="rag-ready-total">0</strong> RAG qualified</span>
+            <span><strong id="model-total">0</strong> qualified artifacts</span>
+            <span><strong id="identity-total">0</strong> model identities</span>
             <span><strong id="pure-java-total">0</strong> pure Java</span>
             <span><strong id="publisher-total">0</strong> publishers</span>
           </div>
         </div>
+
+        <aside class="apple-runtime-notice" aria-label="Apple Foundation Models runtime">
+          <div>
+            <span class="eyebrow">Apple on-device inference</span>
+            <strong>Apple's system model is also available through Models</strong>
+            <p>
+              On supported Apple Silicon Macs, <code>backend-apple</code> calls
+              <code>SystemLanguageModel</code> in-process. Apple manages the weights, so no
+              ModelJar download is required.
+            </p>
+          </div>
+          <a href="https://integrallis.github.io/models/docs/models/current/apple-foundation-models.html">
+            Use Apple Foundation Models <span aria-hidden="true">&rarr;</span>
+          </a>
+        </aside>
 
         <form class="discovery" role="search" onsubmit="return false">
           <label class="search-field" for="catalog-search">
@@ -94,12 +114,10 @@
             <label>
               <span>Production evidence</span>
               <select id="qualification-filter">
-                <option value="">Any evidence state</option>
+                <option value="">Any qualified tier</option>
                 <option value="production-rag">Production RAG</option>
                 <option value="generative-rag">Generative RAG</option>
                 <option value="guarded-rag">Guarded RAG</option>
-                <option value="unqualified">Evaluated, not qualified</option>
-                <option value="not-evaluated">Not evaluated</option>
               </select>
             </label>
             <button id="clear-filters" class="text-button" type="button">Clear filters</button>
@@ -131,28 +149,80 @@
         <div class="guide-inner">
           <div class="guide-intro">
             <p class="eyebrow">Use from Java</p>
-            <h2 id="guide-title">Pin model artifacts like dependencies</h2>
+            <h2 id="guide-title">Run a qualified model in Java</h2>
             <p>
-              Marker JARs put immutable model metadata on the classpath while model weights remain
-              in their upstream repository or local cache.
+              A marker JAR identifies and verifies model weights; it is not an inference engine.
+              The ModelJars facade brings Integrallis Models and its Java and Rust/FFM execution
+              backends, then resolves the qualified profile for the exact artifact.
             </p>
           </div>
           <div class="guide-steps">
             <article>
               <span class="step-number">01</span>
-              <h3>Add the facade</h3>
-              <pre><code>implementation("org.modeljars:modeljars:0.1.0")</code></pre>
+              <h3>Add Models and the registry</h3>
+              <pre><code>dependencies {
+  implementation("org.modeljars:modeljars:0.1.0")
+  runtimeOnly("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
+}</code></pre>
             </article>
             <article>
               <span class="step-number">02</span>
-              <h3>Pin a model marker</h3>
-              <pre><code>runtimeOnly("org.modeljars.huggingface:...")</code></pre>
+              <h3>Resolve and verify weights</h3>
+              <pre><code>var request = ModelJar.of(
+    "hf://ggml-org/Qwen3-0.6B-GGUF")
+  .variant("q4_0")
+  .backend("pure-java");
+var registry = ModelJarRegistry.fromClasspath();
+var descriptor = registry.resolve(request).orElseThrow();
+var path = new ModelJarInstaller(registry)
+  .install(descriptor);</code></pre>
             </article>
             <article>
               <span class="step-number">03</span>
-              <h3>Discover it</h3>
-              <pre><code>ModelJarRegistry.fromClasspath()</code></pre>
+              <h3>Run inference in-process</h3>
+              <pre><code>var prompt = ChatTemplate.CHATML_NO_THINK.render(
+  List.of(ChatMessage.user("Name one JVM language.")));
+var options = SamplingOptions.builder()
+  .temperature(0).maxTokens(32).build();
+
+try (var backend = PureJavaBackend.load(path)) {
+  var model = new RuntimeTextGenerationModel(backend);
+  var answer = model.generate(prompt, options);
+}</code></pre>
             </article>
+          </div>
+          <p class="guide-runtime-note">
+            Requires Java 25 and <code>--add-modules=jdk.incubator.vector</code>. The qualified
+            Rust/FFM profiles also require <code>--enable-native-access=ALL-UNNAMED</code>.
+          </p>
+        </div>
+      </section>
+
+      <section class="apple-runtime-band" aria-labelledby="apple-runtime-title">
+        <div class="apple-runtime-inner">
+          <div class="apple-runtime-copy">
+            <p class="eyebrow">Apple on-device inference</p>
+            <h2 id="apple-runtime-title">Use Apple Foundation Models from Java</h2>
+            <p>
+              Integrallis Models can call the Apple Intelligence system model directly from a
+              Java 25 process through FFM and a small Swift bridge. Apple manages the model and its
+              updates, so it is a Models runtime option rather than a downloadable ModelJar
+              artifact. The client implements Models' shared text-generation contract and can be
+              passed directly to its LangChain4J and Spring AI adapters.
+            </p>
+            <a class="secondary-button" href="https://integrallis.github.io/models/docs/models/current/apple-foundation-models.html">
+              Apple backend guide
+            </a>
+          </div>
+          <div class="apple-runtime-code">
+            <pre><code>implementation("com.integrallis:backend-apple:0.1.0")
+
+try (var client = AppleFoundationModels.create()) {
+  var status = client.availability();
+  if (status.available()) {
+    var answer = client.generate("Summarize this locally.").text();
+  }
+}</code></pre>
           </div>
         </div>
       </section>
@@ -160,12 +230,18 @@
 
     <footer class="site-footer">
       <div class="footer-inner">
-        <a class="footer-brand" href="/">ModelJars</a>
-        <span>Open model metadata for the JVM.</span>
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
         <div>
           <a href="/benchmarks/">Benchmarks</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
           <a href="https://github.com/ModelJars/modeljars">GitHub</a>
-          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
+          <a href="/contribute/">Contribute</a>
         </div>
       </div>
     </footer>

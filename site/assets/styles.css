@@ -173,12 +173,12 @@ pre {
 }
 
 .nav-java-icon {
-  width: 13px;
+  width: 20px;
   height: 18px;
   flex: 0 0 auto;
   background: currentColor;
-  -webkit-mask: url("/assets/fontawesome-java.svg") center / contain no-repeat;
-  mask: url("/assets/fontawesome-java.svg") center / contain no-repeat;
+  -webkit-mask: url("/assets/fontawesome-mug-hot.svg") center / contain no-repeat;
+  mask: url("/assets/fontawesome-mug-hot.svg") center / contain no-repeat;
 }
 
 .icon-button {

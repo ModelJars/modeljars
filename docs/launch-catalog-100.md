@@ -29,9 +29,10 @@ no model list in the website code. The build generates:
 3. the generated website `catalog.json` extracted from that aggregate JAR; and
 4. Maven publications for the facade, core, aggregate catalog, and markers.
 
-An individual marker embeds both `META-INF/modeljars/registry.properties` for the dependency-free
-Java loader and `META-INF/modeljars/model.json` for richer tooling. The aggregate JAR embeds the same
-descriptors as `META-INF/modeljars/catalog.json`.
+An individual marker embeds `META-INF/modeljars/registry.properties`,
+`META-INF/modeljars/model.json`, its performance and qualification resources, and one uniquely
+named generated Java reference class. The aggregate JAR embeds the qualified descriptors as
+`META-INF/modeljars/catalog.json` for catalog tooling and website generation.
 
 Applications can enumerate the launch catalog directly:
 
@@ -40,10 +41,10 @@ List<ModelJarDescriptor> models =
     ModelJarRegistry.fromClasspath().descriptors();
 ```
 
-The Java 25 `org.modeljars:modeljars` facade brings the registry API, aggregate catalog, Models
-runtime, and native execution backend. The native backend retains the Java backend as its fallback.
-Explicit marker dependencies can still serve as model-version declarations; exact duplicates are
-removed when the classpath registry loads them.
+The Java 25 `org.modeljars:modeljars` facade brings the registry API, Models runtime, and both
+execution backends. It does not bring the aggregate catalog. Applications add selected marker JARs
+in compile scope; each marker is both the model-version declaration and the source of the generated
+reference used by `ModelJars.open`.
 
 ## Metadata contract
 

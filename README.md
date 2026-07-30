@@ -16,12 +16,14 @@ META-INF/modeljars/registry.properties
 META-INF/modeljars/model.json
 META-INF/modeljars/performance-v1.properties
 META-INF/modeljars/performance-v1.json
+META-INF/modeljars/qualifications-v1.properties
+META-INF/modeljars/qualifications-v1.json
 ```
 
-Descriptors point to upstream model locations, expected local cache paths or bundled resources,
-checksums, licenses, formats, quantization variants, runtime feature flags, and backend
-compatibility. A bundled payload lives below `META-INF/modeljars/models/<catalog-id>/` and is
-verified against the same size and SHA-256 metadata as an external model.
+Descriptors point to upstream model locations or bundled resources, checksums, licenses, formats,
+quantization variants, runtime feature flags, and backend compatibility. A bundled payload lives
+below `META-INF/modeljars/models/<catalog-id>/` and is verified against the same size and SHA-256
+metadata as an external model.
 
 Model identity has one source of truth, `catalog/models.json`; controlled performance evidence has
 the independent versioned source `catalog/performance-profiles.json`. Gradle generates the aggregate
@@ -36,13 +38,13 @@ publication.
 
 ## Dependency
 
-Applications use the stable facade artifact and may add explicit marker dependencies to record the
-models they intend to ship:
+Applications use the stable facade artifact and add one marker dependency for every model they
+intend to ship:
 
 ```kotlin
 dependencies {
     implementation("org.modeljars:modeljars:0.1.0")
-    runtimeOnly(
+    implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
             "3.0.0-q4_0.1",
@@ -60,19 +62,17 @@ dependencies {
   <groupId>org.modeljars.huggingface</groupId>
   <artifactId>ggml-org.qwen3-0.6b-gguf.q4_0</artifactId>
   <version>3.0.0-q4_0.1</version>
-  <scope>runtime</scope>
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.1.0, the aggregate `modeljars-catalog`, and the
-Models native backend. The native backend includes the Java backend as its fallback, so one
-application dependency provides model discovery and both execution paths. Applications using the
-facade require Java 25. `modeljars-core` remains usable by Java 21 registry and build tooling
-without the Models runtime.
+`modeljars` exposes `modeljars-core`, Models 0.1.0, and both Models execution backends. Each marker
+JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
+Java reference. Applications using the facade require Java 25. `modeljars-core` remains usable by
+Java 21 registry and build tooling without the Models runtime.
 
-Explicit marker dependencies remain useful as build-time model-version declarations. Marker JARs
-contain metadata and no runtime dependencies; duplicate descriptors from the aggregate and an
-individual marker are deduplicated by marker coordinate.
+Marker dependencies are build-time model-version declarations and contain no transitive runtime
+dependencies. Add each selected marker in compile scope so its generated reference is available to
+application source.
 
 ## Example markers
 
@@ -89,11 +89,8 @@ It resolves the upstream source:
 hf://ggml-org/Qwen3-0.6B-GGUF
 ```
 
-and the local path:
-
-```text
-${user.home}/.jvllm/models/Qwen3-0.6B-Q4_0.gguf
-```
+The facade stores downloaded weights in a content-addressed cache below
+`${user.home}/.modeljars/cache/sha256/`. Application code never constructs or passes that path.
 
 Qwen2.5-Coder markers include:
 
@@ -113,17 +110,53 @@ org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ## Runtime use
 
 ```java
-ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
 
+var prompt = ChatTemplate.CHATML_NO_THINK.render(
+    List.of(ChatMessage.user("Name one JVM language.")));
+var options = SamplingOptions.builder()
+    .temperature(0).maxTokens(32).build();
+
+try (var model = ModelJars.open(MODEL)) {
+    String answer = model.generate(prompt, options);
+}
+```
+
+`ModelJars.open` resolves the exact qualified descriptor, selects its qualified Models backend,
+downloads missing weights, verifies their size and SHA-256 digest, and applies an artifact-bound
+performance profile when the current runtime matches one. The returned model owns the backend and
+closes it at the end of the `try` block.
+
+Offline loading and explicit backend selection are available without exposing the cache path:
+
+```java
+var options = ModelLoadOptions.builder()
+    .offline(true)
+    .backend(ModelBackend.JAVA)
+    .build();
+
+try (var model = ModelJars.open(MODEL, options)) {
+    // The verified artifact must already be in the ModelJars cache.
+}
+```
+
+Configuration-driven applications can select the same classpath marker by its complete coordinate:
+
+```java
+try (var model = ModelJars.open(
+    "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")) {
+    // Generate text through the qualified backend.
+}
+```
+
+## Catalog metadata
+
+Registry APIs remain available when an application needs model metadata without loading inference:
+
+```java
 ModelJarDescriptor descriptor =
-    registry.resolve(
-        ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
-            .variant("q4_0")
-            .backend("pure-java")
-            .capability("text-generation"))
-        .orElseThrow();
+    ModelJarRegistry.fromClasspath().resolve(MODEL).orElseThrow();
 
-Path model = descriptor.localPath().orElseThrow();
 Set<String> requiredFeatures = descriptor.features();
 ModelDimensions dimensions = descriptor.dimensions();
 Optional<ModelMemoryEstimate> baseline =
@@ -151,25 +184,23 @@ ModelPerformanceProfileRegistry profiles =
 List<ModelPerformanceProfile> measured = profiles.profilesFor(descriptor);
 ```
 
-Backends call `matching(descriptor, backend, runtimeFacts)` with their complete structured runtime
-fingerprint before considering a recommendation.
+The ModelJars facade calls `matching(descriptor, backend, runtimeFacts)` with the complete
+structured runtime fingerprint before loading the selected Models backend.
 
 `safeForAutomaticSelection()` means the profile has recommendations and exact output hashes
 matched in its comparison. It does not authorize arbitrary runtime properties or native code;
 backends must whitelist supported recommendation keys and retain their own correctness checks. See
 [Performance profiles](docs/performance-profiles.md) for the schema and contribution rules.
 
-To download and verify the pinned artifact instead of requiring it to exist already:
+The lower-level installer remains available to registry tooling that needs the verified file:
 
 ```java
-Path model = new ModelJarInstaller(registry).install(
-    ModelJar.of("hf://ggml-org/Qwen3-0.6B-GGUF")
-        .variant("q4_0")
-        .backend("pure-java"));
+ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+Path artifact = new ModelJarInstaller(registry).install(MODEL);
 ```
 
 `ModelJarInstaller` verifies both the byte size and SHA-256 digest before atomically moving the
-download into the local cache.
+download into place. Most applications should use `ModelJars.open`.
 
 Compact bundled payloads use the same verification contract without an installation step:
 

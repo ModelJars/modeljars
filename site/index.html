@@ -159,23 +159,18 @@
           <div class="guide-steps">
             <article>
               <span class="step-number">01</span>
-              <h3>Add Models and the registry</h3>
+              <h3>Add the facade and marker</h3>
               <pre><code>dependencies {
   implementation("org.modeljars:modeljars:0.1.0")
-  runtimeOnly("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
+  implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
             </article>
             <article>
               <span class="step-number">02</span>
-              <h3>Resolve and verify weights</h3>
-              <pre><code>var request = ModelJar.of(
-    "hf://ggml-org/Qwen3-0.6B-GGUF")
-  .variant("q4_0")
-  .backend("pure-java");
-var registry = ModelJarRegistry.fromClasspath();
-var descriptor = registry.resolve(request).orElseThrow();
-var path = new ModelJarInstaller(registry)
-  .install(descriptor);</code></pre>
+              <h3>Select the exact artifact</h3>
+              <pre><code>import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
+
+var selected = MODEL;</code></pre>
             </article>
             <article>
               <span class="step-number">03</span>
@@ -185,8 +180,7 @@ var path = new ModelJarInstaller(registry)
 var options = SamplingOptions.builder()
   .temperature(0).maxTokens(32).build();
 
-try (var backend = PureJavaBackend.load(path)) {
-  var model = new RuntimeTextGenerationModel(backend);
+try (var model = ModelJars.open(selected)) {
   var answer = model.generate(prompt, options);
 }</code></pre>
             </article>

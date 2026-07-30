@@ -1,0 +1,108 @@
+package org.modeljars;
+
+import java.nio.file.Path;
+import java.util.Objects;
+
+/**
+ * Immutable controls for resolving, installing, and loading a ModelJar.
+ *
+ * @param backend automatic or explicit backend policy
+ * @param offline whether loading is restricted to an existing verified cache entry
+ * @param cacheDirectory content-addressed artifact cache root
+ */
+public record ModelLoadOptions(
+    ModelBackend backend, boolean offline, Path cacheDirectory) {
+  /** System property that overrides the default ModelJars cache directory. */
+  public static final String CACHE_DIRECTORY_PROPERTY = "modeljars.cache";
+
+  /** Environment variable that overrides the default ModelJars cache directory. */
+  public static final String CACHE_DIRECTORY_ENV = "MODELJARS_CACHE";
+
+  /** Validates and normalizes model loading controls. */
+  public ModelLoadOptions {
+    backend = Objects.requireNonNull(backend, "backend");
+    cacheDirectory =
+        Objects.requireNonNull(cacheDirectory, "cacheDirectory").toAbsolutePath().normalize();
+  }
+
+  /**
+   * Returns options that select the qualified backend and use the default online cache.
+   *
+   * @return default model loading options
+   */
+  public static ModelLoadOptions defaults() {
+    return builder().build();
+  }
+
+  /**
+   * Creates a model loading options builder.
+   *
+   * @return a new builder
+   */
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Builder for {@link ModelLoadOptions}. */
+  public static final class Builder {
+    private ModelBackend backend = ModelBackend.AUTO;
+    private boolean offline;
+    private Path cacheDirectory;
+
+    private Builder() {}
+
+    /**
+     * Selects automatic, Java, or native backend loading.
+     *
+     * @param value backend policy
+     * @return this builder
+     */
+    public Builder backend(ModelBackend value) {
+      backend = Objects.requireNonNull(value, "backend");
+      return this;
+    }
+
+    /**
+     * Controls whether loading may download a missing artifact.
+     *
+     * @param value {@code true} to require an existing verified cache entry
+     * @return this builder
+     */
+    public Builder offline(boolean value) {
+      offline = value;
+      return this;
+    }
+
+    /**
+     * Overrides the content-addressed cache root.
+     *
+     * @param value cache root
+     * @return this builder
+     */
+    public Builder cacheDirectory(Path value) {
+      cacheDirectory = Objects.requireNonNull(value, "cacheDirectory");
+      return this;
+    }
+
+    /**
+     * Builds immutable loading options.
+     *
+     * @return model loading options
+     */
+    public ModelLoadOptions build() {
+      return new ModelLoadOptions(
+          backend, offline, cacheDirectory == null ? defaultCacheDirectory() : cacheDirectory);
+    }
+  }
+
+  private static Path defaultCacheDirectory() {
+    String configured = System.getProperty(CACHE_DIRECTORY_PROPERTY);
+    if (configured == null || configured.isBlank()) {
+      configured = System.getenv(CACHE_DIRECTORY_ENV);
+    }
+    if (configured != null && !configured.isBlank()) {
+      return Path.of(configured.trim());
+    }
+    return Path.of(System.getProperty("user.home"), ".modeljars", "cache");
+  }
+}

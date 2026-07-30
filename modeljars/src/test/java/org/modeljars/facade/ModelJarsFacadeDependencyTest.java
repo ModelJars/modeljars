@@ -12,6 +12,7 @@ import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
 import org.modeljars.ModelRagQualificationRegistry;
 import org.modeljars.ModelVersion;
+import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 
 class ModelJarsFacadeDependencyTest {
   @Test
@@ -20,7 +21,7 @@ class ModelJarsFacadeDependencyTest {
   }
 
   @Test
-  void exposesOnlyTheQualifiedCatalogThroughTheFacadeDependency() {
+  void aggregateTestCatalogContainsOnlyQualifiedModels() {
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
 
@@ -44,5 +45,13 @@ class ModelJarsFacadeDependencyTest {
   void exposesBothModelsBackendsThroughTheFacadeDependency() {
     assertEquals("PureJavaBackend", PureJavaBackend.class.getSimpleName());
     assertEquals("RustFfmBackend", RustFfmBackend.class.getSimpleName());
+  }
+
+  @Test
+  void exposesGeneratedReferencesForQualifiedModels() {
+    var descriptor =
+        ModelJarRegistry.fromClasspath().resolve(Qwen3_0_6b_Q4_0.MODEL).orElseThrow();
+
+    assertEquals("qwen3_0_6b_q4_0", descriptor.alias());
   }
 }

@@ -1,5 +1,7 @@
 package org.modeljars.smoke;
 
+import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
+
 import com.integrallis.models.api.SamplingOptions;
 import java.util.stream.Collectors;
 import org.modeljars.ModelJarRegistry;
@@ -18,13 +20,17 @@ public final class FacadeConsumer {
 
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
-    if (descriptors.size() != qualifications.qualifiedModels()) {
+    if (descriptors.size() != 1 || qualifications.qualifiedModels() != 1) {
       throw new IllegalStateException(
-          "Facade catalog and qualification counts differ: "
+          "The selected marker must contribute exactly one qualified artifact: "
               + descriptors.size()
               + " descriptors, "
               + qualifications.qualifiedModels()
               + " qualified artifacts");
+    }
+    if (!"qwen3_0_6b_q4_0"
+        .equals(ModelJarRegistry.fromClasspath().resolve(MODEL).orElseThrow().alias())) {
+      throw new IllegalStateException("The marker's generated reference did not resolve");
     }
 
     var descriptorIds =
@@ -35,7 +41,7 @@ public final class FacadeConsumer {
             .collect(Collectors.toSet());
     if (!descriptorIds.equals(qualifiedIds)) {
       throw new IllegalStateException(
-          "Facade must expose exactly the qualified model identities: "
+          "The selected marker must expose the same descriptor and qualification identity: "
               + descriptorIds
               + " != "
               + qualifiedIds);
@@ -44,7 +50,7 @@ public final class FacadeConsumer {
     if (descriptors.stream()
         .anyMatch(descriptor -> qualifications.qualificationsFor(descriptor).isEmpty())) {
       throw new IllegalStateException(
-          "Facade contains a descriptor without exact artifact qualification evidence");
+          "The selected marker contains a descriptor without exact qualification evidence");
     }
 
     if (SamplingOptions.builder().maxTokens(8).build().maxTokens() != 8) {

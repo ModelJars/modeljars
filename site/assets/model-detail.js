@@ -20,7 +20,7 @@ function coordinateParts(coordinate) {
 export function gradleSnippet(coordinate) {
   coordinateParts(coordinate);
   return `implementation("org.modeljars:modeljars:0.1.0")
-runtimeOnly("${coordinate}")`;
+implementation("${coordinate}")`;
 }
 
 export function mavenSnippet(coordinate) {
@@ -34,8 +34,40 @@ export function mavenSnippet(coordinate) {
   <groupId>${groupId}</groupId>
   <artifactId>${artifactId}</artifactId>
   <version>${version}</version>
-  <scope>runtime</scope>
 </dependency>`;
+}
+
+function referenceClassName(modelId) {
+  return String(modelId)
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("_");
+}
+
+export function javaSnippet(modelId, promptTemplate = "chatml") {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
+    throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  }
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(String(promptTemplate))) {
+    throw new Error(`Invalid Models chat template: ${promptTemplate}`);
+  }
+  const reference = referenceClassName(modelId);
+  return `import static org.modeljars.catalog.${reference}.MODEL;
+
+import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.runtime.chat.ChatMessage;
+import com.integrallis.models.runtime.chat.ChatTemplate;
+import java.util.List;
+import org.modeljars.ModelJars;
+
+var prompt = ChatTemplate.parse("${promptTemplate}").render(
+    List.of(ChatMessage.user("Name one JVM language.")));
+var options = SamplingOptions.builder()
+    .temperature(0).maxTokens(32).build();
+
+try (var model = ModelJars.open(MODEL)) {
+  String answer = model.generate(prompt, options);
+}`;
 }
 
 function formatPercent(value) {
@@ -262,13 +294,29 @@ function renderModel(model, catalog) {
           <p class="eyebrow">JVM dependency</p>
           <h2 id="install-title">Install this marker</h2>
           <p>
-            Add the ModelJars facade and this marker to the application runtime. The facade brings
+            Add the ModelJars facade and this marker to the application. The facade brings
             the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a>
-            and its execution backends. The marker records the pinned model location and checksum;
-            weights are downloaded to the verified local cache when first resolved.
+            and its execution backends. The marker provides the generated Java reference, pinned
+            model location, checksum, and qualification metadata; weights are downloaded to the
+            verified local cache when first opened.
           </p>
           ${copyBlock("Gradle", gradleSnippet(model.markerCoordinate), "language-kotlin")}
           ${copyBlock("Maven", mavenSnippet(model.markerCoordinate), "language-xml")}
+        </section>
+
+        <section class="detail-section" aria-labelledby="run-title">
+          <p class="eyebrow">In-process inference</p>
+          <h2 id="run-title">Open and run the model</h2>
+          <p>
+            The generated catalog reference pins this exact artifact. ModelJars selects its
+            qualified backend, installs and verifies the weights in the content-addressed cache,
+            and applies a performance profile when the current JVM and hardware match one.
+          </p>
+          ${copyBlock(
+            "Java",
+            javaSnippet(model.id, qualification.promptTemplate),
+            "language-java",
+          )}
         </section>
 
         <section class="detail-section" aria-labelledby="contents-title">
@@ -288,7 +336,6 @@ function renderModel(model, catalog) {
             <div><dt>Source</dt><dd><a href="${safeExternalUrl(model.sourceUri)}">${escapeHtml(model.sourceId)}</a></dd></div>
             <div><dt>Revision</dt><dd><code>${escapeHtml(model.revision)}</code></dd></div>
             <div><dt>SHA-256</dt><dd><code>${escapeHtml(model.sha256)}</code></dd></div>
-            <div><dt>Local path</dt><dd><code>${escapeHtml(model.localPath || model.classpathResource)}</code></dd></div>
           </dl>
         </section>
 

@@ -46,6 +46,8 @@ test("renders exactly two icon-only dependency controls per catalog row", () => 
   assert.match(markup, /data-build-tool="maven"/);
   assert.match(markup, /data-build-tool="gradle"/);
   assert.match(markup, /src="\/assets\/apachemaven\.svg"/);
+  assert.match(markup, /dependency-tool-icon-maven/);
+  assert.match(markup, /dependency-tool-icon-gradle/);
   assert.match(markup, /src="\/assets\/gradle\.svg"/);
   assert.match(markup, /aria-label="Copy Maven dependency for Qwen3 0\.6B"/);
   assert.doesNotMatch(markup, />\s*(Maven|Gradle)\s*</);

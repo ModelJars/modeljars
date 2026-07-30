@@ -90,7 +90,7 @@ jobs:
       - name: Validate build
         run: >
           ./gradlew --no-daemon
-          test assemble verifyCatalog verifyFacadePublication generateSite
+          test assemble verifyCatalog verifyJvmRuntimePublication generateSite
 
       - name: Verify pinned Hugging Face metadata
         if: steps.remote-catalog.outputs.required == 'true'
@@ -108,7 +108,7 @@ jobs:
             npm run catalog:enrich -- --concurrency=3
           fi
 
-      - name: Publish facade smoke-test artifacts to Maven Local
+      - name: Publish JVM Runtime smoke-test artifacts to Maven Local
         run: >
           ./gradlew --no-daemon
           :modeljars-core:publishMavenPublicationToMavenLocal
@@ -116,8 +116,8 @@ jobs:
           :modeljars-catalog:publishMarkerQwen306bQ40PublicationToMavenLocal
           :modeljars:publishMavenPublicationToMavenLocal
 
-      - name: Consume facade from Maven Local
-        run: ./gradlew --no-daemon -p smoke-tests/facade-consumer run
+      - name: Consume JVM Runtime from Maven Local
+        run: ./gradlew --no-daemon -p smoke-tests/jvm-runtime-consumer run
 
       - name: Validate catalog source
         run: jq . catalog/models.json >/dev/null

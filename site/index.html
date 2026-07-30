@@ -28,6 +28,10 @@
         </a>
         <nav class="nav" aria-label="Primary">
           <a class="active" href="/">Models</a>
+          <a class="nav-java" href="/#using-modeljars" aria-label="Use from Java">
+            <span class="nav-java-icon" aria-hidden="true"></span>
+            <span>Use from Java</span>
+          </a>
           <a href="/benchmarks/">Benchmarks</a>
           <a href="/apple/">Apple</a>
           <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
@@ -140,30 +144,37 @@
             <h2 id="guide-title">Run a qualified model in Java</h2>
             <p>
               A model JAR identifies and verifies model weights; it is not an inference engine.
-              The ModelJars JVM runtime brings Integrallis Models and its Java and Rust/FFM execution
+              The ModelJars JVM Runtime brings Integrallis Models and its Java and Rust/FFM execution
               backends, then resolves the qualified profile for the exact artifact.
             </p>
           </div>
-          <div class="guide-steps">
-            <article>
-              <span class="step-number">01</span>
-              <h3>Add the JVM runtime and the model</h3>
-              <pre><code>dependencies {
+          <div class="guide-body">
+            <div class="guide-steps">
+              <article>
+                <div class="guide-step-heading">
+                  <span class="step-number">01</span>
+                  <h3>Add the JVM Runtime and the model</h3>
+                </div>
+                <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
   implementation("org.modeljars:modeljars:0.1.0")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
-            </article>
-            <article>
-              <span class="step-number">02</span>
-              <h3>Select the exact artifact</h3>
-              <pre><code>import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
+              </article>
+              <article>
+                <div class="guide-step-heading">
+                  <span class="step-number">02</span>
+                  <h3>Select the exact artifact</h3>
+                </div>
+                <pre><code class="language-java hljs" data-lang="java">import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
 
 var selected = MODEL;</code></pre>
-            </article>
-            <article>
-              <span class="step-number">03</span>
-              <h3>Run inference in-process</h3>
-              <pre><code>var prompt = ChatTemplate.CHATML_NO_THINK.render(
+              </article>
+              <article>
+                <div class="guide-step-heading">
+                  <span class="step-number">03</span>
+                  <h3>Run inference in-process</h3>
+                </div>
+                <pre><code class="language-java hljs" data-lang="java">var prompt = ChatTemplate.CHATML_NO_THINK.render(
   List.of(ChatMessage.user("Name one JVM language.")));
 var options = SamplingOptions.builder()
   .temperature(0).maxTokens(32).build();
@@ -171,12 +182,13 @@ var options = SamplingOptions.builder()
 try (var model = ModelJars.open(selected)) {
   var answer = model.generate(prompt, options);
 }</code></pre>
-            </article>
+              </article>
+            </div>
+            <p class="guide-runtime-note">
+              Requires Java 25 and <code>--add-modules=jdk.incubator.vector</code>. The qualified
+              Rust/FFM profiles also require <code>--enable-native-access=ALL-UNNAMED</code>.
+            </p>
           </div>
-          <p class="guide-runtime-note">
-            Requires Java 25 and <code>--add-modules=jdk.incubator.vector</code>. The qualified
-            Rust/FFM profiles also require <code>--enable-native-access=ALL-UNNAMED</code>.
-          </p>
         </div>
       </section>
 
@@ -200,5 +212,6 @@ try (var model = ModelJars.open(selected)) {
         </div>
       </div>
     </footer>
+    <script src="/assets/highlight.js"></script>
   </body>
 </html>

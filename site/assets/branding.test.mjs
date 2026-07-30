@@ -19,11 +19,14 @@ test("ships the shared ModelJars icon set", async () => {
   ];
 
   await Promise.all(requiredIcons.map((icon) => access(path.join(iconsDirectory, icon))));
-  await Promise.all(
-    ["apachemaven.svg", "gradle.svg"].map((icon) =>
-      access(path.join(repositoryRoot, "site/assets", icon)),
-    ),
-  );
+  const [mavenIcon] = await Promise.all([
+    readFile(path.join(repositoryRoot, "site/assets/apachemaven.svg"), "utf8"),
+    access(path.join(repositoryRoot, "site/assets/gradle.svg")),
+  ]);
+
+  assert.match(mavenIcon, /#d22128/i);
+  assert.match(mavenIcon, /#7c297d/i);
+  assert.match(mavenIcon, /#f79a23/i);
 });
 
 test("uses the shared logo in repository and website branding", async () => {

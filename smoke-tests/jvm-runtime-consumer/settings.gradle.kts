@@ -16,4 +16,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "modeljars-facade-consumer-smoke"
+rootProject.name = "modeljars-jvm-runtime-consumer-smoke"

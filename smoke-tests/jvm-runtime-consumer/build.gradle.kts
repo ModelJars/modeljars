@@ -21,5 +21,5 @@ java {
 }
 
 application {
-    mainClass = "org.modeljars.smoke.FacadeConsumer"
+    mainClass = "org.modeljars.smoke.JvmRuntimeConsumer"
 }

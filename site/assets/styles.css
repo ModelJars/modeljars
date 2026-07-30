@@ -15,6 +15,13 @@
   --amber-soft: #fff3d7;
   --code-bg: #202522;
   --code-text: #eef3ef;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-builtin: #7ee787;
   --shadow: 0 1px 2px rgb(23 28 26 / 6%);
 }
 
@@ -35,6 +42,13 @@
   --amber-soft: #3a2c14;
   --code-bg: #0b0e0c;
   --code-text: #f3f7f4;
+  --hl-comment: #8b949e;
+  --hl-keyword: #ff7b72;
+  --hl-string: #a5d6ff;
+  --hl-number: #79c0ff;
+  --hl-title: #d2a8ff;
+  --hl-type: #ffa657;
+  --hl-builtin: #7ee787;
   --shadow: 0 1px 2px rgb(0 0 0 / 24%);
 }
 
@@ -150,6 +164,21 @@ pre {
 .nav a:hover,
 .nav a.active {
   color: var(--text);
+}
+
+.nav-java {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nav-java-icon {
+  width: 13px;
+  height: 18px;
+  flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask: url("/assets/fontawesome-java.svg") center / contain no-repeat;
+  mask: url("/assets/fontawesome-java.svg") center / contain no-repeat;
 }
 
 .icon-button {
@@ -477,13 +506,17 @@ select {
   background: var(--surface);
 }
 
-.dependency-copy-button img {
+.dependency-tool-icon {
   display: block;
   opacity: 0.72;
 }
 
-[data-theme="dark"] .dependency-copy-button img {
+[data-theme="dark"] .dependency-tool-icon-gradle {
   filter: invert(1);
+}
+
+.dependency-tool-icon-maven {
+  opacity: 0.95;
 }
 
 .dependency-copy-button.copied {
@@ -647,9 +680,18 @@ select {
 
 .guide-inner {
   display: grid;
-  grid-template-columns: 0.75fr 1.5fr;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr);
   gap: 70px;
   padding: 54px 0;
+}
+
+.guide-body {
+  min-width: 0;
+}
+
+.guide-steps,
+.guide-steps article {
+  min-width: 0;
 }
 
 .guide-intro h2,
@@ -672,39 +714,102 @@ select {
 
 .guide-steps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .guide-steps article + article {
-  padding-left: 24px;
-  border-left: 1px solid var(--line);
+  padding-top: 26px;
+  margin-top: 26px;
+  border-top: 1px solid var(--line);
+}
+
+.guide-step-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 11px;
 }
 
 .guide-steps h3 {
-  margin: 7px 0 10px;
-  font-size: 0.95rem;
+  margin: 0;
+  font-size: 1rem;
 }
 
 .step-number {
   color: var(--amber);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
 .guide-steps pre {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
-  overflow: auto;
-  color: var(--muted);
-  font-size: 0.72rem;
-  white-space: pre-wrap;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--code-text) 12%, transparent);
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  scrollbar-width: thin;
+}
+
+.guide-steps code {
+  display: block;
+  min-width: max-content;
+  padding: 17px 19px;
+  color: var(--code-text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal {
+  color: var(--hl-keyword);
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: var(--hl-string);
+}
+
+.hljs-number {
+  color: var(--hl-number);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: var(--hl-title);
+}
+
+.hljs-type,
+.hljs-class .hljs-title {
+  color: var(--hl-type);
+  font-weight: 600;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: var(--hl-builtin);
+}
+
+.hljs-meta {
+  color: var(--hl-comment);
 }
 
 .guide-runtime-note {
-  grid-column: 2;
-  margin: -48px 0 0;
+  margin: 18px 0 0;
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.8rem;
 }
 
 .site-footer {
@@ -1730,8 +1835,11 @@ select {
   }
 
   .guide-inner {
-    grid-template-columns: 1fr;
-    gap: 30px;
+    display: block;
+  }
+
+  .guide-body {
+    margin-top: 30px;
   }
 
   .guide-runtime-note {
@@ -1763,6 +1871,15 @@ select {
     justify-content: space-between;
   }
 
+  .nav-java {
+    width: 20px;
+    justify-content: center;
+  }
+
+  .nav-java span:last-child {
+    display: none;
+  }
+
   .advanced-filters,
   .catalog-entry,
   .detail-grid {
@@ -1773,22 +1890,12 @@ select {
     grid-column: auto;
   }
 
-  .guide-steps {
-    grid-template-columns: 1fr;
-  }
-
   .apple-code-grid {
     grid-template-columns: 1fr;
   }
 
   .apple-code-grid article + article {
     padding: 22px 0 0;
-    border-top: 1px solid var(--line);
-    border-left: 0;
-  }
-
-  .guide-steps article + article {
-    padding: 18px 0 0;
     border-top: 1px solid var(--line);
     border-left: 0;
   }

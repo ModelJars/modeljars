@@ -94,8 +94,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
   assert.match(index, /org\.modeljars:modeljars:0\.1\.0/);
-  assert.match(index, /Add the JVM runtime and the model/);
-  assert.doesNotMatch(index, /\bfacade\b/i);
+  assert.match(index, /Add the JVM Runtime and the model/);
   assert.match(index, /Qwen3_0_6b_Q4_0\.MODEL/);
   assert.match(index, /ModelJars\.open/);
   assert.doesNotMatch(index, /ModelJarInstaller|PureJavaBackend\.load|RustFfmBackend\.load/);
@@ -116,14 +115,12 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(contribution, /Relative to llama\.cpp/);
 
   assert.match(detailScript, /model-mark-logo/);
-  assert.doesNotMatch(detailScript, /\bfacade\b/i);
   assert.doesNotMatch(detailScript, /model\.name\.charAt/);
   assert.match(detailScript, /Also compatible with/);
   assert.doesNotMatch(detailScript, /<h2>Available in<\/h2>/);
 
   assert.match(readme, /qualified subset/i);
-  assert.match(readme, /JVM runtime/);
-  assert.doesNotMatch(readme, /\bfacade\b/i);
+  assert.match(readme, /JVM Runtime/);
   assert.doesNotMatch(readme, /complete generated catalog is searchable/i);
   assert.match(operations, /internal candidate queue/i);
   assert.doesNotMatch(operations, /external-runner/);
@@ -145,4 +142,60 @@ test("CI builds only the current public Pages task", async () => {
     publicationWorkflow,
     /--qualifications catalog\/qualifications\.json/g,
   );
+});
+
+test("renders the Java guide as readable, highlighted vertical steps", async () => {
+  const [index, styles, highlighter] = await Promise.all([
+    read("site/index.html"),
+    read("site/assets/styles.css"),
+    read("site/assets/highlight.js"),
+  ]);
+  const guide = index.match(/<section class="guide-band"[\s\S]*?<\/section>/)?.[0];
+
+  assert.ok(guide, "landing page must contain the Java guide");
+  assert.equal((guide.match(/<article>/g) ?? []).length, 3);
+  assert.equal(
+    (guide.match(/<code class="language-(?:java|kotlin) hljs" data-lang="(?:java|kotlin)">/g) ?? [])
+      .length,
+    3,
+  );
+  assert.match(index, /<script src="\/assets\/highlight\.js"><\/script>/);
+  assert.match(
+    styles,
+    /\.guide-steps\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s,
+  );
+  assert.match(styles, /\.guide-body\s*\{[^}]*min-width:\s*0/s);
+  assert.match(
+    styles,
+    /@media \(max-width: 1040px\)[\s\S]*?\.guide-inner\s*\{[^}]*display:\s*block/s,
+  );
+  assert.match(styles, /\.guide-steps pre\s*\{[^}]*width:\s*100%/s);
+  assert.match(styles, /\.guide-steps pre\s*\{[^}]*min-width:\s*0/s);
+  assert.match(styles, /\.guide-steps code\s*\{[^}]*font-size:\s*0\.9rem/s);
+  assert.match(styles, /\.guide-steps code\s*\{[^}]*white-space:\s*pre/s);
+  assert.match(highlighter, /registerLanguage\("java"/);
+  assert.match(highlighter, /registerLanguage\("kotlin"/);
+});
+
+test("links every primary navigation to the Java guide with the Java brand icon", async () => {
+  const [index, model, benchmarks, apple, contribution, javaIcon, styles] = await Promise.all([
+    read("site/index.html"),
+    read("site/model.html"),
+    read("site/benchmarks/index.html"),
+    read("site/apple/index.html"),
+    read("site/contribute/index.html"),
+    read("site/assets/fontawesome-java.svg"),
+    read("site/assets/styles.css"),
+  ]);
+
+  for (const page of [index, model, benchmarks, apple, contribution]) {
+    assert.match(
+      page,
+      /<a class="nav-java" href="\/#using-modeljars"[^>]*>[\s\S]*?class="nav-java-icon"[\s\S]*?<span>Use from Java<\/span>[\s\S]*?<\/a>/,
+    );
+  }
+
+  assert.match(javaIcon, /Font Awesome Free 7\.3\.1/);
+  assert.match(javaIcon, /viewBox="0 0 384 512"/);
+  assert.match(styles, /mask:\s*url\("\/assets\/fontawesome-java\.svg"\)/);
 });

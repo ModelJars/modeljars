@@ -1,4 +1,4 @@
-package org.modeljars.facade;
+package org.modeljars.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -14,9 +14,9 @@ import org.modeljars.ModelRagQualificationRegistry;
 import org.modeljars.ModelVersion;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 
-class ModelJarsFacadeDependencyTest {
+class ModelJarsJvmRuntimeDependencyTest {
   @Test
-  void exposesTheModelJarsApiThroughTheFacadeDependency() {
+  void exposesTheModelJarsApiThroughTheJvmRuntimeDependency() {
     assertEquals("1.2.3", ModelVersion.parse("1.2.3").toString());
   }
 
@@ -42,7 +42,7 @@ class ModelJarsFacadeDependencyTest {
   }
 
   @Test
-  void exposesBothModelsBackendsThroughTheFacadeDependency() {
+  void exposesBothModelsBackendsThroughTheJvmRuntimeDependency() {
     assertEquals("PureJavaBackend", PureJavaBackend.class.getSimpleName());
     assertEquals("RustFfmBackend", RustFfmBackend.class.getSimpleName());
   }

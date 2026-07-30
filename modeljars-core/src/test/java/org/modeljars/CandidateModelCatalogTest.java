@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class LaunchModelCatalogTest {
+class CandidateModelCatalogTest {
   @Test
-  void launchCatalogContainsAtLeastOneHundredDistinctPinnedHuggingFaceModels() {
+  void candidateCatalogContainsAtLeastOneHundredDistinctPinnedHuggingFaceModels() {
     List<ModelJarDescriptor> descriptors =
         ModelJarRegistry.fromClasspath().descriptors().stream()
             .filter(descriptor -> descriptor.sourceId().startsWith("hf://"))
@@ -35,7 +35,7 @@ class LaunchModelCatalogTest {
   }
 
   @Test
-  void launchMarkersExposeSelfDescribingResourceMetadata() {
+  void candidateMarkersExposeSelfDescribingResourceMetadata() {
     List<ModelJarDescriptor> descriptors =
         ModelJarRegistry.fromClasspath().descriptors().stream()
             .filter(descriptor -> descriptor.format().equals("gguf"))
@@ -120,7 +120,7 @@ class LaunchModelCatalogTest {
   }
 
   @Test
-  void exposesQualifiedSqlCoderRustFfmBackend() {
+  void exposesSqlCoderCandidateRustFfmBackend() {
     ModelJarDescriptor descriptor =
         ModelJarRegistry.fromClasspath()
             .resolve(
@@ -135,7 +135,7 @@ class LaunchModelCatalogTest {
   }
 
   @Test
-  void resolvesPinnedLaunchModelChoices() {
+  void resolvesPinnedCandidateModelChoices() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
 
     for (ExpectedModel expected : EXPECTED_MODELS) {
@@ -145,10 +145,9 @@ class LaunchModelCatalogTest {
                   ModelJar.of(expected.sourceId())
                       .version(expected.versionRange())
                       .variant(expected.variant())
-                      .backend("llama.cpp")
                       .capability("text-generation"))
               .orElseThrow(
-                  () -> new AssertionError("Missing launch model: " + expected.sourceId()));
+                  () -> new AssertionError("Missing candidate model: " + expected.sourceId()));
 
       assertEquals(expected.alias(), descriptor.alias());
       assertEquals(expected.architecture(), descriptor.architecture());

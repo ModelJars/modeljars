@@ -19,12 +19,18 @@ function coordinateParts(coordinate) {
 
 export function gradleSnippet(coordinate) {
   coordinateParts(coordinate);
-  return `runtimeOnly("${coordinate}")`;
+  return `implementation("org.modeljars:modeljars:0.1.0")
+runtimeOnly("${coordinate}")`;
 }
 
 export function mavenSnippet(coordinate) {
   const [groupId, artifactId, version] = coordinateParts(coordinate);
   return `<dependency>
+  <groupId>org.modeljars</groupId>
+  <artifactId>modeljars</artifactId>
+  <version>0.1.0</version>
+</dependency>
+<dependency>
   <groupId>${groupId}</groupId>
   <artifactId>${artifactId}</artifactId>
   <version>${version}</version>
@@ -152,6 +158,15 @@ function renderQualification(qualification) {
         ${escapeHtml(summary.groundingPolicy)}; raw model quality and fallback use remain visible
         below.
       </p>
+      ${
+        summary.label === "Guarded RAG"
+          ? `<p>
+              Guarded RAG uses generated text only when citation and grounding checks pass.
+              Otherwise Models returns a deterministic extract from the retrieved sources or
+              abstains when the sources do not support an answer.
+            </p>`
+          : ""
+      }
       <dl class="dimension-grid qualification-metrics">
         <div><dt>TTFT p95</dt><dd>${escapeHtml(summary.ttft)}</dd></div>
         <div><dt>TPOT p95</dt><dd>${escapeHtml(summary.tpot)}</dd></div>
@@ -199,10 +214,10 @@ function renderModel(model, catalog) {
     ...(model.capabilities || []),
     ...(model.tags || []),
   ];
-  const supportedBackends = Object.entries(model.backends || {}).filter(([, supported]) => supported);
   const qualification = primaryQualification(model);
+  const alsoCompatibleWith = model.backends?.["llama.cpp"] ? ["llama.cpp"] : [];
 
-  document.title = `${model.name} | ModelJars`;
+  document.title = `${model.name} | ModelJARs.org`;
   document.querySelector('meta[name="description"]').content = model.description;
   target.innerHTML = `
     <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -212,7 +227,9 @@ function renderModel(model, catalog) {
     <div class="detail-grid">
       <div class="detail-main">
         <header class="model-identity">
-          <div class="model-mark" aria-hidden="true">${escapeHtml(model.name.charAt(0))}</div>
+          <div class="model-mark">
+            <img class="model-mark-logo" src="/android-chrome-192x192.png" alt="ModelJars artifact">
+          </div>
           <div>
             <div class="identity-meta">
               <span>${escapeHtml(model.format.toUpperCase())}</span>
@@ -245,8 +262,10 @@ function renderModel(model, catalog) {
           <p class="eyebrow">JVM dependency</p>
           <h2 id="install-title">Install this marker</h2>
           <p>
-            Add the ModelJars facade and this marker to the application runtime. The marker records
-            the pinned model location and checksum; weights are resolved separately.
+            Add the ModelJars facade and this marker to the application runtime. The facade brings
+            the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a>
+            and its execution backends. The marker records the pinned model location and checksum;
+            weights are downloaded to the verified local cache when first resolved.
           </p>
           ${copyBlock("Gradle", gradleSnippet(model.markerCoordinate), "language-kotlin")}
           ${copyBlock("Maven", mavenSnippet(model.markerCoordinate), "language-xml")}
@@ -292,15 +311,26 @@ function renderModel(model, catalog) {
           </dl>
         </div>
         <div class="sidebar-panel">
-          <h2>Available in</h2>
+          <h2>Qualified Models runtime</h2>
           <ul class="backend-list">
-            ${supportedBackends
-              .map(
-                ([backend]) => `<li><span class="status-dot"></span>${escapeHtml(backend)}</li>`,
-              )
-              .join("")}
+            <li><span class="status-dot"></span>Models ${escapeHtml(qualification.backend)}</li>
           </ul>
         </div>
+        ${
+          alsoCompatibleWith.length
+            ? `<div class="sidebar-panel">
+                <h2>Also compatible with</h2>
+                <ul class="backend-list">
+                  ${alsoCompatibleWith
+                    .map(
+                      (backend) =>
+                        `<li><span class="status-dot secondary"></span>${escapeHtml(backend)} <small>third-party runtime</small></li>`,
+                    )
+                    .join("")}
+                </ul>
+              </div>`
+            : ""
+        }
         <div class="sidebar-panel">
           <h2>Coordinate</h2>
           <code class="coordinate">${escapeHtml(model.markerCoordinate)}</code>

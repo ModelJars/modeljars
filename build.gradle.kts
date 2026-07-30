@@ -812,6 +812,32 @@ ragQualifications?.let { qualifications ->
     }
 }
 
+val publicQualifications =
+    requireNotNull(ragQualifications) {
+        "Production qualification metadata is required to generate the public site"
+    }.entries.filter(CatalogRagQualification::qualified)
+val publicModelIds = publicQualifications.map(CatalogRagQualification::modelId).toSet()
+val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
+require(publicCatalogEntries.size == publicQualifications.size) {
+    "Public site catalog must contain only qualified artifacts"
+}
+val publicPerformanceProfiles = performanceProfiles.filter { it.modelId in publicModelIds }
+val publicBenchmarkDocument =
+    benchmarkDocument +
+        (
+            "inferenceComparisons" to
+                inferenceComparisons.filter {
+                    it.requiredString("modelId") in publicModelIds
+                }
+        )
+val publicQualificationDocument =
+    requireNotNull(ragQualifications).raw +
+        mapOf(
+            "entries" to publicQualifications.map(CatalogRagQualification::raw),
+            "qualifiedModels" to publicQualifications.size,
+            "rejectedModels" to 0,
+        )
+
 fun validateEvidence(value: Any?, context: String) {
     val evidence = value.stringKeyMap(context)
     val evidenceUri = URI.create(evidence.requiredString("url"))
@@ -1403,8 +1429,126 @@ subprojects {
 project(":modeljars-core") {
     description = "Core ModelJars registry, locator, and verified installer APIs"
 
-    dependencies {
-        testRuntimeOnly(project(":modeljars-catalog"))
+    val candidateTestResources =
+        layout.buildDirectory.dir("generated/resources/candidate-test")
+    val candidateTestRegistry =
+        candidateTestResources.map { it.file("META-INF/modeljars/registry.properties") }
+    val candidateTestMetadata =
+        candidateTestResources.map { it.file("META-INF/modeljars/catalog.json") }
+    val candidateTestPerformanceRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/performance-v1.properties")
+        }
+    val candidateTestPerformanceMetadata =
+        candidateTestResources.map { it.file("META-INF/modeljars/performance-v1.json") }
+    val candidateTestBenchmarkMetadata =
+        candidateTestResources.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
+    val candidateTestQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.properties")
+        }
+    val candidateTestQualificationMetadata =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.json")
+        }
+    val candidateTestPayloadTasks =
+        catalogEntries
+            .filter { it.packaging == "classpath" }
+            .map { entry ->
+                val resource = requireNotNull(entry.classpathResource)
+                val payload = candidateTestResources.map { it.file(resource) }
+                tasks.register("prepareCandidateTestPayload${taskSuffix(entry.id)}") {
+                    inputs.property("downloadUri", entry.downloadUri)
+                    inputs.property("sha256", entry.sha256)
+                    inputs.property("sizeBytes", entry.sizeBytes)
+                    outputs.file(payload)
+                    doLast {
+                        downloadPayload(entry, payload.get().asFile.toPath())
+                    }
+                }
+            }
+    val generateCandidateTestCatalog =
+        tasks.register("generateCandidateTestCatalog") {
+            inputs.file(rootProject.file("catalog/models.json"))
+            inputs.file(rootProject.file("catalog/performance-profiles.json"))
+            inputs.file(rootProject.file("catalog/benchmarks.json"))
+            inputs.file(qualificationCatalogFile)
+            outputs.files(
+                candidateTestRegistry,
+                candidateTestMetadata,
+                candidateTestPerformanceRegistry,
+                candidateTestPerformanceMetadata,
+                candidateTestBenchmarkMetadata,
+                candidateTestQualificationRegistry,
+                candidateTestQualificationMetadata,
+            )
+            doLast {
+                val qualifications = requireNotNull(ragQualifications)
+                val registry = candidateTestRegistry.get().asFile
+                registry.parentFile.mkdirs()
+                registry.writeText(
+                    catalogEntries.joinToString("\n") {
+                        it.registryProperties().trimEnd()
+                    } + "\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(
+                        JsonOutput.toJson(
+                            catalogEntries.map { entry ->
+                                entry.raw +
+                                    ("performanceProfiles" to
+                                        performanceProfiles
+                                            .filter { it.modelId == entry.id }
+                                            .map(CatalogPerformanceProfile::raw)) +
+                                    ("ragQualifications" to
+                                        qualifications.entries
+                                            .filter { it.modelId == entry.id }
+                                            .map { it.siteMetadata(qualifications) })
+                            },
+                        ),
+                    ) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+                candidateTestPerformanceRegistry.get().asFile.writeText(
+                    performanceRegistryProperties(performanceProfiles),
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestPerformanceMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(
+                        JsonOutput.toJson(
+                            mapOf(
+                                "schemaVersion" to 1,
+                                "profiles" to
+                                    performanceProfiles.map(CatalogPerformanceProfile::raw),
+                            ),
+                        ),
+                    ) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+                candidateTestBenchmarkMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(JsonOutput.toJson(benchmarkDocument)) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+                candidateTestQualificationRegistry.get().asFile.writeText(
+                    qualifications.registryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestQualificationMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(JsonOutput.toJson(qualifications.raw)) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+            }
+        }
+
+    extensions.configure<SourceSetContainer> {
+        named("test") {
+            resources.srcDir(candidateTestResources)
+        }
+    }
+    tasks.named("processTestResources") {
+        dependsOn(generateCandidateTestCatalog)
+        dependsOn(candidateTestPayloadTasks)
     }
 }
 
@@ -1420,7 +1564,8 @@ project(":modeljars") {
     dependencies {
         api(project(":modeljars-core"))
         api("com.integrallis:models:$modelsVersion")
-        runtimeOnly("com.integrallis:backend-native:$modelsVersion")
+        api("com.integrallis:backend-java:$modelsVersion")
+        api("com.integrallis:backend-native:$modelsVersion")
         runtimeOnly(project(":modeljars-catalog"))
     }
 }
@@ -1460,8 +1605,8 @@ val verifyFacadePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 4) {
-                "Facade must publish ModelJars, Models, and the selected execution backend"
+            require(dependencies.length == 5) {
+                "Facade must publish ModelJars, Models, and both execution backends"
             }
 
             fun dependency(artifactId: String): Element =
@@ -1502,15 +1647,26 @@ val verifyFacadePublication =
                 "Facade must expose Models in Maven compile scope"
             }
 
-            val backendDependency = dependency("backend-native")
-            require(backendDependency.childText("groupId") == "com.integrallis") {
-                "Facade backend must come from the Models project"
+            val javaBackendDependency = dependency("backend-java")
+            require(javaBackendDependency.childText("groupId") == "com.integrallis") {
+                "Facade Java backend must come from the Models project"
             }
-            require(backendDependency.childText("version") == modelsVersion) {
-                "Facade backend and Models versions must match"
+            require(javaBackendDependency.childText("version") == modelsVersion) {
+                "Facade Java backend and Models versions must match"
             }
-            require(backendDependency.childText("scope") == "runtime") {
-                "Facade must provide the measured native backend at runtime"
+            require(javaBackendDependency.childText("scope") == "compile") {
+                "Facade must expose the Java backend in Maven compile scope"
+            }
+
+            val nativeBackendDependency = dependency("backend-native")
+            require(nativeBackendDependency.childText("groupId") == "com.integrallis") {
+                "Facade native backend must come from the Models project"
+            }
+            require(nativeBackendDependency.childText("version") == modelsVersion) {
+                "Facade native backend and Models versions must match"
+            }
+            require(nativeBackendDependency.childText("scope") == "compile") {
+                "Facade must expose the native backend in Maven compile scope"
             }
         }
     }
@@ -1532,15 +1688,27 @@ val markerPomTaskNames = mutableListOf<String>()
 val markerPomFiles = mutableMapOf<CatalogEntry, Provider<RegularFile>>()
 
 project(":modeljars-catalog") {
-    description = "Generated aggregate and individual ModelJars marker metadata"
+    description = "Qualified aggregate catalog and generated ModelJars candidate markers"
 
-    val generatedResources = layout.buildDirectory.dir("generated/resources/main")
+    val generatedCatalogResources =
+        layout.buildDirectory.dir("generated/catalog-resources/main")
+    val publicClasspathPayloads =
+        publicCatalogEntries.filter { it.packaging == "classpath" }
+    val publicPayloadFingerprint =
+        sha256(
+            publicClasspathPayloads
+                .joinToString("\n") { "${it.id}:${it.sha256}" }
+                .toByteArray(StandardCharsets.UTF_8),
+        )
+    val generatedPayloadResources =
+        layout.buildDirectory.dir(
+            "generated/catalog-payloads/$publicPayloadFingerprint/main",
+        )
     val bundledPayloadTasks =
-        catalogEntries
-            .filter { it.packaging == "classpath" }
+        publicClasspathPayloads
             .associateWith { entry ->
                 val resource = requireNotNull(entry.classpathResource)
-                val payload = generatedResources.map { it.file(resource) }
+                val payload = generatedPayloadResources.map { it.file(resource) }
                 tasks.register("preparePayload${taskSuffix(entry.id)}") {
                     inputs.property("downloadUri", entry.downloadUri)
                     inputs.property("sha256", entry.sha256)
@@ -1552,21 +1720,23 @@ project(":modeljars-catalog") {
                 }
             }
     val aggregateRegistry =
-        generatedResources.map { it.file("META-INF/modeljars/registry.properties") }
+        generatedCatalogResources.map { it.file("META-INF/modeljars/registry.properties") }
     val aggregateMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/catalog.json") }
+        generatedCatalogResources.map { it.file("META-INF/modeljars/catalog.json") }
     val aggregatePerformanceRegistry =
-        generatedResources.map { it.file("META-INF/modeljars/performance-v1.properties") }
+        generatedCatalogResources.map { it.file("META-INF/modeljars/performance-v1.properties") }
     val aggregatePerformanceMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/performance-v1.json") }
+        generatedCatalogResources.map { it.file("META-INF/modeljars/performance-v1.json") }
     val aggregateBenchmarkMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
+        generatedCatalogResources.map { it.file("META-INF/modeljars/benchmarks-v2.json") }
     val aggregateQualificationRegistry =
-        generatedResources.map {
+        generatedCatalogResources.map {
             it.file("META-INF/modeljars/qualifications-v1.properties")
         }
     val aggregateQualificationMetadata =
-        generatedResources.map { it.file("META-INF/modeljars/qualifications-v1.json") }
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.json")
+        }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
@@ -1588,26 +1758,26 @@ project(":modeljars-catalog") {
                 val registry = aggregateRegistry.get().asFile
                 registry.parentFile.mkdirs()
                 registry.writeText(
-                    catalogEntries.joinToString("\n") { it.registryProperties().trimEnd() } + "\n",
+                    publicCatalogEntries.joinToString("\n") {
+                        it.registryProperties().trimEnd()
+                    } + "\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateMetadata.get().asFile.writeText(
                     JsonOutput.prettyPrint(
                         JsonOutput.toJson(
-                            catalogEntries.map { entry ->
+                            publicCatalogEntries.map { entry ->
                                 entry.raw +
                                     ("performanceProfiles" to
-                                        performanceProfiles
+                                        publicPerformanceProfiles
                                             .filter { it.modelId == entry.id }
                                             .map(CatalogPerformanceProfile::raw)) +
                                     ("ragQualifications" to
-                                        (ragQualifications
-                                            ?.entries
-                                            ?.filter { it.modelId == entry.id }
-                                            ?.map {
-                                                it.siteMetadata(ragQualifications)
-                                            }
-                                            ?: emptyList<Map<String, Any?>>()))
+                                        publicQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(requireNotNull(ragQualifications))
+                                            })
                             },
                         ),
                     ) +
@@ -1615,7 +1785,7 @@ project(":modeljars-catalog") {
                     StandardCharsets.UTF_8,
                 )
                 aggregatePerformanceRegistry.get().asFile.writeText(
-                    performanceRegistryProperties(performanceProfiles),
+                    performanceRegistryProperties(publicPerformanceProfiles),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregatePerformanceMetadata.get().asFile.writeText(
@@ -1623,14 +1793,15 @@ project(":modeljars-catalog") {
                         JsonOutput.toJson(
                             mapOf(
                                 "schemaVersion" to 1,
-                                "profiles" to performanceProfiles.map(CatalogPerformanceProfile::raw),
+                                "profiles" to
+                                    publicPerformanceProfiles.map(CatalogPerformanceProfile::raw),
                             ),
                         ),
                     ) + "\n",
                     StandardCharsets.UTF_8,
                 )
                 aggregateBenchmarkMetadata.get().asFile.writeText(
-                    JsonOutput.prettyPrint(JsonOutput.toJson(benchmarkDocument)) + "\n",
+                    JsonOutput.prettyPrint(JsonOutput.toJson(publicBenchmarkDocument)) + "\n",
                     StandardCharsets.UTF_8,
                 )
                 val qualificationRegistry = aggregateQualificationRegistry.get().asFile
@@ -1640,12 +1811,12 @@ project(":modeljars-catalog") {
                     qualificationMetadata.delete()
                 } else {
                     qualificationRegistry.writeText(
-                        ragQualifications.registryProperties(),
+                        ragQualifications.registryProperties(publicQualifications),
                         StandardCharsets.ISO_8859_1,
                     )
                     qualificationMetadata.writeText(
                         JsonOutput.prettyPrint(
-                            JsonOutput.toJson(ragQualifications.raw),
+                            JsonOutput.toJson(publicQualificationDocument),
                         ) + "\n",
                         StandardCharsets.UTF_8,
                     )
@@ -1655,7 +1826,8 @@ project(":modeljars-catalog") {
 
     extensions.configure<SourceSetContainer> {
         named("main") {
-            resources.srcDir(generatedResources)
+            resources.srcDir(generatedCatalogResources)
+            resources.srcDir(generatedPayloadResources)
         }
     }
     tasks.named("processResources") {
@@ -1670,6 +1842,19 @@ project(":modeljars-catalog") {
     catalogEntries.forEach { entry ->
         val suffix = taskSuffix(entry.id)
         val markerRoot = layout.buildDirectory.dir("generated/markers/${entry.id}/main")
+        val markerPayloadTask =
+            entry.classpathResource?.let { resource ->
+                val payload = markerRoot.map { it.file(resource) }
+                tasks.register("prepareMarkerPayload$suffix") {
+                    inputs.property("downloadUri", entry.downloadUri)
+                    inputs.property("sha256", entry.sha256)
+                    inputs.property("sizeBytes", entry.sizeBytes)
+                    outputs.file(payload)
+                    doLast {
+                        downloadPayload(entry, payload.get().asFile.toPath())
+                    }
+                }
+            }
         val markerRegistry = markerRoot.map { it.file("META-INF/modeljars/registry.properties") }
         val markerMetadata = markerRoot.map { it.file("META-INF/modeljars/model.json") }
         val markerPerformanceRegistry =
@@ -1722,9 +1907,9 @@ project(":modeljars-catalog") {
         val markerJar =
             tasks.register<Jar>("markerJar$suffix") {
                 dependsOn(generateMarker)
-                bundledPayloadTasks[entry]?.let { payloadTask ->
+                markerPayloadTask?.let { payloadTask ->
                     dependsOn(payloadTask)
-                    from(generatedResources) {
+                    from(markerRoot) {
                         include(requireNotNull(entry.classpathResource))
                     }
                 }
@@ -1864,43 +2049,74 @@ val generateSiteCatalog =
                     zip.getEntry("META-INF/modeljars/catalog.json")
                         ?: error("Aggregate ModelJars catalog metadata is missing")
                 zip.getInputStream(catalogMetadata).use { input ->
-                    Files.copy(
-                        input,
-                        catalogOutput.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING,
+                    val models =
+                        (JsonSlurper().parse(input) as? List<*>)
+                            ?: error("Aggregate ModelJars catalog metadata must be an array")
+                    val publicModels =
+                        models.filter { model ->
+                            model.stringKeyMap("Aggregate site model").requiredString("id") in
+                                publicModelIds
+                        }
+                    catalogOutput.writeText(
+                        JsonOutput.prettyPrint(JsonOutput.toJson(publicModels)) + "\n",
+                        StandardCharsets.UTF_8,
                     )
                 }
                 val benchmarkMetadata =
                     zip.getEntry("META-INF/modeljars/benchmarks-v2.json")
                         ?: error("Aggregate ModelJars benchmark metadata is missing")
                 zip.getInputStream(benchmarkMetadata).use { input ->
-                    Files.copy(
-                        input,
-                        benchmarkOutput.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING,
+                    val benchmarks =
+                        JsonSlurper()
+                            .parse(input)
+                            .stringKeyMap("Aggregate ModelJars benchmark metadata")
+                    val publicComparisons =
+                        ((benchmarks["inferenceComparisons"] as? List<*>)
+                                ?: error("Aggregate benchmark metadata must contain comparisons"))
+                            .filter { comparison ->
+                                comparison
+                                    .stringKeyMap("Aggregate inference comparison")
+                                    .requiredString("modelId") in publicModelIds
+                            }
+                    benchmarkOutput.writeText(
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                benchmarks + ("inferenceComparisons" to publicComparisons),
+                            ),
+                        ) + "\n",
+                        StandardCharsets.UTF_8,
                     )
                 }
                 val qualificationMetadata =
                     zip.getEntry("META-INF/modeljars/qualifications-v1.json")
-                if (qualificationMetadata == null) {
+                    ?: error("Aggregate ModelJars qualification metadata is missing")
+                zip.getInputStream(qualificationMetadata).use { input ->
+                    val qualifications =
+                        JsonSlurper()
+                            .parse(input)
+                            .stringKeyMap("Aggregate ModelJars qualification metadata")
+                    val entries =
+                        ((qualifications["entries"] as? List<*>)
+                                ?: error("Aggregate qualification metadata must contain entries"))
+                            .filter { entry ->
+                                val values =
+                                    entry.stringKeyMap("Aggregate qualification entry")
+                                values["qualified"] == true &&
+                                    values.requiredString("modelId") in publicModelIds
+                            }
                     qualificationOutput.writeText(
-                        """
-                        {
-                          "schemaVersion": 1,
-                          "status": "pending",
-                          "entries": []
-                        }
-                        """.trimIndent() + "\n",
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                qualifications +
+                                    mapOf(
+                                        "entries" to entries,
+                                        "qualifiedModels" to entries.size,
+                                        "rejectedModels" to 0,
+                                    ),
+                            ),
+                        ) + "\n",
                         StandardCharsets.UTF_8,
                     )
-                } else {
-                    zip.getInputStream(qualificationMetadata).use { input ->
-                        Files.copy(
-                            input,
-                            qualificationOutput.toPath(),
-                            StandardCopyOption.REPLACE_EXISTING,
-                        )
-                    }
                 }
             }
         }
@@ -1921,19 +2137,12 @@ tasks.register<Sync>("generateSite") {
         require(Files.isRegularFile(detailTemplate)) {
             "Model detail template is missing: $detailTemplate"
         }
-        catalogEntries.forEach { entry ->
+        publicCatalogEntries.forEach { entry ->
             val route = siteRoot.resolve("models/${entry.id}/index.html")
             Files.createDirectories(route.parent)
             Files.copy(detailTemplate, route, StandardCopyOption.REPLACE_EXISTING)
         }
     }
-}
-
-val generatedPublicSiteDirectory = layout.buildDirectory.dir("public-site")
-tasks.register<Sync>("generatePublicSite") {
-    from("site-public")
-    from("media/icons")
-    into(generatedPublicSiteDirectory)
 }
 
 tasks.register("verifyRemoteCatalogMetadata") {
@@ -2123,9 +2332,18 @@ tasks.register("verifyCatalog") {
             siteModels.sumOf { model ->
                 val values = model.stringKeyMap("Generated site model")
                 (values["performanceProfiles"] as? List<*>)?.size ?: 0
-            } == performanceProfiles.size,
+            } == performanceProfiles.count { it.modelId in publicModelIds },
         ) {
             "Generated site catalog performance profile count mismatch"
+        }
+        require(
+            siteModels
+                .map { model ->
+                    model.stringKeyMap("Generated site model").requiredString("id")
+                }
+                .toSet() == publicModelIds,
+        ) {
+            "Public site catalog must contain only qualified artifacts"
         }
         val siteBenchmarks = generatedSiteBenchmarks.get().asFile
         require(siteBenchmarks.isFile) {
@@ -2137,7 +2355,9 @@ tasks.register("verifyCatalog") {
                 .stringKeyMap("Generated site benchmark metadata")
         require(
             (generatedBenchmarks["inferenceComparisons"] as? List<*>)?.size ==
-                inferenceComparisons.size,
+                inferenceComparisons.count {
+                    it.requiredString("modelId") in publicModelIds
+                },
         ) {
             "Generated site inference comparison count mismatch"
         }
@@ -2159,18 +2379,28 @@ tasks.register("verifyCatalog") {
                 .stringKeyMap("Generated site qualification metadata")
         require(
             (generatedQualifications["entries"] as? List<*>)?.size ==
-                (ragQualifications?.entries?.size ?: 0),
+                publicQualifications.size,
         ) {
             "Generated site qualification count mismatch"
         }
         val generatedSite = layout.buildDirectory.dir("site").get().asFile
-        catalogEntries.forEach { entry ->
+        publicCatalogEntries.forEach { entry ->
             val detailRoute = generatedSite.resolve("models/${entry.id}/index.html")
             require(detailRoute.isFile) {
                 "Generated model detail route is missing: $detailRoute"
             }
         }
-        println("Verified ${catalogEntries.size} generated ModelJars markers and website entries")
+        catalogEntries
+            .filter { it.id !in publicModelIds }
+            .forEach { entry ->
+                require(!generatedSite.resolve("models/${entry.id}/index.html").exists()) {
+                    "Unqualified model detail route must not be public: ${entry.id}"
+                }
+            }
+        println(
+            "Verified ${catalogEntries.size} generated ModelJars markers and " +
+                "${publicCatalogEntries.size} qualified website entries",
+        )
     }
 }
 

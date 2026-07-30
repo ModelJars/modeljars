@@ -92,6 +92,7 @@ jobs:
           if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
             node tools/plan-model-publications.mjs \
               --current catalog/models.json \
+              --qualifications catalog/qualifications.json \
               --ids "${REQUESTED_MODEL_IDS}" \
               --github-output "${GITHUB_OUTPUT}"
             exit 0
@@ -114,6 +115,7 @@ jobs:
           node tools/plan-model-publications.mjs \
             --previous "${previous_catalog}" \
             --current catalog/models.json \
+            --qualifications catalog/qualifications.json \
             --previous-profiles "${previous_profiles}" \
             --current-profiles catalog/performance-profiles.json \
             --github-output "${GITHUB_OUTPUT}"

@@ -6,24 +6,24 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("keeps the temporary private preview on GitHub Pages only", async () => {
-  const [pagesWorkflow, placeholder, packageJson, operations] = await Promise.all([
+test("deploys the qualified public catalog on GitHub Pages", async () => {
+  const [pagesWorkflow, catalog, packageJson, operations] = await Promise.all([
     read(".github/workflows/pages.yml"),
-    read("site-public/index.html"),
+    read("site/index.html"),
     read("package.json").then(JSON.parse),
     read("docs/modeljars-operations-and-model-candidates.md"),
   ]);
 
-  assert.match(pagesWorkflow, /generatePublicSite/);
-  assert.match(pagesWorkflow, /build\/public-site/);
-  assert.doesNotMatch(pagesWorkflow, /build\/site(?:\s|$)/);
-  assert.match(placeholder, /Private preview/);
-  assert.doesNotMatch(placeholder, /catalog|pure Java|model framework|org\.modeljars/i);
-  assert.doesNotMatch(placeholder, /password|authorization|sign[ -]?in|login/i);
+  assert.match(pagesWorkflow, /generateSite/);
+  assert.match(pagesWorkflow, /build\/site(?:\s|$)/);
+  assert.doesNotMatch(pagesWorkflow, /generatePublicSite|build\/public-site/);
+  assert.match(catalog, /Search models/i);
+  assert.doesNotMatch(catalog, /Private preview|invited accounts/i);
   assert.equal(packageJson.devDependencies?.wrangler, undefined);
   assert.doesNotMatch(operations, /Cloudflare/i);
 
   await Promise.all([
+    assertMissing("site-public"),
     assertMissing(".github/workflows/cloudflare-pages.yml"),
     assertMissing("functions/_middleware.js"),
     assertMissing("functions/login.js"),

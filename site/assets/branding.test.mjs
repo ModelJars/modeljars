@@ -44,6 +44,6 @@ test("uses the shared logo in repository and website branding", async () => {
   assert.match(benchmarks, /id="inference-table-body"/);
   assert.match(benchmarks, /id="rag-table-body"/);
   assert.match(index, /rel="manifest" href="\/site\.webmanifest"/);
-  assert.equal(manifest.name, "ModelJars");
-  assert.equal(manifest.short_name, "ModelJars");
+  assert.equal(manifest.name, "ModelJARs.org");
+  assert.equal(manifest.short_name, "ModelJARs");
 });

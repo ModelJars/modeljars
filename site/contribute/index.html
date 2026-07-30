@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Qualify and submit a model | ModelJARs.org</title>
+    <meta
+      name="description"
+      content="Artifact verification, production qualification, and contribution requirements for ModelJARs.org.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/static-page.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJARs.org</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Models</a>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a class="active" href="/contribute/">Contribute</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="documentation-shell">
+      <header class="documentation-heading">
+        <p class="eyebrow">Contributor guide</p>
+        <h1>Qualify and submit a model</h1>
+        <p class="lede">
+          A model reaches the public catalog only after its exact artifact is verified, executed by
+          Integrallis Models, and measured against the production qualification policy.
+        </p>
+      </header>
+
+      <section class="documentation-section" aria-labelledby="status-title">
+        <h2 id="status-title">Three distinct states</h2>
+        <dl class="definition-list">
+          <div>
+            <dt>Catalog candidate</dt>
+            <dd>
+              Its upstream source, immutable revision, license, dimensions, byte size, and SHA-256
+              are recorded. This is an internal contribution queue, not a runtime claim.
+            </dd>
+          </div>
+          <div>
+            <dt>Artifact verification</dt>
+            <dd>
+              CI downloads those exact bytes and tests the GGUF parser, tokenizer, tensor layout,
+              generation path, and deterministic output references needed by the model.
+            </dd>
+          </div>
+          <div>
+            <dt>Production qualification</dt>
+            <dd>
+              The exact artifact and Models backend complete a controlled RAG workload and satisfy
+              correctness, latency, model-contribution, and relative-performance gates.
+            </dd>
+          </div>
+        </dl>
+        <p class="callout">
+          <strong>Not yet qualified</strong> means the production run has not happened.
+          <strong>Not qualified</strong> is used only after an executed artifact fails the policy.
+        </p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="workflow-title">
+        <h2 id="workflow-title">Qualification workflow</h2>
+        <ol class="workflow-list">
+          <li>
+            <strong>Pin one immutable artifact.</strong>
+            Record the upstream repository, commit, exact download URI, license, size, SHA-256,
+            architecture, quantization, capabilities, and intended workload.
+          </li>
+          <li>
+            <strong>Prove Models compatibility.</strong>
+            Add or run exact-artifact tests in
+            <a href="https://github.com/integrallis/models">integrallis/models</a>. New parser,
+            tokenizer, graph, or kernel support belongs there and must be covered test-first.
+          </li>
+          <li>
+            <strong>Run on a controlled Linux host.</strong>
+            Use Java 25, a clean Models checkout, no competing inference process, and enough memory
+            for the model. The harness records the CPU, memory, JVM, Models revision, artifact
+            digest, prompt controls, and every request.
+          </li>
+          <li>
+            <strong>Compare identical bytes.</strong>
+            The harness measures Models and same-host Ollama and llama.cpp comparators with the same
+            GGUF, prompts, context, sampling controls, thread count, warmups, and iterations.
+            Ollama and llama.cpp are qualification comparators, not ModelJars runtime dependencies.
+          </li>
+          <li>
+            <strong>Submit reproducible evidence.</strong>
+            Commit the raw reports to the Models repository, then update ModelJars catalog and
+            qualification metadata in a pull request. Maintainers verify report hashes and CI
+            rebuilds the marker and public catalog.
+          </li>
+        </ol>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="command-title">
+        <h2 id="command-title">Run the controlled harness</h2>
+        <p>
+          The current harness lives in the Models repository. It fails closed when prerequisites,
+          artifact identity, comparator controls, or policy gates do not match.
+        </p>
+        <h3>Host prerequisites</h3>
+        <ul class="checklist">
+          <li>Linux on a dedicated or otherwise idle host with enough RAM for all three engines.</li>
+          <li>Java 25, a clean Models checkout, and the model artifact on a local filesystem.</li>
+          <li><code>ollama</code>, <code>llama-server</code>, <code>curl</code>, <code>git</code>, <code>jq</code>, and standard Linux utilities on <code>PATH</code>.</li>
+          <li>No live Models, Ollama runner, <code>llama-cli</code>, <code>llama-server</code>, or <code>llama-bench</code> process.</li>
+        </ul>
+        <div class="code-block">
+          <div><span>Qualification command</span></div>
+          <pre><code>git clone https://github.com/integrallis/models.git
+cd models
+
+scripts/run-controlled-rag-qualification.sh \
+  /absolute/path/to/model.gguf \
+  catalog_model_id \
+  workload_id \
+  chatml \
+  build/reports/rag/qualification/catalog_model_id</code></pre>
+        </div>
+        <p>
+          Select the prompt template validated for the artifact, such as <code>chatml</code>,
+          <code>llama3</code>, <code>gemma</code>, or <code>zephyr</code>. The output directory
+          contains Models, Ollama, and llama.cpp reports plus <code>qualification.json</code>.
+        </p>
+        <div class="table-scroll" tabindex="0" aria-label="Qualification command arguments">
+          <table class="benchmark-table policy-table">
+            <thead>
+              <tr><th scope="col">Argument</th><th scope="col">Meaning</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row"><code>MODEL_GGUF</code></th><td>Absolute path to the exact, checksum-pinned GGUF artifact.</td></tr>
+              <tr><th scope="row"><code>MODEL_ID</code></th><td>The ID used by <code>catalog/models.json</code>.</td></tr>
+              <tr><th scope="row"><code>WORKLOAD</code></th><td>A versioned Models RAG workload such as <code>general</code> or <code>coding</code>.</td></tr>
+              <tr><th scope="row"><code>PROMPT_TEMPLATE</code></th><td>The template proven correct for this artifact.</td></tr>
+              <tr><th scope="row"><code>OUTPUT_DIR</code></th><td>Optional directory for raw engine reports and the verdict.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="callout">
+          A contributor's local run is a preflight result, not publication authority. A maintainer
+          must reproduce or review the run on the controlled host, pin the Models commit, and
+          approve the exact report and artifact hashes before adding the qualification entry.
+        </p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="policy-title">
+        <h2 id="policy-title">Acceptance policy</h2>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable qualification policy">
+          <table class="benchmark-table policy-table">
+            <thead>
+              <tr><th scope="col">Policy metric</th><th scope="col">Requirement</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Successful requests</th><td>100%</td></tr>
+              <tr><th scope="row">Retrieval recall</th><td>At least 95%</td></tr>
+              <tr><th scope="row">Mean reciprocal rank</th><td>At least 90%</td></tr>
+              <tr><th scope="row">Fact coverage</th><td>At least 90%</td></tr>
+              <tr><th scope="row">Citation recall and precision</th><td>At least 90% for each</td></tr>
+              <tr><th scope="row">Correct answer rate</th><td>At least 90%</td></tr>
+              <tr><th scope="row">Unsupported-query abstention</th><td>100%</td></tr>
+              <tr><th scope="row">Model contribution</th><td>At least one third of requests</td></tr>
+              <tr><th scope="row">Contributed-answer correctness</th><td>At least 90%</td></tr>
+              <tr><th scope="row">p95 retrieval</th><td>At most 250 ms</td></tr>
+              <tr><th scope="row">p95 TTFT</th><td>At most 2 seconds</td></tr>
+              <tr><th scope="row">p95 time per output token</th><td>At most 200 ms</td></tr>
+              <tr><th scope="row">p95 end to end</th><td>At most 10 seconds</td></tr>
+              <tr><th scope="row">Relative to Ollama</th><td>At least 80% decode and at most 1.5x end-to-end latency</td></tr>
+              <tr><th scope="row">Relative to llama.cpp</th><td>45% decode and 2x end-to-end target, reported independently</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Qualification requires the absolute quality and usable-latency gates plus a qualifying
+          same-host Ollama comparison. The llama.cpp comparison is retained as an additional
+          performance diagnostic. A <code>PRODUCTION_READY</code> result uses the stricter latency
+          ceilings of 100 ms retrieval, 1 second TTFT, 100 ms per output token, and 5 seconds end to
+          end. These are ModelJars acceptance SLOs for the versioned workload, not guarantees for
+          every application, prompt length, concurrency level, or machine.
+        </p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="submit-title">
+        <h2 id="submit-title">Pull request checklist</h2>
+        <p>
+          Runtime support and evidence are reviewed in
+          <a href="https://github.com/integrallis/models">integrallis/models</a> first. The
+          ModelJars pull request then adds the marker descriptor and qualification record that
+          reference the accepted Models commit and report.
+        </p>
+        <ul class="checklist">
+          <li>One immutable marker version and no committed model weights.</li>
+          <li>Attributable upstream source and explicit license metadata.</li>
+          <li>Exact revision, byte size, SHA-256, dimensions, and backend declaration.</li>
+          <li>Models exact-artifact tests and deterministic output evidence.</li>
+          <li>Raw controlled reports committed to Models, the qualification verdict, and report SHA-256 values.</li>
+          <li>A matching entry in <code>catalog/qualifications.json</code> only after maintainer approval.</li>
+          <li>A clean local run of <code>npm test</code> and <code>./gradlew test verifyCatalog</code>.</li>
+        </ul>
+        <p>
+          Start with the repository's
+          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">contribution rules</a>
+          and open a pull request. Only maintainers can merge, and only protected GitHub Actions
+          workflows can publish accepted marker artifacts.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
+        <div>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="/contribute/">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

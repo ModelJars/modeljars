@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inference and RAG benchmarks | ModelJars</title>
+    <title>Inference and RAG benchmarks | ModelJARs.org</title>
     <meta
       name="description"
       content="Controlled Models, llama.cpp, Ollama, and hosted-provider inference and RAG results.">
@@ -22,14 +22,15 @@
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="brand" href="/" aria-label="ModelJars home">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
           <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
-          <span>ModelJars</span>
+          <span>ModelJARs.org</span>
         </a>
         <nav class="nav" aria-label="Primary">
           <a href="/">Models</a>
           <a class="active" href="/benchmarks/">Benchmarks</a>
-          <a class="nav-secondary" href="/#using-modeljars">Docs</a>
+          <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a class="nav-secondary" href="/contribute/">Contribute</a>
           <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
           <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
             <span class="theme-light" aria-hidden="true">&#9728;</span>
@@ -66,8 +67,10 @@
             <h2 id="inference-title">Models compared with native engines</h2>
           </div>
           <p>
-            Each row uses the same GGUF bytes and generation controls across the selected Models
-            backend, llama.cpp, and Ollama.
+            The table contains the qualified artifacts with controlled cross-engine studies. Each
+            row uses the same GGUF bytes and generation controls across the selected Models
+            backend, llama.cpp, and Ollama; these engines are comparators, not ModelJars runtime
+            dependencies.
           </p>
         </div>
 
@@ -127,11 +130,12 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Launch qualification</p>
-            <h2 id="qualification-title">Production RAG by model artifact</h2>
+            <h2 id="qualification-title">Production RAG qualification by artifact</h2>
           </div>
           <p>
-            Each row is the published Models Java client driving a local engine with the exact
-            ModelJar SHA on the same controlled host.
+            Every listed artifact completed the published Models Java workload with the exact
+            ModelJar SHA on the controlled host. The summary and table are generated directly from
+            the qualification ledger.
           </p>
         </div>
 
@@ -174,10 +178,12 @@
             </p>
           </div>
           <div>
-            <h3>Generative and guarded</h3>
+            <h3>What Guarded RAG means</h3>
             <p>
-              Generative RAG met the quality bar primarily from model output. Guarded RAG met the
-              same final bar with Models citation validation and deterministic extractive fallback.
+              Guarded RAG uses the model when its answer passes citation and grounding checks.
+              When it does not, Models returns a deterministic extract from the retrieved sources,
+              or abstains when the sources do not support an answer. Raw model quality and fallback
+              frequency remain visible in every row.
             </p>
           </div>
           <div>
@@ -257,12 +263,18 @@
 
     <footer class="site-footer">
       <div class="footer-inner">
-        <a class="footer-brand" href="/">ModelJars</a>
-        <span>Open model metadata for the JVM.</span>
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
         <div>
           <a href="/benchmarks/">Benchmarks</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
           <a href="https://github.com/ModelJars/modeljars">GitHub</a>
-          <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">Contribute</a>
+          <a href="/contribute/">Contribute</a>
         </div>
       </div>
     </footer>

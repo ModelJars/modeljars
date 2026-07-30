@@ -20,7 +20,11 @@ test("model marker JARs are independent of the Models runtime", async () => {
   assert.match(build, /api\("com\.integrallis:models:\$modelsVersion"\)/);
   assert.match(
     build,
-    /runtimeOnly\("com\.integrallis:backend-native:\$modelsVersion"\)/,
+    /api\("com\.integrallis:backend-java:\$modelsVersion"\)/,
+  );
+  assert.match(
+    build,
+    /api\("com\.integrallis:backend-native:\$modelsVersion"\)/,
   );
   assert.match(
     build,

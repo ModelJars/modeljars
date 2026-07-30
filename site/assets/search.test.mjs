@@ -13,7 +13,7 @@ const model = {
   quantization: "Q4_K_M",
   capabilities: ["text-generation", "chat"],
   features: ["pinned-revision"],
-  backends: { "llama.cpp": true, "pure-java": false },
+  backends: { "llama.cpp": true, "rust-ffm": true },
   domains: ["healthcare"],
   tags: ["clinical", "on-device"],
   dimensions: { parameterCount: 3_000_000_000 },
@@ -21,7 +21,7 @@ const model = {
     {
       qualified: true,
       useCaseTier: "GUARDED_RAG",
-      backend: "llama.cpp",
+      backend: "rust-ffm",
       performanceTier: "USABLE",
     },
   ],
@@ -34,7 +34,7 @@ test("matches catalog domains and descriptions", () => {
 });
 
 test("applies backend filters independently of text", () => {
-  assert.equal(matches(model, "medical", "llama.cpp"), true);
+  assert.equal(matches(model, "medical", "rust-ffm"), true);
   assert.equal(matches(model, "medical", "pure-java"), false);
 });
 
@@ -54,6 +54,14 @@ test("combines category, backend, architecture, size, and sort filters", () => {
       domains: ["coding"],
       architecture: "qwen2",
       backends: { "pure-java": true, "llama.cpp": true },
+      ragQualifications: [
+        {
+          qualified: true,
+          useCaseTier: "GENERATIVE_RAG",
+          backend: "pure-java",
+          performanceTier: "USABLE",
+        },
+      ],
       dimensions: { parameterCount: 600_000_000 },
       sizeBytes: 500_000_000,
     },

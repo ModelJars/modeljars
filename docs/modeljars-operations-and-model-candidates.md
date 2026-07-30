@@ -7,17 +7,21 @@ coding-model candidates against the current Java `models` runtime. The goal is
 to make ModelJars useful as both:
 
 - a neutral JVM marker-JAR catalog for discoverable model coordinates; and
-- a compatibility layer that tells Java applications which local runtimes can
-  execute a model.
+- a verified compatibility layer for artifacts executed by Integrallis Models.
+
+`catalog/models.json` is an internal candidate queue as well as the source of
+marker metadata. A candidate becomes public and publishable only when the exact
+artifact has a passing record in `catalog/qualifications.json`. A candidate
+without that record has not failed; it has not completed production
+qualification.
 
 The current 100+ model catalog, distinct-model counting rule, metadata contract,
 and no-skip CI boundary are maintained in
 [launch-catalog-100.md](launch-catalog-100.md). The original 25-model report is
 retained as historical planning context.
 
-The canonical site is ModelJars.org. It temporarily publishes a private-preview placeholder while
-the framework is not ready for public use. If ModelJars.com is later acquired, redirect it to the
-`.org` site.
+The canonical site is ModelJars.org. If ModelJars.com is later acquired, redirect it to the `.org`
+site.
 
 ## 1. ModelJars.org Setup Runbook
 
@@ -27,18 +31,11 @@ the framework is not ready for public use. If ModelJars.com is later acquired, r
 - Repository: `ModelJars/modeljars`
 - Hosting: GitHub Pages via GitHub Actions
 - Custom domain: `modeljars.org`
-- Full site source/output for local review: `site/` and `build/site/`
-- Deployed placeholder source/output: `site-public/` and `build/public-site/`
+- Site source/output: `site/` and `build/site/`
 
 The GitHub Pages workflow is `.github/workflows/pages.yml`. GitHub Actions runs
-`./gradlew generatePublicSite` and uploads only `build/public-site`. The deployed artifact contains
-the private-preview page, `CNAME`, and brand icons; it contains no catalog, framework documentation,
-or model metadata.
-
-GitHub Pages provides static hosting and cannot enforce per-user login on this public repository.
-The temporary policy is therefore to publish no protected material. Maintainers can generate the
-full site locally with `./gradlew generateSite`. When the framework is ready for public use, the
-Pages workflow can publish `build/site` again.
+`./gradlew generateSite` and uploads `build/site`. The deployed artifact contains the searchable
+catalog, model detail routes, benchmark evidence, documentation links, `CNAME`, and brand icons.
 
 Official references:
 
@@ -216,18 +213,19 @@ Important gaps:
 - Split GGUF files are not resolved as a file set.
 - MoE expert routing, MLA, diffusion decoding, hybrid attention, and
   multimodal projectors are not implemented.
-- Models beyond the validated dense 7B range can be cataloged by ModelJars now,
-  but pure-Java execution requires both runtime feature support and real
-  reference tests.
+- Models beyond the validated dense 7B range can be researched in the internal
+  candidate queue, but they do not receive public routes or published markers
+  until a Models backend passes exact-artifact tests and production
+  qualification.
 
 Support levels used in the model table:
 
 | Level | Meaning |
 |---|---|
-| `catalog-ready` | ModelJars can publish marker metadata now. This does not mean pure-Java execution works. |
-| `external-runner` | A local runtime such as llama.cpp, Ollama, LM Studio, or vLLM can run it; ModelJars can point to that runner. |
-| `near pure-java` | Same broad architecture family as the current backend, but needs targeted validation or small feature work. |
+| `catalog-ready` | Metadata is complete enough for the internal candidate queue. It is not public or publishable yet. |
+| `near pure-java` | Same broad architecture family as the current Java backend, but needs targeted validation or small feature work. |
 | `requires runtime work` | Needs new tokenizer, quantization, architecture, MoE, multimodal, or decoding support. |
+| `qualified` | One exact artifact passed Models compatibility tests and the controlled production policy; it may be published. |
 
 ## 3. Model Metadata ModelJars Should Track
 
@@ -283,7 +281,7 @@ runtime support.
 | IBM Granite Code 3B/8B/20B/34B | Local HF weights; some GGUF conversions exist | Catalog-ready | Requires runtime work | Confirm GGUF tensor layout, add Granite architecture/tokenizer support, add Apache-2-friendly markers. |
 | CodeLlama 7B/13B/34B Instruct | Many GGUF variants; older but stable baseline | Catalog-ready with Meta license metadata | Near pure-Java now that Llama SentencePiece is validated | Pin a license-compliant Q4_0/Q8_0 artifact, add strict reference tests, then add chat/FIM templates. |
 | Qwen3-Coder 30B-A3B Instruct GGUF | GGUF MoE coding model | Catalog-ready | Requires runtime work | Implement MoE/expert routing and any Qwen3-Coder-specific metadata; add K-quant support. |
-| Qwen3-Coder 480B-A35B or newer large MoE | Local quantization possible but heavy | Catalog-only unless external runner | Requires major runtime work | Treat as external-runner first; pure Java would require MoE, split files, memory planning, and performance work. |
+| Qwen3-Coder 480B-A35B or newer large MoE | Local quantization possible but heavy | Internal candidate only | Requires major runtime work | Models would require MoE, split files, memory planning, and substantial performance work before qualification. |
 | North Mini Code 1.0 | KDnuggets lists GGUF and Apache 2.0; 30B-A3B MoE | Catalog-ready after upstream verification | Requires runtime work | Add model metadata, MoE routing, tokenizer, and Qwen/DeepSeek compatibility investigation. |
 | Google Gemma 4 31B IT QAT Q4_0 GGUF | KDnuggets lists Q4_0 GGUF plus multimodal-related artifacts | Catalog-ready with license metadata | Requires runtime work | Add Gemma architecture and tokenizer; keep multimodal projector optional; validate QAT Q4_0 tensors. |
 | DiffusionGemma 26B A4B | KDnuggets describes local runner support via a special llama.cpp branch | Catalog-only for now | Not compatible | Requires diffusion-style generation rather than autoregressive decoding, plus MoE/hybrid support. |
@@ -344,10 +342,11 @@ Recommended fine-tuning catalog priority:
 
 ## 6. Recommended Execution Plan
 
-### Track A: Catalog more models immediately
+### Track A: Research and register candidates
 
-ModelJars can publish marker JARs before pure-Java execution is complete, as
-long as descriptors are honest about backend compatibility.
+ModelJars can record candidate descriptors before Models execution is complete.
+Those descriptors remain internal until one exact artifact passes runtime tests
+and production qualification.
 
 First catalog batch:
 
@@ -376,16 +375,16 @@ First catalog batch:
 13. MedGemma 4B IT Q4_K_M with gated-license metadata and
     `backends.pure-java=false` until Gemma 3 tests pass.
 
-Each marker should start with:
+Each candidate descriptor should start with conservative backend declarations:
 
 ```text
 backends.pure-java=false
-backends.llama-cpp=true
-backends.ollama=true where an Ollama model/library entry is verified
+backends.rust-ffm=false
 ```
 
-Then flip `pure-java` to true only after parser, tokenizer, forward pass, and
-reference generation tests pass.
+Set a Models backend to true only after parser, tokenizer, forward pass, and
+reference generation tests pass. Publication still requires the separate
+qualification record.
 
 ### Track B: Qwen2.5-Coder pure-Java support (completed foundation)
 
@@ -430,20 +429,23 @@ Priority:
 4. BigCode tokenizer and FIM behavior for StarCoder2.
 5. Gemma tokenizer.
 
-### Track E: External runner compatibility
+### Track E: Comparator evidence and ecosystem metadata
 
-For modern MoE or very large models, ModelJars should support external local
-runners before pure-Java execution.
+Ollama and llama.cpp are useful same-host comparators because they provide
+independent measurements for the exact GGUF bytes. They are not ModelJars
+runtime dependencies and do not make an otherwise unsupported candidate
+publishable.
 
-Add descriptor support for:
+Compatibility metadata may record that the same artifact also works with:
 
-- llama.cpp command templates;
-- Ollama model names and tags;
-- LM Studio local server metadata;
-- vLLM/TGI local OpenAI-compatible endpoint metadata.
+- llama.cpp;
+- Ollama;
+- LM Studio;
+- vLLM or TGI.
 
-This lets Java users resolve a model through ModelJars and run it locally from
-Java even when the pure-Java backend is not ready.
+That metadata is advisory. Public qualification always names a tested Models
+backend and binds the verdict to its artifact hash, Models commit, workload,
+environment, and evidence hash.
 
 ## 7. Source Links
 

@@ -25,10 +25,14 @@ verified against the same size and SHA-256 metadata as an external model.
 
 Model identity has one source of truth, `catalog/models.json`; controlled performance evidence has
 the independent versioned source `catalog/performance-profiles.json`. Gradle generates the aggregate
-classpath catalog, one publishable marker JAR per entry, Maven publications, and the website search
-catalog. The aggregate JAR embeds `META-INF/modeljars/catalog.json`; the static website extracts
-that resource instead of maintaining a model list in JavaScript. Adding a model does not require a
-new Gradle module or source folder.
+classpath candidate catalog and one marker build per entry. The aggregate JAR embeds
+`META-INF/modeljars/catalog.json`, so adding a candidate does not require a new Gradle module or
+source folder.
+
+The public site and publication plan use `catalog/qualifications.json` as a separate release
+boundary. They include only the qualified subset whose artifact SHA-256 and byte size exactly match
+the candidate catalog. Recording candidate metadata does not create a public model page or authorize
+publication.
 
 ## Dependency
 
@@ -72,7 +76,7 @@ individual marker are deduplicated by marker coordinate.
 
 ## Example markers
 
-The complete generated catalog is searchable at [modeljars.org](https://modeljars.org). A compact
+The production-qualified subset is searchable at [modeljars.org](https://modeljars.org). A compact
 Qwen marker is:
 
 ```text
@@ -182,20 +186,32 @@ byte[] payload = new ModelJarResourceLoader(
 ).readVerified(descriptor);
 ```
 
+## Qualification
+
+A public ModelJar represents one exact model artifact, not a claim about every conversion or
+quantization of the upstream model. Qualification pins the artifact and Models revision, runs
+parser/tokenizer/generation tests, executes a controlled RAG workload, and checks absolute quality
+and latency plus same-host performance against Ollama. llama.cpp is retained as a second independent
+comparator; neither comparator is a runtime dependency.
+
+The [qualification and submission guide](https://modeljars.org/contribute/) lists host
+prerequisites, the harness command, acceptance thresholds, evidence files, and pull request steps.
+“Not yet qualified” means the controlled run has not occurred; it is not a failed result.
+
 ## Catalog development
 
 ```bash
 ./gradlew test verifyCatalog verifyRemoteCatalogMetadata
-./gradlew generateSite generatePublicSite
+./gradlew generateSite
 npm ci
 npm test
 npm run catalog:enrich
 ```
 
-The full site for local review is written to `build/site`; the temporary metadata-free GitHub Pages
-placeholder is written to `build/public-site`. Individual marker JARs are written under
-`modeljars-catalog/build/libs/markers`. Classpath payloads are fetched from their pinned source
-revision during the build and must pass size, digest, format, vocabulary, and uniqueness checks.
+The generated GitHub Pages site is written to `build/site`. Individual marker JARs are written
+under `modeljars-catalog/build/libs/markers`. Classpath payloads are fetched from their pinned
+source revision during the build and must pass size, digest, format, vocabulary, and uniqueness
+checks.
 
 `npm run catalog:enrich -- --write` uses Hugging Face's official range-aware GGUF parser to update
 dimensions from each exact revision-pinned artifact without downloading its tensors. The same

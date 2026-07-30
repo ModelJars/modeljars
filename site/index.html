@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Explore qualified models | ModelJARs.org</title>
+    <title>Find qualified models | ModelJARs.org</title>
     <meta
       name="description"
-      content="Search versioned, verified model markers for JVM applications.">
+      content="ModelJARs are versioned JAR files that make AI models available to the Models JVM inference library.">
     <meta name="theme-color" content="#ffffff">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -29,6 +29,7 @@
         <nav class="nav" aria-label="Primary">
           <a class="active" href="/">Models</a>
           <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
           <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
           <a class="nav-secondary" href="/contribute/">Contribute</a>
           <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
@@ -45,11 +46,13 @@
         <div class="catalog-heading">
           <div>
             <p class="eyebrow">Community model registry</p>
-            <h1 id="catalog-title">Explore qualified models</h1>
+            <h1 id="catalog-title">Find qualified models</h1>
             <p class="lede">
-              Versioned model artifacts for
-              <a href="https://integrallis.github.io/models/">Integrallis' Models JVM inference library</a>,
-              with immutable metadata and measured runtime support.
+              Discover the power of small and medium-sized models for local, in-JVM inference.
+              ModelJARs are versioned JAR files that make AI models available to the
+              <a href="https://integrallis.github.io/models/">Models JVM inference library</a>.
+              Think of WebJars, but for AI models: standard dependency coordinates,
+              immutable metadata, and measured runtime support.
             </p>
           </div>
           <div class="catalog-stats" aria-label="Catalog statistics">
@@ -59,21 +62,6 @@
             <span><strong id="publisher-total">0</strong> publishers</span>
           </div>
         </div>
-
-        <aside class="apple-runtime-notice" aria-label="Apple Foundation Models runtime">
-          <div>
-            <span class="eyebrow">Apple on-device inference</span>
-            <strong>Apple's system model is also available through Models</strong>
-            <p>
-              On supported Apple Silicon Macs, <code>backend-apple</code> calls
-              <code>SystemLanguageModel</code> in-process. Apple manages the weights, so no
-              ModelJar download is required.
-            </p>
-          </div>
-          <a href="https://integrallis.github.io/models/docs/models/current/apple-foundation-models.html">
-            Use Apple Foundation Models <span aria-hidden="true">&rarr;</span>
-          </a>
-        </aside>
 
         <form class="discovery" role="search" onsubmit="return false">
           <label class="search-field" for="catalog-search">
@@ -192,34 +180,6 @@ try (var model = ModelJars.open(selected)) {
         </div>
       </section>
 
-      <section class="apple-runtime-band" aria-labelledby="apple-runtime-title">
-        <div class="apple-runtime-inner">
-          <div class="apple-runtime-copy">
-            <p class="eyebrow">Apple on-device inference</p>
-            <h2 id="apple-runtime-title">Use Apple Foundation Models from Java</h2>
-            <p>
-              Integrallis Models can call the Apple Intelligence system model directly from a
-              Java 25 process through FFM and a small Swift bridge. Apple manages the model and its
-              updates, so it is a Models runtime option rather than a downloadable ModelJar
-              artifact. The client implements Models' shared text-generation contract and can be
-              passed directly to its LangChain4J and Spring AI adapters.
-            </p>
-            <a class="secondary-button" href="https://integrallis.github.io/models/docs/models/current/apple-foundation-models.html">
-              Apple backend guide
-            </a>
-          </div>
-          <div class="apple-runtime-code">
-            <pre><code>implementation("com.integrallis:backend-apple:0.1.0")
-
-try (var client = AppleFoundationModels.create()) {
-  var status = client.availability();
-  if (status.available()) {
-    var answer = client.generate("Summarize this locally.").text();
-  }
-}</code></pre>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer class="site-footer">
@@ -233,6 +193,7 @@ try (var client = AppleFoundationModels.create()) {
         </span>
         <div>
           <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
           <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
           <a href="https://github.com/ModelJars/modeljars">GitHub</a>
           <a href="/contribute/">Contribute</a>

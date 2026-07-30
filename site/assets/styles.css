@@ -102,7 +102,6 @@ pre {
 .header-inner,
 .catalog-shell,
 .guide-inner,
-.apple-runtime-inner,
 .footer-inner,
 .detail-shell,
 .benchmark-shell,
@@ -122,6 +121,7 @@ pre {
 .brand,
 .footer-brand {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 10px;
   color: var(--text);
@@ -135,6 +135,7 @@ pre {
 
 .nav {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 22px;
   font-size: 0.9rem;
@@ -234,54 +235,6 @@ p {
 .catalog-stats strong {
   color: var(--text);
   font-size: 1.18rem;
-}
-
-.apple-runtime-notice {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 32px;
-  margin: 0 0 22px;
-  padding: 15px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.apple-runtime-notice > div {
-  min-width: 0;
-}
-
-.apple-runtime-notice .eyebrow {
-  display: block;
-  margin-bottom: 3px;
-}
-
-.apple-runtime-notice strong {
-  display: block;
-  font-size: 0.95rem;
-}
-
-.apple-runtime-notice p {
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-
-.apple-runtime-notice code {
-  color: var(--text);
-}
-
-.apple-runtime-notice > a {
-  flex: 0 0 auto;
-  color: var(--accent-strong);
-  font-size: 0.84rem;
-  font-weight: 700;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.apple-runtime-notice > a:hover {
-  text-decoration: underline;
 }
 
 .discovery {
@@ -480,6 +433,7 @@ select {
 }
 
 .catalog-entry {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(300px, 1fr) 360px 210px;
   gap: 28px;
@@ -494,6 +448,52 @@ select {
 
 .catalog-entry:hover {
   background: color-mix(in srgb, var(--surface) 65%, transparent);
+}
+
+.entry-copy-actions {
+  position: absolute;
+  top: 14px;
+  right: 4px;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.dependency-copy-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.dependency-copy-button:hover {
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.dependency-copy-button img {
+  display: block;
+  opacity: 0.72;
+}
+
+[data-theme="dark"] .dependency-copy-button img {
+  filter: invert(1);
+}
+
+.dependency-copy-button.copied {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: var(--accent-soft);
+}
+
+.dependency-copy-button.copy-failed {
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--line));
+  background: var(--amber-soft);
 }
 
 .entry-main,
@@ -705,47 +705,6 @@ select {
   margin: -48px 0 0;
   color: var(--muted);
   font-size: 0.76rem;
-}
-
-.apple-runtime-band {
-  border-top: 1px solid var(--line);
-  background: var(--surface-subtle);
-}
-
-.apple-runtime-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(420px, 1.15fr);
-  align-items: center;
-  gap: 64px;
-  padding: 52px 0;
-}
-
-.apple-runtime-copy h2 {
-  margin: 0;
-  font-size: 1.55rem;
-  letter-spacing: 0;
-}
-
-.apple-runtime-copy > p:not(.eyebrow) {
-  margin: 12px 0 22px;
-  color: var(--muted);
-}
-
-.apple-runtime-code {
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--code-bg);
-}
-
-.apple-runtime-code pre {
-  margin: 0;
-  padding: 18px 20px;
-  overflow: auto;
-  color: var(--code-text);
-  font-size: 0.76rem;
-  line-height: 1.65;
 }
 
 .site-footer {
@@ -1267,6 +1226,63 @@ select {
   max-width: 760px;
 }
 
+.apple-heading {
+  max-width: 900px;
+}
+
+.apple-title-lockup {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.apple-title-lockup > div {
+  min-width: 0;
+}
+
+.apple-brand-mark {
+  display: block;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+}
+
+[data-theme="dark"] .apple-brand-mark {
+  filter: invert(1);
+}
+
+.apple-runtime-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 30px 0 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.apple-runtime-facts div {
+  min-width: 0;
+  padding: 16px 20px;
+  border-left: 1px solid var(--line);
+}
+
+.apple-runtime-facts div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.apple-runtime-facts dt {
+  color: var(--faint);
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.apple-runtime-facts dd {
+  margin: 4px 0 0;
+  font-size: 0.86rem;
+  font-weight: 680;
+}
+
 .documentation-section {
   max-width: 900px;
   padding: 34px 0;
@@ -1313,6 +1329,57 @@ select {
   border-left: 4px solid var(--amber);
   background: var(--amber-soft);
   color: var(--text) !important;
+}
+
+.apple-code-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.7fr) minmax(0, 1.3fr);
+  gap: 28px;
+  margin-bottom: 24px;
+}
+
+.apple-code-grid article {
+  min-width: 0;
+}
+
+.apple-code-grid article + article {
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+}
+
+.apple-code-grid h3 {
+  margin: 7px 0 12px;
+  font-size: 0.95rem;
+}
+
+.apple-code-grid pre {
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-size: 0.74rem;
+  line-height: 1.65;
+}
+
+.apple-code-grid code {
+  display: block;
+  min-width: max-content;
+  padding: 18px 20px;
+}
+
+.apple-code-grid article:first-child code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.apple-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .workflow-list,
@@ -1667,11 +1734,6 @@ select {
     gap: 30px;
   }
 
-  .apple-runtime-inner {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-
   .guide-runtime-note {
     grid-column: auto;
     margin: 0;
@@ -1682,7 +1744,6 @@ select {
   .header-inner,
   .catalog-shell,
   .guide-inner,
-  .apple-runtime-inner,
   .footer-inner,
   .detail-shell,
   .benchmark-shell,
@@ -1691,7 +1752,6 @@ select {
   }
 
   .catalog-heading,
-  .apple-runtime-notice,
   .section-heading,
   .footer-inner {
     align-items: flex-start;
@@ -1715,6 +1775,16 @@ select {
 
   .guide-steps {
     grid-template-columns: 1fr;
+  }
+
+  .apple-code-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .apple-code-grid article + article {
+    padding: 22px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
   }
 
   .guide-steps article + article {
@@ -1768,6 +1838,10 @@ select {
     gap: 12px;
   }
 
+  .brand span {
+    display: none;
+  }
+
   .nav .nav-secondary {
     display: none;
   }
@@ -1789,6 +1863,32 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     white-space: normal;
+  }
+
+  .apple-title-lockup {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .apple-brand-mark {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+  }
+
+  .apple-runtime-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .apple-runtime-facts div,
+  .apple-runtime-facts div:first-child {
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .apple-runtime-facts div:first-child {
+    border-top: 0;
   }
 
   .filter-row,
@@ -1823,6 +1923,10 @@ select {
     gap: 18px;
   }
 
+  .entry-main {
+    padding-right: 68px;
+  }
+
   .entry-facts,
   .dimension-grid {
     grid-template-columns: 1fr;
@@ -1855,5 +1959,16 @@ select {
   .definition-list div {
     grid-template-columns: 1fr;
     gap: 5px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-inner {
+    gap: 12px;
+  }
+
+  .nav {
+    gap: 8px;
+    font-size: 0.82rem;
   }
 }

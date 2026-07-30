@@ -1,4 +1,6 @@
 import { formatDuration } from "./benchmark-data.js";
+import { renderDependencyCopyActions } from "./catalog-entry-actions.js";
+import { copyDependencySnippet } from "./dependency-snippets.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { primaryQualification } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
@@ -73,6 +75,7 @@ function renderEntry(model) {
 
   return `
     <article class="catalog-entry">
+      ${renderDependencyCopyActions(model)}
       <div class="entry-main">
         <div class="entry-title-row">
           <div>
@@ -202,10 +205,32 @@ function bindControls() {
     elements.filterToggle.setAttribute("aria-expanded", String(open));
   });
 
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", async (event) => {
+    const copyButton = event.target.closest("[data-build-tool][data-coordinate]");
     const domainButton = event.target.closest("[data-domain]");
     const searchButton = event.target.closest("[data-search]");
-    if (domainButton) {
+    if (copyButton) {
+      const originalLabel = copyButton.getAttribute("aria-label");
+      const originalTitle = copyButton.title;
+      try {
+        await copyDependencySnippet(
+          copyButton.dataset.buildTool,
+          copyButton.dataset.coordinate,
+        );
+        copyButton.classList.add("copied");
+        copyButton.setAttribute("aria-label", `${originalTitle} copied`);
+        copyButton.title = "Copied";
+      } catch {
+        copyButton.classList.add("copy-failed");
+        copyButton.setAttribute("aria-label", `${originalTitle} failed`);
+        copyButton.title = "Copy failed";
+      }
+      setTimeout(() => {
+        copyButton.classList.remove("copied", "copy-failed");
+        copyButton.setAttribute("aria-label", originalLabel);
+        copyButton.title = originalTitle;
+      }, 1_200);
+    } else if (domainButton) {
       state.domain = domainButton.dataset.domain;
       render();
     } else if (searchButton) {

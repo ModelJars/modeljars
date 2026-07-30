@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Apple Foundation Models from Java | ModelJARs.org</title>
+    <meta
+      name="description"
+      content="Use Apple's on-device system language model from Java 25 through the Integrallis Models Apple backend.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/static-page.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJARs.org</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Models</a>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a class="active" href="/apple/">Apple</a>
+          <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a class="nav-secondary" href="/contribute/">Contribute</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="documentation-shell apple-page">
+      <header class="documentation-heading apple-heading">
+        <div class="apple-title-lockup">
+          <img class="apple-brand-mark" src="/assets/apple.svg" alt="Apple" width="64" height="64">
+          <div>
+            <p class="eyebrow">On-device system model</p>
+            <h1>Apple Foundation Models from Java</h1>
+          </div>
+        </div>
+        <p class="lede">
+          Use Apple's OS-managed <code>SystemLanguageModel</code> directly inside a Java 25
+          application through the
+          <a href="https://integrallis.github.io/models/">Models JVM inference library</a>.
+          Prompts and responses stay on the Mac.
+        </p>
+        <dl class="apple-runtime-facts">
+          <div>
+            <dt>Runtime</dt>
+            <dd>In-process Java FFM</dd>
+          </div>
+          <div>
+            <dt>Model weights</dt>
+            <dd>Managed by macOS</dd>
+          </div>
+          <div>
+            <dt>Artifact download</dt>
+            <dd>None</dd>
+          </div>
+        </dl>
+      </header>
+
+      <section class="documentation-section" aria-labelledby="different-runtime-title">
+        <h2 id="different-runtime-title">A different local runtime</h2>
+        <p>
+          Apple Foundation Models is not a downloadable ModelJAR. Apple supplies and updates the
+          private model weights with the operating system. Models connects Java to Apple's
+          Foundation Models framework through the final FFM API and a small Models-owned Swift
+          binary.
+        </p>
+        <p>
+          This OS-managed runtime has its own page so it does not interfere with the searchable
+          catalog of versioned model artifacts. It still implements Models'
+          <code>TextGenerationModel</code> contract, including the LangChain4J and Spring AI
+          adapters.
+        </p>
+      </section>
+
+      <section class="documentation-section apple-setup" aria-labelledby="apple-setup-title">
+        <h2 id="apple-setup-title">Run it from Java</h2>
+        <div class="apple-code-grid">
+          <article>
+            <span class="step-number">01</span>
+            <h3>Add the Apple backend</h3>
+            <pre><code>dependencies {
+  implementation("com.integrallis:backend-apple:0.2.0")
+}</code></pre>
+          </article>
+          <article>
+            <span class="step-number">02</span>
+            <h3>Check availability and generate</h3>
+            <pre><code>import com.integrallis.models.backend.apple.AppleFoundationModels;
+
+try (var client = AppleFoundationModels.create()) {
+  var status = client.availability();
+  if (!status.available()) {
+    throw new IllegalStateException(status.reason());
+  }
+
+  var answer = client.generate(
+      "Summarize this locally.").text();
+}</code></pre>
+          </article>
+        </div>
+        <p class="callout">
+          Launch with <code>--enable-native-access=ALL-UNNAMED</code>. Always check
+          <code>availability()</code>; hardware support, Apple Intelligence settings, and model
+          readiness can differ by machine and user.
+        </p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="apple-requirements-title">
+        <h2 id="apple-requirements-title">Requirements</h2>
+        <dl class="definition-list">
+          <div>
+            <dt>Hardware</dt>
+            <dd>A supported Apple Silicon Mac.</dd>
+          </div>
+          <div>
+            <dt>Operating system</dt>
+            <dd>Apple Intelligence must be available, enabled, and ready for the current user.</dd>
+          </div>
+          <div>
+            <dt>Java</dt>
+            <dd>Java 25 with native access enabled for the application.</dd>
+          </div>
+        </dl>
+        <div class="apple-actions">
+          <a class="primary-button" href="https://integrallis.github.io/models/docs/models/current/apple-foundation-models.html">
+            Read the Apple backend guide
+          </a>
+          <a class="secondary-button" href="https://developer.apple.com/documentation/foundationmodels/systemlanguagemodel">
+            Apple API documentation
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
+        <div>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/getting-started.html">Docs</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="/contribute/">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

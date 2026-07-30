@@ -19,14 +19,20 @@ test("ships the shared ModelJars icon set", async () => {
   ];
 
   await Promise.all(requiredIcons.map((icon) => access(path.join(iconsDirectory, icon))));
+  await Promise.all(
+    ["apachemaven.svg", "gradle.svg"].map((icon) =>
+      access(path.join(repositoryRoot, "site/assets", icon)),
+    ),
+  );
 });
 
 test("uses the shared logo in repository and website branding", async () => {
-  const [readme, index, modelDetail, benchmarks, manifestSource] = await Promise.all([
+  const [readme, index, modelDetail, benchmarks, apple, manifestSource] = await Promise.all([
     readFile(path.join(repositoryRoot, "README.md"), "utf8"),
     readFile(path.join(repositoryRoot, "site/index.html"), "utf8"),
     readFile(path.join(repositoryRoot, "site/model.html"), "utf8"),
     readFile(path.join(repositoryRoot, "site/benchmarks/index.html"), "utf8"),
+    readFile(path.join(repositoryRoot, "site/apple/index.html"), "utf8"),
     readFile(path.join(iconsDirectory, "site.webmanifest"), "utf8"),
   ]);
   const manifest = JSON.parse(manifestSource);
@@ -41,6 +47,8 @@ test("uses the shared logo in repository and website branding", async () => {
   assert.match(index, /href="\/benchmarks\/"/);
   assert.match(modelDetail, /href="\/benchmarks\/"/);
   assert.match(benchmarks, /src="\/assets\/benchmarks\.js"/);
+  assert.match(apple, /src="\/assets\/apple\.svg"/);
+  await access(path.join(repositoryRoot, "site/assets/apple.svg"));
   assert.match(benchmarks, /id="inference-table-body"/);
   assert.match(benchmarks, /id="rag-table-body"/);
   assert.match(index, /rel="manifest" href="\/site\.webmanifest"/);

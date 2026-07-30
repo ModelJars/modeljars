@@ -1,4 +1,5 @@
 import { formatDuration } from "./benchmark-data.js";
+import { gradleSnippet, mavenSnippet } from "./dependency-snippets.js";
 import { primaryQualification, qualificationLabel } from "./qualification-data.js";
 import { estimateMemory, formatBytes, formatParameters } from "./resource-profile.js";
 import { relatedModels, sizeTier, verificationProfile } from "./taxonomy.js";
@@ -9,33 +10,7 @@ export function modelIdFromPath(pathname) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function coordinateParts(coordinate) {
-  const parts = String(coordinate || "").split(":");
-  if (parts.length !== 3 || parts.some((part) => !part)) {
-    throw new Error(`Invalid Maven coordinate: ${coordinate}`);
-  }
-  return parts;
-}
-
-export function gradleSnippet(coordinate) {
-  coordinateParts(coordinate);
-  return `implementation("org.modeljars:modeljars:0.1.0")
-implementation("${coordinate}")`;
-}
-
-export function mavenSnippet(coordinate) {
-  const [groupId, artifactId, version] = coordinateParts(coordinate);
-  return `<dependency>
-  <groupId>org.modeljars</groupId>
-  <artifactId>modeljars</artifactId>
-  <version>0.1.0</version>
-</dependency>
-<dependency>
-  <groupId>${groupId}</groupId>
-  <artifactId>${artifactId}</artifactId>
-  <version>${version}</version>
-</dependency>`;
-}
+export { gradleSnippet, mavenSnippet };
 
 function referenceClassName(modelId) {
   return String(modelId)

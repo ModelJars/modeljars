@@ -94,6 +94,8 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
   assert.match(index, /org\.modeljars:modeljars:0\.1\.0/);
+  assert.match(index, /Add the JVM runtime and the model/);
+  assert.doesNotMatch(index, /\bfacade\b/i);
   assert.match(index, /Qwen3_0_6b_Q4_0\.MODEL/);
   assert.match(index, /ModelJars\.open/);
   assert.doesNotMatch(index, /ModelJarInstaller|PureJavaBackend\.load|RustFfmBackend\.load/);
@@ -114,11 +116,14 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(contribution, /Relative to llama\.cpp/);
 
   assert.match(detailScript, /model-mark-logo/);
+  assert.doesNotMatch(detailScript, /\bfacade\b/i);
   assert.doesNotMatch(detailScript, /model\.name\.charAt/);
   assert.match(detailScript, /Also compatible with/);
   assert.doesNotMatch(detailScript, /<h2>Available in<\/h2>/);
 
   assert.match(readme, /qualified subset/i);
+  assert.match(readme, /JVM runtime/);
+  assert.doesNotMatch(readme, /\bfacade\b/i);
   assert.doesNotMatch(readme, /complete generated catalog is searchable/i);
   assert.match(operations, /internal candidate queue/i);
   assert.doesNotMatch(operations, /external-runner/);

@@ -1564,7 +1564,7 @@ project(":modeljars-core") {
 }
 
 project(":modeljars") {
-    description = "Application-facing ModelJars dependency facade"
+    description = "Application-facing ModelJars JVM Runtime"
 
     java {
         toolchain {
@@ -1581,13 +1581,13 @@ project(":modeljars") {
     }
 }
 
-val facadePom =
+val jvmRuntimePom =
     project(":modeljars").layout.buildDirectory.file("publications/maven/pom-default.xml")
-val facadePublicationVersion = version.toString()
-val verifyFacadePublication =
-    tasks.register("verifyFacadePublication") {
+val jvmRuntimePublicationVersion = version.toString()
+val verifyJvmRuntimePublication =
+    tasks.register("verifyJvmRuntimePublication") {
         dependsOn(":modeljars:generatePomFileForMavenPublication")
-        inputs.file(facadePom)
+        inputs.file(jvmRuntimePom)
 
         doLast {
             val documentBuilderFactory = DocumentBuilderFactory.newInstance()
@@ -1598,26 +1598,26 @@ val verifyFacadePublication =
             val document =
                 documentBuilderFactory
                     .newDocumentBuilder()
-                    .parse(facadePom.get().asFile)
+                    .parse(jvmRuntimePom.get().asFile)
 
             fun Element.childText(tagName: String): String =
                 getElementsByTagName(tagName).item(0)?.textContent
-                    ?: error("Missing <$tagName> in facade publication POM")
+                    ?: error("Missing <$tagName> in JVM Runtime publication POM")
 
             val projectElement = document.documentElement
             require(projectElement.childText("groupId") == "org.modeljars") {
-                "Facade groupId must be org.modeljars"
+                "JVM Runtime groupId must be org.modeljars"
             }
             require(projectElement.childText("artifactId") == "modeljars") {
-                "Facade artifactId must be modeljars"
+                "JVM Runtime artifactId must be modeljars"
             }
-            require(projectElement.childText("version") == facadePublicationVersion) {
-                "Facade version must match the project version"
+            require(projectElement.childText("version") == jvmRuntimePublicationVersion) {
+                "JVM Runtime version must match the project version"
             }
 
             val dependencies = document.getElementsByTagName("dependency")
             require(dependencies.length == 4) {
-                "Facade must publish ModelJars Core, Models, and both execution backends"
+                "JVM Runtime must publish ModelJars Core, Models, and both execution backends"
             }
 
             fun dependency(artifactId: String): Element =
@@ -1627,46 +1627,46 @@ val verifyFacadePublication =
 
             val coreDependency = dependency("modeljars-core")
             require(coreDependency.childText("groupId") == "org.modeljars") {
-                "Facade dependency groupId must be org.modeljars"
+                "JVM Runtime dependency groupId must be org.modeljars"
             }
-            require(coreDependency.childText("version") == facadePublicationVersion) {
-                "Facade and modeljars-core versions must match"
+            require(coreDependency.childText("version") == jvmRuntimePublicationVersion) {
+                "JVM Runtime and modeljars-core versions must match"
             }
             require(coreDependency.childText("scope") == "compile") {
-                "Facade must expose modeljars-core in Maven compile scope"
+                "JVM Runtime must expose modeljars-core in Maven compile scope"
             }
 
             val modelsDependency = dependency("models")
             require(modelsDependency.childText("groupId") == "com.integrallis") {
-                "Facade must expose the Models runtime"
+                "JVM Runtime must expose the Models library"
             }
             require(modelsDependency.childText("version") == modelsVersion) {
-                "Facade must use the configured Models version"
+                "JVM Runtime must use the configured Models version"
             }
             require(modelsDependency.childText("scope") == "compile") {
-                "Facade must expose Models in Maven compile scope"
+                "JVM Runtime must expose Models in Maven compile scope"
             }
 
             val javaBackendDependency = dependency("backend-java")
             require(javaBackendDependency.childText("groupId") == "com.integrallis") {
-                "Facade Java backend must come from the Models project"
+                "JVM Runtime Java backend must come from the Models project"
             }
             require(javaBackendDependency.childText("version") == modelsVersion) {
-                "Facade Java backend and Models versions must match"
+                "JVM Runtime Java backend and Models versions must match"
             }
             require(javaBackendDependency.childText("scope") == "compile") {
-                "Facade must expose the Java backend in Maven compile scope"
+                "JVM Runtime must expose the Java backend in Maven compile scope"
             }
 
             val nativeBackendDependency = dependency("backend-native")
             require(nativeBackendDependency.childText("groupId") == "com.integrallis") {
-                "Facade native backend must come from the Models project"
+                "JVM Runtime native backend must come from the Models project"
             }
             require(nativeBackendDependency.childText("version") == modelsVersion) {
-                "Facade native backend and Models versions must match"
+                "JVM Runtime native backend and Models versions must match"
             }
             require(nativeBackendDependency.childText("scope") == "compile") {
-                "Facade must expose the native backend in Maven compile scope"
+                "JVM Runtime must expose the native backend in Maven compile scope"
             }
         }
     }
@@ -1675,7 +1675,7 @@ val publishGitHubPackagesPreview =
     tasks.register("publishGitHubPackagesPreview") {
         group = "publishing"
         description =
-            "Publish the facade, core, and aggregate catalog for invited GitHub Packages testing"
+            "Publish the JVM Runtime, core, and aggregate catalog for invited GitHub Packages testing"
         dependsOn(
             ":modeljars-core:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",
@@ -2681,7 +2681,7 @@ val verifyLaunchQualifications =
 
 tasks.named("check") {
     dependsOn("verifyCatalog")
-    dependsOn(verifyFacadePublication)
+    dependsOn(verifyJvmRuntimePublication)
     dependsOn(verifyMarkerPublicationIndependence)
 }
 

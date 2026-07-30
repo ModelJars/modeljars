@@ -9,13 +9,13 @@ import org.modeljars.ModelRagQualification;
 import org.modeljars.ModelRagQualificationRegistry;
 import org.modeljars.ModelVersion;
 
-public final class FacadeConsumer {
-  private FacadeConsumer() {}
+public final class JvmRuntimeConsumer {
+  private JvmRuntimeConsumer() {}
 
   public static void main(String[] args) {
     String parsedVersion = ModelVersion.parse("1.2.3").toString();
     if (!"1.2.3".equals(parsedVersion)) {
-      throw new IllegalStateException("Facade did not expose the ModelJars API");
+      throw new IllegalStateException("JVM Runtime did not expose the ModelJars API");
     }
 
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
@@ -54,16 +54,17 @@ public final class FacadeConsumer {
     }
 
     if (SamplingOptions.builder().maxTokens(8).build().maxTokens() != 8) {
-      throw new IllegalStateException("Facade did not expose the Models API");
+      throw new IllegalStateException("JVM Runtime did not expose the Models API");
     }
 
     try {
       Class.forName(
           "com.integrallis.models.backend.nativekernel.RustFfmBackend",
           false,
-          FacadeConsumer.class.getClassLoader());
+          JvmRuntimeConsumer.class.getClassLoader());
     } catch (ClassNotFoundException exception) {
-      throw new IllegalStateException("Facade did not provide the native Models backend", exception);
+      throw new IllegalStateException(
+          "JVM Runtime did not provide the native Models backend", exception);
     }
   }
 }

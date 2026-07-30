@@ -27,7 +27,7 @@ no model list in the website code. The build generates:
 1. one self-describing marker JAR per catalog entry;
 2. `modeljars-catalog.jar` with the aggregate registry and `catalog.json`;
 3. the generated website `catalog.json` extracted from that aggregate JAR; and
-4. Maven publications for the facade, core, aggregate catalog, and markers.
+4. Maven publications for the JVM Runtime, core, aggregate catalog, and markers.
 
 An individual marker embeds `META-INF/modeljars/registry.properties`,
 `META-INF/modeljars/model.json`, its performance and qualification resources, and one uniquely
@@ -41,7 +41,7 @@ List<ModelJarDescriptor> models =
     ModelJarRegistry.fromClasspath().descriptors();
 ```
 
-The Java 25 `org.modeljars:modeljars` facade brings the registry API, Models runtime, and both
+The Java 25 `org.modeljars:modeljars` JVM Runtime brings the registry API, Models library, and both
 execution backends. It does not bring the aggregate catalog. Applications add selected marker JARs
 in compile scope; each marker is both the model-version declaration and the source of the generated
 reference used by `ModelJars.open`.
@@ -78,7 +78,7 @@ CI applies independent checks:
 4. Build every marker JAR and verify its properties and JSON resources.
 5. Build the aggregate JAR, extract its catalog into the static site, and run browser-module tests.
 6. Resolve at least 100 distinct sources through the Java classpath registry and smoke-test the
-   published facade POM.
+   published JVM Runtime POM.
 
 The marker's `pure-java=true` claim has a stronger gate in `projects/models`: the exact artifact must
 be downloaded, checksum-verified, tokenized against an independent runtime, and run against a

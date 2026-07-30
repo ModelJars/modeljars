@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Small facade for resolving a model descriptor to a local model file path. */
+/** Resolves a model descriptor to a local model file path. */
 public final class ModelJarLocator {
   private final ModelJarRegistry registry;
 

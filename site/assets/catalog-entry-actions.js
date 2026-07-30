@@ -22,7 +22,12 @@ export function renderDependencyCopyActions(model) {
       data-coordinate="${escapedCoordinate}"
       aria-label="Copy Maven dependency for ${name}"
       title="Copy Maven dependency">
-      <img src="/assets/apachemaven.svg" alt="" width="18" height="18">
+      <img
+        class="dependency-tool-icon dependency-tool-icon-maven"
+        src="/assets/apachemaven.svg"
+        alt=""
+        width="20"
+        height="20">
     </button>
     <button
       class="dependency-copy-button"
@@ -31,7 +36,12 @@ export function renderDependencyCopyActions(model) {
       data-coordinate="${escapedCoordinate}"
       aria-label="Copy Gradle dependency for ${name}"
       title="Copy Gradle dependency">
-      <img src="/assets/gradle.svg" alt="" width="18" height="18">
+      <img
+        class="dependency-tool-icon dependency-tool-icon-gradle"
+        src="/assets/gradle.svg"
+        alt=""
+        width="18"
+        height="18">
     </button>
   </div>`;
 }

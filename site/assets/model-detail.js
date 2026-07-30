@@ -269,7 +269,7 @@ function renderModel(model, catalog) {
           <p class="eyebrow">JVM dependency</p>
           <h2 id="install-title">Install this model</h2>
           <p>
-            Add the ModelJars JVM runtime and this model to the application. The runtime brings
+            Add the ModelJars JVM Runtime and this model to the application. The runtime brings
             the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a>
             and its execution backends. The model JAR provides the generated Java reference, pinned
             model location, checksum, and qualification metadata; weights are downloaded to the

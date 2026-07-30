@@ -8,7 +8,7 @@ org.modeljars:modeljars-core:<preview-version>
 org.modeljars:modeljars-catalog:<preview-version>
 ```
 
-The facade is the intended Java 25 application dependency. It brings in the core
+The JVM Runtime is the intended Java 25 application dependency. It brings in the core
 API, Models 0.1.0, and its native and Java execution paths. Add the independently
 published marker for every model used by the application:
 
@@ -28,7 +28,7 @@ Each workflow run creates an immutable version such as:
 The invitation provides the exact versions. The aggregate preview workflow does
 not publish individual marker coordinates. The model-artifact workflow publishes
 those immutable coordinates independently. `modeljars-catalog` remains available
-for catalog tooling but is not a transitive facade dependency.
+for catalog tooling but is not a transitive JVM Runtime dependency.
 
 `com.integrallis:models` and its Vectors dependencies remain separately
 maintained Integrallis libraries and resolve from Maven Central. ModelJars
@@ -114,7 +114,7 @@ Put credentials in the user-level Maven configuration:
 ```
 
 Export the two values in the shell or CI secret store, then add the repository
-and facade dependency:
+and JVM Runtime dependency:
 
 ```xml
 <repositories>
@@ -135,7 +135,7 @@ and facade dependency:
 
 ## Verify retained artifacts
 
-The publishing workflow retains the exact facade, core, and catalog JARs and
+The publishing workflow retains the exact JVM Runtime, core, and catalog JARs and
 creates GitHub build attestations for them. After downloading a retained JAR:
 
 ```bash

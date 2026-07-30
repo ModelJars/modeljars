@@ -14,7 +14,7 @@ test("publishes an immutable aggregate-only private preview", async () => {
   const [build, workflow, consumerSettings] = await Promise.all([
     read("build.gradle.kts"),
     read(".github/workflows/publish.yml"),
-    read("smoke-tests/facade-consumer/settings.gradle.kts"),
+    read("smoke-tests/jvm-runtime-consumer/settings.gradle.kts"),
   ]);
 
   assert.match(build, /name = "GitHubPackages"/);
@@ -53,7 +53,7 @@ test("publishes an immutable aggregate-only private preview", async () => {
   assert.match(workflow, /publishGitHubPackagesPreview/);
   assert.match(workflow, /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/);
   assert.match(workflow, /Consume published preview/);
-  assert.match(workflow, /-p smoke-tests\/facade-consumer[\s\S]*?run/);
+  assert.match(workflow, /-p smoke-tests\/jvm-runtime-consumer[\s\S]*?run/);
   assert.match(
     workflow,
     /-PmodeljarsVersion=\$\{\{ steps\.version\.outputs\.value \}\}/,

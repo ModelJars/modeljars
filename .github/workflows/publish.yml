@@ -155,7 +155,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           ./gradlew --no-daemon
-          -p smoke-tests/facade-consumer
+          -p smoke-tests/jvm-runtime-consumer
           run
           --refresh-dependencies
           "-PmodeljarsVersion=${{ steps.version.outputs.value }}"

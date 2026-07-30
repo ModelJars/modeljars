@@ -35,20 +35,22 @@ test("publishes only artifacts that passed production qualification", async () =
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {
-  const [index, model, benchmarks, contribution, detailScript, readme, operations] =
+  const [index, model, benchmarks, apple, contribution, detailScript, readme, operations] =
     await Promise.all([
     read("site/index.html"),
     read("site/model.html"),
     read("site/benchmarks/index.html"),
+    read("site/apple/index.html"),
     read("site/contribute/index.html"),
     read("site/assets/model-detail.js"),
     read("README.md"),
     read("docs/modeljars-operations-and-model-candidates.md"),
   ]);
-  const pages = [index, model, benchmarks, contribution];
+  const pages = [index, model, benchmarks, apple, contribution];
 
   for (const page of pages) {
     assert.match(page, /ModelJARs\.org/);
+    assert.match(page, /href="\/apple\/"/);
     assert.match(page, /Built with .* by/);
     assert.match(
       page,
@@ -62,17 +64,33 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
 
   assert.match(
     index,
-    /Integrallis(?:'|&#39;) Models JVM inference library/,
+    /ModelJARs are versioned JAR files that make AI models available to the/,
   );
-  assert.match(index, /Apple Foundation Models/);
-  assert.match(index, /LangChain4J and Spring AI/);
-  assert.match(index, /class="apple-runtime-notice"/);
-  assert.ok(
-    index.indexOf("apple-runtime-notice") < index.indexOf("catalog-results"),
-    "Apple's OS-managed runtime must be discoverable before the generated catalog rows",
-  );
+  assert.match(index, /Find qualified models/);
+  assert.doesNotMatch(index, /Explore qualified models/);
   assert.match(
     index,
+    /Discover the power of small and medium-sized models for local, in-JVM inference/,
+  );
+  assert.match(index, />Models JVM inference library<\/a>/);
+  assert.match(index, /Think of WebJars, but for AI models/);
+  assert.doesNotMatch(index, /apple-runtime-notice|apple-runtime-band/);
+  assert.match(index, /id="catalog-search"/);
+  assert.match(index, /id="catalog-results"/);
+  assert.ok(
+    index.indexOf('class="discovery"') < index.indexOf('id="catalog-results"'),
+    "catalog search must lead directly into the dynamic result set",
+  );
+
+  assert.match(apple, /class="apple-brand-mark"/);
+  assert.match(apple, /Apple Foundation Models from Java/);
+  assert.match(apple, /not a downloadable ModelJAR/);
+  assert.match(apple, /LangChain4J and Spring AI/);
+  assert.match(apple, /com\.integrallis:backend-apple:0\.2\.0/);
+  assert.match(apple, /AppleFoundationModels\.create/);
+  assert.match(apple, /client\.availability/);
+  assert.match(
+    apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
   assert.match(index, /org\.modeljars:modeljars:0\.1\.0/);

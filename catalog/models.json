@@ -871,7 +871,7 @@
       "sourceUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF",
       "downloadUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/87007042419d30c1d8f38ef065424ee33870831e/MiniCPM5-1B-Q4_K_M.gguf",
       "revision": "87007042419d30c1d8f38ef065424ee33870831e",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.2",
       "modelVersion": "5.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

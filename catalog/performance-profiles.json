@@ -968,7 +968,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.2",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1021,7 +1021,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_mixed_k",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.2",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1077,6 +1077,88 @@
           "graalCandidateDecodeTokensPerSecond": "15.474967",
           "graalMeanDecodeChangePercent": "1.306078",
           "graalOutputHashesMatch": "true"
+        }
+      }
+    },
+    {
+      "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_q6_two_query",
+      "modelId": "minicpm5_1b_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.2",
+      "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "backend": "pure-java",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC-Milan Processor",
+        "processors": "8",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.purejava.q6BatchedKernel": "two-query-block"
+      },
+      "evidence": {
+        "benchmarkId": "minicpm5-q6-register-tile-prefill-20260801",
+        "measuredAt": "2026-08-01T04:25:01.045242758Z",
+        "baseline": "one-query-block",
+        "candidate": "two-query-block",
+        "warmups": 2,
+        "trials": 32,
+        "generatedTokens": 1,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "p50TtftMillis": 6146.903508,
+          "p95TtftMillis": 6233.667459,
+          "p50PrefillTokensPerSecond": 24.423108703347665,
+          "p50CpuMillis": 45640.0,
+          "peakRssBytes": 1426980864,
+          "youngCollections": 112,
+          "youngGcPauseMillis": 265.969
+        },
+        "candidateMetrics": {
+          "p50TtftMillis": 5899.446693,
+          "p95TtftMillis": 5967.546098,
+          "p50PrefillTokensPerSecond": 25.418704513564133,
+          "p50CpuMillis": 43520.0,
+          "peakRssBytes": 1412833280,
+          "youngCollections": 8,
+          "youngGcPauseMillis": 57.807
+        },
+        "controls": {
+          "cpuModel": "AMD EPYC-Milan Processor",
+          "contextLength": "2048",
+          "threads": "8",
+          "promptSha256": "2db2d875631cc7e3af3f6e4471ae4c9b2b7dfdb31ab561a41ef78182a31532e6",
+          "promptStrategy": "sha256-nonce-prefix-v1",
+          "seed": "42",
+          "temperature": "0.0",
+          "modelSizeBytes": "688065920",
+          "modelsCandidateCommit": "13b25428fa2ad3fd9835b5509d123dafe42a61a6",
+          "vectorsKernelCommit": "648acb9deb15438b7effaab1b7773fda188e8aae",
+          "vectorsReleaseCommit": "7c69b8bda91854723daa90325c804c62be3171c2",
+          "vectorsVersion": "0.1.5",
+          "vectorsCoreJarSha256": "f2671118ad1be7ff142eb68ea71647d95341f2c375415a6c1b1b10973947630f",
+          "backendJavaJarSha256": "0af32a25c1e32cbcf85a6d64777e912d9242374cac08a869bfbab781b155009b",
+          "benchmarkJarSha256": "796f3d11c5bc078654f59261adac96c87cee1590ea30bfb9c33e33a55a08093c",
+          "jvmBuild": "Eclipse Temurin 25.0.3+9-LTS, HotSpot C2",
+          "heap": "1g-fixed",
+          "activeProcessorCount": "8",
+          "prefillBatchSize": "32",
+          "benchmarkPlanVersion": "pure-java-v19",
+          "measurementScope": "prefill-only-one-generated-token",
+          "order": "one-two-two-one",
+          "processesPerMode": "2",
+          "iterationsPerProcess": "16",
+          "trialsPerMode": "32",
+          "correspondingInputTokenSequencesMatch": "true",
+          "outputSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+          "p50TtftReductionPercent": "4.0257",
+          "p50TtftReductionBootstrap95Percent": "3.561..4.462",
+          "p50PrefillGainPercent": "4.0764",
+          "p50PrefillGainBootstrap95Percent": "3.799..4.383",
+          "rawReports": "benchmark-results/certified-20260801/prefill/minicpm5-1b-q6k/",
+          "rssClaim": "observation-only"
         }
       }
     },
@@ -2251,7 +2333,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.2",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "rust-ffm",
       "selector": {

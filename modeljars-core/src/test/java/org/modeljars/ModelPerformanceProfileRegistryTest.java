@@ -837,6 +837,34 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesMeasuredMiniCpmQ6PrefillProfile() {
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_q6_two_query"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("pure-java", profile.backend());
+    assertEquals("hotspot-c2", profile.runtimeSelector().get("compiler"));
+    assertEquals(
+        "two-query-block",
+        profile.recommendations().get("models.purejava.q6BatchedKernel"));
+    assertEquals(32, profile.evidence().trials());
+    assertEquals(1, profile.evidence().generatedTokens());
+    assertEquals(
+        6146.903508, profile.evidence().baselineMetrics().get("p50TtftMillis"), 0.000001);
+    assertEquals(
+        5899.446693, profile.evidence().candidateMetrics().get("p50TtftMillis"), 0.000001);
+    assertEquals(
+        "pure-java-v19", profile.evidence().controls().get("benchmarkPlanVersion"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
   void aggregateCatalogPublishesQualifiedEuroLlmRustFfmProfile() {
     ModelPerformanceProfile profile =
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()

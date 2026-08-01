@@ -34,6 +34,7 @@ public final class ModelPerformanceProfileRegistry {
   private ModelPerformanceProfileRegistry(List<ModelPerformanceProfile> profiles) {
     this.profiles =
         profiles.stream().sorted(Comparator.comparing(ModelPerformanceProfile::id)).toList();
+    rejectConflictingOverlaps(this.profiles);
   }
 
   /**
@@ -147,6 +148,51 @@ public final class ModelPerformanceProfileRegistry {
     List<ModelPerformanceProfile> profiles =
         profileIds(properties).stream().map(id -> profile(id, properties)).toList();
     return new ModelPerformanceProfileRegistry(profiles);
+  }
+
+  private static void rejectConflictingOverlaps(List<ModelPerformanceProfile> profiles) {
+    for (int firstIndex = 0; firstIndex < profiles.size(); firstIndex++) {
+      ModelPerformanceProfile first = profiles.get(firstIndex);
+      for (int secondIndex = firstIndex + 1; secondIndex < profiles.size(); secondIndex++) {
+        ModelPerformanceProfile second = profiles.get(secondIndex);
+        if (!sameExecution(first, second) || !selectorsOverlap(first, second)) {
+          continue;
+        }
+        first
+            .recommendations()
+            .forEach(
+                (name, value) -> {
+                  String other = second.recommendations().get(name);
+                  if (other != null && !value.equals(other)) {
+                    throw new ModelJarException(
+                        "Conflicting performance profile recommendation."
+                            + name
+                            + " for overlapping profiles "
+                            + first.id()
+                            + " and "
+                            + second.id());
+                  }
+                });
+      }
+    }
+  }
+
+  private static boolean sameExecution(
+      ModelPerformanceProfile first, ModelPerformanceProfile second) {
+    return first.modelAlias().equals(second.modelAlias())
+        && first.markerCoordinate().equals(second.markerCoordinate())
+        && first.artifactSha256().equals(second.artifactSha256())
+        && first.backend().equals(second.backend());
+  }
+
+  private static boolean selectorsOverlap(
+      ModelPerformanceProfile first, ModelPerformanceProfile second) {
+    return first.runtimeSelector().entrySet().stream()
+        .allMatch(
+            selector -> {
+              String other = second.runtimeSelector().get(selector.getKey());
+              return other == null || selector.getValue().equalsIgnoreCase(other);
+            });
   }
 
   private static Set<String> profileIds(Properties properties) {

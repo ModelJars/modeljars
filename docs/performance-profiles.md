@@ -44,7 +44,10 @@ profile.qwen3_0_6b_q4_0_epyc_milan_jdk25.recommendation.models.purejava.q4Kernel
 
 `JavaLaunchProfile.command(...)` returns an argument list suitable for `ProcessBuilder`; it does not
 construct a shell command. `missingArguments(...)` supports startup diagnostics against the JVM's
-actual input arguments. Recommendation-only profiles do not require a `javaLaunch` block.
+actual input arguments. `ModelJars.open(...)` excludes a profile when any required startup argument
+is absent and records the profile IDs and missing arguments in backend diagnostics. An independent
+matching profile without launch requirements can still apply. Recommendation-only profiles do not
+require a `javaLaunch` block.
 
 ## Evidence
 
@@ -194,6 +197,12 @@ process. All 40 paired output hashes matched; mean TTFT changed by +0.02% on Hot
 Graal. The profile's primary evidence map records the HotSpot comparison, while its controls retain
 the independent Graal values and exact Models/Vectors commits.
 
+At runtime, all safe profiles whose complete selectors and launch requirements match are
+cumulative. Recommendation maps are merged by key, so the Qwen staged graph, quantized kernel, and
+batch-size profiles form one backend configuration rather than depending on profile-ID order. The
+registry rejects two profiles for the same artifact and backend when their selectors can overlap
+and they assign different values to the same recommendation key.
+
 ## Safety Contract
 
 `ModelPerformanceProfile.safeForAutomaticSelection()` requires exact output-hash agreement and at
@@ -201,10 +210,12 @@ least one backend recommendation or Java launch profile. It is an evidence gate,
 mechanism. A consuming backend must still:
 
 1. match the exact model artifact and complete runtime selector;
-2. whitelist each recommendation key and permitted value;
-3. keep unsupported keys inert and visible in diagnostics;
-4. allow an explicit operator override; and
-5. rerun exactness and full-model performance gates when its implementation changes.
+2. verify every typed Java launch argument against the active process;
+3. combine only non-conflicting matching recommendations;
+4. whitelist each recommendation key and permitted value;
+5. keep unsupported keys inert and visible in diagnostics;
+6. allow an explicit operator override; and
+7. rerun exactness and full-model performance gates when its implementation changes.
 
 Profiles with mismatched output hashes remain representable as negative evidence, but cannot pass
 the automatic-selection gate. Marker JARs without measurements publish an empty schema-v1 resource;

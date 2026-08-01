@@ -9,9 +9,11 @@ import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.BackendDiagnostics;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
+import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.Tokenizer;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -52,17 +54,122 @@ class ModelJarsTest {
               selectedConfiguration.set(configuration);
               return backend;
             },
-            () -> profile.runtimeSelector());
+            () -> profile.runtimeSelector(),
+            () -> profile.javaLaunch().map(JavaLaunchProfile::jvmArguments).orElseGet(List::of));
 
     var model = loader.load(QWEN, ModelLoadOptions.defaults());
 
     assertEquals(descriptor, installed.get());
     assertEquals("pure-java", selectedBackend.get());
-    assertEquals(profile.recommendations(), selectedConfiguration.get().recommendations());
+    assertTrue(
+        selectedConfiguration
+            .get()
+            .recommendations()
+            .entrySet()
+            .containsAll(profile.recommendations().entrySet()));
     assertEquals("fixture", model.modelName());
     assertFalse(backend.closed());
     model.close();
     assertTrue(backend.closed());
+  }
+
+  @Test
+  void combinesEveryNonConflictingProfileForTheExactRuntime() {
+    ModelJar model = QWEN;
+    ModelJarRegistry models = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor descriptor = models.resolve(model).orElseThrow();
+    ModelPerformanceProfileRegistry profiles = ModelPerformanceProfileRegistry.fromClasspath();
+    Map<String, String> runtime =
+        profiles.profilesFor(descriptor).stream()
+            .filter(
+                profile ->
+                    "unsigned-pairwise"
+                        .equals(
+                            profile
+                                .recommendations()
+                                .get("models.purejava.q4Kernel")))
+            .findFirst()
+            .orElseThrow()
+            .runtimeSelector();
+    AtomicReference<BackendConfiguration> selectedConfiguration = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            models,
+            ModelRagQualificationRegistry.fromClasspath(),
+            profiles,
+            (candidate, options) -> Path.of("verified-model.gguf"),
+            (backend, path, configuration) -> {
+              selectedConfiguration.set(configuration);
+              return new StubBackend();
+            },
+            () -> runtime,
+            () -> List.of("-Djdk.graal.MaximumInliningSize=10000"));
+
+    try (var loaded =
+        loader.load(
+            model, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
+      assertEquals("fixture", loaded.modelName());
+      assertEquals(
+          Map.of(
+              "models.purejava.prefillBatchSize",
+              "24",
+              "models.purejava.q4Kernel",
+              "unsigned-pairwise",
+              "models.purejava.stagedQuantizedFfn",
+              "true",
+              "models.purejava.stagedQuantizedLayer",
+              "true"),
+          selectedConfiguration.get().recommendations());
+    }
+  }
+
+  @Test
+  void skipsProfilesWhoseRequiredJvmArgumentsAreMissing() {
+    ModelJarRegistry models = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor descriptor = models.resolve(QWEN).orElseThrow();
+    ModelPerformanceProfileRegistry profiles = ModelPerformanceProfileRegistry.fromClasspath();
+    Map<String, String> runtime =
+        profiles.profilesFor(descriptor).stream()
+            .filter(
+                profile ->
+                    "24"
+                        .equals(
+                            profile
+                                .recommendations()
+                                .get("models.purejava.prefillBatchSize")))
+            .findFirst()
+            .orElseThrow()
+            .runtimeSelector();
+    AtomicReference<BackendConfiguration> selectedConfiguration = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            models,
+            ModelRagQualificationRegistry.fromClasspath(),
+            profiles,
+            (candidate, options) -> Path.of("verified-model.gguf"),
+            (backend, path, configuration) -> {
+              selectedConfiguration.set(configuration);
+              return new StubBackend();
+            },
+            () -> runtime,
+            List::of);
+
+    try (var loaded =
+        loader.load(QWEN, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
+      assertEquals("fixture", loaded.modelName());
+      assertEquals(
+          Map.of("models.purejava.prefillBatchSize", "24"),
+          selectedConfiguration.get().recommendations());
+      var launchDecision =
+          selectedConfiguration.get().optimizations().stream()
+              .filter(decision -> decision.id().equals("modeljars.performance-profile-launch"))
+              .findFirst()
+              .orElseThrow();
+      assertEquals(OptimizationStatus.DISABLED, launchDecision.status());
+      assertEquals(
+          "-Djdk.graal.MaximumInliningSize=10000",
+          launchDecision.settings().get("missing-jvm-arguments"));
+    }
   }
 
   @Test

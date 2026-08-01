@@ -197,6 +197,23 @@ process. All 40 paired output hashes matched; mean TTFT changed by +0.02% on Hot
 Graal. The profile's primary evidence map records the HotSpot comparison, while its controls retain
 the independent Graal values and exact Models/Vectors commits.
 
+The later four-session MiniCPM gate makes the Graal launch and Q6_K choice reproducible as one
+cumulative runtime plan. Three fresh processes per Q6_K policy used the exact artifact, four
+independent KV sessions, a fixed 2 GiB G1 heap, eight EPYC-Milan processors, 256-bit vectors, and
+GraalVM Community Java 25.0.3 with `MaximumInliningSize=10000`:
+
+| Q6_K batch kernel | Aggregate decode | Per-request TPOT | Process CPU | Maximum RSS |
+| --- | ---: | ---: | ---: | ---: |
+| One-query block | 24.660 tok/s | 162.232 ms | 77,760 ms | 2,049,413,120 B |
+| Two-query block | 27.753 tok/s | 144.131 ms | 68,403 ms | 2,129,145,856 B |
+
+Two-query blocks improve throughput 12.54%, reduce TPOT 11.16%, and reduce CPU 12.03%; maximum
+observed RSS rises 3.89%. Every process generated the same 256-token SHA-256 and completed without
+measured garbage collection. The base MiniCPM profile now carries the typed Graal launch
+requirement, while the independent session profile recommends
+`models.purejava.q6BatchedKernel=two-query-block`. The mixed-K recommendation remains a separate,
+compatible profile and the runtime combines all three only on the exact measured tuple.
+
 At runtime, all safe profiles whose complete selectors and launch requirements match are
 cumulative. Recommendation maps are merged by key, so the Qwen staged graph, quantized kernel, and
 batch-size profiles form one backend configuration rather than depending on profile-ID order. The

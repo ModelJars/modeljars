@@ -118,6 +118,28 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
+  void rejectsConflictingRecommendationsFromOverlappingProfiles() {
+    Properties properties = profileProperties(true);
+    String source = "profile.smollm2_360m_q8_0_epyc_milan_jdk25.";
+    String conflict = "profile.smollm2_360m_q8_0_epyc_milan_jdk25_conflict.";
+    properties.stringPropertyNames().stream()
+        .filter(name -> name.startsWith(source))
+        .toList()
+        .forEach(
+            name ->
+                properties.setProperty(
+                    conflict + name.substring(source.length()), properties.getProperty(name)));
+    properties.setProperty(conflict + "recommendation.compiler", "hotspot-c2");
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () -> ModelPerformanceProfileRegistry.fromProperties(properties));
+
+    assertTrue(failure.getMessage().contains("recommendation.compiler"));
+  }
+
+  @Test
   void rejectsIncompleteOrNonContiguousLaunchMetadata() {
     Properties missingFeature = profileProperties(true);
     missingFeature.remove("profile.smollm2_360m_q8_0_epyc_milan_jdk25.launch.javaFeature");

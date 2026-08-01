@@ -123,9 +123,11 @@ try (var model = ModelJars.open(MODEL)) {
 ```
 
 `ModelJars.open` resolves the exact qualified descriptor, selects its qualified Models backend,
-downloads missing weights, verifies their size and SHA-256 digest, and applies an artifact-bound
-performance profile when the current runtime matches one. The returned model owns the backend and
-closes it at the end of the `try` block.
+downloads missing weights, verifies their size and SHA-256 digest, and applies every non-conflicting
+artifact-bound performance profile that matches the current runtime. Profiles with Java launch
+requirements apply only when every required JVM argument is active; omitted profiles and missing
+arguments remain visible in backend diagnostics. The returned model owns the backend and closes it
+at the end of the `try` block.
 
 Offline loading and explicit backend selection are available without exposing the cache path:
 
@@ -185,7 +187,9 @@ List<ModelPerformanceProfile> measured = profiles.profilesFor(descriptor);
 ```
 
 The ModelJars JVM Runtime calls `matching(descriptor, backend, runtimeFacts)` with the complete
-structured runtime fingerprint before loading the selected Models backend.
+structured runtime fingerprint before loading the selected Models backend. It combines independent
+recommendations with different keys, rejects conflicting overlapping profiles at registry load,
+and verifies typed Java launch requirements against the active JVM input arguments.
 
 `safeForAutomaticSelection()` means the profile has recommendations and exact output hashes
 matched in its comparison. It does not authorize arbitrary runtime properties or native code;

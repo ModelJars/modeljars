@@ -12,6 +12,7 @@ import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.RuntimeTextGenerationModel;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -37,6 +38,7 @@ public final class ModelJars {
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
   private final Supplier<Map<String, String>> runtimeEnvironment;
+  private final Supplier<List<String>> jvmArguments;
 
   ModelJars(
       ModelJarRegistry models,
@@ -45,12 +47,31 @@ public final class ModelJars {
       ArtifactInstaller installer,
       BackendLoader backendLoader,
       Supplier<Map<String, String>> runtimeEnvironment) {
+    this(
+        models,
+        qualifications,
+        profiles,
+        installer,
+        backendLoader,
+        runtimeEnvironment,
+        () -> ManagementFactory.getRuntimeMXBean().getInputArguments());
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this.models = Objects.requireNonNull(models, "models");
     this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
     this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
     this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment");
+    this.jvmArguments = Objects.requireNonNull(jvmArguments, "jvmArguments");
   }
 
   /**
@@ -95,7 +116,8 @@ public final class ModelJars {
     String backend = qualification.backend();
     Path artifact = installer.install(descriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
-    BackendConfiguration configuration = configuration(descriptor, qualification, runtime);
+    BackendConfiguration configuration =
+        configuration(descriptor, qualification, runtime, List.copyOf(jvmArguments.get()));
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
     return new ManagedTextGenerationModel(loadedBackend);
   }
@@ -139,8 +161,9 @@ public final class ModelJars {
   private BackendConfiguration configuration(
       ModelJarDescriptor descriptor,
       ModelRagQualification qualification,
-      Map<String, String> runtime) {
-    List<ModelPerformanceProfile> matchingProfiles =
+      Map<String, String> runtime,
+      List<String> activeJvmArguments) {
+    List<ModelPerformanceProfile> safeProfiles =
         profiles.matching(descriptor, qualification.backend(), runtime).stream()
             .filter(ModelPerformanceProfile::safeForAutomaticSelection)
             .sorted(
@@ -150,35 +173,110 @@ public final class ModelJars {
                     .reversed()
                     .thenComparing(ModelPerformanceProfile::id))
             .toList();
-    ModelPerformanceProfile profile =
-        matchingProfiles.isEmpty() ? null : matchingProfiles.getFirst();
-
+    List<ModelPerformanceProfile> applicableProfiles =
+        safeProfiles.stream()
+            .filter(
+                profile ->
+                    profile
+                        .javaLaunch()
+                        .map(launch -> launch.missingArguments(activeJvmArguments).isEmpty())
+                        .orElse(true))
+            .toList();
     Map<String, String> environment = new LinkedHashMap<>(runtime);
     environment.put("modeljars-marker", descriptor.markerCoordinate().toString());
     environment.put("modeljars-artifact-sha256", qualification.artifactSha256());
     environment.put("modeljars-qualification-workload", qualification.workload());
 
     List<OptimizationDecision> decisions = new ArrayList<>();
-    Map<String, String> recommendations = Map.of();
-    if (profile == null) {
-      decisions.add(
-          new OptimizationDecision(
-              "modeljars.performance-profile",
-              OptimizationStatus.DISABLED,
-              "no exact artifact, backend, and runtime profile matched",
-              Map.of("backend", qualification.backend())));
-    } else {
-      recommendations = profile.recommendations();
-      decisions.add(
-          new OptimizationDecision(
-              "modeljars.performance-profile",
-              OptimizationStatus.ENABLED,
-              "applied an artifact-bound profile with deterministic benchmark output",
-              Map.of(
-                  "profile", profile.id(),
-                  "benchmark", profile.evidence().benchmarkId())));
+    List<ModelPerformanceProfile> launchBlockedProfiles =
+        safeProfiles.stream().filter(profile -> !applicableProfiles.contains(profile)).toList();
+    if (!launchBlockedProfiles.isEmpty()) {
+      decisions.add(launchBlockedDecision(launchBlockedProfiles, activeJvmArguments));
     }
+    Map<String, String> recommendations = mergeRecommendations(applicableProfiles);
+    decisions.add(
+        profileSelectionDecision(
+            safeProfiles, applicableProfiles, qualification.backend()));
     return new BackendConfiguration(environment, recommendations, decisions);
+  }
+
+  private static OptimizationDecision launchBlockedDecision(
+      List<ModelPerformanceProfile> profiles, List<String> activeJvmArguments) {
+    String missingArguments =
+        String.join(
+            " ",
+            profiles.stream()
+                .flatMap(
+                    profile ->
+                        profile
+                            .javaLaunch()
+                            .orElseThrow()
+                            .missingArguments(activeJvmArguments)
+                            .stream())
+                .distinct()
+                .toList());
+    return new OptimizationDecision(
+        "modeljars.performance-profile-launch",
+        OptimizationStatus.DISABLED,
+        "required JVM startup arguments are not active",
+        Map.of(
+            "profiles", profileIds(profiles),
+            "missing-jvm-arguments", missingArguments));
+  }
+
+  private static Map<String, String> mergeRecommendations(
+      List<ModelPerformanceProfile> profiles) {
+    Map<String, String> recommendations = new LinkedHashMap<>();
+    for (ModelPerformanceProfile profile : profiles) {
+      profile
+          .recommendations()
+          .forEach(
+              (name, value) -> {
+                String previous = recommendations.putIfAbsent(name, value);
+                if (previous != null && !previous.equals(value)) {
+                  throw new ModelJarException(
+                      "Conflicting performance recommendations for "
+                          + name
+                          + ": "
+                          + previous
+                          + " and "
+                          + value);
+                }
+              });
+    }
+    return Map.copyOf(recommendations);
+  }
+
+  private static OptimizationDecision profileSelectionDecision(
+      List<ModelPerformanceProfile> safeProfiles,
+      List<ModelPerformanceProfile> applicableProfiles,
+      String backend) {
+    if (applicableProfiles.isEmpty()) {
+      return new OptimizationDecision(
+          "modeljars.performance-profile",
+          OptimizationStatus.DISABLED,
+          safeProfiles.isEmpty()
+              ? "no exact artifact, backend, and runtime profile matched"
+              : "matching profiles require JVM startup arguments that are not active",
+          Map.of("backend", backend));
+    }
+    return new OptimizationDecision(
+        "modeljars.performance-profile",
+        OptimizationStatus.ENABLED,
+        "applied artifact-bound profiles with deterministic benchmark output",
+        Map.of(
+            "profiles",
+            profileIds(applicableProfiles),
+            "benchmarks",
+            String.join(
+                ",",
+                applicableProfiles.stream()
+                    .map(profile -> profile.evidence().benchmarkId())
+                    .toList())));
+  }
+
+  private static String profileIds(List<ModelPerformanceProfile> profiles) {
+    return String.join(",", profiles.stream().map(ModelPerformanceProfile::id).toList());
   }
 
   private static ModelJars classpathLoader() {

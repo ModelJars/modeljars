@@ -887,6 +887,62 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesMeasuredMiniCpmGraalSessionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "minicpm5_1b_q4_k_m_epyc_milan_jdk25_graal_session_q6_two_query"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("pure-java", profile.backend());
+    assertEquals("graal-jvmci", profile.runtimeSelector().get("compiler"));
+    assertEquals(
+        "25.0.3+9-jvmci-25.1-b19", profile.runtimeSelector().get("vm-version"));
+    assertEquals(
+        "two-query-block",
+        profile.recommendations().get("models.purejava.q6BatchedKernel"));
+    assertEquals(
+        List.of("-Djdk.graal.MaximumInliningSize=10000"),
+        profile.javaLaunch().orElseThrow().jvmArguments());
+    assertEquals(3, profile.evidence().trials());
+    assertEquals(256, profile.evidence().generatedTokens());
+    assertEquals(
+        24.660334710097775,
+        profile.evidence().baselineMetrics().get("aggregateTokensPerSecond"),
+        0.000000001);
+    assertEquals(
+        27.752817465905974,
+        profile.evidence().candidateMetrics().get("aggregateTokensPerSecond"),
+        0.000000001);
+    assertEquals(
+        "722fe1aa593780b2ff7da300037decad54be5d9d0ff6e026e7515329fd56ce01",
+        profile.evidence().controls().get("outputTokenSha256"));
+    assertEquals(
+        "8881403d434d61fd6e309927041b69cf7370fea2",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertTrue(profile.safeForAutomaticSelection());
+
+    ModelPerformanceProfile compilerProfile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25"))
+            .findFirst()
+            .orElseThrow();
+    assertEquals("graal-jvmci", compilerProfile.runtimeSelector().get("compiler"));
+    assertTrue(compilerProfile.recommendations().isEmpty());
+    assertEquals(
+        List.of("-Djdk.graal.MaximumInliningSize=10000"),
+        compilerProfile.javaLaunch().orElseThrow().jvmArguments());
+  }
+
+  @Test
   void aggregateCatalogPublishesQualifiedEuroLlmRustFfmProfile() {
     ModelPerformanceProfile profile =
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()

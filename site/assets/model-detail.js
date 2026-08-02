@@ -19,29 +19,25 @@ function referenceClassName(modelId) {
     .join("_");
 }
 
-export function javaSnippet(modelId, promptTemplate = "chatml") {
+export function javaSnippet(modelId) {
   if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
     throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
-  }
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(String(promptTemplate))) {
-    throw new Error(`Invalid Models chat template: ${promptTemplate}`);
   }
   const reference = referenceClassName(modelId);
   return `import static org.modeljars.catalog.${reference}.MODEL;
 
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
-import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.util.List;
 import org.modeljars.ModelJars;
 
-var prompt = ChatTemplate.parse("${promptTemplate}").render(
-    List.of(ChatMessage.user("Name one JVM language.")));
 var options = SamplingOptions.builder()
-    .temperature(0).maxTokens(32).build();
+    .temperature(0).maxTokens(128).build();
 
-try (var model = ModelJars.open(MODEL)) {
-  String answer = model.generate(prompt, options);
+try (var runtime = ModelJars.openRuntime(MODEL)) {
+  var prompt = runtime.chatTemplate().render(
+      List.of(ChatMessage.user("Name one JVM language.")));
+  String answer = runtime.model().generate(prompt, options);
 }`;
 }
 
@@ -289,7 +285,7 @@ function renderModel(model, catalog) {
           </p>
           ${copyBlock(
             "Java",
-            javaSnippet(model.id, qualification.promptTemplate),
+            javaSnippet(model.id),
             "language-java",
           )}
         </section>

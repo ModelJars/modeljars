@@ -20,7 +20,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.0")\n' +
+    'implementation("org.modeljars:modeljars:0.1.2")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -31,14 +31,14 @@ test("renders build-tool snippets from marker coordinates", () => {
 });
 
 test("renders path-free Java loading from the generated catalog reference", () => {
-  const snippet = javaSnippet("qwen3_0_6b_q4_0", "chatml-no-think");
+  const snippet = javaSnippet("qwen3_0_6b_q4_0");
 
   assert.match(
     snippet,
     /import static org\.modeljars\.catalog\.Qwen3_0_6b_Q4_0\.MODEL;/,
   );
-  assert.match(snippet, /ChatTemplate\.parse\("chatml-no-think"\)/);
-  assert.match(snippet, /ModelJars\.open\(MODEL\)/);
+  assert.match(snippet, /runtime\.chatTemplate\(\)\.render/);
+  assert.match(snippet, /ModelJars\.openRuntime\(MODEL\)/);
   assert.doesNotMatch(snippet, /Path|ModelJarInstaller|PureJavaBackend/);
 });
 

@@ -76,7 +76,7 @@ jobs:
               '[.deployments[] | select(.deploymentName | contains($filter))]'
           }
 
-          validation_deadline=$((SECONDS + 900))
+          validation_deadline=$((SECONDS + 3600))
           while true; do
             deployments="$(list_deployments | matching_deployments)"
             count="$(jq 'length' <<< "${deployments}")"
@@ -117,7 +117,7 @@ jobs:
               <<< "${deployments}"
           )
 
-          publication_deadline=$((SECONDS + 900))
+          publication_deadline=$((SECONDS + 3600))
           while true; do
             deployments="$(list_deployments | matching_deployments)"
             count="$(jq 'length' <<< "${deployments}")"

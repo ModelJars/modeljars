@@ -67,6 +67,9 @@ test("publishes an immutable aggregate-only private preview", async () => {
   );
   assert.match(consumerSettings, /System\.getenv\("GITHUB_ACTOR"\)/);
   assert.match(consumerSettings, /System\.getenv\("GITHUB_TOKEN"\)/);
+  assert.match(consumerSettings, /exclusiveContent/);
+  assert.match(consumerSettings, /includeGroup\("org\.modeljars"\)/);
+  assert.match(consumerSettings, /mavenCentral\(\)/);
 });
 
 test("documents one-time credentials without embedding a token", async () => {

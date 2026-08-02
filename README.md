@@ -43,7 +43,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.0")
+    implementation("org.modeljars:modeljars:0.1.1")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -56,7 +56,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -65,7 +65,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.1.0, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models 0.2.2, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25. `modeljars-core` remains usable by
 Java 21 registry and build tooling without the Models runtime.

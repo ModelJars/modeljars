@@ -80,9 +80,9 @@ value bootstraps the complete accepted catalog. Use `verify` before either publi
 The JVM Runtime release contains these coordinates and transitive dependencies:
 
 ```text
-org.modeljars:modeljars:0.1.0
-  -> org.modeljars:modeljars-core:0.1.0
-  -> org.modeljars:modeljars-catalog:0.1.0
-  -> com.integrallis:models:0.1.0
-  -> com.integrallis:backend-native:0.1.0
+org.modeljars:modeljars:0.1.1
+  -> org.modeljars:modeljars-core:0.1.1
+  -> org.modeljars:modeljars-catalog:0.1.1
+  -> com.integrallis:models:0.2.2
+  -> com.integrallis:backend-native:0.2.2
 ```

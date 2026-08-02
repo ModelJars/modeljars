@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 27;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 28;
   private static final String AGGREGATE_MODELS_REVISION =
-      "5ec2c5d446e60baa955ef58bd7e4e3dd52281747";
+      "d54eedd3ae9de6bb7558bc78f8b794e6b740cb71";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -125,7 +125,7 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
-  void aggregateCatalogRetainsRejectedGemma4LatencyEvidence() {
+  void aggregateCatalogPublishesQualifiedGemma4Evidence() {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
 
     ModelRagQualification qualification =
@@ -140,20 +140,28 @@ class ModelRagQualificationRegistryTest {
 
     assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
-    assertEquals(1, registry.rejectedModels());
+    assertEquals(0, registry.rejectedModels());
     assertEquals("rust-ffm", qualification.backend());
+    assertEquals(
+        "models@37fc4a8b9d421505487b678c7ce841d1baa20eb4 "
+            + "com.integrallis:vectors-core@0.1.5",
+        qualification.backendVersion());
     assertEquals("gemma4", qualification.promptTemplate());
-    assertEquals("OFFLINE", qualification.performanceTier());
-    assertEquals("FAILED_ABSOLUTE_GATE", qualification.verdict());
-    assertEquals(RagUseCaseTier.UNQUALIFIED, qualification.useCaseTier());
+    assertEquals("USABLE", qualification.performanceTier());
+    assertEquals("QUALIFIED", qualification.verdict());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
     assertEquals(27, qualification.attempts());
     assertEquals(1.0, qualification.correctAnswerRate());
     assertEquals(1.0, qualification.rawCorrectAnswerRate());
-    assertEquals(21.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(18.0 / 27.0, qualification.modelAnswerRate());
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
-    assertEquals(3793.6837236, qualification.p95TtftMillis());
-    assertFalse(qualification.productionUsable());
-    assertFalse(registry.qualified().contains(qualification));
+    assertEquals(1834.6652392, qualification.p95TtftMillis());
+    assertEquals(12.838381625708218, qualification.p50DecodeTokensPerSecond());
+    assertEquals(
+        "2234bd65597ed56c2dbc2936e389e145c3bf471fa2d7202cd7e6a802f2523ed8",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
+    assertTrue(registry.qualified().contains(qualification));
   }
 
   @Test

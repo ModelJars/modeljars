@@ -15,7 +15,7 @@ on:
       version:
         description: Base version for a preview, or exact Maven Central version.
         required: true
-        default: "0.1.0"
+        default: "0.1.1"
         type: string
   push:
     branches:
@@ -27,6 +27,7 @@ on:
       - modeljars-core/**
       - tools/**
       - build.gradle.kts
+      - gradle.properties
       - package.json
       - package-lock.json
       - settings.gradle.kts

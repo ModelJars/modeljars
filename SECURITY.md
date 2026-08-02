@@ -31,9 +31,9 @@ After extracting the bundle, compare an artifact to its recorded SHA-256 value a
 OpenPGP signature with the published ModelJars release key:
 
 ```bash
-test "$(sha256sum modeljars-0.1.0.jar | cut -d ' ' -f 1)" = \
-  "$(tr -d '\n' < modeljars-0.1.0.jar.sha256)"
-gpg --verify modeljars-0.1.0.jar.asc modeljars-0.1.0.jar
+test "$(sha256sum modeljars-0.1.1.jar | cut -d ' ' -f 1)" = \
+  "$(tr -d '\n' < modeljars-0.1.1.jar.sha256)"
+gpg --verify modeljars-0.1.1.jar.asc modeljars-0.1.1.jar
 ```
 
 The generated ModelJar metadata independently pins each model payload by byte size and SHA-256. The

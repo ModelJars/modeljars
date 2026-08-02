@@ -2587,11 +2587,17 @@
         "pinned-revision",
         "verified-sha256",
         "q4-k-m",
-        "community-conversion"
+        "community-conversion",
+        "mixture-of-experts",
+        "mapped-experts",
+        "hybrid-attention",
+        "gemma4-chat-template"
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "rust-ffm": true,
+        "llama.cpp": true,
+        "ollama": true
       },
       "domains": [
         "general"

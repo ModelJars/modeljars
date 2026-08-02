@@ -14,12 +14,15 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Downloads immutable model artifacts and verifies their size and SHA-256 digest. */
 public final class ModelJarInstaller {
+  private static final System.Logger LOGGER = System.getLogger(ModelJarInstaller.class.getName());
   private static final int BUFFER_SIZE = 1024 * 1024;
   private static final int CONNECT_TIMEOUT_MILLIS = 30_000;
   private static final int READ_TIMEOUT_MILLIS = 60_000;
@@ -30,6 +33,7 @@ public final class ModelJarInstaller {
 
   private final ModelJarRegistry registry;
   private final RetryDelay retryDelay;
+  private final Consumer<String> progressReporter;
 
   /**
    * Creates an installer backed by a model registry.
@@ -37,12 +41,18 @@ public final class ModelJarInstaller {
    * @param registry registry used to resolve model selectors
    */
   public ModelJarInstaller(ModelJarRegistry registry) {
-    this(registry, ModelJarInstaller::pauseBeforeRetry);
+    this(registry, ModelJarInstaller::pauseBeforeRetry, ModelJarInstaller::reportProgress);
   }
 
   ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
+    this(registry, retryDelay, ModelJarInstaller::reportProgress);
+  }
+
+  ModelJarInstaller(
+      ModelJarRegistry registry, RetryDelay retryDelay, Consumer<String> progressReporter) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
+    this.progressReporter = Objects.requireNonNull(progressReporter, "progressReporter");
   }
 
   /**
@@ -92,7 +102,15 @@ public final class ModelJarInstaller {
     Objects.requireNonNull(destination, "destination");
 
     if (Files.exists(destination)) {
+      progressReporter.accept(
+          "Verifying cached model "
+              + descriptor.alias()
+              + " ("
+              + displaySize(descriptor)
+              + ") at "
+              + destination.toAbsolutePath().normalize());
       verify(destination, descriptor);
+      progressReporter.accept("Model cache verified: " + descriptor.alias());
       return destination;
     }
 
@@ -116,13 +134,21 @@ public final class ModelJarInstaller {
     try {
       Files.createDirectories(parent);
       temporary = Files.createTempFile(parent, destination.getFileName() + ".", ".part");
-      download(downloadUri, temporary, expectedSize);
+      progressReporter.accept(
+          "Downloading model "
+              + descriptor.alias()
+              + " ("
+              + formatBytes(expectedSize)
+              + ") to "
+              + destination.toAbsolutePath().normalize());
+      download(descriptor.alias(), downloadUri, temporary, expectedSize);
+      progressReporter.accept("Download complete; verifying SHA-256 for " + descriptor.alias());
       verify(temporary, descriptor);
       moveIntoPlace(temporary, destination);
+      progressReporter.accept("Model ready in cache: " + descriptor.alias());
       return destination;
     } catch (IOException e) {
-      throw new ModelJarException(
-          "Unable to install model artifact " + descriptor.alias() + " from " + downloadUri, e);
+      throw new ModelJarException("Unable to install model artifact " + descriptor.alias(), e);
     } finally {
       if (temporary != null) {
         try {
@@ -148,7 +174,15 @@ public final class ModelJarInstaller {
       throw new ModelJarException(
           "Model artifact is not available in the offline cache: " + artifact);
     }
+    progressReporter.accept(
+        "Verifying offline model "
+            + descriptor.alias()
+            + " ("
+            + displaySize(descriptor)
+            + ") at "
+            + artifact.toAbsolutePath().normalize());
     verify(artifact, descriptor);
+    progressReporter.accept("Offline model cache verified: " + descriptor.alias());
     return artifact;
   }
 
@@ -198,7 +232,8 @@ public final class ModelJarInstaller {
     }
   }
 
-  private void download(URI source, Path destination, long expectedSize) throws IOException {
+  private void download(String alias, URI source, Path destination, long expectedSize)
+      throws IOException {
     IOException lastFailure = null;
     for (int attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt++) {
       long downloaded = Files.size(destination);
@@ -210,7 +245,7 @@ public final class ModelJarInstaller {
       }
 
       try {
-        downloadAttempt(source, destination, expectedSize);
+        downloadAttempt(alias, source, destination, expectedSize);
         downloaded = Files.size(destination);
         if (downloaded == expectedSize) {
           return;
@@ -225,6 +260,16 @@ public final class ModelJarInstaller {
         lastFailure = e;
       }
       if (attempt < MAX_DOWNLOAD_ATTEMPTS) {
+        progressReporter.accept(
+            "Model download interrupted at "
+                + formatBytes(Files.size(destination))
+                + "; retrying "
+                + alias
+                + " (attempt "
+                + (attempt + 1)
+                + " of "
+                + MAX_DOWNLOAD_ATTEMPTS
+                + ")");
         retryDelay.pause(attempt);
       }
     }
@@ -250,7 +295,7 @@ public final class ModelJarInstaller {
     }
   }
 
-  private static void downloadAttempt(URI source, Path destination, long expectedSize)
+  private void downloadAttempt(String alias, URI source, Path destination, long expectedSize)
       throws IOException {
     long offset = Files.size(destination);
     URLConnection connection = source.toURL().openConnection();
@@ -272,7 +317,8 @@ public final class ModelJarInstaller {
           verifyContentRange(http.getHeaderField("Content-Range"), offset, expectedSize);
           append = true;
         } else if (status != HttpURLConnection.HTTP_OK) {
-          throw new IOException("Model download returned HTTP " + status + " for " + source);
+          throw new IOException(
+              "Model download returned HTTP " + status + " for " + alias);
         }
       }
 
@@ -287,9 +333,26 @@ public final class ModelJarInstaller {
                       StandardOpenOption.WRITE,
                       StandardOpenOption.TRUNCATE_EXISTING)) {
         int read;
+        long downloaded = offset;
+        int nextPercentage = Math.max(10, ((int) (offset * 100 / expectedSize) / 10 + 1) * 10);
         while ((read = input.read(buffer)) != -1) {
           if (read > 0) {
             output.write(buffer, 0, read);
+            downloaded += read;
+            int percentage = (int) Math.min(100, downloaded * 100.0 / expectedSize);
+            if (percentage >= nextPercentage) {
+              progressReporter.accept(
+                  "Downloading "
+                      + alias
+                      + ": "
+                      + percentage
+                      + "% ("
+                      + formatBytes(downloaded)
+                      + " of "
+                      + formatBytes(expectedSize)
+                      + ")");
+              nextPercentage = percentage / 10 * 10 + 10;
+            }
           }
         }
       }
@@ -357,5 +420,26 @@ public final class ModelJarInstaller {
     } catch (AtomicMoveNotSupportedException e) {
       Files.move(source, destination);
     }
+  }
+
+  private static String displaySize(ModelJarDescriptor descriptor) {
+    return descriptor.sizeBytes().map(ModelJarInstaller::formatBytes).orElse("unknown size");
+  }
+
+  private static String formatBytes(long bytes) {
+    if (bytes < 1024) {
+      return bytes + " B";
+    }
+    if (bytes < 1024L * 1024) {
+      return String.format(Locale.ROOT, "%.1f KiB", bytes / 1024.0);
+    }
+    if (bytes < 1024L * 1024 * 1024) {
+      return String.format(Locale.ROOT, "%.1f MiB", bytes / (1024.0 * 1024));
+    }
+    return String.format(Locale.ROOT, "%.2f GiB", bytes / (1024.0 * 1024 * 1024));
+  }
+
+  private static void reportProgress(String message) {
+    LOGGER.log(System.Logger.Level.INFO, message);
   }
 }

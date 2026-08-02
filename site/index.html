@@ -156,7 +156,7 @@
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.1")
+  implementation("org.modeljars:modeljars:0.1.2")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>
@@ -174,13 +174,13 @@ var selected = MODEL;</code></pre>
                   <span class="step-number">03</span>
                   <h3>Run inference in-process</h3>
                 </div>
-                <pre><code class="language-java hljs" data-lang="java">var prompt = ChatTemplate.CHATML_NO_THINK.render(
-  List.of(ChatMessage.user("Name one JVM language.")));
-var options = SamplingOptions.builder()
-  .temperature(0).maxTokens(32).build();
+                <pre><code class="language-java hljs" data-lang="java">var options = SamplingOptions.builder()
+  .temperature(0).maxTokens(128).build();
 
-try (var model = ModelJars.open(selected)) {
-  var answer = model.generate(prompt, options);
+try (var runtime = ModelJars.openRuntime(selected)) {
+  var prompt = runtime.chatTemplate().render(
+    List.of(ChatMessage.user("Name one JVM language.")));
+  var answer = runtime.model().generate(prompt, options);
 }</code></pre>
               </article>
             </div>

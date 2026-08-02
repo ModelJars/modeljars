@@ -9,7 +9,7 @@ org.modeljars:modeljars-catalog:<preview-version>
 ```
 
 The JVM Runtime is the intended Java 25 application dependency. It brings in the core
-API, Models 0.2.2, and its native and Java execution paths. Add the independently
+API, Models 0.2.3, and its native and Java execution paths. Add the independently
 published marker for every model used by the application:
 
 ```kotlin
@@ -22,7 +22,7 @@ dependencies {
 Each workflow run creates an immutable version such as:
 
 ```text
-0.1.1-preview.42.1.0123456789ab
+0.1.2-preview.42.1.0123456789ab
 ```
 
 The invitation provides the exact versions. The aggregate preview workflow does

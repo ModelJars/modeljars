@@ -43,7 +43,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.1")
+    implementation("org.modeljars:modeljars:0.1.2")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -56,7 +56,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -65,7 +65,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.2.2, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models 0.2.3, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25. `modeljars-core` remains usable by
 Java 21 registry and build tooling without the Models runtime.
@@ -112,22 +112,70 @@ org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ```java
 import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
 
-var prompt = ChatTemplate.CHATML_NO_THINK.render(
-    List.of(ChatMessage.user("Name one JVM language.")));
 var options = SamplingOptions.builder()
-    .temperature(0).maxTokens(32).build();
+    .temperature(0).maxTokens(128).build();
 
-try (var model = ModelJars.open(MODEL)) {
-    String answer = model.generate(prompt, options);
+try (var runtime = ModelJars.openRuntime(MODEL)) {
+    var prompt = runtime.chatTemplate().render(
+        List.of(ChatMessage.user("Name one JVM language.")));
+    String answer = runtime.model().generate(prompt, options);
 }
 ```
 
-`ModelJars.open` resolves the exact qualified descriptor, selects its qualified Models backend,
+`ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
+and chat template,
 downloads missing weights, verifies their size and SHA-256 digest, and applies every non-conflicting
 artifact-bound performance profile that matches the current runtime. Profiles with Java launch
 requirements apply only when every required JVM argument is active; omitted profiles and missing
-arguments remain visible in backend diagnostics. The returned model owns the backend and closes it
-at the end of the `try` block.
+arguments remain visible in backend diagnostics. The runtime owns the backend and closes it at the
+end of the `try` block. The older `ModelJars.open` model-only API remains available when the caller
+already owns prompt selection.
+
+Local inference must start Java 25 with the Vector module resolved:
+
+```text
+--add-modules=jdk.incubator.vector
+```
+
+ModelJars checks this before resolving or downloading model weights. When automatic selection picks
+the Rust/FFM backend, it also checks for `--enable-native-access=ALL-UNNAMED` before downloading and
+explains how to select a qualified Java backend when available.
+
+For Maven's in-process `exec:java`, pass the module to the Maven JVM:
+
+```bash
+MAVEN_OPTS="--add-modules=jdk.incubator.vector" mvn exec:java
+```
+
+For a packaged application, place the option before `-jar`:
+
+```bash
+java --add-modules=jdk.incubator.vector -jar application.jar
+```
+
+## RAG framework dependencies
+
+ModelJars does not force a LangChain4j or Spring AI version on applications. Add the Models adapter,
+the framework-neutral grounding module, and the chosen framework explicitly. For LangChain4j:
+
+```kotlin
+implementation("com.integrallis:models-rag:0.2.3")
+implementation("com.integrallis:models-langchain4j:0.2.3")
+implementation("dev.langchain4j:langchain4j:1.17.2")
+```
+
+For Spring AI:
+
+```kotlin
+implementation("com.integrallis:models-rag:0.2.3")
+implementation("com.integrallis:models-spring-ai:0.2.3")
+implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
+implementation("org.springframework.ai:spring-ai-rag:2.0.0")
+```
+
+Use `GroundedRagPrompt.prepare(...)` to screen retrieved evidence and construct the canonical prompt.
+Place its `instructions()` in the framework system message and its `request()` in the user message,
+then render both with `runtime.chatTemplate()`.
 
 Offline loading and explicit backend selection are available without exposing the cache path:
 

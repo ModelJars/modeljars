@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 /**
  * Resolves, verifies, configures, and opens qualified models from ModelJars metadata.
  *
- * <p>The returned {@link TextGenerationModel} owns its inference backend and must be closed.
+ * <p>Returned models and runtimes own their inference backend and must be closed.
  */
 public final class ModelJars {
   private static final String JAVA_BACKEND = "pure-java";
@@ -81,7 +81,7 @@ public final class ModelJars {
    * @return ready-to-use text generation model
    */
   public static TextGenerationModel open(ModelJar model) {
-    return open(model, ModelLoadOptions.defaults());
+    return openRuntime(model).model();
   }
 
   /**
@@ -92,7 +92,31 @@ public final class ModelJars {
    * @return ready-to-use text generation model
    */
   public static TextGenerationModel open(ModelJar model, ModelLoadOptions options) {
-    return classpathLoader().load(model, options);
+    return openRuntime(model, options).model();
+  }
+
+  /**
+   * Opens a qualified model and exposes its qualified chat template and evidence.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @return loaded model runtime with qualification-owned prompt metadata
+   */
+  public static ModelJarRuntime openRuntime(ModelJar model) {
+    return openRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified model with explicit loading controls and qualification-owned prompt
+   * metadata.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @param options backend, cache, and network controls
+   * @return loaded model runtime with qualification-owned prompt metadata
+   */
+  public static ModelJarRuntime openRuntime(ModelJar model, ModelLoadOptions options) {
+    requireVectorModule(
+        ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadRuntime(model, options);
   }
 
   /**
@@ -105,7 +129,21 @@ public final class ModelJars {
     return open(ModelJar.of(markerCoordinate));
   }
 
+  /**
+   * Opens an exact marker coordinate with its qualified chat template and evidence.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return loaded model runtime with qualification-owned prompt metadata
+   */
+  public static ModelJarRuntime openRuntime(String markerCoordinate) {
+    return openRuntime(ModelJar.of(markerCoordinate));
+  }
+
   TextGenerationModel load(ModelJar model, ModelLoadOptions options) {
+    return loadRuntime(model, options).model();
+  }
+
+  ModelJarRuntime loadRuntime(ModelJar model, ModelLoadOptions options) {
     Objects.requireNonNull(model, "model");
     Objects.requireNonNull(options, "options");
     ModelJarDescriptor descriptor =
@@ -114,12 +152,41 @@ public final class ModelJars {
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
     ModelRagQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
+    List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
+    requireNativeAccess(backend, activeJvmArguments);
     Path artifact = installer.install(descriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
-        configuration(descriptor, qualification, runtime, List.copyOf(jvmArguments.get()));
+        configuration(descriptor, qualification, runtime, activeJvmArguments);
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
-    return new ManagedTextGenerationModel(loadedBackend);
+    return new ModelJarRuntime(
+        new ManagedTextGenerationModel(loadedBackend), descriptor, qualification);
+  }
+
+  static void requireVectorModule(boolean available) {
+    if (!available) {
+      throw new ModelJarException(
+          "ModelJars local inference requires the JDK Vector module. Restart Java 25 with "
+              + "--add-modules=jdk.incubator.vector");
+    }
+  }
+
+  static void requireNativeAccess(String backend, List<String> activeJvmArguments) {
+    if (!NATIVE_BACKEND.equals(backend)) {
+      return;
+    }
+    boolean enabled =
+        activeJvmArguments.stream()
+            .filter(argument -> argument.startsWith("--enable-native-access="))
+            .map(argument -> argument.substring("--enable-native-access=".length()))
+            .flatMap(value -> java.util.Arrays.stream(value.split(",")))
+            .anyMatch("ALL-UNNAMED"::equals);
+    if (!enabled) {
+      throw new ModelJarException(
+          "The qualified rust-ffm backend requires native access. Restart Java 25 with "
+              + "--enable-native-access=ALL-UNNAMED, or explicitly select ModelBackend.JAVA "
+              + "when that backend is qualified");
+    }
   }
 
   private ModelRagQualification selectQualification(

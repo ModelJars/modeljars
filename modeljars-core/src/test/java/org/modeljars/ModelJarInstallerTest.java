@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -60,6 +61,31 @@ class ModelJarInstallerTest {
     assertEquals(cacheDestination, installed);
     assertArrayEquals(modelBytes, Files.readAllBytes(installed));
     assertFalse(Files.exists(markerDestination));
+  }
+
+  @Test
+  void reportsDownloadVerificationAndCacheReadiness() throws IOException {
+    byte[] modelBytes = "visible download".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    Path source = tempDir.resolve("upstream.gguf");
+    Path destination = tempDir.resolve("cache/model.gguf");
+    Files.write(source, modelBytes);
+    ModelJarDescriptor descriptor = descriptor(source, destination, sha256(modelBytes));
+    List<String> progress = new ArrayList<>();
+    ModelJarInstaller installer =
+        new ModelJarInstaller(
+            new InMemoryModelJarRegistry(List.of(descriptor)), ignored -> {}, progress::add);
+
+    installer.install(descriptor, destination);
+
+    assertTrue(progress.getFirst().contains("Downloading model example"));
+    assertTrue(progress.stream().anyMatch(message -> message.contains("100%")));
+    assertTrue(progress.stream().anyMatch(message -> message.contains("verifying SHA-256")));
+    assertTrue(progress.getLast().contains("Model ready in cache"));
+
+    progress.clear();
+    installer.install(descriptor, destination);
+    assertTrue(progress.getFirst().contains("Verifying cached model"));
+    assertTrue(progress.getLast().contains("Model cache verified"));
   }
 
   @Test

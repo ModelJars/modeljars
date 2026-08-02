@@ -2,6 +2,7 @@ package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,6 +13,7 @@ import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,8 @@ class ModelJarsTest {
             () -> profile.runtimeSelector(),
             () -> profile.javaLaunch().map(JavaLaunchProfile::jvmArguments).orElseGet(List::of));
 
-    var model = loader.load(QWEN, ModelLoadOptions.defaults());
+    var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults());
+    var model = runtime.model();
 
     assertEquals(descriptor, installed.get());
     assertEquals("pure-java", selectedBackend.get());
@@ -68,8 +71,11 @@ class ModelJarsTest {
             .entrySet()
             .containsAll(profile.recommendations().entrySet()));
     assertEquals("fixture", model.modelName());
+    assertEquals(descriptor, runtime.descriptor());
+    assertEquals("chatml-no-think", runtime.qualification().promptTemplate());
+    assertEquals(ChatTemplate.CHATML_NO_THINK, runtime.chatTemplate());
     assertFalse(backend.closed());
-    model.close();
+    runtime.close();
     assertTrue(backend.closed());
   }
 
@@ -185,7 +191,8 @@ class ModelJarsTest {
               selectedBackend.set(backend);
               return new StubBackend();
             },
-            Map::of);
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
 
     try (var model = loader.load(SMOLLM, ModelLoadOptions.defaults())) {
       assertEquals("rust-ffm", selectedBackend.get());
@@ -214,6 +221,39 @@ class ModelJarsTest {
 
     assertTrue(failure.getMessage().contains("qualified"));
     assertTrue(failure.getMessage().contains("rust-ffm"));
+  }
+
+  @Test
+  void explainsTheVectorModuleBeforeClasspathLoading() {
+    ModelJarException failure =
+        assertThrows(ModelJarException.class, () -> ModelJars.requireVectorModule(false));
+
+    assertTrue(failure.getMessage().contains("--add-modules=jdk.incubator.vector"));
+  }
+
+  @Test
+  void rejectsMissingNativeAccessBeforeInstallingTheArtifact() {
+    AtomicReference<ModelJarDescriptor> installed = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installed.set(descriptor);
+              return Path.of("must-not-install.gguf");
+            },
+            (backend, path, configuration) -> new StubBackend(),
+            Map::of,
+            List::of);
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () -> loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains("--enable-native-access=ALL-UNNAMED"));
+    assertNull(installed.get());
   }
 
   @Test

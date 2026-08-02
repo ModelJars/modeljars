@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 class ModelRagQualificationRegistryTest {
   private static final int AGGREGATE_QUALIFIED_MODELS = 27;
   private static final String AGGREGATE_MODELS_REVISION =
-      "bc9ac1d08d49c6e70a9396af9b086942db1fe419";
+      "5ec2c5d446e60baa955ef58bd7e4e3dd52281747";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -122,6 +122,38 @@ class ModelRagQualificationRegistryTest {
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
     assertEquals(43.91685822892476, qualification.p50DecodeTokensPerSecond());
     assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogRetainsRejectedGemma4LatencyEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(
+                entry ->
+                    entry
+                        .modelId()
+                        .equals("ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(1, registry.rejectedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("gemma4", qualification.promptTemplate());
+    assertEquals("OFFLINE", qualification.performanceTier());
+    assertEquals("FAILED_ABSOLUTE_GATE", qualification.verdict());
+    assertEquals(RagUseCaseTier.UNQUALIFIED, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(1.0, qualification.rawCorrectAnswerRate());
+    assertEquals(21.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(3793.6837236, qualification.p95TtftMillis());
+    assertFalse(qualification.productionUsable());
+    assertFalse(registry.qualified().contains(qualification));
   }
 
   @Test

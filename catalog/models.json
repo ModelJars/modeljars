@@ -2569,7 +2569,7 @@
       "sourceUri": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF",
       "downloadUri": "https://huggingface.co/ggml-org/gemma-4-26B-A4B-it-GGUF/resolve/ae4d537a6345467d1c86bb5cc0d4505ff3ebe0f3/gemma-4-26B-A4B-it-Q4_K_M.gguf",
       "revision": "ae4d537a6345467d1c86bb5cc0d4505ff3ebe0f3",
-      "markerCoordinate": "org.modeljars.huggingface:ggml-org.gemma-4-26b-a4b-it-gguf.q4_k_m:4.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.gemma-4-26b-a4b-it-gguf.q4_k_m:4.0.0-q4_k_m.2",
       "modelVersion": "4.0.0",
       "variant": "q4_k_m",
       "format": "gguf",
@@ -2587,11 +2587,17 @@
         "pinned-revision",
         "verified-sha256",
         "q4-k-m",
-        "community-conversion"
+        "community-conversion",
+        "mixture-of-experts",
+        "mapped-experts",
+        "hybrid-attention",
+        "gemma4-chat-template"
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "rust-ffm": true,
+        "llama.cpp": true,
+        "ollama": true
       },
       "domains": [
         "general"

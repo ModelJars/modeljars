@@ -1,0 +1,145 @@
+name: Finalize Central deployments
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_name_filter:
+        description: Unique substring shared by the intended Central deployment names
+        required: true
+        type: string
+      expected_count:
+        description: Exact number of deployments that must match before publication
+        required: true
+        default: 1
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: central-finalize-${{ inputs.deployment_name_filter }}
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Validate and publish exact Central deployments
+    runs-on: ubuntu-latest
+    environment: maven-central
+    steps:
+      - name: Verify release credentials
+        shell: bash
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          test -n "${CENTRAL_USERNAME}"
+          test -n "${CENTRAL_PASSWORD}"
+
+      - name: Publish validated deployments and await Maven Central
+        shell: bash
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          DEPLOYMENT_NAME_FILTER: ${{ inputs.deployment_name_filter }}
+          EXPECTED_COUNT: ${{ inputs.expected_count }}
+        run: |
+          if [[ ! "${DEPLOYMENT_NAME_FILTER}" =~ ^[A-Za-z0-9._-]{3,120}$ ]]; then
+            echo "Deployment filter must be a 3-120 character identifier." >&2
+            exit 1
+          fi
+          if [[ ! "${EXPECTED_COUNT}" =~ ^[0-9]+$ ]] ||
+             (( EXPECTED_COUNT < 1 || EXPECTED_COUNT > 100 )); then
+            echo "Expected deployment count must be between 1 and 100." >&2
+            exit 1
+          fi
+
+          authorization="$(
+            printf '%s:%s' "${CENTRAL_USERNAME}" "${CENTRAL_PASSWORD}" |
+              base64 |
+              tr -d '\n'
+          )"
+          api='https://central.sonatype.com/api/v1/publisher'
+
+          list_deployments() {
+            curl --fail-with-body --silent --show-error \
+              --get \
+              --header "Authorization: Bearer ${authorization}" \
+              --data-urlencode "deploymentName=${DEPLOYMENT_NAME_FILTER}" \
+              --data 'size=100' \
+              --data 'sortField=createTimestamp' \
+              --data 'sortDirection=desc' \
+              "${api}/deployments"
+          }
+
+          matching_deployments() {
+            jq --arg filter "${DEPLOYMENT_NAME_FILTER}" \
+              '[.deployments[] | select(.deploymentName | contains($filter))]'
+          }
+
+          validation_deadline=$((SECONDS + 900))
+          while true; do
+            deployments="$(list_deployments | matching_deployments)"
+            count="$(jq 'length' <<< "${deployments}")"
+            if (( count > EXPECTED_COUNT )); then
+              echo "Refusing to publish: ${count} deployments matched; expected ${EXPECTED_COUNT}." >&2
+              exit 1
+            fi
+            if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
+              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
+                <<< "${deployments}" >&2
+              exit 1
+            fi
+            incomplete="$(
+              jq '[.[] | select(
+                .deploymentState != "VALIDATED" and
+                .deploymentState != "PUBLISHING" and
+                .deploymentState != "PUBLISHED"
+              )] | length' <<< "${deployments}"
+            )"
+            if (( count == EXPECTED_COUNT && incomplete == 0 )); then
+              break
+            fi
+            if (( SECONDS >= validation_deadline )); then
+              echo "Timed out waiting for ${EXPECTED_COUNT} validated deployments; found ${count}." >&2
+              jq -r '.[] | "\(.deploymentName): \(.deploymentState)"' <<< "${deployments}" >&2
+              exit 1
+            fi
+            sleep 10
+          done
+
+          while IFS= read -r deployment_id; do
+            curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer ${authorization}" \
+              "${api}/deployment/${deployment_id}"
+          done < <(
+            jq -r '.[] | select(.deploymentState == "VALIDATED") | .deploymentId' \
+              <<< "${deployments}"
+          )
+
+          publication_deadline=$((SECONDS + 900))
+          while true; do
+            deployments="$(list_deployments | matching_deployments)"
+            count="$(jq 'length' <<< "${deployments}")"
+            published="$(jq '[.[] | select(.deploymentState == "PUBLISHED")] | length' <<< "${deployments}")"
+            if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
+              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
+                <<< "${deployments}" >&2
+              exit 1
+            fi
+            if (( count == EXPECTED_COUNT && published == EXPECTED_COUNT )); then
+              break
+            fi
+            if (( SECONDS >= publication_deadline )); then
+              echo "Timed out waiting for publication: ${published}/${EXPECTED_COUNT} published." >&2
+              jq -r '.[] | "\(.deploymentName): \(.deploymentState)"' <<< "${deployments}" >&2
+              exit 1
+            fi
+            sleep 10
+          done
+
+          {
+            echo '### Maven Central publication complete'
+            echo
+            echo "Published ${published} deployment(s) matching \`${DEPLOYMENT_NAME_FILTER}\`."
+          } >> "${GITHUB_STEP_SUMMARY}"

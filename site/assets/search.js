@@ -4,8 +4,8 @@ import { primaryQualification } from "./qualification-data.js";
 const SEARCH_ALIASES = new Map([
   ["medical", ["healthcare", "clinical"]],
   ["medicine", ["healthcare", "clinical"]],
-  ["programming", ["coding", "code"]],
-  ["developer", ["coding", "code"]],
+  ["programming", ["coding"]],
+  ["developer", ["coding"]],
   ["java", ["pure-java"]],
   ["local", ["offline", "on-device"]],
 ]);

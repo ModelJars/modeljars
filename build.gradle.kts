@@ -119,9 +119,27 @@ data class CatalogEntry(
     val dimensions: CatalogDimensions?,
     val capabilities: List<String>,
     val features: List<String>,
+    val files: List<CatalogArtifactFile>,
     val backends: Map<String, Boolean>,
     val raw: Map<String, Any?>,
 )
+
+data class CatalogArtifactFile(
+    val path: String,
+    val role: String,
+    val sha256: String,
+    val sizeBytes: Long,
+) {
+    fun properties(prefix: String, index: Int): List<String> {
+        val filePrefix = "${prefix}file.${index.toString().padStart(3, '0')}."
+        return listOf(
+            "${filePrefix}path=${propertyValue(path)}",
+            "${filePrefix}role=${propertyValue(role)}",
+            "${filePrefix}sha256=$sha256",
+            "${filePrefix}sizeBytes=$sizeBytes",
+        )
+    }
+}
 
 data class CatalogDimensions(
     val parameterCount: Long,
@@ -463,6 +481,12 @@ fun CatalogEntry.registryProperties(): String =
         dimensions?.properties(prefix)?.forEach(::appendLine)
         appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
         appendLine("${prefix}features=${features.joinToString(",")}")
+        if (files.isNotEmpty()) {
+            appendLine("${prefix}file.count=${files.size}")
+            files.forEachIndexed { index, file ->
+                file.properties(prefix, index).forEach(::appendLine)
+            }
+        }
         backends.toSortedMap().forEach { (backend, supported) ->
             appendLine("${prefix}backend.$backend=$supported")
         }
@@ -494,6 +518,34 @@ val catalogEntries =
                 (raw["domains"] as? List<*>)
                     ?.map { it as? String ?: error("domains must contain strings") }
                     ?: emptyList()
+            val files =
+                (raw["files"] as? List<*>)
+                    ?.mapIndexed { index, value ->
+                        val file = value.stringKeyMap("files[$index] for ${raw["id"]}")
+                        val path = file.requiredString("path")
+                        require(isNormalizedRepositoryRelativePath(path)) {
+                            "Artifact file path must be normalized and relative: $path"
+                        }
+                        val sha256 = file.requiredString("sha256")
+                        require(sha256.matches(Regex("[a-f0-9]{64}"))) {
+                            "Artifact file SHA-256 must contain 64 lowercase hexadecimal characters: $path"
+                        }
+                        val sizeBytes =
+                            (file["sizeBytes"] as? Number)?.toLong()
+                                ?: error("files[$index].sizeBytes must be an integer")
+                        require(sizeBytes > 0) {
+                            "Artifact file sizeBytes must be positive: $path"
+                        }
+                        CatalogArtifactFile(
+                            path = path,
+                            role = file.requiredString("role"),
+                            sha256 = sha256,
+                            sizeBytes = sizeBytes,
+                        )
+                    } ?: emptyList()
+            require(files.map(CatalogArtifactFile::path).distinct().size == files.size) {
+                "Artifact file paths must be unique for ${raw["id"]}"
+            }
             val dimensions =
                 raw["dimensions"]?.stringKeyMap("dimensions for ${raw["id"]}")?.let { values ->
                     fun requiredLong(name: String): Long =
@@ -561,6 +613,7 @@ val catalogEntries =
                 dimensions = dimensions,
                 capabilities = capabilities,
                 features = features,
+                files = files,
                 backends = backends,
                 raw = raw,
             )
@@ -1164,7 +1217,25 @@ catalogEntries.forEach { entry ->
     }
     require(entry.capabilities.isNotEmpty()) { "capabilities must not be empty for ${entry.id}" }
     require(entry.domains.isNotEmpty()) { "domains must not be empty for ${entry.id}" }
+    require("code" !in entry.domains) {
+        "Use the canonical 'coding' domain instead of 'code' for ${entry.id}"
+    }
     require(entry.backends.values.any { it }) { "At least one backend must support ${entry.id}" }
+    if (entry.files.isNotEmpty()) {
+        require(entry.features.contains("multi-file-artifact")) {
+            "Multi-file entries must advertise multi-file-artifact for ${entry.id}"
+        }
+        require(entry.files.size > 1) {
+            "Multi-file entries must bind at least two files for ${entry.id}"
+        }
+        require(
+            entry.files.any { file ->
+                file.sha256 == entry.sha256 && file.sizeBytes == entry.sizeBytes
+            },
+        ) {
+            "One artifact file must match the primary SHA-256 and size for ${entry.id}"
+        }
+    }
     if (entry.format == "wordtour-v1") {
         require(entry.packaging == "classpath") { "WordTour payload must be bundled for ${entry.id}" }
         require(entry.topology == "cycle") { "WordTour topology must be cycle for ${entry.id}" }

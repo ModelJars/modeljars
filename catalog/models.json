@@ -5582,7 +5582,7 @@
       },
       "domains": [
         "general",
-        "code"
+        "coding"
       ],
       "dimensions": {
         "parameterCount": 1476495360,
@@ -5594,6 +5594,183 @@
         "feedForwardLength": 5504,
         "attentionBlockCount": 24
       }
+    },
+    {
+      "id": "bartowski_kwaipilot_kat_coder_v2_5_dev_gguf_q4_k_m",
+      "name": "KAT-Coder V2.5 Dev GGUF Q4_K_M",
+      "description": "Apache-2.0 KAT-Coder V2.5 Dev coding model on the Qwen3.5 35B-A3B MoE architecture, pinned to a community Q4_K_M conversion while Models Qwen3.5-MoE support is pending.",
+      "sourceId": "hf://bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF",
+      "sourceUri": "https://huggingface.co/bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF",
+      "downloadUri": "https://huggingface.co/bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF/resolve/d8f684f08d2950ea9d2db6a35ef7dada0707858b/Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf",
+      "revision": "d8f684f08d2950ea9d2db6a35ef7dada0707858b",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.kwaipilot-kat-coder-v2.5-dev-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "modelVersion": "2.5.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35moe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf",
+      "sha256": "4221c26e5663502d1c96fc901c9967d0e70ce2dcfaa5a9fb9280a46bd19e3c07",
+      "sizeBytes": 21391448480,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation",
+        "tool-calling"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "community-conversion",
+        "q4-k-m",
+        "mixture-of-experts",
+        "hybrid-linear-full-attention",
+        "base-model:Kwaipilot/KAT-Coder-V2.5-Dev"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "coding",
+        "agentic-coding"
+      ],
+      "dimensions": {
+        "parameterCount": 34660610688,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 40,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "expertCount": 256,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 10
+      }
+    },
+    {
+      "id": "qwen_qwen3_tts_12hz_0_6b_customvoice_bf16",
+      "name": "Qwen3-TTS 12Hz 0.6B CustomVoice BF16",
+      "description": "Apache-2.0 multilingual Qwen3 text-to-speech candidate with nine built-in voices and a bundled 12 Hz speech tokenizer; retained internally until ModelJars supports multi-file artifacts and Models exposes audio generation.",
+      "sourceId": "hf://Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice/resolve/85e237c12c027371202489a0ec509ded67b5e4b5/model.safetensors",
+      "revision": "85e237c12c027371202489a0ec509ded67b5e4b5",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-tts-12hz-0.6b-customvoice.bf16:3.0.0-bf16.1",
+      "modelVersion": "3.0.0",
+      "variant": "12hz_0_6b_customvoice_bf16",
+      "format": "safetensors",
+      "architecture": "qwen3_tts",
+      "quantization": "BF16",
+      "localPath": "${user.home}/.modeljars/candidates/qwen3-tts-12hz-0.6b-customvoice/model.safetensors",
+      "sha256": "bc3c7e785eb961179c25450d1acff03f839e0002f2f3a5aeb67b5735c0fa2adb",
+      "sizeBytes": 1811626576,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-to-speech",
+        "multilingual"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "snapshot-required",
+        "speech-tokenizer-12hz",
+        "built-in-voices",
+        "reference-runner:qwen-tts",
+        "requires-audio-runtime"
+      ],
+      "files": [
+        {
+          "path": "model.safetensors",
+          "role": "text-to-speech-model",
+          "sha256": "bc3c7e785eb961179c25450d1acff03f839e0002f2f3a5aeb67b5735c0fa2adb",
+          "sizeBytes": 1811626576
+        },
+        {
+          "path": "speech_tokenizer/model.safetensors",
+          "role": "speech-tokenizer",
+          "sha256": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+          "sizeBytes": 682293092
+        }
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": false,
+        "qwen-tts": true
+      },
+      "domains": [
+        "audio",
+        "voice"
+      ]
+    },
+    {
+      "id": "dots_studio_dots_tts_mf_bf16",
+      "name": "dots.tts-mf BF16",
+      "description": "Apache-2.0 48 kHz voice-cloning TTS candidate using continuous speech latents and mean-flow distillation; retained internally until ModelJars supports multi-file artifacts and Models exposes audio generation.",
+      "sourceId": "hf://dots-studio/dots.tts-mf",
+      "sourceUri": "https://huggingface.co/dots-studio/dots.tts-mf",
+      "downloadUri": "https://huggingface.co/dots-studio/dots.tts-mf/resolve/25c53fb462e57087e52237daa5ea30df1c5cc328/model.safetensors",
+      "revision": "25c53fb462e57087e52237daa5ea30df1c5cc328",
+      "markerCoordinate": "org.modeljars.huggingface:dots-studio.dots-tts-mf.bf16:1.0.0-bf16.1",
+      "modelVersion": "1.0.0",
+      "variant": "mf_bf16",
+      "format": "safetensors",
+      "architecture": "dots_tts",
+      "quantization": "BF16",
+      "localPath": "${user.home}/.modeljars/candidates/dots.tts-mf/model.safetensors",
+      "sha256": "a16d5798da197bf647fc01915236873e4672e975b0341360703ec49d002c4696",
+      "sizeBytes": 4398915254,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-to-speech",
+        "voice-cloning",
+        "multilingual"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "snapshot-required",
+        "continuous-speech-latents",
+        "mean-flow",
+        "flow-matching",
+        "48khz-audio",
+        "reference-runner:dots.tts",
+        "requires-audio-runtime"
+      ],
+      "files": [
+        {
+          "path": "model.safetensors",
+          "role": "text-to-speech-model",
+          "sha256": "a16d5798da197bf647fc01915236873e4672e975b0341360703ec49d002c4696",
+          "sizeBytes": 4398915254
+        },
+        {
+          "path": "speaker_encoder.safetensors",
+          "role": "speaker-encoder",
+          "sha256": "1cf3861c9dee79e4db34bd0b8a4155e68bed27a7c6274e168bb6ee4fed191c85",
+          "sizeBytes": 29150484
+        },
+        {
+          "path": "vocoder.safetensors",
+          "role": "48khz-vocoder",
+          "sha256": "c0e45c08f480df67ac4c354b465355fcc7e2f6c8765263b6dfeddd1f4671c93d",
+          "sizeBytes": 723585584
+        }
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": false,
+        "dots.tts": true
+      },
+      "domains": [
+        "audio",
+        "voice"
+      ]
     },
     {
       "id": "wordtour_glove_6b_300d_optimal",

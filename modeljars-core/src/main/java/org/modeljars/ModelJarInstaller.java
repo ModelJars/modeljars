@@ -44,6 +44,18 @@ public final class ModelJarInstaller {
     this(registry, ModelJarInstaller::pauseBeforeRetry, ModelJarInstaller::reportProgress);
   }
 
+  /**
+   * Creates an installer with an application-owned progress reporter.
+   *
+   * @param registry registry used to resolve model selectors
+   * @param progressReporter receiver for download, verification, and retry messages
+   * @return installer that forwards progress messages to the supplied receiver
+   */
+  public static ModelJarInstaller reportingTo(
+      ModelJarRegistry registry, Consumer<String> progressReporter) {
+    return new ModelJarInstaller(registry, ModelJarInstaller::pauseBeforeRetry, progressReporter);
+  }
+
   ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
     this(registry, retryDelay, ModelJarInstaller::reportProgress);
   }

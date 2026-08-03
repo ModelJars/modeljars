@@ -22,7 +22,7 @@ dependencies {
 Each workflow run creates an immutable version such as:
 
 ```text
-0.1.2-preview.42.1.0123456789ab
+0.1.3-preview.42.1.0123456789ab
 ```
 
 The invitation provides the exact versions. The aggregate preview workflow does

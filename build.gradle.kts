@@ -19,15 +19,20 @@ import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.plugins.signing.SigningExtension
+import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
+import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 import org.w3c.dom.Element
 
 plugins {
     `java-library`
     `maven-publish`
+    id("org.graalvm.buildtools.native") version "1.1.6" apply false
 }
 
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
@@ -1318,7 +1323,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.2-SNAPSHOT")
+            .orElse("0.1.3-SNAPSHOT")
             .get()
 }
 
@@ -1326,6 +1331,7 @@ val modelsVersion = providers.gradleProperty("modelsVersion").get()
 
 val githubPreviewVersionPattern =
     Regex("""\d+\.\d+\.\d+-preview\.\d+\.\d+\.[0-9a-f]{12}""")
+val stableCliVersionPattern = Regex("""\d+\.\d+\.\d+""")
 
 subprojects {
     apply(plugin = "java-library")
@@ -1427,9 +1433,16 @@ subprojects {
                 name == "publishMavenPublicationToGitHubPackagesRepository"
             if (enabled && !isModelMarker) {
                 doFirst {
-                    require(project.version.toString().matches(githubPreviewVersionPattern)) {
-                        "GitHub Packages previews require an immutable " +
-                            "<version>-preview.<run>.<attempt>.<sha> version"
+                    val publishedVersion = project.version.toString()
+                    val isStableCliRelease =
+                        project.name == "modeljars-cli" &&
+                            publishedVersion.matches(stableCliVersionPattern)
+                    require(
+                        publishedVersion.matches(githubPreviewVersionPattern) ||
+                            isStableCliRelease,
+                    ) {
+                        "GitHub Packages requires an immutable preview version, or a stable " +
+                            "modeljars-cli MAJOR.MINOR.PATCH release"
                     }
                 }
             }
@@ -1563,6 +1576,60 @@ project(":modeljars-core") {
     }
 }
 
+project(":modeljars-cli") {
+    description = "Standalone ModelJars catalog and verified model prefetch CLI"
+    apply(plugin = "application")
+    apply(plugin = "org.graalvm.buildtools.native")
+
+    dependencies {
+        implementation(project(":modeljars-core"))
+        runtimeOnly(project(":modeljars-catalog"))
+    }
+
+    extensions.configure<JavaApplication> {
+        applicationName = "modeljars"
+        mainClass.set("org.modeljars.cli.ModelJarsCli")
+    }
+
+    val graalvmNative = extensions.getByType<GraalVMExtension>()
+    (graalvmNative as ExtensionAware).extensions.configure<
+        GraalVMReachabilityMetadataRepositoryExtension
+    > {
+        enabled.set(false)
+    }
+    graalvmNative.apply {
+        binaries.named("main") {
+            imageName.set("modeljars")
+            mainClass.set("org.modeljars.cli.ModelJarsCli")
+            sharedLibrary.set(false)
+            buildArgs.add("--no-fallback")
+            buildArgs.add("--enable-url-protocols=http,https")
+        }
+        toolchainDetection.set(false)
+    }
+
+    tasks.named<Jar>("jar") {
+        dependsOn(":modeljars-core:jar", ":modeljars-catalog:jar")
+        manifest {
+            attributes(
+                "Main-Class" to "org.modeljars.cli.ModelJarsCli",
+                "Implementation-Version" to project.version.toString(),
+            )
+        }
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        from({
+            configurations.runtimeClasspath.get().map { dependency ->
+                if (dependency.isDirectory) dependency else zipTree(dependency)
+            }
+        })
+        exclude(
+            "META-INF/*.SF",
+            "META-INF/*.DSA",
+            "META-INF/*.RSA",
+        )
+    }
+}
+
 project(":modeljars") {
     description = "Application-facing ModelJars JVM Runtime"
 
@@ -1675,10 +1742,11 @@ val publishGitHubPackagesPreview =
     tasks.register("publishGitHubPackagesPreview") {
         group = "publishing"
         description =
-            "Publish the JVM Runtime, core, and aggregate catalog for invited GitHub Packages testing"
+            "Publish the JVM Runtime, core, CLI, and aggregate catalog for invited GitHub Packages testing"
         dependsOn(
             ":modeljars-core:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",
+            ":modeljars-cli:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars:publishMavenPublicationToGitHubPackagesRepository",
         )
     }
@@ -2714,6 +2782,7 @@ val releasePublicationTasks =
     listOf(
         ":modeljars-core:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars-catalog:publishMavenPublicationToReleaseBundleRepository",
+        ":modeljars-cli:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars:publishMavenPublicationToReleaseBundleRepository",
     )
 val modeljarsMarkerIds =

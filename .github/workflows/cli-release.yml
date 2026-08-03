@@ -1,0 +1,293 @@
+name: CLI native release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag that receives the binaries, for example v0.1.3.
+        required: true
+        type: string
+      ref:
+        description: Git ref to build; defaults to the release tag.
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  native:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            label: linux-x86_64
+            executable: modeljars
+            sdkman-platform: LINUX_64
+          - runner: ubuntu-24.04-arm
+            label: linux-aarch64
+            executable: modeljars
+            sdkman-platform: LINUX_ARM64
+          - runner: macos-15-intel
+            label: macos-x86_64
+            executable: modeljars
+            sdkman-platform: MAC_OSX
+          - runner: macos-15
+            label: macos-aarch64
+            executable: modeljars
+            sdkman-platform: MAC_ARM64
+          - runner: windows-2025
+            label: windows-x86_64
+            executable: modeljars.exe
+            sdkman-platform: WINDOWS_64
+
+    steps:
+      - name: Resolve release context
+        id: release
+        shell: bash
+        run: |
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || steps.release.outputs.tag }}
+
+      - name: Set up GraalVM Native Image
+        uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd # v1
+        with:
+          java-version: "21"
+          distribution: graalvm-community
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: gradle
+          native-image-job-reports: "true"
+
+      - name: Build and test native CLI
+        shell: bash
+        env:
+          MODELJARS_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          ./gradlew --no-daemon :modeljars-cli:test :modeljars-cli:nativeCompile \
+            "-PmodeljarsVersion=${MODELJARS_VERSION}"
+          binary="modeljars-cli/build/native/nativeCompile/${{ matrix.executable }}"
+          "$binary" version
+          "$binary" search gemma
+
+      - name: Package release assets
+        id: package
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          LABEL: ${{ matrix.label }}
+        run: |
+          mkdir -p dist "sdkman/modeljars-${VERSION}/bin"
+          source="modeljars-cli/build/native/nativeCompile/${{ matrix.executable }}"
+          raw="modeljars-${LABEL}${{ runner.os == 'Windows' && '.exe' || '' }}"
+          cp "$source" "dist/$raw"
+          if [ "${{ runner.os }}" != "Windows" ]; then
+            chmod +x "dist/$raw"
+            strip "dist/$raw" || true
+          fi
+          cp "dist/$raw" "sdkman/modeljars-${VERSION}/bin/${{ matrix.executable }}"
+          archive="modeljars-${VERSION}-${LABEL}.zip"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            (cd sdkman && 7z a -tzip "../dist/$archive" "modeljars-${VERSION}")
+          else
+            (cd sdkman && zip -qr "../dist/$archive" "modeljars-${VERSION}")
+          fi
+          for artifact in "dist/$raw" "dist/$archive"; do
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$artifact" | awk '{print $1}' > "${artifact}.sha256"
+            else
+              shasum -a 256 "$artifact" | awk '{print $1}' > "${artifact}.sha256"
+            fi
+          done
+          echo "raw=$raw" >> "$GITHUB_OUTPUT"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Upload assets to GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh release upload "${{ steps.release.outputs.tag }}" dist/*
+          --clobber --repo "${{ github.repository }}"
+
+  publish-packages:
+    name: Publish Homebrew and Scoop
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve context and credentials
+        id: context
+        env:
+          TOKEN: ${{ secrets.PACKAGES_PUBLISH_TOKEN }}
+        run: |
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          if [ -n "$TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PACKAGES_PUBLISH_TOKEN is absent; skipping Homebrew and Scoop."
+          fi
+
+      - name: Checkout packaging templates
+        if: steps.context.outputs.ready == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download binaries and calculate checksums
+        if: steps.context.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.context.outputs.tag }}
+        run: |
+          mkdir dist
+          gh release download "$TAG" --repo "${{ github.repository }}" --dir dist \
+            --pattern 'modeljars-linux-x86_64' \
+            --pattern 'modeljars-linux-aarch64' \
+            --pattern 'modeljars-macos-x86_64' \
+            --pattern 'modeljars-macos-aarch64' \
+            --pattern 'modeljars-windows-x86_64.exe'
+          {
+            echo "SHA_LINUX_X64=$(sha256sum dist/modeljars-linux-x86_64 | cut -d' ' -f1)"
+            echo "SHA_LINUX_ARM=$(sha256sum dist/modeljars-linux-aarch64 | cut -d' ' -f1)"
+            echo "SHA_MAC_X64=$(sha256sum dist/modeljars-macos-x86_64 | cut -d' ' -f1)"
+            echo "SHA_MAC_ARM=$(sha256sum dist/modeljars-macos-aarch64 | cut -d' ' -f1)"
+            echo "SHA_WIN_X64=$(sha256sum dist/modeljars-windows-x86_64.exe | cut -d' ' -f1)"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish Homebrew formula
+        if: steps.context.outputs.ready == 'true'
+        env:
+          TOKEN: ${{ secrets.PACKAGES_PUBLISH_TOKEN }}
+          VERSION: ${{ steps.context.outputs.version }}
+          BASE: https://github.com/${{ github.repository }}/releases/download/${{ steps.context.outputs.tag }}
+        run: |
+          variables='${VERSION} ${BASE} ${SHA_LINUX_X64} ${SHA_LINUX_ARM} ${SHA_MAC_X64} ${SHA_MAC_ARM}'
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/integrallis/homebrew-tap.git" tap
+          envsubst "$variables" < packaging/modeljars.rb > tap/Formula/modeljars.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/modeljars.rb
+          git commit -m "modeljars ${VERSION}" && git push || echo "No formula change"
+
+      - name: Publish Scoop manifest
+        if: steps.context.outputs.ready == 'true'
+        env:
+          TOKEN: ${{ secrets.PACKAGES_PUBLISH_TOKEN }}
+          VERSION: ${{ steps.context.outputs.version }}
+          BASE: https://github.com/${{ github.repository }}/releases/download/${{ steps.context.outputs.tag }}
+        run: |
+          variables='${VERSION} ${BASE} ${SHA_WIN_X64}'
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/integrallis/scoop-bucket.git" bucket
+          envsubst "$variables" < packaging/modeljars.json > bucket/bucket/modeljars.json
+          cd bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bucket/modeljars.json
+          git commit -m "modeljars ${VERSION}" && git push || echo "No manifest change"
+
+  publish-github-package:
+    name: Publish CLI JAR to GitHub Packages
+    needs: native
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve release context
+        id: release
+        run: |
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || steps.release.outputs.tag }}
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Publish executable JAR
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: >-
+          ./gradlew --no-daemon
+          :modeljars-cli:publishMavenPublicationToGitHubPackagesRepository
+          "-PmodeljarsVersion=${VERSION}"
+
+  publish-sdkman:
+    name: SDKMAN ${{ matrix.platform }}
+    needs: native
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x86_64
+            platform: LINUX_64
+          - label: linux-aarch64
+            platform: LINUX_ARM64
+          - label: macos-x86_64
+            platform: MAC_OSX
+          - label: macos-aarch64
+            platform: MAC_ARM64
+          - label: windows-x86_64
+            platform: WINDOWS_64
+    steps:
+      - name: Resolve context and credentials
+        id: context
+        env:
+          KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+        run: |
+          tag="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SDKMAN vendor credentials are absent; skipping SDKMAN publish."
+          fi
+
+      - name: Download SDKMAN archive
+        if: steps.context.outputs.ready == 'true'
+        id: archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.context.outputs.tag }}
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          asset="modeljars-${VERSION}-${{ matrix.label }}.zip"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$asset"
+          echo "name=$asset" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$asset" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish candidate version
+        if: steps.context.outputs.ready == 'true'
+        uses: sdkman/sdkman-release-action@3eb9347b254fc89b9af3a1ed08b874228f3dcd1f # v0.2.0
+        with:
+          consumer-key: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          consumer-token: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          candidate: modeljars
+          version: ${{ steps.context.outputs.version }}
+          url: https://github.com/${{ github.repository }}/releases/download/${{ steps.context.outputs.tag }}/${{ steps.archive.outputs.name }}
+          platform: ${{ matrix.platform }}
+          checksum-sha-256: ${{ steps.archive.outputs.sha256 }}

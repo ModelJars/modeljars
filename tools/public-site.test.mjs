@@ -94,7 +94,10 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.2/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.3/);
+  assert.match(index, /brew install integrallis\/tap\/modeljars/);
+  assert.match(index, /modeljars pull/);
+  assert.match(index, /revision-pinned upstream URL/);
   assert.match(index, /Add the JVM Runtime and the model/);
   assert.match(index, /Qwen3_0_6b_Q4_0\.MODEL/);
   assert.match(index, /ModelJars\.openRuntime/);
@@ -151,7 +154,8 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
     read("site/assets/styles.css"),
     read("site/assets/highlight.js"),
   ]);
-  const guide = index.match(/<section class="guide-band"[\s\S]*?<\/section>/)?.[0];
+  const guide =
+    index.match(/<section class="guide-band" id="using-modeljars"[\s\S]*?<\/section>/)?.[0];
 
   assert.ok(guide, "landing page must contain the Java guide");
   assert.equal((guide.match(/<article>/g) ?? []).length, 3);

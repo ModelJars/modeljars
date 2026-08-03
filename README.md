@@ -36,6 +36,40 @@ boundary. They include only the qualified subset whose artifact SHA-256 and byte
 the candidate catalog. Recording candidate metadata does not create a public model page or authorize
 publication.
 
+## Install the CLI
+
+The `modeljars` CLI is a self-contained GraalVM native executable; using it does not require a JDK.
+It follows the familiar local-model workflow used by tools such as Ollama:
+
+```bash
+# macOS or Linux
+brew install integrallis/tap/modeljars
+
+# macOS or Linux without Homebrew
+curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh
+
+# Windows
+scoop bucket add integrallis https://github.com/integrallis/scoop-bucket
+scoop install modeljars
+```
+
+Search the qualified catalog, inspect immutable provenance, prefetch weights, and see what is
+already cached:
+
+```bash
+modeljars search gemma
+modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
+modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
+modeljars list
+```
+
+`pull` uses the same content-addressed cache as the JVM Runtime. It downloads from the descriptor's
+exact immutable URL, verifies byte size and SHA-256, and never starts inference. Release automation
+builds native binaries for macOS, Linux, and Windows on their host architectures and publishes an
+executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platform archives are
+also generated; publication begins once the `modeljars` candidate completes SDKMAN vendor
+onboarding.
+
 ## Dependency
 
 Applications use the stable JVM Runtime artifact and add one model dependency for every model they
@@ -43,7 +77,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.2")
+    implementation("org.modeljars:modeljars:0.1.3")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -56,7 +90,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.2</version>
+  <version>0.1.3</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -67,8 +101,8 @@ dependencies {
 
 `modeljars` exposes `modeljars-core`, Models 0.2.3, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
-Java reference. Applications using the JVM Runtime require Java 25. `modeljars-core` remains usable by
-Java 21 registry and build tooling without the Models runtime.
+Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
+the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to
@@ -89,8 +123,12 @@ It resolves the upstream source:
 hf://ggml-org/Qwen3-0.6B-GGUF
 ```
 
-The JVM Runtime stores downloaded weights in a content-addressed cache below
-`${user.home}/.modeljars/cache/sha256/`. Application code never constructs or passes that path.
+For this launch catalog, external weights are downloaded directly from an exact, commit-pinned
+Hugging Face revision. The marker JAR contains metadata rather than the large weights, including the
+source page, immutable download URL, revision, byte count, and SHA-256. The JVM Runtime and CLI store
+verified weights in a content-addressed cache below `${user.home}/.modeljars/cache/sha256/`.
+Application code never constructs or passes that path. Run `modeljars show <model>` to inspect all
+of that provenance before downloading.
 
 Qwen2.5-Coder markers include:
 
@@ -112,15 +150,20 @@ org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ```java
 import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
 
+import com.integrallis.models.api.ModelPrompt;
+
 var options = SamplingOptions.builder()
     .temperature(0).maxTokens(128).build();
 
 try (var runtime = ModelJars.openRuntime(MODEL)) {
-    var prompt = runtime.chatTemplate().render(
+    ModelPrompt prompt = runtime.chatTemplate().render(
         List.of(ChatMessage.user("Name one JVM language.")));
     String answer = runtime.model().generate(prompt, options);
 }
 ```
+
+`ChatTemplate.render(...)` returns `com.integrallis.models.api.ModelPrompt`. `ModelPrompt` preserves
+the distinction between template control tokens and user text; it is intentionally not a `String`.
 
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,
@@ -131,7 +174,7 @@ arguments remain visible in backend diagnostics. The runtime owns the backend an
 end of the `try` block. The older `ModelJars.open` model-only API remains available when the caller
 already owns prompt selection.
 
-Local inference must start Java 25 with the Vector module resolved:
+Local inference must start Java 25 or newer with the Vector module resolved:
 
 ```text
 --add-modules=jdk.incubator.vector
@@ -140,6 +183,17 @@ Local inference must start Java 25 with the Vector module resolved:
 ModelJars checks this before resolving or downloading model weights. When automatic selection picks
 the Rust/FFM backend, it also checks for `--enable-native-access=ALL-UNNAMED` before downloading and
 explains how to select a qualified Java backend when available.
+
+If an error says class-file version `69.0` but the runtime only recognizes up to `61.0`, the model
+library was compiled for Java 25 (`69`) but the process actually launched with Java 17 (`61`). Java
+26 can run Java 25 bytecode; the usual cause is Maven, Gradle, or an IDE using a different JDK than
+the shell. Check every launcher involved:
+
+```bash
+java -version
+mvn -v
+./gradlew --version
+```
 
 For Maven's in-process `exec:java`, pass the module to the Maven JVM:
 
@@ -316,3 +370,4 @@ well-known metadata resources. A richer scanner and public catalog service can c
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
 - [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)
 - [Performance profile schema and safety contract](docs/performance-profiles.md)
+- [Native CLI distribution and release channels](docs/cli-distribution.md)

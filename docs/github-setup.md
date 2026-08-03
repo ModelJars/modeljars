@@ -72,7 +72,7 @@ After the namespace is verified, generate a dedicated Central Portal user token 
 continuity, but the namespace is authorized through DNS rather than the mailbox address. The
 Gradle Plugin Portal is not involved unless ModelJars later publishes a Gradle plugin.
 
-The `publish` workflow stages the JVM Runtime, core, and aggregate catalog as one signed USER_MANAGED
+The `publish` workflow stages the JVM Runtime, core, CLI, and aggregate catalog as one signed USER_MANAGED
 Central deployment. The `Model artifacts` workflow publishes accepted marker coordinates
 independently. Its `model_ids` input accepts exact comma-separated catalog IDs; the reserved `all`
 value bootstraps the complete accepted catalog. Use `verify` before either publication target.
@@ -80,9 +80,14 @@ value bootstraps the complete accepted catalog. Use `verify` before either publi
 The JVM Runtime release contains these coordinates and transitive dependencies:
 
 ```text
-org.modeljars:modeljars:0.1.2
-  -> org.modeljars:modeljars-core:0.1.2
+org.modeljars:modeljars:0.1.3
+  -> org.modeljars:modeljars-core:0.1.3
   -> com.integrallis:models:0.2.3
   -> com.integrallis:backend-java:0.2.3
   -> com.integrallis:backend-native:0.2.3
 ```
+
+The separate CLI release workflow builds host-native executables with GraalVM on GitHub Actions,
+attaches checksummed assets to the GitHub release, publishes
+`org.modeljars:modeljars-cli:0.1.3` to GitHub Packages, and updates the Integrallis Homebrew tap and
+Scoop bucket. SDKMAN publication is credential-gated until vendor onboarding is complete.

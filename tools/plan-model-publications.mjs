@@ -21,6 +21,7 @@ function parseArguments(argumentsList) {
         "--previous-profiles",
         "--current-profiles",
         "--qualifications",
+        "--previous-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -30,7 +31,7 @@ function parseArguments(argumentsList) {
         "Usage: plan-model-publications.mjs --current FILE " +
           "(--previous FILE | --ids ID[,ID...]) " +
           "[--previous-profiles FILE --current-profiles FILE] " +
-          "[--qualifications FILE] " +
+          "[--qualifications FILE --previous-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -49,6 +50,23 @@ function parseArguments(argumentsList) {
       "--previous-profiles and --current-profiles must be provided together",
     );
   }
+  if (
+    values.has("--previous-qualifications") &&
+    (!values.has("--previous") || !values.has("--qualifications"))
+  ) {
+    throw new Error(
+      "--previous-qualifications requires --previous and --qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--qualifications") &&
+    !values.has("--previous-qualifications")
+  ) {
+    throw new Error(
+      "--previous-qualifications is required for a qualification-aware delta",
+    );
+  }
   return values;
 }
 
@@ -56,12 +74,41 @@ async function readCatalog(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
 
+function qualifiedCatalog(catalog, qualificationManifest) {
+  filterQualifiedPublications(
+    { publications: [], removed: [] },
+    catalog,
+    qualificationManifest,
+  );
+  const qualifiedIds = new Set(
+    qualificationManifest.entries
+      .filter((entry) => entry.qualified === true)
+      .map((entry) => entry.modelId),
+  );
+  return {
+    catalog: {
+      ...catalog,
+      models: catalog.models.filter((model) => qualifiedIds.has(model.id)),
+    },
+    qualifiedIds,
+  };
+}
+
+function qualifiedProfiles(profileCatalog, qualifiedIds) {
+  return {
+    ...profileCatalog,
+    profiles: profileCatalog.profiles.filter((profile) =>
+      qualifiedIds.has(profile.modelId),
+    ),
+  };
+}
+
 async function main() {
   const argumentsMap = parseArguments(process.argv.slice(2));
   const current = await readCatalog(argumentsMap.get("--current"));
   const previousPath = argumentsMap.get("--previous");
   const previousProfilesPath = argumentsMap.get("--previous-profiles");
-  const profileOptions =
+  let profileOptions =
     previousProfilesPath === undefined
       ? {}
       : {
@@ -70,29 +117,57 @@ async function main() {
             argumentsMap.get("--current-profiles"),
           ),
         };
-  const planned =
-    previousPath === undefined
-      ? selectCatalogPublications(
-          current,
-          argumentsMap
-            .get("--ids")
-            .split(",")
-            .map((id) => id.trim())
-            .filter(Boolean),
-        )
-      : catalogPublicationDelta(
-          await readCatalog(previousPath),
-          current,
-          profileOptions,
-        );
   const qualificationPath = argumentsMap.get("--qualifications");
+  const currentQualifications =
+    qualificationPath === undefined
+      ? undefined
+      : await readCatalog(qualificationPath);
+  let planned;
+  if (previousPath === undefined) {
+    planned = selectCatalogPublications(
+      current,
+      argumentsMap
+        .get("--ids")
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean),
+    );
+  } else {
+    let previous = await readCatalog(previousPath);
+    let currentForDelta = current;
+    const previousQualificationsPath = argumentsMap.get(
+      "--previous-qualifications",
+    );
+    if (previousQualificationsPath !== undefined) {
+      const previousQualified = qualifiedCatalog(
+        previous,
+        await readCatalog(previousQualificationsPath),
+      );
+      const currentQualified = qualifiedCatalog(current, currentQualifications);
+      previous = previousQualified.catalog;
+      currentForDelta = currentQualified.catalog;
+      if (previousProfilesPath !== undefined) {
+        profileOptions = {
+          previousProfiles: qualifiedProfiles(
+            profileOptions.previousProfiles,
+            previousQualified.qualifiedIds,
+          ),
+          currentProfiles: qualifiedProfiles(
+            profileOptions.currentProfiles,
+            currentQualified.qualifiedIds,
+          ),
+        };
+      }
+    }
+    planned = catalogPublicationDelta(previous, currentForDelta, profileOptions);
+  }
   const delta =
     qualificationPath === undefined
       ? planned
       : filterQualifiedPublications(
           planned,
           current,
-          await readCatalog(qualificationPath),
+          currentQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

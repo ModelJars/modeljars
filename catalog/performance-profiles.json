@@ -4177,7 +4177,7 @@
     {
       "id": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.2",
       "artifactSha256": "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
       "backend": "rust-ffm",
       "selector": {

@@ -181,6 +181,13 @@ pre {
   mask: url("/assets/fontawesome-mug-hot.svg") center / contain no-repeat;
 }
 
+.catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
 .icon-button {
   display: inline-grid;
   width: 36px;
@@ -1874,6 +1881,10 @@ select {
   .nav-java {
     width: 20px;
     justify-content: center;
+  }
+
+  .nav-cli {
+    display: none;
   }
 
   .nav-java span:last-child {

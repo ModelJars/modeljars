@@ -166,7 +166,7 @@ public final class ModelJars {
   static void requireVectorModule(boolean available) {
     if (!available) {
       throw new ModelJarException(
-          "ModelJars local inference requires the JDK Vector module. Restart Java 25 with "
+          "ModelJars local inference requires the JDK Vector module. Restart with Java 25 or newer and "
               + "--add-modules=jdk.incubator.vector");
     }
   }
@@ -183,7 +183,7 @@ public final class ModelJars {
             .anyMatch("ALL-UNNAMED"::equals);
     if (!enabled) {
       throw new ModelJarException(
-          "The qualified rust-ffm backend requires native access. Restart Java 25 with "
+          "The qualified rust-ffm backend requires native access. Restart with Java 25 or newer and "
               + "--enable-native-access=ALL-UNNAMED, or explicitly select ModelBackend.JAVA "
               + "when that backend is qualified");
     }
@@ -364,22 +364,11 @@ public final class ModelJars {
   }
 
   private static Path cachePath(ModelJarDescriptor descriptor, Path cacheDirectory) {
-    String sha256 =
-        descriptor
-            .sha256()
-            .orElseThrow(
-                () ->
-                    new ModelJarException(
-                        "ModelJar has no artifact SHA-256: " + descriptor.markerCoordinate()));
     if (!descriptor.format().equals("gguf")) {
       throw new ModelJarException(
           "Models backends cannot load ModelJar format " + descriptor.format());
     }
-    return cacheDirectory
-        .resolve("sha256")
-        .resolve(sha256.substring(0, 2))
-        .resolve(sha256)
-        .resolve("model.gguf");
+    return ModelJarCache.artifactPath(descriptor, cacheDirectory);
   }
 
   private static InferenceBackend loadBackend(

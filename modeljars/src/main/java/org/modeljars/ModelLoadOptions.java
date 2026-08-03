@@ -13,10 +13,10 @@ import java.util.Objects;
 public record ModelLoadOptions(
     ModelBackend backend, boolean offline, Path cacheDirectory) {
   /** System property that overrides the default ModelJars cache directory. */
-  public static final String CACHE_DIRECTORY_PROPERTY = "modeljars.cache";
+  public static final String CACHE_DIRECTORY_PROPERTY = ModelJarCache.CACHE_DIRECTORY_PROPERTY;
 
   /** Environment variable that overrides the default ModelJars cache directory. */
-  public static final String CACHE_DIRECTORY_ENV = "MODELJARS_CACHE";
+  public static final String CACHE_DIRECTORY_ENV = ModelJarCache.CACHE_DIRECTORY_ENV;
 
   /** Validates and normalizes model loading controls. */
   public ModelLoadOptions {
@@ -91,18 +91,7 @@ public record ModelLoadOptions(
      */
     public ModelLoadOptions build() {
       return new ModelLoadOptions(
-          backend, offline, cacheDirectory == null ? defaultCacheDirectory() : cacheDirectory);
+          backend, offline, cacheDirectory == null ? ModelJarCache.defaultDirectory() : cacheDirectory);
     }
-  }
-
-  private static Path defaultCacheDirectory() {
-    String configured = System.getProperty(CACHE_DIRECTORY_PROPERTY);
-    if (configured == null || configured.isBlank()) {
-      configured = System.getenv(CACHE_DIRECTORY_ENV);
-    }
-    if (configured != null && !configured.isBlank()) {
-      return Path.of(configured.trim());
-    }
-    return Path.of(System.getProperty("user.home"), ".modeljars", "cache");
   }
 }

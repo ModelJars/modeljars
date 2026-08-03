@@ -75,6 +75,11 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(index, />Models<\/a> JVM inference library/);
   assert.doesNotMatch(index, />Models JVM inference library<\/a>/);
   assert.match(index, /Think of WebJars, but for AI models/);
+  assert.match(
+    index,
+    /<a class="primary-button" href="#modeljars-cli">Install the native CLI<\/a>/,
+  );
+  assert.match(index, /content="Discover qualified local AI models, pull verified weights/);
   assert.doesNotMatch(index, /apple-runtime-notice|apple-runtime-band/);
   assert.match(index, /id="catalog-search"/);
   assert.match(index, /id="catalog-results"/);
@@ -94,7 +99,10 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.2/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.3/);
+  assert.match(index, /brew install integrallis\/tap\/modeljars/);
+  assert.match(index, /modeljars pull/);
+  assert.match(index, /revision-pinned upstream URL/);
   assert.match(index, /Add the JVM Runtime and the model/);
   assert.match(index, /Qwen3_0_6b_Q4_0\.MODEL/);
   assert.match(index, /ModelJars\.openRuntime/);
@@ -151,7 +159,8 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
     read("site/assets/styles.css"),
     read("site/assets/highlight.js"),
   ]);
-  const guide = index.match(/<section class="guide-band"[\s\S]*?<\/section>/)?.[0];
+  const guide =
+    index.match(/<section class="guide-band" id="using-modeljars"[\s\S]*?<\/section>/)?.[0];
 
   assert.ok(guide, "landing page must contain the Java guide");
   assert.equal((guide.match(/<article>/g) ?? []).length, 3);
@@ -178,7 +187,7 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(highlighter, /registerLanguage\("kotlin"/);
 });
 
-test("links every primary navigation to the Java guide with a simple monochrome cup icon", async () => {
+test("links every primary navigation to the CLI and Java guides", async () => {
   const [index, model, benchmarks, apple, contribution, javaIcon, styles] = await Promise.all([
     read("site/index.html"),
     read("site/model.html"),
@@ -190,6 +199,7 @@ test("links every primary navigation to the Java guide with a simple monochrome 
   ]);
 
   for (const page of [index, model, benchmarks, apple, contribution]) {
+    assert.match(page, /<a class="nav-cli" href="\/#modeljars-cli">CLI<\/a>/);
     assert.match(
       page,
       /<a class="nav-java" href="\/#using-modeljars"[^>]*>[\s\S]*?<span class="nav-java-icon" aria-hidden="true"><\/span>[\s\S]*?<span>Use from Java<\/span>[\s\S]*?<\/a>/,

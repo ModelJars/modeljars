@@ -26,6 +26,7 @@ export function javaSnippet(modelId) {
   const reference = referenceClassName(modelId);
   return `import static org.modeljars.catalog.${reference}.MODEL;
 
+import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import java.util.List;
@@ -35,7 +36,7 @@ var options = SamplingOptions.builder()
     .temperature(0).maxTokens(128).build();
 
 try (var runtime = ModelJars.openRuntime(MODEL)) {
-  var prompt = runtime.chatTemplate().render(
+  ModelPrompt prompt = runtime.chatTemplate().render(
       List.of(ChatMessage.user("Name one JVM language.")));
   String answer = runtime.model().generate(prompt, options);
 }`;

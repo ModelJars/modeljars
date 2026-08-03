@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 28;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 29;
   private static final String AGGREGATE_MODELS_REVISION =
-      "49441e29d9b6b6e47f1f539d8998c72cbfafef50";
+      "af662fc92310afa83afc3b7d6860d43124ec4c8e";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -841,13 +841,22 @@ class ModelRagQualificationRegistryTest {
                         .equals("huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
-    ModelRagQualification danube =
+    ModelRagQualification danubeTwo =
         registry.qualifications().stream()
             .filter(
                 entry ->
                     entry
                         .modelId()
                         .equals("h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    ModelRagQualification danubeThree =
+        registry.qualifications().stream()
+            .filter(
+                entry ->
+                    entry
+                        .modelId()
+                        .equals("h2oai_h2o_danube3_500m_chat_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
     ModelRagQualification yiCoder =
@@ -868,12 +877,18 @@ class ModelRagQualificationRegistryTest {
     assertEquals(
         "128dce8b4c8b5eae1e1c1be7cca8c155b144506e33c37b1cb0479dd928af0968",
         smolLm.reportSha256());
-    assertEquals("h2o-direct", danube.promptTemplate());
-    assertEquals(1.0 / 3.0, danube.modelAnswerRate());
-    assertEquals(26.092233851604476, danube.p50DecodeTokensPerSecond());
+    assertEquals("h2o-direct", danubeTwo.promptTemplate());
+    assertEquals(1.0 / 3.0, danubeTwo.modelAnswerRate());
+    assertEquals(26.092233851604476, danubeTwo.p50DecodeTokensPerSecond());
     assertEquals(
         "3fca8449921c16205d24d60cff87b9162ed933fb3871748b1dcada56ff77686e",
-        danube.reportSha256());
+        danubeTwo.reportSha256());
+    assertEquals("h2o", danubeThree.promptTemplate());
+    assertEquals(1.0 / 3.0, danubeThree.modelAnswerRate());
+    assertEquals(82.08539689080071, danubeThree.p50DecodeTokensPerSecond());
+    assertEquals(
+        "f3953bfd66fe21a31ae63f1bb05b2929d1dd5dcab4be49ac7af2e341137b0b84",
+        danubeThree.reportSha256());
     assertEquals("chatml-answer", yiCoder.promptTemplate());
     assertEquals(15.0 / 27.0, yiCoder.modelAnswerRate());
     assertEquals(29.737367126827113, yiCoder.p50DecodeTokensPerSecond());
@@ -888,7 +903,8 @@ class ModelRagQualificationRegistryTest {
                 + "yi-coder-1.5b-q4_k_m/models-rust-ffm.json"),
         yiCoder.reportUri());
     assertTrue(smolLm.productionUsable());
-    assertTrue(danube.productionUsable());
+    assertTrue(danubeTwo.productionUsable());
+    assertTrue(danubeThree.productionUsable());
     assertTrue(yiCoder.productionUsable());
   }
 

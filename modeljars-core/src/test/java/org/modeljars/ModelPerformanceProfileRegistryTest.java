@@ -1611,6 +1611,44 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesH2oDanubeThree500MillionProfile() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile profile =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("rust-ffm", profile.backend());
+    assertEquals(
+        "021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43",
+        profile.artifactSha256());
+    assertEquals("8", profile.recommendations().get("models.native.kernels.threads"));
+    assertEquals("true", profile.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("h2o", profile.evidence().controls().get("promptTemplate"));
+    assertEquals("general", profile.evidence().controls().get("workload"));
+    assertEquals(
+        "f3953bfd66fe21a31ae63f1bb05b2929d1dd5dcab4be49ac7af2e341137b0b84",
+        profile.evidence().controls().get("candidateReportSha256"));
+    assertEquals(
+        "2027cbf6ff433520b27c758b6c3465c79726159381211c5977bc95e63c29d331",
+        profile.evidence().controls().get("qualificationReportSha256"));
+    assertEquals(
+        "af662fc92310afa83afc3b7d6860d43124ec4c8e",
+        profile.evidence().controls().get("modelsEvidenceCommit"));
+    assertEquals(
+        82.08539689080071,
+        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+    assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
   void aggregateCatalogPublishesYiCoderOnePointFiveBillionChatProfile() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
     ModelPerformanceProfile profile =

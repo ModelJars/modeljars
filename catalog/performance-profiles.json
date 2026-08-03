@@ -4063,7 +4063,7 @@
     {
       "id": "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube3-500m-chat-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube3-500m-chat-gguf.q4_k_m:3.0.0-q4_k_m.2",
       "artifactSha256": "021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43",
       "backend": "rust-ffm",
       "selector": {

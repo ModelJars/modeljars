@@ -5460,7 +5460,7 @@
       "sourceUri": "https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF",
       "downloadUri": "https://huggingface.co/h2oai/h2o-danube3-500m-chat-GGUF/resolve/73d306884d4f4ed09fa6d146fe3260e3b739dc74/h2o-danube3-500m-chat-Q4_K_M.gguf",
       "revision": "73d306884d4f4ed09fa6d146fe3260e3b739dc74",
-      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube3-500m-chat-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:h2oai.h2o-danube3-500m-chat-gguf.q4_k_m:3.0.0-q4_k_m.2",
       "modelVersion": "3.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

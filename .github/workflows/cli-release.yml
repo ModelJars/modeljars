@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag that receives the binaries, for example v0.1.3.
+        description: Release tag that receives the binaries, for example v0.1.4.
         required: true
         type: string
       ref:

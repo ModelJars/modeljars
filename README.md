@@ -327,9 +327,11 @@ byte[] payload = new ModelJarResourceLoader(
 
 A public ModelJar represents one exact model artifact, not a claim about every conversion or
 quantization of the upstream model. Qualification pins the artifact and Models revision, runs
-parser/tokenizer/generation tests, executes a controlled RAG workload, and checks absolute quality
-and latency plus same-host performance against Ollama. llama.cpp is retained as a second independent
-comparator; neither comparator is a runtime dependency.
+parser/tokenizer/generation tests, then executes the complete controlled RAG workload using the
+selected Models backend and library-default properties. Every default generation must succeed with
+perfect deterministic correctness before any tuning is applied. A separate performance phase checks
+absolute quality and latency plus same-host performance against Ollama. llama.cpp is retained as a
+second independent comparator; neither comparator is a runtime dependency.
 
 The [qualification and submission guide](https://modeljars.org/contribute/) lists host
 prerequisites, the harness command, acceptance thresholds, evidence files, and pull request steps.

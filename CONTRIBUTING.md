@@ -34,10 +34,20 @@ Qualification requires:
   [`integrallis/models`](https://github.com/integrallis/models);
 - a controlled Java 25 run using
   `scripts/run-controlled-rag-qualification.sh` from the Models repository;
+- a successful `default-correctness` report for the exact model/backend pair,
+  using library-default Models properties, the longest-common-prefix cache,
+  every workload case, and no failed generation attempts;
 - identical GGUF bytes, prompts, controls, and host hardware for Models, Ollama, and llama.cpp
-  comparator reports;
+  comparator reports in the separate tuned performance phase;
 - raw report files, artifact and report SHA-256 values, environment identity, and a passing
   `production-rag-model-contribution-v4` verdict.
+
+New or changed qualified entries must include `defaultConfigurationSmoke`
+metadata pointing to the immutable Models report. CI fetches that report from
+the declared Models commit, verifies its SHA-256 and exact artifact/backend,
+and rejects tuned properties or any failed attempt. Existing evidence is
+grandfathered until it changes; tuned benchmark success cannot override a
+failed default-configuration smoke.
 
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not

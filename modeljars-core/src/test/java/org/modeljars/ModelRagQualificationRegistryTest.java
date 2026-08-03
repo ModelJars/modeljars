@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 28;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 27;
   private static final String AGGREGATE_MODELS_REVISION =
       "d54eedd3ae9de6bb7558bc78f8b794e6b740cb71";
 
@@ -125,7 +125,7 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
-  void aggregateCatalogPublishesQualifiedGemma4Evidence() {
+  void aggregateCatalogWithdrawsGemma4UntilDefaultConfigurationPasses() {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
 
     ModelRagQualification qualification =
@@ -140,7 +140,7 @@ class ModelRagQualificationRegistryTest {
 
     assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
-    assertEquals(0, registry.rejectedModels());
+    assertEquals(1, registry.rejectedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
         "models@37fc4a8b9d421505487b678c7ce841d1baa20eb4 "
@@ -148,8 +148,8 @@ class ModelRagQualificationRegistryTest {
         qualification.backendVersion());
     assertEquals("gemma4", qualification.promptTemplate());
     assertEquals("USABLE", qualification.performanceTier());
-    assertEquals("QUALIFIED", qualification.verdict());
-    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals("UNQUALIFIED_DEFAULT_CONFIGURATION", qualification.verdict());
+    assertEquals(RagUseCaseTier.UNQUALIFIED, qualification.useCaseTier());
     assertEquals(27, qualification.attempts());
     assertEquals(1.0, qualification.correctAnswerRate());
     assertEquals(1.0, qualification.rawCorrectAnswerRate());
@@ -160,8 +160,8 @@ class ModelRagQualificationRegistryTest {
     assertEquals(
         "2234bd65597ed56c2dbc2936e389e145c3bf471fa2d7202cd7e6a802f2523ed8",
         qualification.reportSha256());
-    assertTrue(qualification.productionUsable());
-    assertTrue(registry.qualified().contains(qualification));
+    assertFalse(qualification.productionUsable());
+    assertFalse(registry.qualified().contains(qualification));
   }
 
   @Test

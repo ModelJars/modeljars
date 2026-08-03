@@ -76,8 +76,8 @@
           <div>
             <dt>Production qualification</dt>
             <dd>
-              The exact artifact and Models backend complete a controlled RAG workload and satisfy
-              correctness, latency, model-contribution, and relative-performance gates.
+              The exact artifact and Models backend first pass the complete RAG workload with
+              library defaults, then satisfy the separate tuned performance gates.
             </dd>
           </div>
         </dl>
@@ -108,7 +108,13 @@
             digest, prompt controls, and every request.
           </li>
           <li>
-            <strong>Compare identical bytes.</strong>
+            <strong>Pass with library defaults.</strong>
+            Before tuning, the exact Models backend runs every workload case with the
+            longest-common-prefix cache. Every generation must succeed and deterministic
+            correctness must be 100%. A tuned result cannot override this gate.
+          </li>
+          <li>
+            <strong>Compare identical bytes separately.</strong>
             The harness measures Models and same-host Ollama and llama.cpp comparators with the same
             GGUF, prompts, context, sampling controls, thread count, warmups, and iterations.
             Ollama and llama.cpp are qualification comparators, not ModelJars runtime dependencies.
@@ -116,8 +122,9 @@
           <li>
             <strong>Submit reproducible evidence.</strong>
             Commit the raw reports to the Models repository, then update ModelJars catalog and
-            qualification metadata in a pull request. Maintainers verify report hashes and CI
-            rebuilds the marker and public catalog.
+            qualification metadata, including <code>defaultConfigurationSmoke</code>, in a pull
+            request. CI fetches the default report from the pinned Models commit, verifies its
+            digest and controls, and rebuilds the marker and public catalog.
           </li>
         </ol>
       </section>

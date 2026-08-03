@@ -220,6 +220,23 @@ batch-size profiles form one backend configuration rather than depending on prof
 registry rejects two profiles for the same artifact and backend when their selectors can overlap
 and they assign different values to the same recommendation key.
 
+## H2O Danube3 500M guarded-RAG profile
+
+The H2O Danube3 500M Chat Q4_K_M profile is bound to SHA-256
+`021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43`,
+HotSpot Java 25.0.3, eight EPYC-Milan processors, and 256-bit vectors. It enables
+native quantized decode with eight native workers, keeps a 32-token prefill
+batch, and selects the measured single-row attention score/value paths.
+
+Two complete 27-request runs produced identical prompt hashes, raw model
+outputs, grounding decisions, and evaluations. The qualified run reached 82.09
+tok/s median decode, 415.6 ms p95 TTFT, and 1,131.7 ms p95 end-to-end latency;
+the repeat reached 83.34 tok/s, 414.5 ms, and 1,117.1 ms respectively. Both
+were `PRODUCTION_READY` with 100% guarded-RAG correctness. The exact-output
+pair makes this profile safe for automatic selection on the measured runtime
+tuple. Library defaults were also tested separately for correctness and passed
+all nine cases, but are not presented as the performance baseline.
+
 ## Safety Contract
 
 `ModelPerformanceProfile.safeForAutomaticSelection()` requires exact output-hash agreement and at

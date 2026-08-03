@@ -15,7 +15,7 @@ on:
       version:
         description: Base version for a preview, or exact Maven Central version.
         required: true
-        default: "0.1.3"
+        default: "0.1.4"
         type: string
   push:
     branches:

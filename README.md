@@ -77,7 +77,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.3")
+    implementation("org.modeljars:modeljars:0.1.4")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -90,7 +90,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.3</version>
+  <version>0.1.4</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -99,7 +99,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.2.3, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models 0.2.4, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
 the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
@@ -213,16 +213,16 @@ ModelJars does not force a LangChain4j or Spring AI version on applications. Add
 the framework-neutral grounding module, and the chosen framework explicitly. For LangChain4j:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.2.3")
-implementation("com.integrallis:models-langchain4j:0.2.3")
+implementation("com.integrallis:models-rag:0.2.4")
+implementation("com.integrallis:models-langchain4j:0.2.4")
 implementation("dev.langchain4j:langchain4j:1.17.2")
 ```
 
 For Spring AI:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.2.3")
-implementation("com.integrallis:models-spring-ai:0.2.3")
+implementation("com.integrallis:models-rag:0.2.4")
+implementation("com.integrallis:models-spring-ai:0.2.4")
 implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
 implementation("org.springframework.ai:spring-ai-rag:2.0.0")
 ```

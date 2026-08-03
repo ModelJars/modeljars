@@ -20,6 +20,11 @@ and no-skip CI boundary are maintained in
 [launch-catalog-100.md](launch-catalog-100.md). The original 25-model report is
 retained as historical planning context.
 
+The 2026-08-03 intake for KAT-Coder V2.5 Dev, Qwen3-TTS, and dots.tts is in
+[model-candidates-20260803.md](model-candidates-20260803.md). It defines the
+separate runtime and qualification work required for coding-agent and voice
+models; these candidates remain internal until those gates pass.
+
 The canonical site is ModelJars.org. If ModelJars.com is later acquired, redirect it to the `.org`
 site.
 

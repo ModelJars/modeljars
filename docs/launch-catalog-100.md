@@ -6,12 +6,13 @@ Status: July 2026 implementation baseline
 
 The metadata-driven catalog currently contains:
 
-- 116 marker artifacts;
-- 115 pinned GGUF files;
-- 114 distinct upstream model repositories;
+- 119 marker artifacts;
+- 116 pinned GGUF files;
+- two pinned multi-file Safetensors voice candidates;
+- 117 distinct upstream model repositories;
 - 24 GGUF architecture identifiers;
 - 20 artifacts from 18 sources with a `pure-java` backend claim;
-- 31 artifacts from 29 sources with a `rust-ffm` backend claim; and
+- 32 artifacts from 30 sources with a `rust-ffm` backend claim; and
 - one bundled WordTour semantic-order model.
 
 Distinct models are counted by upstream `sourceId`. Multiple quantizations are separate artifacts,
@@ -56,6 +57,12 @@ Every GGUF marker must include:
 - parameter count, context length, embedding width, block count, and attention block count;
 - attention and KV head counts, explicit key/value widths where present, feed-forward width, and
   MoE expert dimensions where present.
+
+Domain names use one canonical vocabulary. In particular, coding models use
+the `coding` domain; `code-generation`, `code-completion`, and `fim` remain
+capabilities rather than competing domain names. Catalog validation rejects
+the legacy `code` domain so the site cannot render both `code` and `coding`
+facets again.
 
 Dimensions are extracted from the exact pinned file with the official `@huggingface/gguf` parser.
 It uses HTTP range requests and tensor shapes, so validation does not download multi-gigabyte model

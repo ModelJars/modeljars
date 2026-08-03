@@ -1,6 +1,7 @@
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -57,6 +58,55 @@ class CandidateModelCatalogTest {
       assertTrue(
           descriptor.estimateMemory(1, KvCachePrecision.FLOAT16).isPresent(), descriptor.alias());
     }
+  }
+
+  @Test
+  void exposesRuntimeBlockedKatCoderCandidate() {
+    ModelJarDescriptor descriptor =
+        ModelJarRegistry.fromClasspath()
+            .resolve(
+                ModelJar.of("hf://bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF")
+                    .version("[2.5.0,2.6.0)")
+                    .variant("q4_k_m")
+                    .capability("code-generation"))
+            .orElseThrow();
+
+    assertEquals("qwen35moe", descriptor.architecture());
+    assertFalse(descriptor.supportsBackend("pure-java"));
+    assertFalse(descriptor.supportsBackend("rust-ffm"));
+    assertTrue(descriptor.supportsBackend("llama.cpp"));
+  }
+
+  @Test
+  void exposesRuntimeBlockedVoiceCandidates() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor qwen =
+        registry
+            .resolve(
+                ModelJar.of("hf://Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice")
+                    .version("[3.0.0,4.0.0)")
+                    .variant("12hz_0_6b_customvoice_bf16")
+                    .capability("text-to-speech"))
+            .orElseThrow();
+    ModelJarDescriptor dots =
+        registry
+            .resolve(
+                ModelJar.of("hf://dots-studio/dots.tts-mf")
+                    .version("[1.0.0,2.0.0)")
+                    .variant("mf_bf16")
+                    .capability("voice-cloning"))
+            .orElseThrow();
+
+    assertEquals("safetensors", qwen.format());
+    assertEquals("qwen3_tts", qwen.architecture());
+    assertFalse(qwen.supportsBackend("pure-java"));
+    assertFalse(qwen.supportsBackend("rust-ffm"));
+    assertTrue(qwen.supportsBackend("qwen-tts"));
+    assertEquals("safetensors", dots.format());
+    assertEquals("dots_tts", dots.architecture());
+    assertFalse(dots.supportsBackend("pure-java"));
+    assertFalse(dots.supportsBackend("rust-ffm"));
+    assertTrue(dots.supportsBackend("dots.tts"));
   }
 
   @Test

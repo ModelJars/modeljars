@@ -1639,7 +1639,7 @@ class ModelPerformanceProfileRegistryTest {
         "2027cbf6ff433520b27c758b6c3465c79726159381211c5977bc95e63c29d331",
         profile.evidence().controls().get("qualificationReportSha256"));
     assertEquals(
-        "af662fc92310afa83afc3b7d6860d43124ec4c8e",
+        "7ba11421ece87d6738ce8a21b11b47b02e807a06",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
         82.08539689080071,

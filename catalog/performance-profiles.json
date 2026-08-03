@@ -4140,7 +4140,7 @@
           "promptCache": "longest-common-prefix",
           "modelsCommit": "3d312534241dd80feee84d043c8727a874da9719",
           "modelJarsCommitAtMeasurement": "5f3ea49018187840dbda14099d6772e334f73cdc",
-          "modelsEvidenceCommit": "af662fc92310afa83afc3b7d6860d43124ec4c8e",
+          "modelsEvidenceCommit": "7ba11421ece87d6738ce8a21b11b47b02e807a06",
           "vectorsVersion": "0.1.5",
           "kernelImplementation": "rust-ffm-quantized-v12",
           "nativeKernelAbi": "4",

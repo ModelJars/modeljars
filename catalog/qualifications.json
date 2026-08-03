@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedAt": "2026-08-03T22:49:00Z",
   "policyVersion": "production-rag-model-contribution-v4",
-  "modelsRevision": "af662fc92310afa83afc3b7d6860d43124ec4c8e",
+  "modelsRevision": "7ba11421ece87d6738ce8a21b11b47b02e807a06",
   "targetQualifiedModels": 25,
   "qualifiedModels": 29,
   "rejectedModels": 0,
@@ -1270,7 +1270,7 @@
         "backend": "rust-ffm",
         "artifactSha256": "021f78849c5670ecb2aa4cd7c5972eee0a3c9e41e33e5902c408a2ab989f0b43",
         "report": "benchmark-results/certified-20260803/rag/h2o-danube3-500m-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "b4fafa03c34d31db4657cdd1dc1a1a56a62cca8c70d128ac35ec0ebba31f7c46",
+        "reportSha256": "daec4ae73102e741db9f1e98998283f3a29c7f248e0262b63d112da8d9ed1de5",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []

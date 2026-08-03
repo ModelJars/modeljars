@@ -91,6 +91,18 @@ test("grandfathers unchanged qualification evidence", async () => {
   assert.deepEqual(checked, []);
 });
 
+test("validates newly added default smoke even when tuned evidence is unchanged", async () => {
+  const report = defaultReport();
+  const { qualification, bytes } = withSmoke(entry(), report);
+  const checked = await validateQualificationSmokeGate({
+    previousQualifications: qualifications([entry()]),
+    currentQualifications: qualifications([qualification]),
+    currentCatalog: catalog(),
+    loadReport: async () => bytes,
+  });
+  assert.deepEqual(checked, [`${modelId}/${backend}`]);
+});
+
 test("requires default smoke for a newly qualified model/backend pair", async () => {
   await assert.rejects(
     validateQualificationSmokeGate({

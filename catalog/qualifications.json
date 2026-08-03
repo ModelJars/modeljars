@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-03T12:47:54Z",
+  "generatedAt": "2026-08-03T13:54:34Z",
   "policyVersion": "production-rag-model-contribution-v4",
-  "modelsRevision": "d54eedd3ae9de6bb7558bc78f8b794e6b740cb71",
+  "modelsRevision": "49441e29d9b6b6e47f1f539d8998c72cbfafef50",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 27,
-  "rejectedModels": 1,
+  "qualifiedModels": 28,
+  "rejectedModels": 0,
   "entries": [
     {
       "modelId": "smollm2_360m_instruct_q8_0",
@@ -1209,9 +1209,18 @@
       "report": "benchmark-results/certified-20260802/rag/gemma4-26b-a4b-q4_k_m/models-rust-ffm.json",
       "reportSha256": "2234bd65597ed56c2dbc2936e389e145c3bf471fa2d7202cd7e6a802f2523ed8",
       "performanceTier": "USABLE",
-      "verdict": "UNQUALIFIED_DEFAULT_CONFIGURATION",
-      "qualified": false,
-      "rejectionReason": "The tuned Rust/FFM evidence passed, but library-default generation can reject a Gemma 4 Q4_K projection in the batched-prefill kernel. Requalification requires passing the default-configuration smoke gate.",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "88f4a13b0bb95f031a7fad973e10854122fb67ebc34d214d39a2f65053046abc",
+        "report": "benchmark-results/certified-20260803/rag/gemma4-26b-a4b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "74739c5166a445ba97cbb05701cddea47dfda03d8af119836b53f374e04b77d5",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      },
       "attempts": 27,
       "p95RetrievalMillis": 1.8901046,
       "p95TtftMillis": 1834.6652392,

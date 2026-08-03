@@ -33,6 +33,7 @@ function evidenceIdentity(entry) {
     reportSha256: entry.reportSha256,
     workload: entry.workload,
     promptTemplate: entry.promptTemplate,
+    defaultConfigurationSmoke: entry.defaultConfigurationSmoke,
   });
 }
 

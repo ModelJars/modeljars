@@ -75,6 +75,11 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(index, />Models<\/a> JVM inference library/);
   assert.doesNotMatch(index, />Models JVM inference library<\/a>/);
   assert.match(index, /Think of WebJars, but for AI models/);
+  assert.match(
+    index,
+    /<a class="primary-button" href="#modeljars-cli">Install the native CLI<\/a>/,
+  );
+  assert.match(index, /content="Discover qualified local AI models, pull verified weights/);
   assert.doesNotMatch(index, /apple-runtime-notice|apple-runtime-band/);
   assert.match(index, /id="catalog-search"/);
   assert.match(index, /id="catalog-results"/);
@@ -182,7 +187,7 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(highlighter, /registerLanguage\("kotlin"/);
 });
 
-test("links every primary navigation to the Java guide with a simple monochrome cup icon", async () => {
+test("links every primary navigation to the CLI and Java guides", async () => {
   const [index, model, benchmarks, apple, contribution, javaIcon, styles] = await Promise.all([
     read("site/index.html"),
     read("site/model.html"),
@@ -194,6 +199,7 @@ test("links every primary navigation to the Java guide with a simple monochrome 
   ]);
 
   for (const page of [index, model, benchmarks, apple, contribution]) {
+    assert.match(page, /<a class="nav-cli" href="\/#modeljars-cli">CLI<\/a>/);
     assert.match(
       page,
       /<a class="nav-java" href="\/#using-modeljars"[^>]*>[\s\S]*?<span class="nav-java-icon" aria-hidden="true"><\/span>[\s\S]*?<span>Use from Java<\/span>[\s\S]*?<\/a>/,

@@ -132,6 +132,7 @@ jobs:
             --previous "${previous_catalog}" \
             --current catalog/models.json \
             --qualifications catalog/qualifications.json \
+            --previous-qualifications "${previous_qualifications}" \
             --previous-profiles "${previous_profiles}" \
             --current-profiles catalog/performance-profiles.json \
             --github-output "${GITHUB_OUTPUT}"

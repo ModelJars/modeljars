@@ -5554,7 +5554,7 @@
       "sourceUri": "https://huggingface.co/bartowski/Yi-Coder-1.5B-Chat-GGUF",
       "downloadUri": "https://huggingface.co/bartowski/Yi-Coder-1.5B-Chat-GGUF/resolve/442545c4f577cfdab9a70b38fec719c47d393b8b/Yi-Coder-1.5B-Chat-Q4_K_M.gguf",
       "revision": "442545c4f577cfdab9a70b38fec719c47d393b8b",
-      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.yi-coder-1.5b-chat-gguf.q4_k_m:1.5.0-q4_k_m.2",
       "modelVersion": "1.5.0",
       "variant": "q4_k_m",
       "format": "gguf",

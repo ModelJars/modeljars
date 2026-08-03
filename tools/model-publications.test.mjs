@@ -539,3 +539,77 @@ test("CLI includes performance profiles in the immutable publication plan", asyn
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("CLI publishes a newly qualified candidate without a spurious version bump", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "modeljars-plan-"));
+  try {
+    const entry = model();
+    const previous = path.join(directory, "previous.json");
+    const current = path.join(directory, "current.json");
+    const previousProfiles = path.join(directory, "previous-profiles.json");
+    const currentProfiles = path.join(directory, "current-profiles.json");
+    const previousQualifications = path.join(
+      directory,
+      "previous-qualifications.json",
+    );
+    const currentQualifications = path.join(
+      directory,
+      "current-qualifications.json",
+    );
+    const output = path.join(directory, "github-output");
+    const profile = {
+      id: "qwen3_linux_jdk25",
+      modelId: entry.id,
+      markerCoordinate: entry.markerCoordinate,
+      recommendations: { "models.purejava.q4Kernel": "unsigned-pairwise" },
+    };
+    await Promise.all([
+      writeFile(previous, JSON.stringify(catalog([entry]))),
+      writeFile(current, JSON.stringify(catalog([entry]))),
+      writeFile(previousProfiles, JSON.stringify(profiles([]))),
+      writeFile(currentProfiles, JSON.stringify(profiles([profile]))),
+      writeFile(previousQualifications, JSON.stringify(qualifications([]))),
+      writeFile(
+        currentQualifications,
+        JSON.stringify(
+          qualifications([
+            {
+              modelId: entry.id,
+              artifactSha256: entry.sha256,
+              artifactSizeBytes: entry.sizeBytes,
+              qualified: true,
+            },
+          ]),
+        ),
+      ),
+    ]);
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        path.join(toolsDirectory, "plan-model-publications.mjs"),
+        "--previous",
+        previous,
+        "--current",
+        current,
+        "--previous-profiles",
+        previousProfiles,
+        "--current-profiles",
+        currentProfiles,
+        "--previous-qualifications",
+        previousQualifications,
+        "--qualifications",
+        currentQualifications,
+        "--github-output",
+        output,
+      ],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /"change": "added"/);
+    assert.match(await readFile(output, "utf8"), /^count=1$/m);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

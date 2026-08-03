@@ -113,6 +113,26 @@ jobs:
           echo "raw=$raw" >> "$GITHUB_OUTPUT"
           echo "archive=$archive" >> "$GITHUB_OUTPUT"
 
+      - name: Smoke-test SDKMAN archive
+        shell: bash
+        env:
+          ARCHIVE: dist/${{ steps.package.outputs.archive }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          destination="sdkman-smoke"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z x -y "$ARCHIVE" "-o${destination}"
+          else
+            unzip -q "$ARCHIVE" -d "$destination"
+          fi
+          installed="${destination}/modeljars-${VERSION}/bin/${{ matrix.executable }}"
+          test -f "$installed"
+          if [ "${{ runner.os }}" != "Windows" ]; then
+            test -x "$installed"
+          fi
+          "$installed" version
+          "$installed" search gemma
+
       - name: Upload assets to GitHub release
         shell: bash
         env:
@@ -233,61 +253,10 @@ jobs:
           "-PmodeljarsVersion=${VERSION}"
 
   publish-sdkman:
-    name: SDKMAN ${{ matrix.platform }}
     needs: native
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - label: linux-x86_64
-            platform: LINUX_64
-          - label: linux-aarch64
-            platform: LINUX_ARM64
-          - label: macos-x86_64
-            platform: MAC_OSX
-          - label: macos-aarch64
-            platform: MAC_ARM64
-          - label: windows-x86_64
-            platform: WINDOWS_64
-    steps:
-      - name: Resolve context and credentials
-        id: context
-        env:
-          KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
-          TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
-        run: |
-          tag="${{ github.event.release.tag_name || inputs.tag }}"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
-          if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::SDKMAN vendor credentials are absent; skipping SDKMAN publish."
-          fi
-
-      - name: Download SDKMAN archive
-        if: steps.context.outputs.ready == 'true'
-        id: archive
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.context.outputs.tag }}
-          VERSION: ${{ steps.context.outputs.version }}
-        run: |
-          asset="modeljars-${VERSION}-${{ matrix.label }}.zip"
-          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$asset"
-          echo "name=$asset" >> "$GITHUB_OUTPUT"
-          echo "sha256=$(sha256sum "$asset" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
-
-      - name: Publish candidate version
-        if: steps.context.outputs.ready == 'true'
-        uses: sdkman/sdkman-release-action@3eb9347b254fc89b9af3a1ed08b874228f3dcd1f # v0.2.0
-        with:
-          consumer-key: ${{ secrets.SDKMAN_CONSUMER_KEY }}
-          consumer-token: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
-          candidate: modeljars
-          version: ${{ steps.context.outputs.version }}
-          url: https://github.com/${{ github.repository }}/releases/download/${{ steps.context.outputs.tag }}/${{ steps.archive.outputs.name }}
-          platform: ${{ matrix.platform }}
-          checksum-sha-256: ${{ steps.archive.outputs.sha256 }}
+    uses: ./.github/workflows/sdkman-publish.yml
+    with:
+      tag: ${{ github.event.release.tag_name || inputs.tag }}
+      make_default: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
+      announce: ${{ github.event_name != 'release' || !github.event.release.prerelease }}
+    secrets: inherit

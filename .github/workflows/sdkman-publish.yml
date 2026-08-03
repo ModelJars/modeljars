@@ -1,0 +1,198 @@
+name: Publish CLI to SDKMAN
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Existing GitHub release tag containing the SDKMAN archives.
+        required: true
+        type: string
+      make_default:
+        description: Make this version the stable candidate default.
+        required: false
+        default: true
+        type: boolean
+      announce:
+        description: Broadcast this version after every platform succeeds.
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub release tag to publish, for example v0.1.5.
+        required: true
+        type: string
+      make_default:
+        description: Make this version the stable candidate default.
+        required: false
+        default: true
+        type: boolean
+      announce:
+        description: Broadcast this version after every platform succeeds.
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdkman-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  publish-platforms:
+    name: SDKMAN ${{ matrix.platform }}
+    runs-on: ubuntu-24.04
+    environment: sdkman
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x86_64
+            executable: modeljars
+            platform: LINUX_64
+          - label: linux-aarch64
+            executable: modeljars
+            platform: LINUX_ARM64
+          - label: macos-x86_64
+            executable: modeljars
+            platform: MAC_OSX
+          - label: macos-aarch64
+            executable: modeljars
+            platform: MAC_ARM64
+          - label: windows-x86_64
+            executable: modeljars.exe
+            platform: WINDOWS_64
+    steps:
+      - name: Resolve release context and credentials
+        id: context
+        env:
+          KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in
+            v?*) ;;
+            *) echo "Tag must start with v: $TAG" >&2; exit 1 ;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SDKMAN vendor credentials are absent; skipping SDKMAN publish."
+          fi
+
+      - name: Download and validate SDKMAN archive
+        if: steps.context.outputs.ready == 'true'
+        id: archive
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.context.outputs.tag }}
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          asset="modeljars-${VERSION}-${{ matrix.label }}.zip"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$asset"
+          root="modeljars-${VERSION}/"
+          expected="${root}bin/${{ matrix.executable }}"
+          entries="$(unzip -Z1 "$asset")"
+          while IFS= read -r entry; do
+            case "$entry" in
+              "$root"*) ;;
+              *) echo "Archive entry is outside $root: $entry" >&2; exit 1 ;;
+            esac
+            case "$entry" in
+              /*|*../*) echo "Unsafe archive entry: $entry" >&2; exit 1 ;;
+            esac
+          done <<< "$entries"
+          grep -Fqx "$expected" <<< "$entries"
+          echo "name=$asset" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(sha256sum "$asset" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish candidate version
+        if: steps.context.outputs.ready == 'true'
+        uses: sdkman/sdkman-release-action@3eb9347b254fc89b9af3a1ed08b874228f3dcd1f # v0.2.0
+        with:
+          consumer-key: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          consumer-token: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          candidate: modeljars
+          version: ${{ steps.context.outputs.version }}
+          url: https://github.com/${{ github.repository }}/releases/download/${{ steps.context.outputs.tag }}/${{ steps.archive.outputs.name }}
+          platform: ${{ matrix.platform }}
+          checksum-sha-256: ${{ steps.archive.outputs.sha256 }}
+
+  finalize:
+    name: Default, announce, and verify SDKMAN release
+    needs: publish-platforms
+    runs-on: ubuntu-24.04
+    environment: sdkman
+    steps:
+      - name: Resolve release context and credentials
+        id: context
+        env:
+          KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          if [ -n "$KEY" ] && [ -n "$TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set default version
+        if: steps.context.outputs.ready == 'true' && inputs.make_default
+        env:
+          SDKMAN_CONSUMER_KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          SDKMAN_CONSUMER_TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          default_payload="$(jq -nc --arg version "$VERSION" \
+            '{candidate:"modeljars",version:$version}')"
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -X PUT \
+            -H "Consumer-Key: ${SDKMAN_CONSUMER_KEY}" \
+            -H "Consumer-Token: ${SDKMAN_CONSUMER_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            --data "$default_payload" \
+            https://vendors.sdkman.io/default
+
+      - name: Announce release
+        if: steps.context.outputs.ready == 'true' && inputs.announce
+        env:
+          SDKMAN_CONSUMER_KEY: ${{ secrets.SDKMAN_CONSUMER_KEY }}
+          SDKMAN_CONSUMER_TOKEN: ${{ secrets.SDKMAN_CONSUMER_TOKEN }}
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          announce_payload="$(jq -nc --arg version "$VERSION" \
+            --arg url "https://github.com/${{ github.repository }}/releases/tag/v${VERSION}" \
+            '{candidate:"modeljars",version:$version,url:$url}')"
+          curl --fail-with-body --silent --show-error --retry 3 \
+            -X POST \
+            -H "Consumer-Key: ${SDKMAN_CONSUMER_KEY}" \
+            -H "Consumer-Token: ${SDKMAN_CONSUMER_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            --data "$announce_payload" \
+            https://vendors.sdkman.io/announce/struct
+
+      - name: Verify published version
+        if: steps.context.outputs.ready == 'true'
+        env:
+          VERSION: ${{ steps.context.outputs.version }}
+        run: |
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error \
+              https://api.sdkman.io/2/candidates/modeljars/linuxx64/versions/list \
+              | grep -Fq "$VERSION"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "SDKMAN did not expose modeljars $VERSION within two minutes" >&2
+          exit 1

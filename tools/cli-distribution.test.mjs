@@ -28,8 +28,9 @@ test("builds native CLI assets on every supported host architecture", async () =
 });
 
 test("publishes native and JVM CLI channels without exposing credentials", async () => {
-  const [workflow, installer, build, docs] = await Promise.all([
+  const [workflow, sdkmanWorkflow, installer, build, docs] = await Promise.all([
     read(".github/workflows/cli-release.yml"),
+    read(".github/workflows/sdkman-publish.yml"),
     read("install.sh"),
     read("build.gradle.kts"),
     read("docs/cli-distribution.md"),
@@ -38,14 +39,24 @@ test("publishes native and JVM CLI channels without exposing credentials", async
   assert.match(workflow, /integrallis\/homebrew-tap/);
   assert.match(workflow, /integrallis\/scoop-bucket/);
   assert.match(workflow, /PACKAGES_PUBLISH_TOKEN/);
-  assert.match(workflow, /sdkman\/sdkman-release-action@[0-9a-f]{40}/);
-  assert.match(workflow, /candidate: modeljars/);
   assert.match(workflow, /modeljars-\$\{VERSION\}\/bin/);
+  assert.match(workflow, /Smoke-test SDKMAN archive/);
+  assert.match(workflow, /\.\/\.github\/workflows\/sdkman-publish\.yml/);
   assert.match(workflow, /publishMavenPublicationToGitHubPackagesRepository/);
   assert.doesNotMatch(workflow, /gho_|github_pat_|Consumer-Key: [A-Za-z0-9]/);
+
+  assert.match(sdkmanWorkflow, /workflow_dispatch:/);
+  assert.match(sdkmanWorkflow, /environment: sdkman/);
+  assert.match(sdkmanWorkflow, /sdkman\/sdkman-release-action@[0-9a-f]{40}/);
+  assert.match(sdkmanWorkflow, /candidate: modeljars/);
+  assert.match(sdkmanWorkflow, /checksum-sha-256/);
+  assert.match(sdkmanWorkflow, /https:\/\/vendors\.sdkman\.io\/default/);
+  assert.match(sdkmanWorkflow, /https:\/\/vendors\.sdkman\.io\/announce\/struct/);
+  assert.match(sdkmanWorkflow, /https:\/\/api\.sdkman\.io\/2\/candidates\/modeljars/);
+  assert.doesNotMatch(sdkmanWorkflow, /gho_|github_pat_|Consumer-Key: [A-Za-z0-9]/);
 
   assert.match(installer, /\.sha256/);
   assert.match(installer, /actual_checksum/);
   assert.match(build, /imageName\.set\("modeljars"\)/);
-  assert.match(docs, /SDKMAN requires its vendor onboarding/);
+  assert.match(docs, /SDKMAN requires its one-time vendor onboarding/);
 });

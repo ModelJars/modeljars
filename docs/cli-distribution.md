@@ -52,10 +52,24 @@ same executable JAR is part of the signed Maven Central bundle as a Java 21 fall
 Homebrew and Scoop publication requires the `PACKAGES_PUBLISH_TOKEN` repository secret. The token
 must be able to push to `integrallis/homebrew-tap` and `integrallis/scoop-bucket`.
 
-SDKMAN requires its vendor onboarding process before the workflow can publish. Create the
-`modeljars` candidate in SDKMAN's database-migrations repository, send the project's armored public
-GPG key to SDKMAN, then store the returned credentials as `SDKMAN_CONSUMER_KEY` and
-`SDKMAN_CONSUMER_TOKEN`. The workflow already submits every supported platform with a SHA-256.
+SDKMAN requires its one-time vendor onboarding process before the workflow can publish. Create the
+`modeljars` candidate with `distribution = "PLATFORM_SPECIFIC"` in SDKMAN's database-migrations
+repository without adding any versions. Send the project's armored public GPG key as a plain-text
+attachment to `info@sdkman.io`; SDKMAN returns an encrypted message containing the vendor API
+credentials. Store the decrypted values in the `ModelJars/modeljars` repository as
+`SDKMAN_CONSUMER_KEY` and `SDKMAN_CONSUMER_TOKEN`. They are issued by SDKMAN and are not GitHub
+tokens or GPG fingerprints.
+
+`.github/workflows/sdkman-publish.yml` can be dispatched independently for an existing GitHub
+release, which allows the first SDKMAN publication to backfill `v0.1.5` without rebuilding native
+binaries or republishing other package channels. It validates that every ZIP has a single
+`modeljars-<version>/` root and the expected executable under `bin/`, then submits all five platform
+archives with their SHA-256. Only after every platform succeeds does it set the version as the
+candidate default, announce it once, and verify that the SDKMAN public API exposes the version.
+
+SDKMAN publication uses the `sdkman` GitHub environment. Repository administrators may add
+required reviewers to that environment when they want a manual approval immediately before the
+external publication.
 
 ## Release sequence
 
@@ -64,5 +78,17 @@ GPG key to SDKMAN, then store the returned credentials as `SDKMAN_CONSUMER_KEY` 
 3. Create and publish `v<version>` on the same commit.
 4. The CLI workflow builds and attaches native assets, publishes the GitHub Maven package, and
    updates Homebrew and Scoop.
-5. After SDKMAN onboarding, the same workflow publishes the platform archives there.
+5. After SDKMAN onboarding, the reusable SDKMAN workflow publishes every platform, sets the stable
+   default, announces it, and verifies the public candidate listing.
 6. Verify a clean install through Homebrew, Scoop, and the direct install script before announcing.
+
+To backfill an existing release after the two SDKMAN secrets have been configured:
+
+```bash
+gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.5
+```
+
+Both `make_default` and `announce` default to `true` for a stable backfill. Set `announce=false`
+when retrying a release that was already broadcast, so an idempotent platform retry does not create
+a duplicate announcement. Prereleases invoked by the main CLI release workflow are published as
+selectable versions without changing the stable default or broadcasting.

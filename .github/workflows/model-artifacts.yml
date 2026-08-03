@@ -4,9 +4,12 @@ on:
   pull_request:
     paths:
       - catalog/models.json
+      - catalog/qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
+      - tools/qualification-smoke-gate.mjs
+      - tools/qualification-smoke-gate.test.mjs
       - tools/independent-model-publication.test.mjs
       - tools/plan-model-publications.mjs
       - build.gradle.kts
@@ -20,9 +23,12 @@ on:
       - main
     paths:
       - catalog/models.json
+      - catalog/qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
+      - tools/qualification-smoke-gate.mjs
+      - tools/qualification-smoke-gate.test.mjs
       - tools/independent-model-publication.test.mjs
       - tools/plan-model-publications.mjs
       - build.gradle.kts
@@ -104,14 +110,24 @@ jobs:
           fi
           previous_catalog="${RUNNER_TEMP}/models-before.json"
           previous_profiles="${RUNNER_TEMP}/performance-profiles-before.json"
+          previous_qualifications="${RUNNER_TEMP}/qualifications-before.json"
           if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
               ! git cat-file -e "${comparison}^{commit}"; then
             printf '%s\n' '{"schemaVersion":2,"models":[]}' > "${previous_catalog}"
             printf '%s\n' '{"schemaVersion":1,"profiles":[]}' > "${previous_profiles}"
+            printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_qualifications}"
           else
             git show "${comparison}:catalog/models.json" > "${previous_catalog}"
             git show "${comparison}:catalog/performance-profiles.json" > "${previous_profiles}"
+            if ! git show "${comparison}:catalog/qualifications.json" > "${previous_qualifications}"; then
+              printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_qualifications}"
+            fi
           fi
+          node tools/qualification-smoke-gate.mjs \
+            --previous "${previous_qualifications}" \
+            --current catalog/qualifications.json \
+            --catalog catalog/models.json \
+            --verify-remote
           node tools/plan-model-publications.mjs \
             --previous "${previous_catalog}" \
             --current catalog/models.json \

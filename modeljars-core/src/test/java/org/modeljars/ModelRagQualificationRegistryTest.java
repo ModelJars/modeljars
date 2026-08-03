@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 class ModelRagQualificationRegistryTest {
   private static final int AGGREGATE_QUALIFIED_MODELS = 28;
   private static final String AGGREGATE_MODELS_REVISION =
-      "d54eedd3ae9de6bb7558bc78f8b794e6b740cb71";
+      "49441e29d9b6b6e47f1f539d8998c72cbfafef50";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -125,7 +125,7 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
-  void aggregateCatalogPublishesQualifiedGemma4Evidence() {
+  void aggregateCatalogPublishesGemma4AfterDefaultConfigurationPasses() {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
 
     ModelRagQualification qualification =

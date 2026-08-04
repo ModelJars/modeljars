@@ -4,7 +4,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh
 #
 # Overrides:
-#   MODELJARS_CLI_VERSION       version to install (default: latest), for example 0.1.5
+#   MODELJARS_CLI_VERSION       version to install (default: latest), for example 0.1.6
 #   MODELJARS_CLI_INSTALL_DIR   target directory (default: $HOME/.local/bin)
 set -eu
 

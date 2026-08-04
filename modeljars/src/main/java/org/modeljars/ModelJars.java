@@ -1,17 +1,14 @@
 package org.modeljars;
 
 import com.integrallis.models.api.BackendConfiguration;
-import com.integrallis.models.api.BackendDiagnostics;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
-import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.TextGenerationModel;
-import com.integrallis.models.api.TokenStream;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
-import com.integrallis.models.runtime.RuntimeTextGenerationModel;
+import com.integrallis.models.runtime.InferencePipeline;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -159,8 +155,7 @@ public final class ModelJars {
     BackendConfiguration configuration =
         configuration(descriptor, qualification, runtime, activeJvmArguments);
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
-    return new ModelJarRuntime(
-        new ManagedTextGenerationModel(loadedBackend), descriptor, qualification);
+    return new ModelJarRuntime(new InferencePipeline(loadedBackend), descriptor, qualification);
   }
 
   static void requireVectorModule(boolean available) {
@@ -388,43 +383,5 @@ public final class ModelJars {
   @FunctionalInterface
   interface BackendLoader {
     InferenceBackend load(String backend, Path artifact, BackendConfiguration configuration);
-  }
-
-  private static final class ManagedTextGenerationModel implements TextGenerationModel {
-    private final InferenceBackend backend;
-    private final RuntimeTextGenerationModel delegate;
-    private final AtomicBoolean closed = new AtomicBoolean();
-
-    private ManagedTextGenerationModel(InferenceBackend backend) {
-      this.backend = Objects.requireNonNull(backend, "backend");
-      delegate = new RuntimeTextGenerationModel(backend);
-    }
-
-    @Override
-    public String modelName() {
-      return delegate.modelName();
-    }
-
-    @Override
-    public BackendDiagnostics diagnostics() {
-      return delegate.diagnostics();
-    }
-
-    @Override
-    public String generate(String prompt, SamplingOptions options) {
-      return delegate.generate(prompt, options);
-    }
-
-    @Override
-    public void generate(String prompt, SamplingOptions options, TokenStream stream) {
-      delegate.generate(prompt, options, stream);
-    }
-
-    @Override
-    public void close() {
-      if (closed.compareAndSet(false, true)) {
-        backend.close();
-      }
-    }
   }
 }

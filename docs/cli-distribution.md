@@ -61,7 +61,7 @@ credentials. Store the decrypted values in the `ModelJars/modeljars` repository 
 tokens or GPG fingerprints.
 
 `.github/workflows/sdkman-publish.yml` can be dispatched independently for an existing GitHub
-release, which allows the first SDKMAN publication to backfill `v0.1.5` without rebuilding native
+release, which allows an SDKMAN publication to backfill `v0.1.6` without rebuilding native
 binaries or republishing other package channels. It validates that every ZIP has a single
 `modeljars-<version>/` root and the expected executable under `bin/`, then submits all five platform
 archives with their SHA-256. Only after every platform succeeds does it set the version as the
@@ -85,7 +85,7 @@ external publication.
 To backfill an existing release after the two SDKMAN secrets have been configured:
 
 ```bash
-gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.5
+gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.6
 ```
 
 Both `make_default` and `announce` default to `true` for a stable backfill. Set `announce=false`

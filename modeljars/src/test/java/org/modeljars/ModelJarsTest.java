@@ -3,6 +3,7 @@ package org.modeljars;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,9 +11,11 @@ import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.BackendDiagnostics;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
+import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.nio.file.Path;
 import java.util.List;
@@ -276,11 +279,47 @@ class ModelJarsTest {
     assertEquals(1, backend.closeCount());
   }
 
+  @Test
+  void exposesTheQualifiedPipelineWithoutFlatteningStructuredPrompts() {
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of);
+
+    try (var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults())) {
+      ModelPrompt prompt =
+          runtime.chatTemplate().render(List.of(ChatMessage.user("hello")));
+
+      assertSame(runtime.pipeline(), runtime.model());
+      assertSame(runtime.pipeline().tokenizer(), runtime.tokenizer());
+      assertEquals("fixture", runtime.metadata().modelName());
+      assertEquals(32, runtime.contextWindow().capacity());
+      assertTrue(runtime.contextWindow().position().isEmpty());
+      assertEquals("", runtime.model().generate(prompt, SamplingOptions.builder().maxTokens(1).build()));
+      assertEquals(1, backend.structuredEncodes);
+      assertEquals(0, backend.plainEncodes);
+    }
+  }
+
   private static final class StubBackend implements InferenceBackend {
-    private static final Tokenizer TOKENIZER =
+    private int plainEncodes;
+    private int structuredEncodes;
+    private final Tokenizer tokenizer =
         new Tokenizer() {
           @Override
           public int[] encode(String text) {
+            plainEncodes++;
+            return new int[] {1};
+          }
+
+          @Override
+          public int[] encode(ModelPrompt prompt) {
+            structuredEncodes++;
             return new int[] {1};
           }
 
@@ -329,7 +368,7 @@ class ModelJarsTest {
 
     @Override
     public Tokenizer tokenizer() {
-      return TOKENIZER;
+      return tokenizer;
     }
 
     @Override

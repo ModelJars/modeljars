@@ -20,7 +20,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.5")\n' +
+    'implementation("org.modeljars:modeljars:0.1.6")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -39,6 +39,7 @@ test("renders path-free Java loading from the generated catalog reference", () =
   );
   assert.match(snippet, /runtime\.chatTemplate\(\)\.render/);
   assert.match(snippet, /ModelPrompt prompt/);
+  assert.match(snippet, /InferencePipeline pipeline = runtime\.pipeline\(\)/);
   assert.match(snippet, /ModelJars\.openRuntime\(MODEL\)/);
   assert.doesNotMatch(snippet, /Path|ModelJarInstaller|PureJavaBackend/);
 });

@@ -1,6 +1,10 @@
 package org.modeljars;
 
+import com.integrallis.models.api.InferenceContextWindow;
+import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.TextGenerationModel;
+import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.InferencePipeline;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.util.Objects;
 
@@ -11,23 +15,23 @@ import java.util.Objects;
  * <p>The runtime owns the model backend and must be closed.
  */
 public final class ModelJarRuntime implements AutoCloseable {
-  private final TextGenerationModel model;
+  private final InferencePipeline pipeline;
   private final ModelJarDescriptor descriptor;
   private final ModelRagQualification qualification;
   private final ChatTemplate chatTemplate;
 
   ModelJarRuntime(
-      TextGenerationModel model,
+      InferencePipeline pipeline,
       ModelJarDescriptor descriptor,
       ModelRagQualification qualification) {
-    this.model = Objects.requireNonNull(model, "model");
+    this.pipeline = Objects.requireNonNull(pipeline, "pipeline");
     this.descriptor = Objects.requireNonNull(descriptor, "descriptor");
     this.qualification = Objects.requireNonNull(qualification, "qualification");
     try {
       chatTemplate = ChatTemplate.parse(qualification.promptTemplate());
     } catch (IllegalArgumentException failure) {
       try {
-        model.close();
+        pipeline.close();
       } catch (RuntimeException closeFailure) {
         failure.addSuppressed(closeFailure);
       }
@@ -46,7 +50,47 @@ public final class ModelJarRuntime implements AutoCloseable {
    * @return the owned model
    */
   public TextGenerationModel model() {
-    return model;
+    return pipeline;
+  }
+
+  /**
+   * Returns the complete Models inference pipeline for this qualified artifact.
+   *
+   * <p>The pipeline exposes structured tokenization, model metadata, active context state, prefill,
+   * forward-pass logits, reset, checkpoint, rewind, and high-level generation. It is owned by this
+   * runtime and must not be closed separately.
+   *
+   * @return the owned inference pipeline
+   */
+  public InferencePipeline pipeline() {
+    return pipeline;
+  }
+
+  /**
+   * Returns immutable architecture metadata for the loaded model.
+   *
+   * @return loaded model metadata
+   */
+  public ModelMetadata metadata() {
+    return pipeline.metadata();
+  }
+
+  /**
+   * Returns the loaded model's read-only tokenizer.
+   *
+   * @return loaded model tokenizer
+   */
+  public Tokenizer tokenizer() {
+    return pipeline.tokenizer();
+  }
+
+  /**
+   * Returns the active context capacity and current position when available.
+   *
+   * @return current context-window snapshot
+   */
+  public InferenceContextWindow contextWindow() {
+    return pipeline.contextWindow();
   }
 
   /**
@@ -79,6 +123,6 @@ public final class ModelJarRuntime implements AutoCloseable {
   /** Closes the owned model backend. */
   @Override
   public void close() {
-    model.close();
+    pipeline.close();
   }
 }

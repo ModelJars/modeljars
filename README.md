@@ -77,7 +77,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.5")
+    implementation("org.modeljars:modeljars:0.1.6")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -90,7 +90,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -99,7 +99,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.2.5, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models 0.2.6, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
 the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
@@ -150,20 +150,30 @@ org.modeljars.github:joisino.wordtour-glove-6b-300d.optimal:1.0.0-optimal.1
 ```java
 import static org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL;
 
+import com.integrallis.models.api.InferenceContextWindow;
 import com.integrallis.models.api.ModelPrompt;
+import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.InferencePipeline;
 
 var options = SamplingOptions.builder()
     .temperature(0).maxTokens(128).build();
 
 try (var runtime = ModelJars.openRuntime(MODEL)) {
+    InferencePipeline pipeline = runtime.pipeline();
+    Tokenizer tokenizer = runtime.tokenizer();
+    InferenceContextWindow context = runtime.contextWindow();
     ModelPrompt prompt = runtime.chatTemplate().render(
         List.of(ChatMessage.user("Name one JVM language.")));
-    String answer = runtime.model().generate(prompt, options);
+    String answer = pipeline.generate(prompt, options);
 }
 ```
 
 `ChatTemplate.render(...)` returns `com.integrallis.models.api.ModelPrompt`. `ModelPrompt` preserves
 the distinction between template control tokens and user text; it is intentionally not a `String`.
+`runtime.pipeline()` exposes the same owning model through the complete Models inference API,
+including structured tokenization, metadata, active context capacity and position, prefill,
+forward-pass logits, reset, checkpoint, and rewind. `runtime.model()` remains the high-level
+`TextGenerationModel` view and delegates structured prompts to that pipeline.
 
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,
@@ -213,16 +223,16 @@ ModelJars does not force a LangChain4j or Spring AI version on applications. Add
 the framework-neutral grounding module, and the chosen framework explicitly. For LangChain4j:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.2.5")
-implementation("com.integrallis:models-langchain4j:0.2.5")
+implementation("com.integrallis:models-rag:0.2.6")
+implementation("com.integrallis:models-langchain4j:0.2.6")
 implementation("dev.langchain4j:langchain4j:1.17.2")
 ```
 
 For Spring AI:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.2.5")
-implementation("com.integrallis:models-spring-ai:0.2.5")
+implementation("com.integrallis:models-rag:0.2.6")
+implementation("com.integrallis:models-spring-ai:0.2.6")
 implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
 implementation("org.springframework.ai:spring-ai-rag:2.0.0")
 ```
@@ -373,3 +383,4 @@ well-known metadata resources. A richer scanner and public catalog service can c
 - [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)
 - [Performance profile schema and safety contract](docs/performance-profiles.md)
 - [Native CLI distribution and release channels](docs/cli-distribution.md)
+- [Advanced inference pipeline access](docs/inference-pipeline.md)

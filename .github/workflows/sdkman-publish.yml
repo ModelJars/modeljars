@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing GitHub release tag to publish, for example v0.1.5.
+        description: Existing GitHub release tag to publish, for example v0.1.6.
         required: true
         type: string
       make_default:

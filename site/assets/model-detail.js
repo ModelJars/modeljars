@@ -28,6 +28,7 @@ export function javaSnippet(modelId) {
 
 import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.runtime.InferencePipeline;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import java.util.List;
 import org.modeljars.ModelJars;
@@ -36,9 +37,10 @@ var options = SamplingOptions.builder()
     .temperature(0).maxTokens(128).build();
 
 try (var runtime = ModelJars.openRuntime(MODEL)) {
+  InferencePipeline pipeline = runtime.pipeline();
   ModelPrompt prompt = runtime.chatTemplate().render(
       List.of(ChatMessage.user("Name one JVM language.")));
-  String answer = runtime.model().generate(prompt, options);
+  String answer = pipeline.generate(prompt, options);
 }`;
 }
 

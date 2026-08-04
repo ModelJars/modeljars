@@ -209,7 +209,7 @@ modeljars list</code></pre>
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.5")
+  implementation("org.modeljars:modeljars:0.1.6")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>
@@ -228,14 +228,16 @@ var selected = MODEL;</code></pre>
                   <h3>Run inference in-process</h3>
                 </div>
                 <pre><code class="language-java hljs" data-lang="java">import com.integrallis.models.api.ModelPrompt;
+import com.integrallis.models.runtime.InferencePipeline;
 
 var options = SamplingOptions.builder()
   .temperature(0).maxTokens(128).build();
 
 try (var runtime = ModelJars.openRuntime(selected)) {
+  InferencePipeline pipeline = runtime.pipeline();
   ModelPrompt prompt = runtime.chatTemplate().render(
     List.of(ChatMessage.user("Name one JVM language.")));
-  var answer = runtime.model().generate(prompt, options);
+  String answer = pipeline.generate(prompt, options);
 }</code></pre>
               </article>
             </div>
@@ -245,6 +247,8 @@ try (var runtime = ModelJars.openRuntime(selected)) {
               Rust/FFM profiles also require <code>--enable-native-access=ALL-UNNAMED</code>.
               Class-file versions 69 versus 61 mean the process actually launched with Java 17;
               check <code>java -version</code>, <code>mvn -v</code>, and the Gradle JVM.
+              For low-level inference, <code>runtime.pipeline()</code> exposes the tokenizer,
+              metadata, active context, structured prefill, logits, reset, checkpoint, and rewind.
             </p>
           </div>
         </div>

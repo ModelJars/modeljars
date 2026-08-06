@@ -4449,7 +4449,7 @@
         "q8-0"
       ],
       "backends": {
-        "pure-java": false,
+        "pure-java": true,
         "llama.cpp": true
       },
       "domains": [

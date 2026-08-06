@@ -21,25 +21,20 @@ import java.util.Set;
 /**
  * Auditable evidence that one exact embedding artifact is faithfully reproduced by a backend.
  *
- * <p>The counterpart to {@link ModelRagQualification}, certifying a different thing. An embedding
- * model's retrieval quality is a published property of the weights — Qwen3-Embedding-0.6B scores
- * 64.64 on MTEB multilingual retrieval whoever runs it. What a runtime can get wrong is pooling,
- * rotary embeddings, dequantization, and normalization, so this record gates on agreement with a
- * reference implementation over the same bytes, and the published retrieval quality transfers.
+ * <p>Records that a backend produces the same vectors as a reference implementation over the same
+ * model bytes. The counterpart to {@link ModelRagQualification}. Retrieval quality is a published
+ * property of the weights — Qwen3-Embedding-0.6B scores 64.64 on MTEB multilingual retrieval
+ * whoever runs it — so it transfers once reproduction holds.
  *
- * <p>Two floors, both placed against measurements. Agreement between the pure-Java backend and
- * llama.cpp on Qwen3-Embedding-0.6B Q8_0 measures 0.99950 across varied inputs; mean pooling in
- * place of last-token measures 0.66156. Agreement is not bit-exact: two independent
- * implementations accumulate floating point differently.
+ * <p>Agreement between the pure-Java backend and llama.cpp on Qwen3-Embedding-0.6B Q8_0 measures
+ * 0.99950 across varied inputs; mean pooling in place of last-token measures 0.66156. Agreement is
+ * not bit-exact: two independent implementations accumulate floating point differently.
  *
  * <p>Cosine is scale-invariant, so an unnormalized runtime agrees with a normalized reference at
- * exactly 1.0. Vector length is therefore gated separately.
+ * exactly 1.0. Vector length is gated separately.
  *
- * <p>Every field here is something the equivalence run measures. Throughput and memory are not
- * recorded, because nothing in this policy measures them.
- *
- * <p>Agreement is necessary but not sufficient. Two identically broken implementations would agree
- * perfectly, so the claim rests on the reference being an independent implementation.
+ * <p>Every field here is something the equivalence run measures. The claim rests on the reference
+ * being an independent implementation.
  *
  * @param modelId catalog alias of the qualified model
  * @param model display name and variant of the qualified model

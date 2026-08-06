@@ -22,9 +22,8 @@ package org.modeljars;
  * evidence. This one records whether a runtime reproduces an embedding model, since retrieval
  * quality is a published property of the weights.
  *
- * <p>Two values. A finer grading would need retrieval evidence this policy does not produce, and
- * grading on fidelity alone would be meaningless: an artifact agreeing at 0.9999 supports the same
- * use cases as one agreeing at 0.9995.
+ * <p>Two values, because an artifact agreeing at 0.9999 supports the same use cases as one
+ * agreeing at 0.9995.
  */
 public enum EmbeddingUseCaseTier {
 

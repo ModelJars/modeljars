@@ -343,13 +343,11 @@ perfect deterministic correctness before any tuning is applied. A separate perfo
 absolute quality and latency plus same-host performance against Ollama. llama.cpp is retained as a
 second independent comparator; neither comparator is a runtime dependency.
 
-Embedding artifacts use a separate policy. Retrieval quality is a published property of the
-weights, so the gate measures whether the runtime reproduces the model: vectors for a pinned probe
-set are compared against a pinned llama.cpp build over the same bytes. Agreement is gated at 0.999
-cosine, where a correct run measures 0.99950 and wrong pooling measures 0.66156. Vector length is
-gated separately at 1e-3, because cosine is scale-invariant and cannot detect a missing L2
-normalization. Evidence is recorded as `ModelEmbeddingQualification`, whose tier is
-`SEMANTIC_SEARCH` or `UNQUALIFIED`.
+Embedding artifacts use a separate policy: we test that the model produces the same vectors as
+llama.cpp, for a pinned probe set over the same bytes. Agreement is gated at 0.999 cosine, where a
+correct run measures 0.99950 and wrong pooling measures 0.66156. Cosine is scale-invariant, so
+vector length is gated separately at 1e-3. Evidence is recorded as `ModelEmbeddingQualification`,
+whose tier is `SEMANTIC_SEARCH` or `UNQUALIFIED`.
 
 The [qualification and submission guide](https://modeljars.org/contribute/) lists host
 prerequisites, the harness command, acceptance thresholds, evidence files, and pull request steps.

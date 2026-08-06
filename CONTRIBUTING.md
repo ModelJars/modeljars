@@ -51,13 +51,12 @@ failed default-configuration smoke.
 
 ### Embedding artifacts
 
-Embedding models do not run the RAG workload. Their gate is
+We test that an embedding model produces the same vectors as llama.cpp. The harness is
 `./gradlew :models-bench:run --args="embedding-equivalence --model <artifact.gguf> --report <out>"`
-from the Models repository, which compares vectors for a pinned probe set against a pinned
-llama.cpp build over the same bytes.
+from the Models repository.
 
 Submissions carry the report, the artifact and report SHA-256 values, the probe-set SHA-256, the
-pinned oracle version, and environment identity. `defaultConfigurationSmoke` does not apply.
+pinned oracle version, and environment identity.
 
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not

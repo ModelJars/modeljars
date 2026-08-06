@@ -255,7 +255,7 @@ Recommended fields:
 | `files` | File list for split GGUF or sidecar artifacts. |
 | `sha256` | Integrity check for each file when available. |
 | `license` | License identifier and whether the model is gated or has use restrictions. |
-| `capabilities` | `chat`, `text-generation`, `code-completion`, `fim`, `embedding`, `multimodal`, etc. |
+| `capabilities` | `chat`, `text-generation`, `code-completion`, `fim`, `text-embedding`, `semantic-search`, `multimodal`, etc. |
 | `backends` | Compatibility flags for `pure-java`, `llama.cpp`, `ollama`, `apple-foundation`, `onnx`, `mlx`. |
 | `features` | Required runtime features: `qkv-bias`, `sliding-window`, `rope-scaling`, `moe`, `mla`, `mtp`, `diffusion`, `mmproj`. |
 | `promptTemplates` | Chat and FIM templates, ideally stored as separate named resources. |

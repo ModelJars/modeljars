@@ -49,6 +49,16 @@ and rejects tuned properties or any failed attempt. Existing evidence is
 grandfathered until it changes; tuned benchmark success cannot override a
 failed default-configuration smoke.
 
+### Embedding artifacts
+
+Embedding models do not run the RAG workload. Their gate is
+`./gradlew :models-bench:run --args="embedding-equivalence --model <artifact.gguf> --report <out>"`
+from the Models repository, which compares vectors for a pinned probe set against a pinned
+llama.cpp build over the same bytes.
+
+Submissions carry the report, the artifact and report SHA-256 values, the probe-set SHA-256, the
+pinned oracle version, and environment identity. `defaultConfigurationSmoke` does not apply.
+
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not
 been completed; it does not mean the candidate failed.

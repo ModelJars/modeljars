@@ -216,6 +216,42 @@ scripts/run-controlled-rag-qualification.sh \
         </p>
       </section>
 
+      <section class="documentation-section" aria-labelledby="embedding-policy-title">
+        <h2 id="embedding-policy-title">Embedding acceptance policy</h2>
+        <p>
+          Embedding artifacts do not run the RAG workload. Retrieval quality is a published property
+          of the weights, so the gate measures whether the runtime reproduces the model. Vectors for
+          a pinned probe set are compared against a pinned llama.cpp build over the same model
+          bytes.
+        </p>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable embedding policy">
+          <table class="benchmark-table policy-table">
+            <thead>
+              <tr><th scope="col">Policy metric</th><th scope="col">Requirement</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Minimum cosine agreement</th><td>At least 0.999 on every probe</td></tr>
+              <tr><th scope="row">Vector length</th><td>Within 1e-3 of unit, when the reference is normalized</td></tr>
+              <tr><th scope="row">Oracle</th><td>llama.cpp or Ollama, pinned to an exact build</td></tr>
+              <tr><th scope="row">Pooling</th><td><code>last-token</code> or <code>mean</code>, recorded with the evidence</td></tr>
+              <tr><th scope="row">Probe set</th><td>Pinned and bound by SHA-256</td></tr>
+              <tr><th scope="row">Artifact</th><td>Bound by SHA-256 to the bytes the reference came from</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The floors were placed against measurements. A correct run measures 0.99950 agreement;
+          mean pooling in place of last-token measures 0.66156. Vector length is gated separately
+          because cosine is scale-invariant, so a runtime that skips L2 normalization agrees with a
+          normalized reference at exactly 1.0. The gate takes the worst probe, not the mean.
+        </p>
+        <p>
+          Evidence is recorded as <code>ModelEmbeddingQualification</code>, whose tier is
+          <code>SEMANTIC_SEARCH</code> or <code>UNQUALIFIED</code>. Throughput and memory are not
+          recorded, because this policy does not measure them.
+        </p>
+      </section>
+
       <section class="documentation-section" aria-labelledby="submit-title">
         <h2 id="submit-title">Pull request checklist</h2>
         <p>

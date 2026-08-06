@@ -21,36 +21,25 @@ import java.util.Set;
 /**
  * Auditable evidence that one exact embedding artifact is faithfully reproduced by a backend.
  *
- * <p>The counterpart to {@link ModelRagQualification}, but it certifies a different thing. A
- * generator is graded on how well it answers, because answer quality depends on the runtime. An
- * embedding model's retrieval quality is a published property of the weights — Qwen3-Embedding-0.6B
- * scores 64.64 on MTEB multilingual retrieval whoever runs it. What a runtime can get wrong is
- * reproducing the model: pooling, rotary embeddings, dequantization, normalization. So this record
- * gates on agreement with a reference implementation over the same bytes, and the published
- * retrieval quality then transfers by construction.
- *
- * <p>That choice avoids inventing a retrieval threshold. Absolute cutoffs are dataset-dependent —
- * nDCG@10 of 0.65 is strong on one corpus and weak on another — and the best embedding models score
- * near 0.71, so any fixed floor would be either meaningless or arbitrary. Agreement with a
- * reference has an unambiguous correct answer.
+ * <p>The counterpart to {@link ModelRagQualification}, certifying a different thing. An embedding
+ * model's retrieval quality is a published property of the weights — Qwen3-Embedding-0.6B scores
+ * 64.64 on MTEB multilingual retrieval whoever runs it. What a runtime can get wrong is pooling,
+ * rotary embeddings, dequantization, and normalization, so this record gates on agreement with a
+ * reference implementation over the same bytes, and the published retrieval quality transfers.
  *
  * <p>Two floors, both placed against measurements. Agreement between the pure-Java backend and
- * llama.cpp on Qwen3-Embedding-0.6B Q8_0 sits at 0.99950 across varied inputs, while mean pooling
- * in place of last-token scores 0.66156 — a defect lands nowhere near the floor. Agreement is not
- * bit-exact and should not be: two independent implementations accumulate floating point
- * differently.
+ * llama.cpp on Qwen3-Embedding-0.6B Q8_0 measures 0.99950 across varied inputs; mean pooling in
+ * place of last-token measures 0.66156. Agreement is not bit-exact: two independent
+ * implementations accumulate floating point differently.
  *
- * <p>The second floor exists because cosine cannot see a missing normalization. It is
- * scale-invariant, so an unnormalized runtime agrees with a normalized reference at exactly 1.0.
- * Callers that use a bare dot product as a cosine shortcut would be silently wrong while agreement
- * looked perfect.
+ * <p>Cosine is scale-invariant, so an unnormalized runtime agrees with a normalized reference at
+ * exactly 1.0. Vector length is therefore gated separately.
  *
  * <p>Every field here is something the equivalence run measures. Throughput and memory are not
- * recorded: nothing in this policy measures them, and a floor no evidence can speak to is not a
- * qualification.
+ * recorded, because nothing in this policy measures them.
  *
  * <p>Agreement is necessary but not sufficient. Two identically broken implementations would agree
- * perfectly, which is why the claim rests on the reference being an independent implementation.
+ * perfectly, so the claim rests on the reference being an independent implementation.
  *
  * @param modelId catalog alias of the qualified model
  * @param model display name and variant of the qualified model
@@ -102,18 +91,17 @@ public record ModelEmbeddingQualification(
   /**
    * Agreement below which an artifact is not considered reproduced.
    *
-   * <p>Set beneath the measured 0.99946 floor so legitimate floating-point divergence passes, and
-   * far above where a pooling, rotary-embedding or dequantization defect would land.
+   * <p>Sits below the measured 0.99950 agreement and far above the 0.66156 a wrong pooling
+   * produces.
    */
   public static final double MINIMUM_ORACLE_COSINE = 0.999;
 
   /**
    * How far a vector's length may sit from one before normalization is considered broken.
    *
-   * <p>Cosine cannot police this. It is scale-invariant, so a runtime that skips L2 normalization
-   * agrees with a normalized reference at exactly 1.0 — measured against llama.cpp with {@code
-   * --embd-normalize -1}, not assumed. Callers that use a bare dot product as a cosine shortcut
-   * depend on unit length, so it is checked separately.
+   * <p>Cosine is scale-invariant, so a runtime that skips L2 normalization agrees with a
+   * normalized reference at exactly 1.0, measured against llama.cpp with {@code --embd-normalize
+   * -1}. Callers that use a bare dot product as a cosine shortcut depend on unit length.
    */
   public static final double MAX_NORM_DEVIATION = 1.0e-3;
 

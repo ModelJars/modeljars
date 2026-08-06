@@ -34,14 +34,23 @@ import java.util.Set;
  * near 0.71, so any fixed floor would be either meaningless or arbitrary. Agreement with a
  * reference has an unambiguous correct answer.
  *
- * <p>Measured agreement between the pure-Java backend and llama.cpp on Qwen3-Embedding-0.6B Q8_0
- * sits in a narrow 0.99946 to 0.99984 band across varied inputs. It is not bit-exact and should not
- * be: two independent implementations accumulate floating-point differently. A real defect lands
- * far below the floor rather than just under it.
+ * <p>Two floors, both placed against measurements. Agreement between the pure-Java backend and
+ * llama.cpp on Qwen3-Embedding-0.6B Q8_0 sits at 0.99950 across varied inputs, while mean pooling
+ * in place of last-token scores 0.66156 — a defect lands nowhere near the floor. Agreement is not
+ * bit-exact and should not be: two independent implementations accumulate floating point
+ * differently.
+ *
+ * <p>The second floor exists because cosine cannot see a missing normalization. It is
+ * scale-invariant, so an unnormalized runtime agrees with a normalized reference at exactly 1.0.
+ * Callers that use a bare dot product as a cosine shortcut would be silently wrong while agreement
+ * looked perfect.
+ *
+ * <p>Every field here is something the equivalence run measures. Throughput and memory are not
+ * recorded: nothing in this policy measures them, and a floor no evidence can speak to is not a
+ * qualification.
  *
  * <p>Agreement is necessary but not sufficient. Two identically broken implementations would agree
- * perfectly, which is why the referenced report is expected to carry retrieval diagnostics as
- * corroboration even though they do not gate.
+ * perfectly, which is why the claim rests on the reference being an independent implementation.
  *
  * @param modelId catalog alias of the qualified model
  * @param model display name and variant of the qualified model
@@ -63,10 +72,7 @@ import java.util.Set;
  * @param minimumOracleCosine lowest cosine agreement observed across the probe set
  * @param meanOracleCosine mean cosine agreement across the probe set
  * @param maxComponentDelta largest absolute per-component difference observed
- * @param p50EmbedTextsPerSecond median sustained embedding throughput
- * @param oracleP50EmbedTextsPerSecond median throughput of the reference implementation
- * @param p95EmbedMillis 95th-percentile latency to embed one text
- * @param peakRssBytes peak resident set size observed during qualification
+ * @param maxNormDeviation largest distance from unit length among the produced vectors
  * @param environment host and JVM identity the evidence was produced on
  */
 public record ModelEmbeddingQualification(
@@ -90,10 +96,7 @@ public record ModelEmbeddingQualification(
     double minimumOracleCosine,
     double meanOracleCosine,
     double maxComponentDelta,
-    double p50EmbedTextsPerSecond,
-    double oracleP50EmbedTextsPerSecond,
-    double p95EmbedMillis,
-    long peakRssBytes,
+    double maxNormDeviation,
     ModelQualificationEnvironment environment) {
 
   /**
@@ -105,12 +108,14 @@ public record ModelEmbeddingQualification(
   public static final double MINIMUM_ORACLE_COSINE = 0.999;
 
   /**
-   * Throughput floor as a share of the reference implementation.
+   * How far a vector's length may sit from one before normalization is considered broken.
    *
-   * <p>Matches the generation policy's requirement of at least 80% of Ollama decode speed, so one
-   * convention covers both kinds of artifact and neither ages with hardware.
+   * <p>Cosine cannot police this. It is scale-invariant, so a runtime that skips L2 normalization
+   * agrees with a normalized reference at exactly 1.0 — measured against llama.cpp with {@code
+   * --embd-normalize -1}, not assumed. Callers that use a bare dot product as a cosine shortcut
+   * depend on unit length, so it is checked separately.
    */
-  public static final double MINIMUM_ORACLE_THROUGHPUT_RATIO = 0.80;
+  public static final double MAX_NORM_DEVIATION = 1.0e-3;
 
   /** Reference implementations whose embedding output this policy accepts as authoritative. */
   private static final Set<String> SUPPORTED_ORACLES = Set.of("llama.cpp", "ollama");
@@ -149,16 +154,10 @@ public record ModelEmbeddingQualification(
     if (embeddingDimension < 1) {
       throw new IllegalArgumentException("embeddingDimension must be positive");
     }
-    if (peakRssBytes < 1) {
-      throw new IllegalArgumentException("peakRssBytes must be positive");
-    }
     minimumOracleCosine = requireCosine(minimumOracleCosine, "minimumOracleCosine");
     meanOracleCosine = requireCosine(meanOracleCosine, "meanOracleCosine");
     maxComponentDelta = requireMetric(maxComponentDelta, "maxComponentDelta");
-    p50EmbedTextsPerSecond = requireMetric(p50EmbedTextsPerSecond, "p50EmbedTextsPerSecond");
-    oracleP50EmbedTextsPerSecond =
-        requireMetric(oracleP50EmbedTextsPerSecond, "oracleP50EmbedTextsPerSecond");
-    p95EmbedMillis = requireMetric(p95EmbedMillis, "p95EmbedMillis");
+    maxNormDeviation = requireMetric(maxNormDeviation, "maxNormDeviation");
     environment = Objects.requireNonNull(environment, "environment");
     if (qualified) {
       if (minimumOracleCosine < MINIMUM_ORACLE_COSINE) {
@@ -166,15 +165,11 @@ public record ModelEmbeddingQualification(
             "qualified evidence must reproduce the reference implementation to at least "
                 + MINIMUM_ORACLE_COSINE);
       }
-      double ratio =
-          oracleP50EmbedTextsPerSecond == 0.0
-              ? Double.POSITIVE_INFINITY
-              : p50EmbedTextsPerSecond / oracleP50EmbedTextsPerSecond;
-      if (ratio < MINIMUM_ORACLE_THROUGHPUT_RATIO) {
+      if (normalized && maxNormDeviation > MAX_NORM_DEVIATION) {
         throw new IllegalArgumentException(
-            "qualified evidence must sustain at least "
-                + MINIMUM_ORACLE_THROUGHPUT_RATIO
-                + " of reference throughput");
+            "qualified evidence claiming normalized vectors must keep them within "
+                + MAX_NORM_DEVIATION
+                + " of unit length");
       }
     }
   }
@@ -199,17 +194,6 @@ public record ModelEmbeddingQualification(
    */
   public boolean productionUsable() {
     return qualified;
-  }
-
-  /**
-   * Returns throughput as a share of the reference implementation.
-   *
-   * @return sustained throughput divided by the oracle's, or infinity when the oracle recorded none
-   */
-  public double oracleThroughputRatio() {
-    return oracleP50EmbedTextsPerSecond == 0.0
-        ? Double.POSITIVE_INFINITY
-        : p50EmbedTextsPerSecond / oracleP50EmbedTextsPerSecond;
   }
 
   private static String requireText(String value, String field) {

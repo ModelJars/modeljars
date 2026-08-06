@@ -47,7 +47,7 @@ class ModelEmbeddingQualificationTest {
   }
 
   private static ModelEmbeddingQualification qualification(
-      double minimumOracleCosine, double textsPerSecond, boolean qualified) {
+      double minimumOracleCosine, double maxNormDeviation, boolean qualified) {
     return new ModelEmbeddingQualification(
         "qwen_qwen3_embedding_0_6b_gguf_q8_0",
         "Qwen3-Embedding-0.6B GGUF Q8_0",
@@ -69,16 +69,13 @@ class ModelEmbeddingQualificationTest {
         minimumOracleCosine,
         0.99966,
         0.006005,
-        textsPerSecond,
-        20.0,
-        48.2,
-        1_391_558_656L,
+        maxNormDeviation,
         environment());
   }
 
   @Test
   void carriesTheEquivalenceEvidenceThatCertifiesReproduction() {
-    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
+    ModelEmbeddingQualification qualification = qualification(0.99946, 2.7e-09, true);
 
     assertEquals("llama.cpp", qualification.oracleBackend());
     assertEquals("6ea215d17", qualification.oracleVersion());
@@ -90,22 +87,15 @@ class ModelEmbeddingQualificationTest {
 
   @Test
   void qualifiesAnArtifactThatReproducesTheReferenceImplementation() {
-    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
+    ModelEmbeddingQualification qualification = qualification(0.99946, 2.7e-09, true);
 
     assertEquals(EmbeddingUseCaseTier.SEMANTIC_SEARCH, qualification.useCaseTier());
     assertTrue(qualification.productionUsable());
   }
 
   @Test
-  void reportsThroughputAsAShareOfTheOracle() {
-    // Mirrors the generation policy, which gates on a share of Ollama decode speed rather than
-    // on an absolute rate that would age with hardware.
-    assertEquals(0.9, qualification(0.99946, 18.0, true).oracleThroughputRatio(), 1.0e-9);
-  }
-
-  @Test
   void gradesUnqualifiedEvidenceAsUnqualified() {
-    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, false);
+    ModelEmbeddingQualification qualification = qualification(0.99946, 2.7e-09, false);
 
     assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, qualification.useCaseTier());
     assertFalse(qualification.productionUsable());
@@ -115,23 +105,55 @@ class ModelEmbeddingQualificationTest {
   void rejectsQualifiedEvidenceBelowTheEquivalenceFloor() {
     // A pooling, RoPE or dequantization defect lands far below the floor rather than just under
     // it, so evidence claiming qualification while failing it is a contradiction.
-    assertThrows(IllegalArgumentException.class, () -> qualification(0.97, 18.0, true));
+    assertThrows(IllegalArgumentException.class, () -> qualification(0.97, 2.7e-09, true));
   }
 
   @Test
-  void rejectsQualifiedEvidenceBelowTheThroughputFloor() {
-    assertThrows(IllegalArgumentException.class, () -> qualification(0.99946, 8.0, true));
+  void rejectsQualifiedEvidenceWhoseVectorsAreNotUnitLength() {
+    // Cosine is scale-invariant, so agreement stays perfect while normalization is missing. Only
+    // the length check can catch it, and qualified evidence must not claim both.
+    assertThrows(IllegalArgumentException.class, () -> qualification(0.99946, 11.0, true));
+  }
+
+  @Test
+  void ignoresVectorLengthWhenTheEvidenceDoesNotClaimNormalization() {
+    ModelEmbeddingQualification qualification =
+        new ModelEmbeddingQualification(
+            "id",
+            "name",
+            "pure-java",
+            "models-0.3.0",
+            "oracle-equivalence-v1",
+            PROBE_SHA,
+            ARTIFACT_SHA,
+            1L,
+            "report.json",
+            REPORT_SHA,
+            true,
+            64,
+            1024,
+            "last-token",
+            false,
+            "llama.cpp",
+            "6ea215d17",
+            0.9999,
+            0.9999,
+            0.001,
+            11.0,
+            environment());
+
+    assertTrue(qualification.productionUsable());
   }
 
   @Test
   void allowsUnqualifiedEvidenceBelowEitherFloor() {
-    assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, qualification(0.5, 1.0, false).useCaseTier());
+    assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, qualification(0.5, 11.0, false).useCaseTier());
   }
 
   @Test
   void rejectsACosineOutsideItsValidRange() {
-    assertThrows(IllegalArgumentException.class, () -> qualification(1.5, 18.0, true));
-    assertThrows(IllegalArgumentException.class, () -> qualification(-1.5, 18.0, false));
+    assertThrows(IllegalArgumentException.class, () -> qualification(1.5, 2.7e-09, true));
+    assertThrows(IllegalArgumentException.class, () -> qualification(-1.5, 2.7e-09, false));
   }
 
   @Test
@@ -162,10 +184,7 @@ class ModelEmbeddingQualificationTest {
                 0.9999,
                 0.9999,
                 0.001,
-                18.0,
-                20.0,
-                48.2,
-                1L,
+                1.0e-9,
                 environment()));
   }
 
@@ -197,16 +216,13 @@ class ModelEmbeddingQualificationTest {
                 0.9999,
                 0.9999,
                 0.001,
-                18.0,
-                20.0,
-                48.2,
-                1L,
+                1.0e-9,
                 environment()));
   }
 
   @Test
   void bindsEvidenceToTheExactArtifactAndProbeSet() {
-    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
+    ModelEmbeddingQualification qualification = qualification(0.99946, 2.7e-09, true);
 
     assertEquals(ARTIFACT_SHA, qualification.artifactSha256());
     assertEquals(PROBE_SHA, qualification.probeSetSha256());

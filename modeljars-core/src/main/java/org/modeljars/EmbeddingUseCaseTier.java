@@ -16,27 +16,26 @@
 package org.modeljars;
 
 /**
- * How an embedding artifact met the retrieval quality policy.
+ * How an embedding artifact met the production equivalence policy.
  *
- * <p>Deliberately separate from {@link RagUseCaseTier}. That enum grades a model's ability to
- * answer from retrieved evidence; this one grades a model's ability to retrieve. The two are
- * measured against different corpora with disjoint metrics, and collapsing them would leave every
- * artifact carrying a majority of meaningless fields.
+ * <p>Deliberately separate from {@link RagUseCaseTier}. That enum grades how well a model answers
+ * from retrieved evidence, which depends on the runtime. This one records whether a runtime
+ * faithfully reproduces an embedding model, because retrieval quality is a published property of
+ * the weights rather than something a runtime improves on.
+ *
+ * <p>Only two values, and deliberately so. A finer grading would need retrieval evidence this
+ * policy does not produce, and grading on reproduction fidelity alone would be meaningless: an
+ * artifact agreeing with the reference at 0.9999 supports exactly the use cases as one agreeing at
+ * 0.9995.
  */
 public enum EmbeddingUseCaseTier {
 
-  /** Did not meet the retrieval floor, or was not evaluated. */
+  /** Does not reproduce the reference implementation, or was not evaluated. */
   UNQUALIFIED,
 
   /**
-   * Meets the retrieval floor: suitable for first-stage semantic search, where a later stage may
-   * rerank or a generator may ground on what was returned.
+   * Reproduces the reference implementation, so the model's published retrieval quality applies to
+   * this runtime and the artifact is usable for semantic search.
    */
-  SEMANTIC_SEARCH,
-
-  /**
-   * Meets the stricter floor at which retrieval can be trusted without a reranking stage, so the
-   * top results are used directly.
-   */
-  PRECISION_RETRIEVAL
+  SEMANTIC_SEARCH
 }

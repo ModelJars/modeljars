@@ -26,7 +26,7 @@ class ModelEmbeddingQualificationTest {
 
   private static final String ARTIFACT_SHA =
       "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439";
-  private static final String CORPUS_SHA =
+  private static final String PROBE_SHA =
       "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45";
   private static final String REPORT_SHA =
       "85bfa1d4d855997ccb99ef60c53c4d22a4ba02f1f9cc21447087c82dae334153";
@@ -47,119 +47,97 @@ class ModelEmbeddingQualificationTest {
   }
 
   private static ModelEmbeddingQualification qualification(
-      double recallAtTen, double meanReciprocalRank, boolean qualified) {
+      double minimumOracleCosine, double textsPerSecond, boolean qualified) {
     return new ModelEmbeddingQualification(
         "qwen_qwen3_embedding_0_6b_gguf_q8_0",
         "Qwen3-Embedding-0.6B GGUF Q8_0",
         "pure-java",
         "models-0.3.0",
-        "beir-scifact",
-        CORPUS_SHA,
+        "oracle-equivalence-v1",
+        PROBE_SHA,
         ARTIFACT_SHA,
         639_150_592L,
         "benchmark-results/embedding/qwen3-embedding-0.6b-q8_0.json",
         REPORT_SHA,
         qualified,
-        300,
+        64,
         1024,
         "last-token",
         true,
-        recallAtTen,
-        meanReciprocalRank,
-        0.71,
+        "llama.cpp",
+        "6ea215d17",
+        minimumOracleCosine,
+        0.99966,
+        0.006005,
+        textsPerSecond,
+        20.0,
         48.2,
-        21.5,
         1_391_558_656L,
         environment());
   }
 
   @Test
-  void carriesTheRetrievalEvidenceThatDistinguishesAnEmbedder() {
-    ModelEmbeddingQualification qualification = qualification(0.95, 0.88, true);
+  void carriesTheEquivalenceEvidenceThatCertifiesReproduction() {
+    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
 
+    assertEquals("llama.cpp", qualification.oracleBackend());
+    assertEquals("6ea215d17", qualification.oracleVersion());
+    assertEquals(0.99946, qualification.minimumOracleCosine());
     assertEquals(1024, qualification.embeddingDimension());
     assertEquals("last-token", qualification.pooling());
     assertTrue(qualification.normalized());
-    assertEquals(0.95, qualification.recallAtTen());
-    assertEquals(0.88, qualification.meanReciprocalRank());
   }
 
   @Test
-  void gradesAStrongRetrieverAsPrecisionGrade() {
-    assertEquals(
-        EmbeddingUseCaseTier.PRECISION_RETRIEVAL, qualification(0.95, 0.88, true).useCaseTier());
+  void qualifiesAnArtifactThatReproducesTheReferenceImplementation() {
+    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
+
+    assertEquals(EmbeddingUseCaseTier.SEMANTIC_SEARCH, qualification.useCaseTier());
+    assertTrue(qualification.productionUsable());
   }
 
   @Test
-  void gradesAnAdequateRetrieverAsSemanticSearch() {
-    // Clears the retrieval floor but not the precision floor: usable for first-stage search,
-    // where a reranker or a grounding policy still stands between it and an answer.
-    assertEquals(
-        EmbeddingUseCaseTier.SEMANTIC_SEARCH, qualification(0.90, 0.72, true).useCaseTier());
+  void reportsThroughputAsAShareOfTheOracle() {
+    // Mirrors the generation policy, which gates on a share of Ollama decode speed rather than
+    // on an absolute rate that would age with hardware.
+    assertEquals(0.9, qualification(0.99946, 18.0, true).oracleThroughputRatio(), 1.0e-9);
   }
 
   @Test
   void gradesUnqualifiedEvidenceAsUnqualified() {
-    ModelEmbeddingQualification qualification = qualification(0.95, 0.88, false);
+    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, false);
 
     assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, qualification.useCaseTier());
     assertFalse(qualification.productionUsable());
   }
 
   @Test
-  void rejectsQualifiedEvidenceBelowTheRetrievalFloor() {
-    // The floor is what "qualified" means; evidence that claims it while failing it is a
-    // contradiction the record must not be able to represent.
-    assertThrows(IllegalArgumentException.class, () -> qualification(0.50, 0.40, true));
+  void rejectsQualifiedEvidenceBelowTheEquivalenceFloor() {
+    // A pooling, RoPE or dequantization defect lands far below the floor rather than just under
+    // it, so evidence claiming qualification while failing it is a contradiction.
+    assertThrows(IllegalArgumentException.class, () -> qualification(0.97, 18.0, true));
   }
 
   @Test
-  void allowsUnqualifiedEvidenceBelowTheFloor() {
-    ModelEmbeddingQualification rejected = qualification(0.50, 0.40, false);
-
-    assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, rejected.useCaseTier());
+  void rejectsQualifiedEvidenceBelowTheThroughputFloor() {
+    assertThrows(IllegalArgumentException.class, () -> qualification(0.99946, 8.0, true));
   }
 
   @Test
-  void rejectsRatesOutsideTheUnitInterval() {
-    assertThrows(IllegalArgumentException.class, () -> qualification(1.5, 0.88, true));
-    assertThrows(IllegalArgumentException.class, () -> qualification(0.95, -0.1, true));
+  void allowsUnqualifiedEvidenceBelowEitherFloor() {
+    assertEquals(EmbeddingUseCaseTier.UNQUALIFIED, qualification(0.5, 1.0, false).useCaseTier());
   }
 
   @Test
-  void rejectsAnImpossibleEmbeddingWidth() {
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ModelEmbeddingQualification(
-                "id",
-                "name",
-                "pure-java",
-                "models-0.3.0",
-                "beir-scifact",
-                CORPUS_SHA,
-                ARTIFACT_SHA,
-                1L,
-                "report.json",
-                REPORT_SHA,
-                true,
-                300,
-                0,
-                "last-token",
-                true,
-                0.95,
-                0.88,
-                0.71,
-                48.2,
-                21.5,
-                1L,
-                environment()));
+  void rejectsACosineOutsideItsValidRange() {
+    assertThrows(IllegalArgumentException.class, () -> qualification(1.5, 18.0, true));
+    assertThrows(IllegalArgumentException.class, () -> qualification(-1.5, 18.0, false));
   }
 
   @Test
   void rejectsAnUnknownPoolingStrategy() {
-    // Pooling must travel with the model: using the wrong one degrades retrieval silently
-    // rather than failing, so an unrecognised value cannot be recorded as evidence.
+    // Pooling must travel with the evidence: the wrong one degrades retrieval silently rather
+    // than failing, so an unreproducible value cannot be recorded.
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -168,32 +146,70 @@ class ModelEmbeddingQualificationTest {
                 "name",
                 "pure-java",
                 "models-0.3.0",
-                "beir-scifact",
-                CORPUS_SHA,
+                "oracle-equivalence-v1",
+                PROBE_SHA,
                 ARTIFACT_SHA,
                 1L,
                 "report.json",
                 REPORT_SHA,
                 true,
-                300,
+                64,
                 1024,
                 "magic",
                 true,
-                0.95,
-                0.88,
-                0.71,
+                "llama.cpp",
+                "6ea215d17",
+                0.9999,
+                0.9999,
+                0.001,
+                18.0,
+                20.0,
                 48.2,
-                21.5,
                 1L,
                 environment()));
   }
 
   @Test
-  void matchesOnlyTheExactArtifactItCertified() {
-    ModelEmbeddingQualification qualification = qualification(0.95, 0.88, true);
+  void requiresTheOracleToBeNamedAndPinned() {
+    // An unpinned oracle makes the evidence unreproducible: reference kernels change, and the
+    // agreement band can move with them.
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ModelEmbeddingQualification(
+                "id",
+                "name",
+                "pure-java",
+                "models-0.3.0",
+                "oracle-equivalence-v1",
+                PROBE_SHA,
+                ARTIFACT_SHA,
+                1L,
+                "report.json",
+                REPORT_SHA,
+                true,
+                64,
+                1024,
+                "last-token",
+                true,
+                "llama.cpp",
+                "  ",
+                0.9999,
+                0.9999,
+                0.001,
+                18.0,
+                20.0,
+                48.2,
+                1L,
+                environment()));
+  }
+
+  @Test
+  void bindsEvidenceToTheExactArtifactAndProbeSet() {
+    ModelEmbeddingQualification qualification = qualification(0.99946, 18.0, true);
 
     assertEquals(ARTIFACT_SHA, qualification.artifactSha256());
-    assertEquals(CORPUS_SHA, qualification.corpusSha256());
+    assertEquals(PROBE_SHA, qualification.probeSetSha256());
     assertEquals(REPORT_SHA, qualification.reportSha256());
   }
 }

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-06T16:40:00Z",
+  "policyVersion": "oracle-equivalence-v1",
+  "modelsRevision": "b2eebb6038741b8ff68cc1715daf6c9e6b8f5b70",
+  "qualifiedModels": 1,
+  "rejectedModels": 0,
+  "entries": [
+    {
+      "modelId": "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+      "model": "Qwen3-Embedding-0.6B GGUF Q8_0",
+      "backend": "pure-java",
+      "backendVersion": "models-0.3.0",
+      "workload": "oracle-equivalence-v1",
+      "probeSetSha256": "a25952a4cb80e57c099291dda9b44ad2b713c0688c386015a1e0000bf6fbf8b9",
+      "artifactSha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+      "artifactSizeBytes": 639150592,
+      "report": "benchmark-results/embedding/qwen3-embedding-0.6b-q8_0.json",
+      "reportSha256": "4764fbbf682254e8664d09e1ef4e8a61d816303c9c155a29f1be022f79b357be",
+      "qualified": true,
+      "probes": 8,
+      "embeddingDimension": 1024,
+      "pooling": "last-token",
+      "normalized": true,
+      "oracleBackend": "llama.cpp",
+      "oracleVersion": "6ea215d17",
+      "minimumOracleCosine": 0.9995014497617521,
+      "meanOracleCosine": 0.999646999958326,
+      "maxComponentDelta": 0.005263041704893112,
+      "maxNormDeviation": 2.73471778555745e-09,
+      "environment": {
+        "hostname": "rockhopper",
+        "osName": "Linux",
+        "osVersion": "7.0.11-76070011-generic",
+        "architecture": "amd64",
+        "cpuModel": "Intel(R) Core(TM) i9-14900HX",
+        "processors": 32,
+        "physicalMemoryBytes": 101073932288,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Azul Systems, Inc.",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    }
+  ]
+}

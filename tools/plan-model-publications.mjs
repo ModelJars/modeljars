@@ -22,6 +22,8 @@ function parseArguments(argumentsList) {
         "--current-profiles",
         "--qualifications",
         "--previous-qualifications",
+        "--embedding-qualifications",
+        "--previous-embedding-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -32,6 +34,8 @@ function parseArguments(argumentsList) {
           "(--previous FILE | --ids ID[,ID...]) " +
           "[--previous-profiles FILE --current-profiles FILE] " +
           "[--qualifications FILE --previous-qualifications FILE] " +
+          "[--embedding-qualifications FILE " +
+          "--previous-embedding-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -74,14 +78,18 @@ async function readCatalog(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
 
-function qualifiedCatalog(catalog, qualificationManifest) {
+function qualifiedCatalog(catalog, qualificationManifest, embeddingManifest) {
   filterQualifiedPublications(
     { publications: [], removed: [] },
     catalog,
     qualificationManifest,
+    embeddingManifest,
   );
   const qualifiedIds = new Set(
-    qualificationManifest.entries
+    [
+      ...qualificationManifest.entries,
+      ...(embeddingManifest?.entries ?? []),
+    ]
       .filter((entry) => entry.qualified === true)
       .map((entry) => entry.modelId),
   );
@@ -122,6 +130,13 @@ async function main() {
     qualificationPath === undefined
       ? undefined
       : await readCatalog(qualificationPath);
+  const embeddingQualificationPath = argumentsMap.get(
+    "--embedding-qualifications",
+  );
+  const currentEmbeddingQualifications =
+    embeddingQualificationPath === undefined
+      ? undefined
+      : await readCatalog(embeddingQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -139,11 +154,21 @@ async function main() {
       "--previous-qualifications",
     );
     if (previousQualificationsPath !== undefined) {
+      const previousEmbeddingPath = argumentsMap.get(
+        "--previous-embedding-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
+        previousEmbeddingPath === undefined
+          ? undefined
+          : await readCatalog(previousEmbeddingPath),
       );
-      const currentQualified = qualifiedCatalog(current, currentQualifications);
+      const currentQualified = qualifiedCatalog(
+        current,
+        currentQualifications,
+        currentEmbeddingQualifications,
+      );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
       if (previousProfilesPath !== undefined) {
@@ -168,6 +193,7 @@ async function main() {
           planned,
           current,
           currentQualifications,
+          currentEmbeddingQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

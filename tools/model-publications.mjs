@@ -238,8 +238,7 @@ export function selectCatalogPublications(catalog, ids) {
   return { publications, removed: [] };
 }
 
-export function filterQualifiedPublications(delta, catalog, qualifications) {
-  assertCatalog(catalog, "Catalog");
+function collectQualifiedIds(qualifications, modelsById) {
   if (
     qualifications === null ||
     typeof qualifications !== "object" ||
@@ -249,7 +248,6 @@ export function filterQualifiedPublications(delta, catalog, qualifications) {
     throw new Error("Qualifications must be a ModelJars schemaVersion 1 manifest");
   }
 
-  const modelsById = new Map(catalog.models.map((model) => [model.id, model]));
   const qualifiedIds = new Set();
   const qualificationIds = new Set();
   for (const qualification of qualifications.entries) {
@@ -271,6 +269,29 @@ export function filterQualifiedPublications(delta, catalog, qualifications) {
     if (qualification.qualified === true) {
       qualifiedIds.add(id);
     }
+  }
+  return qualifiedIds;
+}
+
+/**
+ * Keeps only publications whose exact artifact passed a qualification policy.
+ *
+ * A generator qualifies through the RAG workload, an embedder through the
+ * embedding equivalence gate. Either is sufficient, and both bind evidence to
+ * the catalog SHA-256 and byte size so stale evidence cannot publish.
+ */
+export function filterQualifiedPublications(
+  delta,
+  catalog,
+  qualifications,
+  embeddingQualifications = { schemaVersion: 1, entries: [] },
+) {
+  assertCatalog(catalog, "Catalog");
+
+  const modelsById = new Map(catalog.models.map((model) => [model.id, model]));
+  const qualifiedIds = collectQualifiedIds(qualifications, modelsById);
+  for (const id of collectQualifiedIds(embeddingQualifications, modelsById)) {
+    qualifiedIds.add(id);
   }
 
   return {

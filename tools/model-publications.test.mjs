@@ -613,3 +613,109 @@ test("CLI publishes a newly qualified candidate without a spurious version bump"
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("publishes an artifact qualified only by embedding equivalence", () => {
+  const embedder = model({
+    id: "embedding_model",
+    markerCoordinate:
+      "org.modeljars.huggingface:example.embedder.q8_0:1.0.0-q8_0.1",
+    sha256: "e".repeat(64),
+  });
+  const delta = selectCatalogPublications(catalog([embedder]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([embedder]),
+    qualifications([]),
+    qualifications([
+      {
+        modelId: embedder.id,
+        artifactSha256: embedder.sha256,
+        artifactSizeBytes: embedder.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [embedder.id],
+  );
+});
+
+test("withholds an embedding artifact whose evidence did not qualify", () => {
+  const embedder = model({
+    id: "embedding_model",
+    markerCoordinate:
+      "org.modeljars.huggingface:example.embedder.q8_0:1.0.0-q8_0.1",
+    sha256: "e".repeat(64),
+  });
+  const delta = selectCatalogPublications(catalog([embedder]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([embedder]),
+    qualifications([]),
+    qualifications([
+      {
+        modelId: embedder.id,
+        artifactSha256: embedder.sha256,
+        artifactSizeBytes: embedder.sizeBytes,
+        qualified: false,
+      },
+    ]),
+  );
+
+  assert.deepEqual(filtered.publications, []);
+});
+
+test("rejects stale embedding evidence for changed artifact bytes", () => {
+  const embedder = model({
+    id: "embedding_model",
+    markerCoordinate:
+      "org.modeljars.huggingface:example.embedder.q8_0:1.0.0-q8_0.1",
+    sha256: "e".repeat(64),
+  });
+  const delta = selectCatalogPublications(catalog([embedder]), ["all"]);
+
+  assert.throws(
+    () =>
+      filterQualifiedPublications(
+        delta,
+        catalog([embedder]),
+        qualifications([]),
+        qualifications([
+          {
+            modelId: embedder.id,
+            artifactSha256: "f".repeat(64),
+            artifactSizeBytes: embedder.sizeBytes,
+            qualified: true,
+          },
+        ]),
+      ),
+    /SHA-256 does not match/,
+  );
+});
+
+test("treats absent embedding evidence as no additional publications", () => {
+  const entry = model();
+  const delta = selectCatalogPublications(catalog([entry]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([entry]),
+    qualifications([
+      {
+        modelId: entry.id,
+        artifactSha256: entry.sha256,
+        artifactSizeBytes: entry.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [entry.id],
+  );
+});

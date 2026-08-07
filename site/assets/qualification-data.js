@@ -169,13 +169,20 @@ export function validateQualificationCatalog(value, models) {
 }
 
 export function primaryQualification(model) {
-  const entries = Array.isArray(model?.ragQualifications) ? model.ragQualifications : [];
+  const rag = Array.isArray(model?.ragQualifications) ? model.ragQualifications : [];
+  const embedding = Array.isArray(model?.embeddingQualifications)
+    ? model.embeddingQualifications
+    : [];
+  // RAG evidence wins when a model carries both: it grades answer quality, which is the
+  // stronger claim. Embedding evidence certifies that the runtime reproduces the model.
+  const entries = [...rag, ...embedding];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
 export function qualificationLabel(qualification) {
   if (!qualification?.qualified) return qualification ? "Evaluated" : "Not evaluated";
   if (qualification.useCaseTier === "GENERATIVE_RAG") return "Generative RAG";
+  if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
   return "Guarded RAG";
 }
 

@@ -147,3 +147,31 @@ test("rejects artifact mismatches and false qualification counts", () => {
     /workload/,
   );
 });
+
+test("treats embedding equivalence evidence as a qualification", () => {
+  const embedder = {
+    id: "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+    embeddingQualifications: [
+      { qualified: true, useCaseTier: "SEMANTIC_SEARCH", minimumOracleCosine: 0.9995 },
+    ],
+  };
+
+  const qualification = primaryQualification(embedder);
+
+  assert.equal(qualification.useCaseTier, "SEMANTIC_SEARCH");
+  assert.equal(qualificationLabel(qualification), "Semantic search");
+});
+
+test("prefers RAG evidence when a model carries both", () => {
+  const both = {
+    ragQualifications: [{ qualified: true, useCaseTier: "GUARDED_RAG" }],
+    embeddingQualifications: [{ qualified: true, useCaseTier: "SEMANTIC_SEARCH" }],
+  };
+
+  assert.equal(primaryQualification(both).useCaseTier, "GUARDED_RAG");
+});
+
+test("reports a model with no evidence of either kind as unevaluated", () => {
+  assert.equal(primaryQualification({ id: "bare" }), null);
+  assert.equal(qualificationLabel(null), "Not evaluated");
+});

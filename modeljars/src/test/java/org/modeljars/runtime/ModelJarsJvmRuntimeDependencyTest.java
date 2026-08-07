@@ -8,6 +8,7 @@ import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.modeljars.ModelEmbeddingQualificationRegistry;
 import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
 import org.modeljars.ModelRagQualificationRegistry;
@@ -24,16 +25,34 @@ class ModelJarsJvmRuntimeDependencyTest {
   void aggregateTestCatalogContainsOnlyQualifiedModels() {
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
+    var embeddingQualifications = ModelEmbeddingQualificationRegistry.fromClasspath();
 
-    assertEquals(qualifications.qualifiedModels(), descriptors.size());
-    assertEquals(
+    // A generator qualifies through the RAG workload and an embedder through the equivalence
+    // gate. Either is sufficient to publish, so the catalog is the union of both.
+    var ragQualified =
         qualifications.qualified().stream()
             .map(ModelRagQualification::modelId)
-            .collect(Collectors.toSet()),
+            .collect(Collectors.toSet());
+    var embeddingQualified =
+        embeddingQualifications.qualified().stream()
+            .map(ModelEmbeddingQualificationRegistry.Entry::modelId)
+            .collect(Collectors.toSet());
+    var allQualified = new java.util.HashSet<>(ragQualified);
+    allQualified.addAll(embeddingQualified);
+
+    assertEquals(allQualified.size(), descriptors.size());
+    assertEquals(
+        allQualified,
         descriptors.stream().map(descriptor -> descriptor.alias()).collect(Collectors.toSet()));
     assertTrue(
         descriptors.stream()
-            .allMatch(descriptor -> !qualifications.qualificationsFor(descriptor).isEmpty()));
+            .allMatch(
+                descriptor ->
+                    !qualifications.qualificationsFor(descriptor).isEmpty()
+                        || descriptor
+                            .sha256()
+                            .flatMap(embeddingQualifications::qualificationFor)
+                            .isPresent()));
     assertNull(
         getClass()
             .getClassLoader()

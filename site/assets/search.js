@@ -8,22 +8,33 @@ const SEARCH_ALIASES = new Map([
   ["developer", ["coding"]],
   ["java", ["pure-java"]],
   ["local", ["offline", "on-device"]],
+  ["vector", ["embedding"]],
+  ["vectors", ["embedding"]],
+  ["embed", ["embedding"]],
+  ["similarity", ["semantic-search"]],
 ]);
 
 export function normalize(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function queryTerms(query) {
-  const normalized = normalize(query);
-  if (!normalized) return [];
-  return [normalized, ...(SEARCH_ALIASES.get(normalized) || [])];
+// A query word matches when the catalog text contains it, or contains any of its aliases.
+// Splitting on whitespace lets "semantic search" find the "semantic-search" capability, which
+// a single substring test cannot because of the hyphen.
+function queryWords(query) {
+  return normalize(query).split(/\s+/).filter(Boolean);
+}
+
+function wordMatches(text, word) {
+  return [word, ...(SEARCH_ALIASES.get(word) || [])].some((term) => text.includes(term));
 }
 
 export function matches(model, query, backend) {
   const text = modelTerms(model).join(" ");
 
-  const queryMatches = !query || queryTerms(query).some((term) => text.includes(term));
+  const words = queryWords(query);
+  // Every word must match, so adding words narrows the result set rather than widening it.
+  const queryMatches = !words.length || words.every((word) => wordMatches(text, word));
   const backendMatches = !backend || model.backends?.[backend] === true;
   return queryMatches && backendMatches;
 }

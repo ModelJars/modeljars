@@ -60,6 +60,12 @@ export function modelTerms(model) {
       qualification.verdict,
       qualification.useCaseTier,
     ]),
+    ...(model.embeddingQualifications || []).flatMap((qualification) => [
+      qualification.backend,
+      qualification.pooling,
+      qualification.oracleBackend,
+      qualification.useCaseTier,
+    ]),
     ...FACET_FIELDS.backends(model),
   ];
 
@@ -109,7 +115,13 @@ export function verificationProfile(model) {
 
   if (pinnedArtifact) checks.push("Pinned artifact");
   if (completeMetadata) checks.push("Complete metadata");
-  if (qualification) checks.push(`${qualification.attempts}-request RAG qualification`);
+  if (qualification?.probes) {
+    checks.push(
+      `${qualification.probes}-probe equivalence with ${qualification.oracleBackend}`,
+    );
+  } else if (qualification) {
+    checks.push(`${qualification.attempts}-request RAG qualification`);
+  }
 
   if (qualification?.qualified && pinnedArtifact && completeMetadata) {
     return { level: "qualified", label: qualificationLabel(qualification), checks };

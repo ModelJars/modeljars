@@ -279,6 +279,23 @@ data class CatalogRagQualifications(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogEmbeddingQualification(
+    val modelId: String,
+    val qualified: Boolean,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val reportPath: String,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogEmbeddingQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val entries: List<CatalogEmbeddingQualification>,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -423,6 +440,54 @@ fun CatalogRagQualification.siteMetadata(
                     "GENERATIVE_RAG"
                 else -> "GUARDED_RAG"
             })
+
+fun CatalogEmbeddingQualification.registryProperties(): String =
+    buildString {
+        val prefix = "embeddingQualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(raw.requiredString("model"))}")
+        appendLine("${prefix}backend=${propertyValue(raw.requiredString("backend"))}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}qualified=$qualified")
+        appendLine("${prefix}probes=${(raw["probes"] as Number).toInt()}")
+        appendLine(
+            "${prefix}embeddingDimension=${(raw["embeddingDimension"] as Number).toInt()}",
+        )
+        appendLine("${prefix}pooling=${propertyValue(raw.requiredString("pooling"))}")
+        appendLine("${prefix}normalized=${raw["normalized"] as Boolean}")
+        appendLine(
+            "${prefix}oracleBackend=${propertyValue(raw.requiredString("oracleBackend"))}",
+        )
+        appendLine(
+            "${prefix}oracleVersion=${propertyValue(raw.requiredString("oracleVersion"))}",
+        )
+        appendLine(
+            "${prefix}minimumOracleCosine=${(raw["minimumOracleCosine"] as Number).toDouble()}",
+        )
+    }
+
+fun CatalogEmbeddingQualifications.registryProperties(
+    entries: List<CatalogEmbeddingQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.embeddingQualifications.schemaVersion=1")
+        appendLine("modeljars.embeddingQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.embeddingQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.embeddingQualifications.modelsRevision=$modelsRevision")
+        entries.forEach { append(it.registryProperties()) }
+    }
+
+fun CatalogEmbeddingQualification.siteMetadata(
+    qualifications: CatalogEmbeddingQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("policyVersion" to qualifications.policyVersion) +
+        ("useCaseTier" to if (qualified) "SEMANTIC_SEARCH" else "UNQUALIFIED")
 
 fun CatalogRagQualifications.registryProperties(
     entries: List<CatalogRagQualification> = this.entries,
@@ -881,14 +946,72 @@ ragQualifications?.let { qualifications ->
     }
 }
 
+val embeddingQualificationCatalogFile = file("catalog/embedding-qualifications.json")
+val embeddingQualifications =
+    if (embeddingQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(embeddingQualificationCatalogFile)
+                .stringKeyMap("catalog/embedding-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/embedding-qualifications.json must use schemaVersion 1"
+        }
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Embedding qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every embedding qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    CatalogEmbeddingQualification(
+                        modelId = modelId,
+                        qualified =
+                            raw["qualified"] as? Boolean
+                                ?: error("embedding qualification $modelId.qualified must be a boolean"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes =
+                            (raw["artifactSizeBytes"] as? Number)?.toLong()
+                                ?: error("embedding qualification $modelId.artifactSizeBytes must be an integer"),
+                        reportPath = raw.requiredString("report"),
+                        raw = raw,
+                    )
+                }
+        require(entries.map(CatalogEmbeddingQualification::modelId).distinct().size == entries.size) {
+            "Embedding qualification model IDs must be unique"
+        }
+        CatalogEmbeddingQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 val publicQualifications =
     requireNotNull(ragQualifications) {
         "Production qualification metadata is required to generate the public site"
     }.entries.filter(CatalogRagQualification::qualified)
-val publicModelIds = publicQualifications.map(CatalogRagQualification::modelId).toSet()
+val publicEmbeddingQualifications =
+    embeddingQualifications?.entries?.filter(CatalogEmbeddingQualification::qualified).orEmpty()
+val publicModelIds =
+    publicQualifications.map(CatalogRagQualification::modelId).toSet() +
+        publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet()
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
-require(publicCatalogEntries.size == publicQualifications.size) {
+require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
+}
+publicEmbeddingQualifications.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error("Embedding qualification references unknown catalog model: ${qualification.modelId}")
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Embedding qualification SHA-256 does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Embedding qualification size does not match catalog model ${qualification.modelId}"
+    }
 }
 val publicPerformanceProfiles = performanceProfiles.filter { it.modelId in publicModelIds }
 val publicBenchmarkDocument =
@@ -1910,6 +2033,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/qualifications-v1.json")
         }
+    val aggregateEmbeddingQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
+        }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
@@ -1917,6 +2044,9 @@ project(":modeljars-catalog") {
             inputs.file(rootProject.file("catalog/benchmarks.json"))
             if (qualificationCatalogFile.isFile) {
                 inputs.file(qualificationCatalogFile)
+            }
+            if (embeddingQualificationCatalogFile.isFile) {
+                inputs.file(embeddingQualificationCatalogFile)
             }
             outputs.files(
                 aggregateRegistry,
@@ -1926,6 +2056,7 @@ project(":modeljars-catalog") {
                 aggregateBenchmarkMetadata,
                 aggregateQualificationRegistry,
                 aggregateQualificationMetadata,
+                aggregateEmbeddingQualificationRegistry,
             )
             doLast {
                 val registry = aggregateRegistry.get().asFile
@@ -1950,12 +2081,26 @@ project(":modeljars-catalog") {
                                             .filter { it.modelId == entry.id }
                                             .map {
                                                 it.siteMetadata(requireNotNull(ragQualifications))
+                                            }) +
+                                    ("embeddingQualifications" to
+                                        publicEmbeddingQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(
+                                                    requireNotNull(embeddingQualifications),
+                                                )
                                             })
                             },
                         ),
                     ) +
                         "\n",
                     StandardCharsets.UTF_8,
+                )
+                aggregateEmbeddingQualificationRegistry.get().asFile.writeText(
+                    embeddingQualifications
+                        ?.registryProperties(publicEmbeddingQualifications)
+                        ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
                 )
                 aggregatePerformanceRegistry.get().asFile.writeText(
                     performanceRegistryProperties(publicPerformanceProfiles),
@@ -2078,6 +2223,10 @@ project(":modeljars-catalog") {
             markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.properties") }
         val markerQualificationMetadata =
             markerRoot.map { it.file("META-INF/modeljars/qualifications-v1.json") }
+        val markerEmbeddingQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
+            }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
@@ -2091,6 +2240,7 @@ project(":modeljars-catalog") {
                     markerPerformanceMetadata,
                     markerQualificationRegistry,
                     markerQualificationMetadata,
+                    markerEmbeddingQualificationRegistry,
                     markerDocs,
                 )
                 doLast {
@@ -2146,6 +2296,12 @@ project(":modeljars-catalog") {
                         ) + "\n",
                         StandardCharsets.UTF_8,
                     )
+                    markerEmbeddingQualificationRegistry.get().asFile.writeText(
+                        embeddingQualifications?.registryProperties(
+                            embeddingQualifications.entries.filter { it.modelId == entry.id },
+                        ) ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -2173,6 +2329,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/performance-v1.properties",
                         "META-INF/modeljars/performance-v1.json",
                         "META-INF/modeljars/qualifications-v1.properties",
+                        "META-INF/modeljars/embedding-qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
                 }
@@ -3181,3 +3338,4 @@ tasks.register<Zip>("markerReleaseBundleZip") {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
+

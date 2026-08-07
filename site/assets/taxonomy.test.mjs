@@ -123,3 +123,63 @@ test("ranks related variants by family, architecture, and domain", () => {
     ["same-family", "same-domain"],
   );
 });
+
+const embeddingModel = {
+  id: "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+  name: "Qwen3-Embedding-0.6B GGUF Q8_0",
+  sourceId: "hf://Qwen/Qwen3-Embedding-0.6B-GGUF",
+  markerCoordinate: "org.modeljars.huggingface:qwen.qwen3-embedding-0.6b-gguf.q8_0:3.0.0-q8_0.1",
+  architecture: "qwen3",
+  format: "gguf",
+  quantization: "Q8_0",
+  license: "apache-2.0",
+  sizeBytes: 639_150_592,
+  sha256: "0".repeat(64),
+  revision: "main",
+  capabilities: ["text-embedding", "semantic-search"],
+  domains: ["embeddings", "retrieval"],
+  dimensions: { parameterCount: 600_000_000 },
+  embeddingQualifications: [
+    {
+      qualified: true,
+      useCaseTier: "SEMANTIC_SEARCH",
+      backend: "pure-java",
+      probes: 8,
+      minimumOracleCosine: 0.9995014,
+      oracleBackend: "llama.cpp",
+      oracleVersion: "6ea215d17",
+    },
+  ],
+};
+
+test("facets an embedding model under its semantic-search tier", () => {
+  const facets = buildFacets([embeddingModel]);
+
+  assert.deepEqual(
+    facets.qualifications.map((facet) => facet.value),
+    ["semantic-search"],
+  );
+  assert.ok(facets.domains.some((facet) => facet.value === "embeddings"));
+});
+
+test("describes embedding evidence without borrowing RAG wording", () => {
+  const profile = verificationProfile(embeddingModel);
+
+  assert.equal(profile.level, "qualified");
+  assert.equal(profile.label, "Semantic search");
+  assert.ok(
+    profile.checks.some((check) => check.includes("probe")),
+    `expected a probe-based check, got ${JSON.stringify(profile.checks)}`,
+  );
+  assert.ok(
+    !profile.checks.some((check) => check.includes("undefined")),
+    `checks must not contain undefined: ${JSON.stringify(profile.checks)}`,
+  );
+});
+
+test("surfaces embedding evidence in search terms", () => {
+  const terms = modelTerms(embeddingModel);
+
+  assert.ok(terms.includes("text-embedding"));
+  assert.ok(terms.includes("semantic_search") || terms.includes("semantic-search"));
+});

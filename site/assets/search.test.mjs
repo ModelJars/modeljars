@@ -89,3 +89,50 @@ test("filters by evidence-backed RAG qualification", () => {
     0,
   );
 });
+
+const embedder = {
+  name: "Qwen3-Embedding-0.6B GGUF Q8_0",
+  description: "Text embedding model for retrieval.",
+  sourceId: "hf://Qwen/Qwen3-Embedding-0.6B-GGUF",
+  markerCoordinate: "org.modeljars.huggingface:qwen.qwen3-embedding-0.6b-gguf.q8_0:3.0.0-q8_0.1",
+  architecture: "qwen3",
+  format: "gguf",
+  quantization: "Q8_0",
+  capabilities: ["text-embedding", "semantic-search"],
+  backends: { "pure-java": true },
+  domains: ["embeddings", "retrieval"],
+  tags: [],
+  dimensions: { parameterCount: 600_000_000 },
+  embeddingQualifications: [{ qualified: true, useCaseTier: "SEMANTIC_SEARCH" }],
+};
+
+test("matches a multi-word query against hyphenated metadata", () => {
+  // The capability is "semantic-search"; a person types "semantic search".
+  assert.equal(matches(embedder, "semantic search", ""), true);
+  assert.equal(matches(embedder, "text embedding", ""), true);
+});
+
+test("requires every word of a multi-word query to match", () => {
+  assert.equal(matches(model, "clinical question", ""), true);
+  assert.equal(matches(model, "clinical insurance", ""), false);
+});
+
+test("finds embedding models through common vocabulary", () => {
+  for (const query of ["embedding", "embeddings", "vector", "vectors", "vector search"]) {
+    assert.equal(matches(embedder, query, ""), true, `expected "${query}" to match`);
+  }
+});
+
+test("does not drag generative models into embedding vocabulary", () => {
+  assert.equal(matches(model, "vector", ""), false);
+  assert.equal(matches(model, "embeddings", ""), false);
+});
+
+test("filters embedding models by their semantic-search tier", () => {
+  const catalog = [model, embedder];
+
+  assert.deepEqual(
+    filterCatalog(catalog, { qualification: "semantic-search" }).map((entry) => entry.name),
+    [embedder.name],
+  );
+});

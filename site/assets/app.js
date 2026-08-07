@@ -72,6 +72,12 @@ function renderEntry(model) {
   ].slice(0, 4);
   const qualification = primaryQualification(model);
   const modelsBackend = qualification?.backend;
+  // Latency and decode rate exist only on RAG evidence; agreement and width only on embedding
+  // evidence. Reading one from the other throws inside the formatters and blanks the catalog.
+  const ragEvidence =
+    qualification?.qualified && qualification.p95TtftMillis !== undefined ? qualification : null;
+  const embeddingEvidence =
+    qualification?.qualified && qualification.probes !== undefined ? qualification : null;
 
   return `
     <article class="catalog-entry">
@@ -90,8 +96,10 @@ function renderEntry(model) {
         </div>
       </div>
       <div class="entry-facts" aria-label="Model properties">
-        ${qualification?.qualified ? metric("TTFT p95", formatDuration(qualification.p95TtftMillis)) : ""}
-        ${qualification?.qualified ? metric("decode", `${qualification.p50DecodeTokensPerSecond.toFixed(1)} tok/s`) : ""}
+        ${ragEvidence ? metric("TTFT p95", formatDuration(ragEvidence.p95TtftMillis)) : ""}
+        ${ragEvidence ? metric("decode", `${ragEvidence.p50DecodeTokensPerSecond.toFixed(1)} tok/s`) : ""}
+        ${embeddingEvidence ? metric("agreement", embeddingEvidence.minimumOracleCosine.toFixed(5)) : ""}
+        ${embeddingEvidence ? metric("dimensions", String(embeddingEvidence.embeddingDimension)) : ""}
         ${metric("parameters", formatParameters(dimensions.parameterCount))}
         ${metric("download", formatBytes(model.sizeBytes))}
         ${metric("", context)}

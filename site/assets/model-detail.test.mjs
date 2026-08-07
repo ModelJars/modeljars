@@ -79,3 +79,35 @@ test("summarizes exact RAG qualification evidence without hiding fallbacks", () 
   assert.equal(summary.decode, "50.0 tok/s");
   assert.equal(summary.evidenceSha256, "b".repeat(64));
 });
+
+const embeddingQualification = {
+  qualified: true,
+  useCaseTier: "SEMANTIC_SEARCH",
+  backend: "pure-java",
+  backendVersion: "models-0.3.0",
+  workload: "oracle-equivalence-v1",
+  probes: 8,
+  embeddingDimension: 1024,
+  pooling: "last-token",
+  normalized: true,
+  oracleBackend: "llama.cpp",
+  oracleVersion: "6ea215d17",
+  minimumOracleCosine: 0.9995014497617521,
+  meanOracleCosine: 0.999647,
+  maxNormDeviation: 2.7e-9,
+  reportUri: "https://github.com/integrallis/models/blob/fa26f46/report.json",
+  reportSha256: "4764fbbf682254e8664d09e1ef4e8a61d816303c9c155a29f1be022f79b357be",
+};
+
+test("summarizes embedding evidence without RAG latency fields", () => {
+  // Embedding evidence has no TTFT, decode rate or answer rates. Formatting them threw and
+  // took down the whole catalog render.
+  const summary = qualificationSummary(embeddingQualification);
+
+  assert.equal(summary.label, "Semantic search");
+  assert.equal(summary.qualified, true);
+  assert.equal(summary.probes, 8);
+  assert.equal(summary.oracle, "llama.cpp 6ea215d17");
+  assert.equal(summary.ttft, null);
+  assert.equal(summary.decode, null);
+});

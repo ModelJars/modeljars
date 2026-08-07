@@ -48,8 +48,42 @@ function formatPercent(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
 
+/** True for embedding evidence, which records agreement rather than latency and answer rates. */
+export function isEmbeddingEvidence(qualification) {
+  return Boolean(qualification) && qualification.probes !== undefined;
+}
+
 export function qualificationSummary(qualification) {
   if (!qualification) return null;
+  if (isEmbeddingEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      probes: qualification.probes,
+      embeddingDimension: qualification.embeddingDimension,
+      pooling: qualification.pooling,
+      normalized: qualification.normalized,
+      oracle: `${qualification.oracleBackend} ${qualification.oracleVersion}`,
+      minimumOracleCosine: qualification.minimumOracleCosine,
+      meanOracleCosine: qualification.meanOracleCosine,
+      maxNormDeviation: qualification.maxNormDeviation,
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
+      promptTemplate: null,
+      groundingPolicy: null,
+      attempts: null,
+      ttft: null,
+      tpot: null,
+      endToEnd: null,
+      decode: null,
+      peakRss: null,
+      rawQuality: null,
+      finalQuality: null,
+      fallbackRate: null,
+    };
+  }
   return {
     label: qualificationLabel(qualification),
     backend: `${qualification.backend} ${qualification.backendVersion}`,
@@ -145,9 +179,40 @@ function copyBlock(label, value, language = "") {
     </div>`;
 }
 
+function renderEmbeddingQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="embedding-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="embedding-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.probes))} probes</span>
+      </div>
+      <p>
+        We test that Models produces the same vectors as ${escapeHtml(summary.oracle)}, for a
+        pinned probe set over the same model bytes, on ${escapeHtml(summary.backend)} using
+        ${escapeHtml(summary.pooling)} pooling.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>Minimum agreement</dt><dd>${escapeHtml(summary.minimumOracleCosine.toFixed(7))}</dd></div>
+        <div><dt>Mean agreement</dt><dd>${escapeHtml(summary.meanOracleCosine.toFixed(7))}</dd></div>
+        <div><dt>Vector width</dt><dd>${escapeHtml(String(summary.embeddingDimension))}</dd></div>
+        <div><dt>Pooling</dt><dd>${escapeHtml(summary.pooling)}</dd></div>
+        <div><dt>Unit length</dt><dd>${summary.normalized ? "normalized" : "raw"}</dd></div>
+        <div><dt>Reference</dt><dd>${escapeHtml(summary.oracle)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw equivalence JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
+  if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
   return `
     <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="rag-evidence-title">
       <div class="verification-heading">

@@ -4778,7 +4778,7 @@
         "community-conversion"
       ],
       "backends": {
-        "pure-java": false,
+        "pure-java": true,
         "llama.cpp": true
       },
       "domains": [

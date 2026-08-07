@@ -49,6 +49,15 @@ and rejects tuned properties or any failed attempt. Existing evidence is
 grandfathered until it changes; tuned benchmark success cannot override a
 failed default-configuration smoke.
 
+### Embedding artifacts
+
+We test that an embedding model produces the same vectors as llama.cpp. The harness is
+`./gradlew :models-bench:run --args="embedding-equivalence --model <artifact.gguf> --report <out>"`
+from the Models repository.
+
+Submissions carry the report, the artifact and report SHA-256 values, the probe-set SHA-256, the
+pinned oracle version, and environment identity.
+
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not
 been completed; it does not mean the candidate failed.

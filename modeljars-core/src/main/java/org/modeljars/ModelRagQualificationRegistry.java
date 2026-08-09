@@ -176,7 +176,7 @@ public final class ModelRagQualificationRegistry {
   public static ModelRagQualificationRegistry fromClasspath(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null ? ModelRagQualificationRegistry.class.getClassLoader() : classLoader;
-    Map<String, ModelRagQualification> qualifications = new LinkedHashMap<>();
+    Map<String, SourcedQualification> qualifications = new LinkedHashMap<>();
     ModelRagQualificationRegistry metadata = null;
     try {
       Enumeration<URL> resources = loader.getResources(RESOURCE);
@@ -187,18 +187,16 @@ public final class ModelRagQualificationRegistry {
           properties.load(input);
         }
         ModelRagQualificationRegistry registry = fromProperties(properties);
-        if (metadata == null) {
+        if (metadata == null || registry.generatedAt().isAfter(metadata.generatedAt())) {
           metadata = registry;
-        } else {
-          requireCompatibleMetadata(metadata, registry);
+        } else if (registry.generatedAt().equals(metadata.generatedAt())) {
+          requireCompatibleMetadataAtSameInstant(metadata, registry);
         }
         for (ModelRagQualification qualification : registry.qualifications()) {
-          ModelRagQualification previous =
-              qualifications.putIfAbsent(qualification.modelId(), qualification);
-          if (previous != null && !previous.equals(qualification)) {
-            throw new ModelJarException(
-                "Conflicting RAG qualification model ID: " + qualification.modelId());
-          }
+          qualifications.merge(
+              qualification.modelId(),
+              new SourcedQualification(registry.generatedAt(), qualification),
+              ModelRagQualificationRegistry::newestQualification);
         }
       }
     } catch (IOException e) {
@@ -212,7 +210,7 @@ public final class ModelRagQualificationRegistry {
         metadata.policyVersion(),
         metadata.modelsRevision(),
         metadata.targetQualifiedModels(),
-        List.copyOf(qualifications.values()));
+        qualifications.values().stream().map(SourcedQualification::qualification).toList());
   }
 
   /**
@@ -311,15 +309,35 @@ public final class ModelRagQualificationRegistry {
             required(properties, environment + "vmName")));
   }
 
-  private static void requireCompatibleMetadata(
+  private static SourcedQualification newestQualification(
+      SourcedQualification first, SourcedQualification other) {
+    if (first.qualification().equals(other.qualification())) {
+      return first.generatedAt().isBefore(other.generatedAt()) ? other : first;
+    }
+    int recency = first.generatedAt().compareTo(other.generatedAt());
+    if (recency < 0) {
+      return other;
+    }
+    if (recency > 0) {
+      return first;
+    }
+    throw new ModelJarException(
+        "Conflicting RAG qualification model ID at the same generation instant: "
+            + first.qualification().modelId());
+  }
+
+  private static void requireCompatibleMetadataAtSameInstant(
       ModelRagQualificationRegistry first, ModelRagQualificationRegistry other) {
-    if (!first.generatedAt().equals(other.generatedAt())
-        || !first.policyVersion().equals(other.policyVersion())
+    if (!first.policyVersion().equals(other.policyVersion())
         || !first.modelsRevision().equals(other.modelsRevision())
         || first.targetQualifiedModels() != other.targetQualifiedModels()) {
-      throw new ModelJarException("Conflicting RAG qualification catalog metadata");
+      throw new ModelJarException(
+          "Conflicting RAG qualification catalog metadata at the same generation instant");
     }
   }
+
+  private record SourcedQualification(
+      Instant generatedAt, ModelRagQualification qualification) {}
 
   private static String required(Properties properties, String name) {
     String value = properties.getProperty(name);

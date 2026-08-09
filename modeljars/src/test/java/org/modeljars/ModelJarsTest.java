@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.BackendDiagnostics;
+import com.integrallis.models.api.EmbeddingBackend;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.ModelPrompt;
@@ -22,11 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 import org.modeljars.catalog.Smollm2_360m_Instruct_Q8_0;
 
 class ModelJarsTest {
   private static final ModelJar QWEN = Qwen3_0_6b_Q4_0.MODEL;
+  private static final ModelJar QWEN_EMBEDDING = Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0.MODEL;
   private static final ModelJar SMOLLM = Smollm2_360m_Instruct_Q8_0.MODEL;
 
   @Test
@@ -303,6 +306,63 @@ class ModelJarsTest {
       assertEquals("", runtime.model().generate(prompt, SamplingOptions.builder().maxTokens(1).build()));
       assertEquals(1, backend.structuredEncodes);
       assertEquals(0, backend.plainEncodes);
+    }
+  }
+
+  @Test
+  void opensAnEmbeddingFromMarkerOwnedQualificationSettings() {
+    ModelJarRegistry models = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor descriptor = models.resolve(QWEN_EMBEDDING).orElseThrow();
+    StubEmbeddingBackend embedding = new StubEmbeddingBackend();
+    AtomicReference<ModelEmbeddingQualificationRegistry.Entry> selectedQualification =
+        new AtomicReference<>();
+    AtomicReference<BackendConfiguration> selectedConfiguration = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            models,
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelEmbeddingQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-embedding.gguf"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (path, qualification, configuration) -> {
+              selectedQualification.set(qualification);
+              selectedConfiguration.set(configuration);
+              return embedding;
+            },
+            Map::of,
+            List::of);
+
+    try (var runtime = loader.loadEmbeddingRuntime(QWEN_EMBEDDING, ModelLoadOptions.defaults())) {
+      assertSame(embedding, runtime.model());
+      assertEquals(descriptor, runtime.descriptor());
+      assertEquals(descriptor.alias(), runtime.qualification().modelId());
+      assertEquals("last-token", selectedQualification.get().pooling());
+      assertEquals(
+          descriptor.markerCoordinate().toString(),
+          selectedConfiguration.get().environment().get("modeljars-marker"));
+      assertEquals(1024, runtime.model().embed("hello").length);
+      assertFalse(embedding.closed);
+    }
+    assertTrue(embedding.closed);
+  }
+
+  private static final class StubEmbeddingBackend implements EmbeddingBackend {
+    private boolean closed;
+
+    @Override
+    public int dimension() {
+      return 1024;
+    }
+
+    @Override
+    public float[] embed(String text) {
+      return new float[dimension()];
+    }
+
+    @Override
+    public void close() {
+      closed = true;
     }
   }
 

@@ -60,5 +60,27 @@ pipeline operations invalidate the high-level prompt-prefix cache before they
 change context state, so later calls to `generate(...)` cannot reuse a stale
 prefix.
 
+## Qualified embedding access
+
+Embedding markers use the same install, digest verification, and ownership
+contract. The qualification selects the backend, pooling, normalization, and
+vector width; application code supplies only the marker and text:
+
+```java
+import static org.modeljars.catalog.Ggml_Org_Embeddinggemma_300m_Gguf_Q8_0.MODEL;
+
+import org.modeljars.ModelJars;
+
+try (var embeddings = ModelJars.openEmbedding(MODEL)) {
+  float[] vector = embeddings.embed("Where is the maintenance schedule?");
+}
+```
+
+Use `ModelJars.openEmbeddingRuntime(MODEL)` when provenance must remain beside
+the loaded model. Its `descriptor()` identifies the exact marker and artifact,
+while `qualification()` exposes the reference-equivalence evidence used to
+select the execution policy. The returned runtime owns the embedding backend
+and must be closed.
+
 The Models documentation describes the complete contract in
 [Inference Pipeline](https://integrallis.github.io/models/docs/models/current/inference-pipeline.html).

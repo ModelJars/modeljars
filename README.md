@@ -77,7 +77,7 @@ intend to ship:
 
 ```kotlin
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.6")
+    implementation("org.modeljars:modeljars:0.1.8")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -90,7 +90,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.6</version>
+  <version>0.1.8</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -99,7 +99,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.3.1, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models 0.3.2, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
 the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
@@ -184,6 +184,22 @@ arguments remain visible in backend diagnostics. The runtime owns the backend an
 end of the `try` block. The older `ModelJars.open` model-only API remains available when the caller
 already owns prompt selection.
 
+Qualified embedding markers use the same path-free loading contract. Pooling, normalization,
+vector width, artifact digest, and backend come from the marker's equivalence evidence rather than
+application configuration:
+
+```java
+import static org.modeljars.catalog.Ggml_Org_Embeddinggemma_300m_Gguf_Q8_0.MODEL;
+
+try (var embeddings = ModelJars.openEmbedding(MODEL)) {
+    float[] vector = embeddings.embed("Where is the maintenance schedule?");
+}
+```
+
+Use `ModelJars.openEmbeddingRuntime(MODEL)` when the application also needs the exact descriptor
+and `ModelEmbeddingQualificationRegistry.Entry` selected for the loaded model. Applications never
+construct a cache path or choose pooling themselves.
+
 Local inference must start Java 25 or newer with the Vector module resolved:
 
 ```text
@@ -223,16 +239,16 @@ ModelJars does not force a LangChain4j or Spring AI version on applications. Add
 the framework-neutral grounding module, and the chosen framework explicitly. For LangChain4j:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.3.1")
-implementation("com.integrallis:models-langchain4j:0.3.1")
+implementation("com.integrallis:models-rag:0.3.2")
+implementation("com.integrallis:models-langchain4j:0.3.2")
 implementation("dev.langchain4j:langchain4j:1.17.2")
 ```
 
 For Spring AI:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.3.1")
-implementation("com.integrallis:models-spring-ai:0.3.1")
+implementation("com.integrallis:models-rag:0.3.2")
+implementation("com.integrallis:models-spring-ai:0.3.2")
 implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
 implementation("org.springframework.ai:spring-ai-rag:2.0.0")
 ```

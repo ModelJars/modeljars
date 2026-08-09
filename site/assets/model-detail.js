@@ -44,6 +44,20 @@ try (var runtime = ModelJars.openRuntime(MODEL)) {
 }`;
 }
 
+export function embeddingJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
+    throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  }
+  const reference = referenceClassName(modelId);
+  return `import static org.modeljars.catalog.${reference}.MODEL;
+
+import org.modeljars.ModelJars;
+
+try (var embeddings = ModelJars.openEmbedding(MODEL)) {
+  float[] vector = embeddings.embed("Where is the maintenance schedule?");
+}`;
+}
+
 function formatPercent(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
@@ -353,7 +367,9 @@ function renderModel(model, catalog) {
           </p>
           ${copyBlock(
             "Java",
-            javaSnippet(model.id),
+            isEmbeddingEvidence(qualification)
+              ? embeddingJavaSnippet(model.id)
+              : javaSnippet(model.id),
             "language-java",
           )}
         </section>

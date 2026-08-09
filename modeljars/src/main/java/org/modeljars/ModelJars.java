@@ -1,11 +1,14 @@
 package org.modeljars;
 
 import com.integrallis.models.api.BackendConfiguration;
+import com.integrallis.models.api.EmbeddingBackend;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
+import com.integrallis.models.api.Pooling;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
+import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.InferencePipeline;
@@ -30,9 +33,11 @@ public final class ModelJars {
 
   private final ModelJarRegistry models;
   private final ModelRagQualificationRegistry qualifications;
+  private final ModelEmbeddingQualificationRegistry embeddingQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
+  private final EmbeddingBackendLoader embeddingBackendLoader;
   private final Supplier<Map<String, String>> runtimeEnvironment;
   private final Supplier<List<String>> jvmArguments;
 
@@ -46,9 +51,11 @@ public final class ModelJars {
     this(
         models,
         qualifications,
+        ModelEmbeddingQualificationRegistry.fromClasspath(),
         profiles,
         installer,
         backendLoader,
+        ModelJars::loadEmbeddingBackend,
         runtimeEnvironment,
         () -> ManagementFactory.getRuntimeMXBean().getInputArguments());
   }
@@ -61,11 +68,37 @@ public final class ModelJars {
       BackendLoader backendLoader,
       Supplier<Map<String, String>> runtimeEnvironment,
       Supplier<List<String>> jvmArguments) {
+    this(
+        models,
+        qualifications,
+        ModelEmbeddingQualificationRegistry.fromClasspath(),
+        profiles,
+        installer,
+        backendLoader,
+        ModelJars::loadEmbeddingBackend,
+        runtimeEnvironment,
+        jvmArguments);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelEmbeddingQualificationRegistry embeddingQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      EmbeddingBackendLoader embeddingBackendLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this.models = Objects.requireNonNull(models, "models");
     this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
+    this.embeddingQualifications =
+        Objects.requireNonNull(embeddingQualifications, "embeddingQualifications");
     this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
+    this.embeddingBackendLoader =
+        Objects.requireNonNull(embeddingBackendLoader, "embeddingBackendLoader");
     this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment");
     this.jvmArguments = Objects.requireNonNull(jvmArguments, "jvmArguments");
   }
@@ -135,6 +168,70 @@ public final class ModelJars {
     return openRuntime(ModelJar.of(markerCoordinate));
   }
 
+  /**
+   * Opens a qualified embedding model using its marker-owned pooling and normalization policy.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @return ready-to-use embedding backend
+   */
+  public static EmbeddingBackend openEmbedding(ModelJar model) {
+    return openEmbeddingRuntime(model).model();
+  }
+
+  /**
+   * Opens a qualified embedding model with explicit cache and network controls.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @param options backend, cache, and network controls
+   * @return ready-to-use embedding backend
+   */
+  public static EmbeddingBackend openEmbedding(ModelJar model, ModelLoadOptions options) {
+    return openEmbeddingRuntime(model, options).model();
+  }
+
+  /**
+   * Opens a qualified embedding model together with its exact descriptor and equivalence evidence.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @return loaded embedding runtime
+   */
+  public static ModelJarEmbeddingRuntime openEmbeddingRuntime(ModelJar model) {
+    return openEmbeddingRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified embedding model together with its exact descriptor and equivalence evidence.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @param options backend, cache, and network controls
+   * @return loaded embedding runtime
+   */
+  public static ModelJarEmbeddingRuntime openEmbeddingRuntime(
+      ModelJar model, ModelLoadOptions options) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadEmbeddingRuntime(model, options);
+  }
+
+  /**
+   * Opens an exact qualified embedding marker coordinate using automatic loading controls.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return ready-to-use embedding backend
+   */
+  public static EmbeddingBackend openEmbedding(String markerCoordinate) {
+    return openEmbedding(ModelJar.of(markerCoordinate));
+  }
+
+  /**
+   * Opens an exact qualified embedding marker coordinate and exposes its evidence.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return loaded embedding runtime
+   */
+  public static ModelJarEmbeddingRuntime openEmbeddingRuntime(String markerCoordinate) {
+    return openEmbeddingRuntime(ModelJar.of(markerCoordinate));
+  }
+
   TextGenerationModel load(ModelJar model, ModelLoadOptions options) {
     return loadRuntime(model, options).model();
   }
@@ -156,6 +253,32 @@ public final class ModelJars {
         configuration(descriptor, qualification, runtime, activeJvmArguments);
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
     return new ModelJarRuntime(new InferencePipeline(loadedBackend), descriptor, qualification);
+  }
+
+  EmbeddingBackend loadEmbedding(ModelJar model, ModelLoadOptions options) {
+    return loadEmbeddingRuntime(model, options).model();
+  }
+
+  ModelJarEmbeddingRuntime loadEmbeddingRuntime(ModelJar model, ModelLoadOptions options) {
+    Objects.requireNonNull(model, "model");
+    Objects.requireNonNull(options, "options");
+    ModelJarDescriptor descriptor =
+        models
+            .resolve(model)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    ModelEmbeddingQualificationRegistry.Entry qualification =
+        selectEmbeddingQualification(descriptor, options.backend());
+    Path artifact = installer.install(descriptor, options);
+    Map<String, String> environment = new LinkedHashMap<>(runtimeEnvironment.get());
+    environment.put("modeljars-marker", descriptor.markerCoordinate().toString());
+    environment.put("modeljars-artifact-sha256", qualification.artifactSha256());
+    environment.put("modeljars-qualification-workload", "oracle-equivalence-v1");
+    EmbeddingBackend backend =
+        embeddingBackendLoader.load(
+            artifact,
+            qualification,
+            new BackendConfiguration(environment, Map.of(), List.of()));
+    return new ModelJarEmbeddingRuntime(backend, descriptor, qualification);
   }
 
   static void requireVectorModule(boolean available) {
@@ -218,6 +341,36 @@ public final class ModelJars {
                     "ModelJar "
                         + descriptor.markerCoordinate()
                         + " has no production qualification"));
+  }
+
+  private ModelEmbeddingQualificationRegistry.Entry selectEmbeddingQualification(
+      ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
+    String artifactSha256 =
+        descriptor
+            .sha256()
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "Embedding ModelJar "
+                            + descriptor.markerCoordinate()
+                            + " has no pinned artifact digest"));
+    return embeddingQualifications.qualified().stream()
+        .filter(candidate -> candidate.modelId().equals(descriptor.alias()))
+        .filter(candidate -> candidate.artifactSha256().equalsIgnoreCase(artifactSha256))
+        .filter(
+            candidate ->
+                requestedBackend == ModelBackend.AUTO
+                    || candidate.backend().equals(requestedBackend.backendId()))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " has no qualified "
+                        + (requestedBackend == ModelBackend.AUTO
+                            ? "embedding execution"
+                            : requestedBackend.backendId() + " embedding execution")));
   }
 
   private BackendConfiguration configuration(
@@ -375,6 +528,45 @@ public final class ModelJars {
     };
   }
 
+  private static EmbeddingBackend loadEmbeddingBackend(
+      Path artifact,
+      ModelEmbeddingQualificationRegistry.Entry qualification,
+      BackendConfiguration configuration) {
+    if (!JAVA_BACKEND.equals(qualification.backend())) {
+      throw new ModelJarException(
+          "Unsupported Models embedding backend: " + qualification.backend());
+    }
+    Pooling pooling =
+        switch (qualification.pooling()) {
+          case "last-token" -> Pooling.LAST_TOKEN;
+          case "mean" -> Pooling.MEAN;
+          default ->
+              throw new ModelJarException(
+                  "Unsupported qualified embedding pooling: " + qualification.pooling());
+        };
+    PureJavaBackend backend = PureJavaBackend.load(artifact, configuration);
+    try {
+      var builder =
+          GgufEmbeddingBackend.builder(backend).normalize(qualification.normalized());
+      if (!backend.supportsSequenceEmbedding()) {
+        builder.pooling(pooling);
+      }
+      EmbeddingBackend embedding = builder.build();
+      int loadedDimension = embedding.dimension();
+      if (loadedDimension != qualification.embeddingDimension()) {
+        throw new ModelJarException(
+            "Qualified embedding dimension "
+                + qualification.embeddingDimension()
+                + " does not match loaded model dimension "
+                + loadedDimension);
+      }
+      return embedding;
+    } catch (RuntimeException | Error failure) {
+      backend.close();
+      throw failure;
+    }
+  }
+
   @FunctionalInterface
   interface ArtifactInstaller {
     Path install(ModelJarDescriptor descriptor, ModelLoadOptions options);
@@ -383,5 +575,13 @@ public final class ModelJars {
   @FunctionalInterface
   interface BackendLoader {
     InferenceBackend load(String backend, Path artifact, BackendConfiguration configuration);
+  }
+
+  @FunctionalInterface
+  interface EmbeddingBackendLoader {
+    EmbeddingBackend load(
+        Path artifact,
+        ModelEmbeddingQualificationRegistry.Entry qualification,
+        BackendConfiguration configuration);
   }
 }

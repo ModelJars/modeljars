@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  embeddingJavaSnippet,
   gradleSnippet,
   javaSnippet,
   mavenSnippet,
@@ -20,7 +21,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.6")\n' +
+    'implementation("org.modeljars:modeljars:0.1.8")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -42,6 +43,18 @@ test("renders path-free Java loading from the generated catalog reference", () =
   assert.match(snippet, /InferencePipeline pipeline = runtime\.pipeline\(\)/);
   assert.match(snippet, /ModelJars\.openRuntime\(MODEL\)/);
   assert.doesNotMatch(snippet, /Path|ModelJarInstaller|PureJavaBackend/);
+});
+
+test("renders qualified embedding loading without paths or pooling guesses", () => {
+  const snippet = embeddingJavaSnippet("ggml_org_embeddinggemma_300m_gguf_q8_0");
+
+  assert.match(
+    snippet,
+    /import static org\.modeljars\.catalog\.Ggml_Org_Embeddinggemma_300m_Gguf_Q8_0\.MODEL;/,
+  );
+  assert.match(snippet, /ModelJars\.openEmbedding\(MODEL\)/);
+  assert.match(snippet, /embeddings\.embed/);
+  assert.doesNotMatch(snippet, /Path|Pooling|PureJavaBackend/);
 });
 
 test("summarizes exact RAG qualification evidence without hiding fallbacks", () => {

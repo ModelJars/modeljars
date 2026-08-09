@@ -22,8 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class ModelEmbeddingQualificationRegistryTest {
 
@@ -108,5 +111,49 @@ class ModelEmbeddingQualificationRegistryTest {
 
     assertTrue(registry.entries().isEmpty());
     assertTrue(registry.qualified().isEmpty());
+  }
+
+  @Test
+  void mergesMarkersGeneratedFromDifferentCatalogSnapshots(@TempDir Path root) throws Exception {
+    Path olderRoot = root.resolve("older");
+    Path newerRoot = root.resolve("newer");
+    writeResource(olderRoot, PROPERTIES);
+    writeResource(
+        newerRoot,
+        PROPERTIES
+            .replace("2026-08-06T16:40:00Z", "2026-08-09T18:42:00Z")
+            .replace(
+                "fa26f46ca56facab129b2cc12404a5a8af0d07a5",
+                "ffffffffffffffffffffffffffffffffffffffff")
+            .replace(
+                "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+                "ggml_org_embeddinggemma_300m_gguf_q8_0")
+            .replace(
+                "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+                "b5ce9d77a3fc4b3b39ccb5643c36777911cc4eb46a66962eadfa3f5f60490d63"));
+
+    try (var loader =
+        new java.net.URLClassLoader(
+            new java.net.URL[] {olderRoot.toUri().toURL(), newerRoot.toUri().toURL()}, null)) {
+      ModelEmbeddingQualificationRegistry registry =
+          ModelEmbeddingQualificationRegistry.fromClasspath(loader);
+
+      assertEquals(2, registry.entries().size());
+      assertEquals("2026-08-09T18:42:00Z", registry.generatedAt());
+      assertEquals("f".repeat(40), registry.modelsRevision());
+      assertEquals(
+          java.util.Set.of(
+              "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+              "ggml_org_embeddinggemma_300m_gguf_q8_0"),
+          registry.entries().stream()
+              .map(ModelEmbeddingQualificationRegistry.Entry::modelId)
+              .collect(java.util.stream.Collectors.toSet()));
+    }
+  }
+
+  private static void writeResource(Path root, String properties) throws IOException {
+    Path resource = root.resolve(ModelEmbeddingQualificationRegistry.RESOURCE);
+    Files.createDirectories(resource.getParent());
+    Files.writeString(resource, properties, StandardCharsets.ISO_8859_1);
   }
 }

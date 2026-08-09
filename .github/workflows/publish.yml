@@ -129,8 +129,7 @@ jobs:
   preview:
     name: Publish invited preview to GitHub Packages
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'github-packages'
-    needs: resolve-version
-    needs: verify
+    needs: [verify, resolve-version]
     runs-on: ubuntu-latest
     permissions:
       attestations: write
@@ -227,8 +226,7 @@ jobs:
   publish:
     name: Publish to Maven Central
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'maven-central'
-    needs: resolve-version
-    needs: verify
+    needs: [verify, resolve-version]
     runs-on: ubuntu-latest
     environment: maven-central
     permissions:

@@ -13,9 +13,11 @@ on:
           - github-packages
           - maven-central
       version:
-        description: Base version for a preview, or exact Maven Central version.
-        required: true
-        default: "0.1.6"
+        description: >
+          Optional override. Leave blank to use the next patch after the latest release tag,
+          which is what a normal release wants.
+        required: false
+        default: ""
         type: string
   push:
     branches:
@@ -42,6 +44,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  resolve-version:
+    name: Resolve release version
+    if: github.event_name == 'workflow_dispatch' && inputs.target != 'verify'
+    runs-on: ubuntu-latest
+    outputs:
+      value: ${{ steps.resolve.outputs.value }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tags are the version of record, so a shallow clone cannot answer the question.
+          fetch-depth: 0
+
+      - name: Resolve version from the latest release tag
+        id: resolve
+        shell: bash
+        env:
+          OVERRIDE: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${OVERRIDE}" ]]; then
+            if [[ ! "${OVERRIDE}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Version override must use MAJOR.MINOR.PATCH syntax: ${OVERRIDE}" >&2
+              exit 1
+            fi
+            RESOLVED="${OVERRIDE}"
+            SOURCE="override"
+          else
+            # Latest by version order, not by tag date: a patch cut from an older branch would
+            # otherwise make the newest tag the wrong answer.
+            LATEST="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+            if [[ -z "${LATEST}" ]]; then
+              echo "No release tag found, so there is no latest version to build on." >&2
+              exit 1
+            fi
+            IFS=. read -r MAJOR MINOR PATCH <<< "${LATEST}"
+            RESOLVED="${MAJOR}.${MINOR}.$((PATCH + 1))"
+            SOURCE="next patch after v${LATEST}"
+          fi
+          if git rev-parse "v${RESOLVED}" >/dev/null 2>&1; then
+            echo "v${RESOLVED} already exists; Maven Central versions are immutable." >&2
+            exit 1
+          fi
+          echo "value=${RESOLVED}" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${RESOLVED} (${SOURCE})." >> "$GITHUB_STEP_SUMMARY"
+
   verify:
     name: Build release artifacts
     if: github.repository == 'ModelJars/modeljars'
@@ -81,6 +129,7 @@ jobs:
   preview:
     name: Publish invited preview to GitHub Packages
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'github-packages'
+    needs: resolve-version
     needs: verify
     runs-on: ubuntu-latest
     permissions:
@@ -104,7 +153,7 @@ jobs:
         id: version
         shell: bash
         env:
-          BASE_VERSION: ${{ inputs.version }}
+          BASE_VERSION: ${{ needs.resolve-version.outputs.value }}
         run: |
           if [[ ! "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?$ ]]; then
             echo "Preview base version must use MAJOR.MINOR.PATCH syntax." >&2
@@ -178,6 +227,7 @@ jobs:
   publish:
     name: Publish to Maven Central
     if: github.event_name == 'workflow_dispatch' && inputs.target == 'maven-central'
+    needs: resolve-version
     needs: verify
     runs-on: ubuntu-latest
     environment: maven-central
@@ -232,7 +282,7 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MODELJARS_VERSION: ${{ inputs.version }}
+          MODELJARS_VERSION: ${{ needs.resolve-version.outputs.value }}
         run: >
           ./gradlew --no-daemon
           check
@@ -250,7 +300,7 @@ jobs:
       - name: Retain verified Central bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: modeljars-central-bundle-${{ inputs.version }}
+          name: modeljars-central-bundle-${{ needs.resolve-version.outputs.value }}
           path: build/release/modeljars-central-bundle.zip
           if-no-files-found: error
           retention-days: 14
@@ -259,7 +309,7 @@ jobs:
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-          MODELJARS_VERSION: ${{ inputs.version }}
+          MODELJARS_VERSION: ${{ needs.resolve-version.outputs.value }}
         run: |
           authorization="$(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64 | tr -d '\n')"
           deployment_id="$(

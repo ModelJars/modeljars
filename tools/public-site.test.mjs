@@ -56,10 +56,13 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
       page,
       /<a href="https:\/\/integrallis\.com"[^>]*>\s*<img[^>]+assets\/integrallis-logo\.png[^>]+alt="Integrallis"/,
     );
+    // index.html, not getting-started.html: the Models documentation has no getting-started page,
+    // so the old assertion pinned a link that returned 404 from every page of the site.
     assert.match(
       page,
-      /https:\/\/integrallis\.github\.io\/models\/docs\/models\/current\/getting-started\.html/,
+      /https:\/\/integrallis\.github\.io\/models\/docs\/models\/current\/index\.html/,
     );
+    assert.doesNotMatch(page, /docs\/models\/current\/getting-started\.html/);
   }
 
   assert.match(

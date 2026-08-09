@@ -18,11 +18,15 @@ package org.modeljars;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -106,32 +110,81 @@ public final class ModelEmbeddingQualificationRegistry {
   public static ModelEmbeddingQualificationRegistry fromClasspath(ClassLoader loader) {
     ClassLoader resolved =
         loader == null ? ModelEmbeddingQualificationRegistry.class.getClassLoader() : loader;
-    List<Entry> merged = new ArrayList<>();
-    String generatedAt = "";
-    String policyVersion = "";
-    String modelsRevision = "";
+    Map<String, SourcedEntry> merged = new LinkedHashMap<>();
+    ModelEmbeddingQualificationRegistry metadata = null;
     try {
       Enumeration<java.net.URL> resources = resolved.getResources(RESOURCE);
       while (resources.hasMoreElements()) {
         try (InputStream stream = resources.nextElement().openStream()) {
           ModelEmbeddingQualificationRegistry registry = parse(stream);
-          generatedAt = registry.generatedAt;
-          policyVersion = registry.policyVersion;
-          modelsRevision = registry.modelsRevision;
+          Instant generatedAt = timestamp(registry.generatedAt);
+          if (metadata == null
+              || generatedAt.isAfter(timestamp(metadata.generatedAt))) {
+            metadata = registry;
+          } else if (generatedAt.equals(timestamp(metadata.generatedAt))) {
+            requireCompatibleMetadataAtSameInstant(metadata, registry);
+          }
           for (Entry entry : registry.entries) {
-            if (merged.stream().noneMatch(existing -> existing.modelId().equals(entry.modelId()))) {
-              merged.add(entry);
-            }
+            merged.merge(
+                entry.modelId(),
+                new SourcedEntry(generatedAt, entry),
+                ModelEmbeddingQualificationRegistry::newestEntry);
           }
         }
       }
     } catch (IOException failure) {
       throw new UncheckedIOException("Cannot read " + RESOURCE, failure);
     }
-    merged.sort(Comparator.comparing(Entry::modelId));
+    List<Entry> entries =
+        merged.values().stream()
+            .map(SourcedEntry::entry)
+            .sorted(Comparator.comparing(Entry::modelId))
+            .toList();
+    if (metadata == null) {
+      return new ModelEmbeddingQualificationRegistry("", "", "", entries);
+    }
     return new ModelEmbeddingQualificationRegistry(
-        generatedAt, policyVersion, modelsRevision, merged);
+        metadata.generatedAt, metadata.policyVersion, metadata.modelsRevision, entries);
   }
+
+  private static SourcedEntry newestEntry(SourcedEntry first, SourcedEntry other) {
+    if (first.entry().equals(other.entry())) {
+      return first.generatedAt().isBefore(other.generatedAt()) ? other : first;
+    }
+    int recency = first.generatedAt().compareTo(other.generatedAt());
+    if (recency < 0) {
+      return other;
+    }
+    if (recency > 0) {
+      return first;
+    }
+    throw new ModelJarException(
+        "Conflicting embedding qualification model ID at the same generation instant: "
+            + first.entry().modelId());
+  }
+
+  private static void requireCompatibleMetadataAtSameInstant(
+      ModelEmbeddingQualificationRegistry first,
+      ModelEmbeddingQualificationRegistry other) {
+    if (!first.policyVersion.equals(other.policyVersion)
+        || !first.modelsRevision.equals(other.modelsRevision)) {
+      throw new ModelJarException(
+          "Conflicting embedding qualification metadata at the same generation instant");
+    }
+  }
+
+  private static Instant timestamp(String value) {
+    if (value == null || value.isBlank()) {
+      return Instant.MIN;
+    }
+    try {
+      return Instant.parse(value);
+    } catch (DateTimeParseException malformed) {
+      throw new ModelJarException("Invalid embedding qualification generatedAt: " + value, malformed);
+    }
+  }
+
+  private record SourcedEntry(Instant generatedAt, Entry entry) {}
 
   /**
    * Parses one embedding qualification properties stream.

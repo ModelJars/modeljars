@@ -1517,7 +1517,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.6-SNAPSHOT")
+            .orElse("0.1.8-SNAPSHOT")
             .get()
 }
 
@@ -3338,4 +3338,3 @@ tasks.register<Zip>("markerReleaseBundleZip") {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
-

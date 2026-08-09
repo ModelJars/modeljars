@@ -103,6 +103,36 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
+  void mergesMarkersGeneratedFromDifferentCatalogSnapshots(@TempDir Path root) throws Exception {
+    Path olderRoot = root.resolve("older");
+    Path newerRoot = root.resolve("newer");
+    Properties older = properties(1.0, 1.0, true);
+    Properties newer = renamedQualification(older, "another_qualified_model");
+    newer.setProperty("modeljars.qualifications.generatedAt", "2026-08-09T18:42:00Z");
+    newer.setProperty("modeljars.qualifications.modelsRevision", "f".repeat(40));
+    newer.setProperty("modeljars.qualifications.targetQualifiedModels", "26");
+    writeResource(olderRoot, older);
+    writeResource(newerRoot, newer);
+
+    try (var loader =
+        new java.net.URLClassLoader(
+            new java.net.URL[] {olderRoot.toUri().toURL(), newerRoot.toUri().toURL()}, null)) {
+      ModelRagQualificationRegistry registry =
+          ModelRagQualificationRegistry.fromClasspath(loader);
+
+      assertEquals(2, registry.qualifications().size());
+      assertEquals(Instant.parse("2026-08-09T18:42:00Z"), registry.generatedAt());
+      assertEquals("f".repeat(40), registry.modelsRevision());
+      assertEquals(26, registry.targetQualifiedModels());
+      assertEquals(
+          Set.of("qwen3_0_6b_q4_0", "another_qualified_model"),
+          registry.qualifications().stream()
+              .map(ModelRagQualification::modelId)
+              .collect(java.util.stream.Collectors.toSet()));
+    }
+  }
+
+  @Test
   void aggregateCatalogPublishesQualifiedSmolLm2RustFfmEvidence() {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
 
@@ -1010,6 +1040,28 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty(prefix + "environment.javaVendor", "Eclipse Adoptium");
     properties.setProperty(prefix + "environment.vmName", "OpenJDK 64-Bit Server VM");
     return properties;
+  }
+
+  private static Properties renamedQualification(Properties source, String modelId) {
+    Properties renamed = new Properties();
+    source
+        .stringPropertyNames()
+        .forEach(
+            name ->
+                renamed.setProperty(
+                    name.replace(
+                        "qualification.qwen3_0_6b_q4_0.",
+                        "qualification." + modelId + "."),
+                    source.getProperty(name)));
+    return renamed;
+  }
+
+  private static void writeResource(Path root, Properties properties) throws Exception {
+    Path resource = root.resolve(ModelRagQualificationRegistry.RESOURCE);
+    Files.createDirectories(resource.getParent());
+    try (var output = Files.newOutputStream(resource)) {
+      properties.store(output, null);
+    }
   }
 
   private static ModelJarDescriptor descriptor(String sha) {

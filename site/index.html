@@ -149,9 +149,10 @@
             <p class="eyebrow">No Java required</p>
             <h2 id="cli-title">Pull models before your app starts</h2>
             <p>
-              The GraalVM-native ModelJars CLI searches the qualified catalog, exposes exact
-              Hugging Face provenance, and downloads verified weights into the same cache used by
-              the JVM Runtime.
+              The GraalVM-native ModelJars CLI searches and filters the qualified catalog, exposes
+              exact provenance, reports local inference capabilities, produces build-tool
+              coordinates, and downloads verified weights into the same cache used by the JVM
+              Runtime.
             </p>
           </div>
           <div class="guide-body">
@@ -169,9 +170,16 @@ curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh
               <article>
                 <div class="guide-step-heading">
                   <span class="step-number">02</span>
-                  <h3>Search and inspect</h3>
+                  <h3>Explore interactively or run once</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars search gemma
+                <pre><code class="language-bash hljs" data-lang="bash"># Open the ModelJars prompt
+modeljars
+
+# Or run a single command
+modeljars search gemma
+modeljars search --capability embedding --sort size
+modeljars search fintech
+modeljars search gemma --details
 modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m</code></pre>
               </article>
               <article>
@@ -181,6 +189,17 @@ modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m</code></pre>
                 </div>
                 <pre><code class="language-bash hljs" data-lang="bash">modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
 modeljars list</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading">
+                  <span class="step-number">04</span>
+                  <h3>Inspect this machine and wire your build</h3>
+                </div>
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars info
+modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
+
+# Stable output for scripts and agents
+modeljars search gemma --output json</code></pre>
               </article>
             </div>
             <p class="guide-runtime-note">

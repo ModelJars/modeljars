@@ -6,20 +6,52 @@ code only. In-process inference remains in the Java 25-or-newer `org.modeljars:m
 
 ## User commands
 
+Run `modeljars` with no arguments to open the interactive prompt. Command history is stored at
+`~/.modeljars/cli-history`, tab completes commands and options, and `exit`, `quit`, or Ctrl-D closes
+the session. Supplying any arguments executes exactly one command and returns to the calling shell.
+
 ```bash
-modeljars search [query]
-modeljars show <alias|coordinate>
-modeljars pull <alias|coordinate> [--cache <directory>]
-modeljars list
+modeljars search [query] [--capability <name>] [--backend <name>] [--sort <field>] [--details]
+modeljars show <alias|source|coordinate> [--coordinates] [--details]
+modeljars pull <alias|source|coordinate> [--cache <directory>] [--quiet]
+modeljars list [--coordinates] [--details]
+modeljars snippet <model> [--tool <tool>]
+modeljars info
+modeljars remove <exact-model>
 modeljars cache-dir
 modeljars version
 ```
 
-`search` reads the qualified catalog embedded in the CLI. `show` prints the exact source page,
+`search` reads the qualified catalog embedded in the CLI. It searches names, descriptions,
+catalog domains/tags, capabilities, and common discovery aliases (`fintech` finds the canonical
+`finance` tag). Its default table is a compact one-row summary; `--details` adds complete
+capabilities and supported backends beneath each result. `show --details` exposes the same two
+fields for one model. `show` prints the exact source page,
 download URL, upstream revision, byte size, SHA-256, license, and destination cache path. `pull`
 downloads and verifies the artifact before atomically placing it in the shared content-addressed
 cache. `list` contains the files currently present at known catalog paths; `pull` and the JVM
-Runtime verify them again before use.
+Runtime verify them again before use. Familiar aliases include `available`, `ls`, `inspect`, `rm`,
+`coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
+
+`snippet` emits copy-ready Maven, Gradle, and Gradle Kotlin DSL declarations by default. Select any
+combination of Maven, Gradle, Gradle Kotlin DSL, sbt, Ivy, Leiningen, and JBang by repeating
+`--tool`; `coordinates`, `coords`, `dependency`, and `deps` are aliases. Release builds include both
+the matching ModelJars runtime and model marker; use `--marker-only` when dependency management
+already supplies the runtime. `info` reports host CPU,
+physical/logical cores, SIMD, memory, graphics devices, CLI runtime, inference-backend status,
+catalog capabilities, and cache usage. The project banner heads the interactive prompt and human
+`info` output; JSON and plain modes remain decoration-free. Hardware detection and backend
+usability are separate: a
+GPU may be detected while GPU model offload remains unsupported, and Apple Foundation Models are
+reported as eligible until `backend-apple` performs its runtime availability check.
+
+The default output is a responsive table. Installed-model listings preserve complete model names
+and requested dependency coordinates instead of truncating identifiers; `--details` opts into
+complete capability and backend fields. Global `--output json` and `--output plain` modes provide
+stable automation surfaces. ANSI color is enabled only for
+terminals by default, respects
+`NO_COLOR`, and can be forced with `--color always` or disabled with `--color never`. `--width`
+overrides terminal-width discovery for narrow consoles and snapshots.
 
 ## Release assets
 

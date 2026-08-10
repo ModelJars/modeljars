@@ -80,6 +80,10 @@ jobs:
           binary="modeljars-cli/build/native/nativeCompile/${{ matrix.executable }}"
           "$binary" version
           "$binary" search gemma
+          "$binary" search fintech
+          "$binary" search gemma --details --limit 1
+          "$binary" info --output json
+          "$binary" coordinates qwen3_0_6b_q4_0 --tool gradle-kotlin
 
       - name: Package release assets
         id: package
@@ -132,6 +136,7 @@ jobs:
           fi
           "$installed" version
           "$installed" search gemma
+          "$installed" info --output json
 
       - name: Upload assets to GitHub release
         shell: bash

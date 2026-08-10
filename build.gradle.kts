@@ -1777,7 +1777,21 @@ project(":modeljars-cli") {
 
     dependencies {
         implementation(project(":modeljars-core"))
+        implementation("info.picocli:picocli:4.7.7")
+        implementation("info.picocli:picocli-shell-jline3:4.7.7")
+        annotationProcessor("info.picocli:picocli-codegen:4.7.7")
         runtimeOnly(project(":modeljars-catalog"))
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        // Picocli's GraalVM processor observes annotations without claiming them.
+        options.compilerArgs.add("-Xlint:-processing")
+    }
+
+    tasks.named<org.gradle.language.jvm.tasks.ProcessResources>("processResources") {
+        from(rootProject.file("media/banner.txt")) {
+            into("org/modeljars/cli")
+        }
     }
 
     extensions.configure<JavaApplication> {

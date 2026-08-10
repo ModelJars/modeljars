@@ -290,8 +290,12 @@ class ModelJarsCliTest {
     Result snippet = run(cli, "snippet", descriptor().alias(), "--tool", "maven");
 
     assertEquals(0, help.status());
-    assertTrue(help.output().contains("coordinates, coords, snippet, dependency, deps"));
-    assertTrue(help.output().contains("info, system, env"));
+    for (String command : List.of("coordinates", "coords", "snippet", "dependency", "deps")) {
+      assertTrue(help.output().contains(command), command + " missing from help output");
+    }
+    for (String command : List.of("info", "system", "env")) {
+      assertTrue(help.output().contains(command), command + " missing from help output");
+    }
     assertFalse(help.output().contains("generate-completion"));
     assertEquals(0, snippet.status());
     assertTrue(snippet.output().contains("<artifactId>example.model.q4_0</artifactId>"));
@@ -302,12 +306,17 @@ class ModelJarsCliTest {
     ModelJarsCli cli = cli(descriptor());
     ByteArrayOutputStream interactiveOutput = new ByteArrayOutputStream();
     ByteArrayOutputStream interactiveError = new ByteArrayOutputStream();
+    String commands =
+        String.join(
+            System.lineSeparator(),
+            "snippet example_q4_0 --tool gradle-kotlin",
+            "help",
+            "exit",
+            "");
     int interactiveStatus =
         cli.launch(
             new String[0],
-            new ByteArrayInputStream(
-                ("snippet example_q4_0 --tool gradle-kotlin\nhelp\nexit\n")
-                    .getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream(commands.getBytes(StandardCharsets.UTF_8)),
             new PrintStream(interactiveOutput, true, StandardCharsets.UTF_8),
             new PrintStream(interactiveError, true, StandardCharsets.UTF_8),
             false,

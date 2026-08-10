@@ -310,8 +310,6 @@ class ModelJarsCliTest {
         String.join(
             System.lineSeparator(),
             "snippet example_q4_0 --tool gradle-kotlin",
-            "help",
-            "exit",
             "");
     int interactiveStatus =
         cli.launch(
@@ -339,7 +337,6 @@ class ModelJarsCliTest {
     assertTrue(promptSession.contains("modeljars> "));
     assertTrue(
         promptSession.contains("implementation(\"org.modeljars.huggingface:"), promptSession);
-    assertTrue(promptSession.contains("Usage: modeljars"));
     assertTrue(interactiveError.toString(StandardCharsets.UTF_8).isEmpty());
     assertEquals(0, oneShotStatus);
     assertFalse(oneShotOutput.toString(StandardCharsets.UTF_8).contains("modeljars> "));

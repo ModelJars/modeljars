@@ -42,6 +42,7 @@ test("searches folksonomy tags and common discovery aliases", () => {
   assert.equal(matches(model, "clinical", ""), true);
   assert.equal(matches(model, "medical", ""), true);
   assert.equal(matches(model, "java", "pure-java"), false);
+  assert.equal(matches({ ...model, domains: ["finance"] }, "fintech", ""), true);
 });
 
 test("combines category, backend, architecture, size, and sort filters", () => {

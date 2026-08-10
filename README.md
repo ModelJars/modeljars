@@ -53,14 +53,23 @@ scoop bucket add integrallis https://github.com/integrallis/scoop-bucket
 scoop install modeljars
 ```
 
-Search the qualified catalog, inspect immutable provenance, prefetch weights, and see what is
-already cached:
+Search or filter the qualified catalog, inspect immutable provenance, prefetch weights, see what is
+cached, and check what the current machine can actually run:
 
 ```bash
+# Start an interactive session
+modeljars
+
+# Or execute any command once
 modeljars search gemma
+modeljars search --capability embedding --sort size
+modeljars search fintech
+modeljars search gemma --details
 modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
 modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
-modeljars list
+modeljars ls
+modeljars info
+modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
 ```
 
 `pull` uses the same content-addressed cache as the JVM Runtime. It downloads from the descriptor's
@@ -69,6 +78,22 @@ builds native binaries for macOS, Linux, and Windows on their host architectures
 executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platform archives are
 also generated; publication begins once the `modeljars` candidate completes SDKMAN vendor
 onboarding.
+
+Interactive output uses responsive, aligned tables and color only when stdout is a terminal.
+Catalog and cache listings are compact by default; add `--details` to show complete capability and
+backend continuation fields without truncation. `list --coordinates` independently adds the exact
+marker coordinate. Search includes catalog domains/tags and common discovery aliases, such as
+`fintech` for `finance`.
+Every discovery command also supports `--output json` for automation and `--output plain` for stable
+line-oriented output; `NO_COLOR` and `--color never` disable ANSI output. `modeljars info` reports
+CPU, physical and logical cores, SIMD, memory, graphics hardware, Java/native runtime, backend
+eligibility, catalog capability counts, and local cache usage. A detected GPU is reported separately
+from a usable inference backend so hardware inventory is never mistaken for supported acceleration.
+Run `modeljars help` or `modeljars <command> --help` for the complete command surface. Use
+`modeljars snippet <model> --tool maven` or `--tool gradle-kotlin` for a copy-ready dependency;
+`coordinates`, `coords`, `dependency`, and `deps` are aliases for the same command. With no
+arguments, `modeljars` opens a prompt with history and tab completion; `exit`, `quit`, or Ctrl-D
+returns to the shell. Supplying any command keeps the normal one-shot behavior used by scripts.
 
 ## Dependency
 

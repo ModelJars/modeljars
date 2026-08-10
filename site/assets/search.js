@@ -2,6 +2,8 @@ import { modelTerms, sizeTier } from "./taxonomy.js";
 import { primaryQualification } from "./qualification-data.js";
 
 const SEARCH_ALIASES = new Map([
+  ["fintech", ["finance"]],
+  ["financial", ["finance"]],
   ["medical", ["healthcare", "clinical"]],
   ["medicine", ["healthcare", "clinical"]],
   ["programming", ["coding"]],
@@ -12,6 +14,11 @@ const SEARCH_ALIASES = new Map([
   ["vectors", ["embedding"]],
   ["embed", ["embedding"]],
   ["similarity", ["semantic-search"]],
+  ["law", ["legal"]],
+  ["math", ["mathematics"]],
+  ["translate", ["translation"]],
+  ["speech", ["voice", "audio"]],
+  ["tts", ["voice", "audio", "text-to-speech"]],
 ]);
 
 export function normalize(value) {

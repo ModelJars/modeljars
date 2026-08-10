@@ -32,6 +32,7 @@ class Modeljars < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/modeljars version")
-    assert_match "ALIAS", shell_output("#{bin}/modeljars search gemma")
+    search = shell_output("#{bin}/modeljars search fintech --color never")
+    assert_match "king3djbl_nexus_finance_gguf_q4_k_m", search
   end
 end

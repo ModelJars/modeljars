@@ -1527,6 +1527,38 @@ val githubPreviewVersionPattern =
     Regex("""\d+\.\d+\.\d+-preview\.\d+\.\d+\.[0-9a-f]{12}""")
 val stableCliVersionPattern = Regex("""\d+\.\d+\.\d+""")
 
+val verifyReadmeVersions =
+    tasks.register("verifyReadmeVersions") {
+        group = "verification"
+        description = "Verify README dependency snippets use dynamic version properties"
+
+        val readmeFile = file("README.md")
+        inputs.file(readmeFile)
+
+        doLast {
+            val readme = readmeFile.readText()
+            val hardcodedModelJarsCoordinate =
+                Regex("""org\.modeljars:modeljars:\d+\.\d+\.\d+(?:[-+][A-Za-z0-9._-]+)?""")
+            require(!hardcodedModelJarsCoordinate.containsMatchIn(readme)) {
+                "README must use the modeljarsVersion property in dependency snippets"
+            }
+            val hardcodedModelsCoordinate =
+                Regex(
+                    """com\.integrallis:models(?:-[A-Za-z0-9.-]+)?:\d+\.\d+\.\d+""" +
+                        """(?:[-+][A-Za-z0-9._-]+)?"""
+                )
+            require(!hardcodedModelsCoordinate.containsMatchIn(readme)) {
+                "README must use the modelsVersion property for Models dependency snippets"
+            }
+            require("\$modeljarsVersion" in readme) {
+                "README dependency snippets must pull the ModelJars version from modeljarsVersion"
+            }
+            require("\$modelsVersion" in readme) {
+                "README dependency snippets must pull the Models version from modelsVersion"
+            }
+        }
+    }
+
 subprojects {
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
@@ -2991,6 +3023,7 @@ val verifyLaunchQualifications =
 
 tasks.named("check") {
     dependsOn("verifyCatalog")
+    dependsOn(verifyReadmeVersions)
     dependsOn(verifyJvmRuntimePublication)
     dependsOn(verifyMarkerPublicationIndependence)
 }

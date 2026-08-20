@@ -101,8 +101,10 @@ Applications use the stable JVM Runtime artifact and add one model dependency fo
 intend to ship:
 
 ```kotlin
+val modeljarsVersion = providers.gradleProperty("modeljarsVersion").get()
+
 dependencies {
-    implementation("org.modeljars:modeljars:0.1.8")
+    implementation("org.modeljars:modeljars:$modeljarsVersion")
     implementation(
         "org.modeljars.huggingface:" +
             "ggml-org.qwen3-0.6b-gguf.q4_0:" +
@@ -115,7 +117,7 @@ dependencies {
 <dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.8</version>
+  <version>${modeljars.version}</version>
 </dependency>
 <dependency>
   <groupId>org.modeljars.huggingface</groupId>
@@ -124,7 +126,7 @@ dependencies {
 </dependency>
 ```
 
-`modeljars` exposes `modeljars-core`, Models 0.3.2, and both Models execution backends. Each marker
+`modeljars` exposes `modeljars-core`, Models, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
 the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
@@ -264,16 +266,20 @@ ModelJars does not force a LangChain4j or Spring AI version on applications. Add
 the framework-neutral grounding module, and the chosen framework explicitly. For LangChain4j:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.3.2")
-implementation("com.integrallis:models-langchain4j:0.3.2")
+val modelsVersion = providers.gradleProperty("modelsVersion").get()
+
+implementation("com.integrallis:models-rag:$modelsVersion")
+implementation("com.integrallis:models-langchain4j:$modelsVersion")
 implementation("dev.langchain4j:langchain4j:1.17.2")
 ```
 
 For Spring AI:
 
 ```kotlin
-implementation("com.integrallis:models-rag:0.3.2")
-implementation("com.integrallis:models-spring-ai:0.3.2")
+val modelsVersion = providers.gradleProperty("modelsVersion").get()
+
+implementation("com.integrallis:models-rag:$modelsVersion")
+implementation("com.integrallis:models-spring-ai:$modelsVersion")
 implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
 implementation("org.springframework.ai:spring-ai-rag:2.0.0")
 ```

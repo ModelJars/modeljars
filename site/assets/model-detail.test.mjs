@@ -21,7 +21,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.8")\n' +
+    'implementation("org.modeljars:modeljars:0.1.11")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);

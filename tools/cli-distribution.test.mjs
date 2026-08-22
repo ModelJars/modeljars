@@ -42,6 +42,11 @@ test("publishes native and JVM CLI channels without exposing credentials", async
   assert.match(workflow, /modeljars-\$\{VERSION\}\/bin/);
   assert.match(workflow, /Smoke-test SDKMAN archive/);
   assert.match(workflow, /\.\/\.github\/workflows\/sdkman-publish\.yml/);
+  assert.match(workflow, /publish_sdkman:[\s\S]*default: false/);
+  assert.match(
+    workflow,
+    /publish-sdkman:[\s\S]*if: github\.event_name == 'workflow_dispatch' && inputs\.publish_sdkman/,
+  );
   assert.match(workflow, /publishMavenPublicationToGitHubPackagesRepository/);
   assert.doesNotMatch(workflow, /gho_|github_pat_|Consumer-Key: [A-Za-z0-9]/);
 

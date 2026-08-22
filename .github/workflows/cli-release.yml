@@ -13,6 +13,11 @@ on:
         description: Git ref to build; defaults to the release tag.
         required: false
         type: string
+      publish_sdkman:
+        description: Publish to SDKMAN after candidate approval.
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -258,6 +263,7 @@ jobs:
           "-PmodeljarsVersion=${VERSION}"
 
   publish-sdkman:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_sdkman
     needs: native
     uses: ./.github/workflows/sdkman-publish.yml
     with:

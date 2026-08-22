@@ -110,7 +110,7 @@ external publication.
 3. Create and publish `v<version>` on the same commit.
 4. The CLI workflow builds and attaches native assets, publishes the GitHub Maven package, and
    updates Homebrew and Scoop.
-5. After SDKMAN onboarding, the reusable SDKMAN workflow publishes every platform, sets the stable
+5. After SDKMAN approval, dispatch the SDKMAN workflow; it publishes every platform, sets the stable
    default, announces it, and verifies the public candidate listing.
 6. Verify a clean install through Homebrew, Scoop, and the direct install script before announcing.
 
@@ -122,5 +122,5 @@ gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.13
 
 Both `make_default` and `announce` default to `true` for a stable backfill. Set `announce=false`
 when retrying a release that was already broadcast, so an idempotent platform retry does not create
-a duplicate announcement. Prereleases invoked by the main CLI release workflow are published as
-selectable versions without changing the stable default or broadcasting.
+a duplicate announcement. The main CLI workflow also has a `publish_sdkman` dispatch input for a
+deliberate combined retry; it defaults to `false`. Automatic GitHub releases never contact SDKMAN.

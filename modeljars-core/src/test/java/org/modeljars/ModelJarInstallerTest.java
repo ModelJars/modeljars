@@ -89,6 +89,53 @@ class ModelJarInstallerTest {
   }
 
   @Test
+  void reportsStructuredByteProgressForDownloadsAndCachedVerification() throws IOException {
+    byte[] modelBytes = new byte[2 * 1024 * 1024 + 37];
+    java.util.Arrays.fill(modelBytes, (byte) 7);
+    Path source = tempDir.resolve("structured-upstream.gguf");
+    Path destination = tempDir.resolve("structured-cache/model.gguf");
+    Files.write(source, modelBytes);
+    ModelJarDescriptor descriptor = descriptor(source, destination, sha256(modelBytes));
+    List<ModelInstallProgress> progress = new ArrayList<>();
+    ModelJarInstaller installer =
+        ModelJarInstaller.reportingProgressTo(
+            new InMemoryModelJarRegistry(List.of(descriptor)), progress::add);
+
+    installer.install(descriptor, destination);
+
+    assertTrue(progress.getFirst() instanceof ModelInstallProgress.DownloadStarted);
+    assertTrue(
+        progress.stream()
+            .filter(ModelInstallProgress.DownloadAdvanced.class::isInstance)
+            .map(ModelInstallProgress.DownloadAdvanced.class::cast)
+            .anyMatch(event -> event.completedBytes() == modelBytes.length));
+    assertTrue(
+        progress.stream()
+            .anyMatch(
+                event ->
+                    event instanceof ModelInstallProgress.VerificationStarted started
+                        && started.source() == ModelInstallProgress.Source.DOWNLOAD));
+    assertTrue(
+        progress.stream()
+            .filter(ModelInstallProgress.VerificationAdvanced.class::isInstance)
+            .map(ModelInstallProgress.VerificationAdvanced.class::cast)
+            .anyMatch(event -> event.completedBytes() == modelBytes.length));
+    assertTrue(
+        progress.getLast() instanceof ModelInstallProgress.Completed completed
+            && completed.source() == ModelInstallProgress.Source.DOWNLOAD);
+
+    progress.clear();
+    installer.install(descriptor, destination);
+
+    assertTrue(
+        progress.getFirst() instanceof ModelInstallProgress.VerificationStarted started
+            && started.source() == ModelInstallProgress.Source.CACHE);
+    assertTrue(
+        progress.getLast() instanceof ModelInstallProgress.Completed completed
+            && completed.source() == ModelInstallProgress.Source.CACHE);
+  }
+
+  @Test
   void verifiesAnOfflineArtifactWithoutAttemptingADownload() throws IOException {
     byte[] modelBytes = "offline model".getBytes(java.nio.charset.StandardCharsets.UTF_8);
     Path source = tempDir.resolve("missing-upstream.gguf");

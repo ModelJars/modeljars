@@ -37,6 +37,7 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.terminal.impl.DumbTerminal;
 import org.modeljars.KvCachePrecision;
 import org.modeljars.ModelDimensions;
+import org.modeljars.ModelInstallProgress;
 import org.modeljars.ModelJarCache;
 import org.modeljars.ModelJarCoordinate;
 import org.modeljars.ModelJarDescriptor;
@@ -117,6 +118,13 @@ public final class ModelJarsCli implements Callable<Integer> {
   private CliOutput.ColorMode colorMode;
 
   @Option(
+      names = "--progress",
+      description = "Progress rendering: ${COMPLETION-CANDIDATES} (default: ${DEFAULT-VALUE}).",
+      defaultValue = "auto",
+      scope = ScopeType.INHERIT)
+  private PullProgressRenderer.Mode progressMode;
+
+  @Option(
       names = "--cache",
       paramLabel = "DIRECTORY",
       description = "Override the shared ModelJars cache directory.",
@@ -133,6 +141,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private PrintStream output;
   private PrintStream error;
   private int detectedWidth;
+  private Terminal activeTerminal;
 
   ModelJarsCli(ModelJarRegistry registry, ArtifactInstaller installer) {
     this(registry, installer, new SystemCapabilities()::detect);
@@ -156,7 +165,8 @@ public final class ModelJarsCli implements Callable<Integer> {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
     ArtifactInstaller installer =
         (descriptor, destination, progress) ->
-            ModelJarInstaller.reportingTo(registry, progress).install(descriptor, destination);
+            ModelJarInstaller.reportingProgressTo(registry, progress)
+                .install(descriptor, destination);
     int status =
         new ModelJarsCli(registry, installer)
             .launch(args, System.in, System.out, System.err, true);
@@ -202,7 +212,38 @@ public final class ModelJarsCli implements Callable<Integer> {
     Objects.requireNonNull(args, "args");
     return args.length == 0
         ? runInteractive(standardInput, standardOutput, standardError, systemTerminal, history)
-        : run(args, standardOutput, standardError);
+        : runOneShot(
+            args, standardInput, standardOutput, standardError, systemTerminal);
+  }
+
+  private int runOneShot(
+      String[] args,
+      InputStream standardInput,
+      PrintStream standardOutput,
+      PrintStream standardError,
+      boolean systemTerminal) {
+    prepare(standardOutput, standardError);
+    if (!systemTerminal) {
+      return commandLine().execute(args);
+    }
+    try (Terminal terminal =
+        TerminalBuilder.builder()
+            .system(true)
+            .systemOutput(TerminalBuilder.SystemOutput.SysErr)
+            .streams(standardInput, standardError)
+            .dumb(true)
+            .build()) {
+      activeTerminal = terminal;
+      if (terminal.getWidth() > 0) {
+        detectedWidth = terminal.getWidth();
+      }
+      return commandLine().execute(args);
+    } catch (IOException ignored) {
+      activeTerminal = null;
+      return commandLine().execute(args);
+    } finally {
+      activeTerminal = null;
+    }
   }
 
   private int runInteractive(
@@ -227,10 +268,15 @@ public final class ModelJarsCli implements Callable<Integer> {
           systemTerminal
               ? TerminalBuilder.builder()
                   .system(true)
+                  .systemOutput(TerminalBuilder.SystemOutput.SysOut)
                   .streams(standardInput, standardOutput)
                   .dumb(true)
                   .build()
               : new DumbTerminal(standardInput, standardOutput)) {
+        activeTerminal = terminal;
+        if (terminal.getWidth() > 0) {
+          detectedWidth = terminal.getWidth();
+        }
         DefaultParser parser = new DefaultParser();
         LineReaderBuilder readerBuilder =
             LineReaderBuilder.builder()
@@ -268,6 +314,8 @@ public final class ModelJarsCli implements Callable<Integer> {
     } catch (IOException exception) {
       standardError.println("Error: unable to open interactive terminal: " + exception.getMessage());
       return 2;
+    } finally {
+      activeTerminal = null;
     }
   }
 
@@ -276,6 +324,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     error = Objects.requireNonNull(standardError, "standardError");
     outputFormat = CliOutput.Format.TABLE;
     colorMode = CliOutput.ColorMode.AUTO;
+    progressMode = PullProgressRenderer.Mode.AUTO;
     cacheDirectory = ModelJarCache.defaultDirectory();
     requestedWidth = null;
     detectedWidth = detectTerminalWidth();
@@ -328,12 +377,29 @@ public final class ModelJarsCli implements Callable<Integer> {
     return new CliOutput(output, outputFormat, colorMode, width());
   }
 
-  private CliOutput err() {
-    return new CliOutput(error, CliOutput.Format.TABLE, colorMode, width());
+  private PullProgressRenderer pullProgress(boolean quiet) {
+    PullProgressRenderer.Mode mode = quiet ? PullProgressRenderer.Mode.OFF : progressMode;
+    boolean color =
+        switch (colorMode) {
+          case ALWAYS -> true;
+          case NEVER -> false;
+          case AUTO ->
+              activeTerminal != null
+                  && activeTerminal.getType() != null
+                  && !activeTerminal.getType().toLowerCase(Locale.ROOT).startsWith("dumb")
+                  && System.getenv("NO_COLOR") == null;
+        };
+    return new PullProgressRenderer(mode, activeTerminal, error, color, width());
   }
 
   private int width() {
-    return requestedWidth == null ? detectedWidth : Math.max(40, requestedWidth);
+    if (requestedWidth != null) {
+      return Math.max(40, requestedWidth);
+    }
+    if (activeTerminal != null && activeTerminal.getWidth() > 0) {
+      return Math.max(40, activeTerminal.getWidth());
+    }
+    return detectedWidth;
   }
 
   private Path cacheDirectory() {
@@ -1021,8 +1087,15 @@ public final class ModelJarsCli implements Callable<Integer> {
     public Integer call() {
       ModelJarDescriptor descriptor = parent.resolve(selector);
       Path destination = ModelJarCache.artifactPath(descriptor, parent.cacheDirectory());
-      Consumer<String> progress = quiet ? ignored -> {} : parent.err()::hint;
-      Path artifact = parent.installer.install(descriptor, destination, progress).toAbsolutePath().normalize();
+      Path artifact;
+      PullProgressRenderer progress = parent.pullProgress(quiet);
+      try (progress) {
+        artifact =
+            parent.installer
+                .install(descriptor, destination, progress)
+                .toAbsolutePath()
+                .normalize();
+      }
       CliOutput out = parent.out();
       if (quiet) {
         out.line(artifact.toString());
@@ -1031,21 +1104,49 @@ public final class ModelJarsCli implements Callable<Integer> {
             Map.of(
                 "alias", descriptor.alias(),
                 "coordinate", descriptor.markerCoordinate().toString(),
+                "cached", progress.completionSource() == ModelInstallProgress.Source.CACHE,
+                "elapsedSeconds", progress.elapsedSeconds(),
                 "sha256", descriptor.sha256().orElse(""),
+                "sizeBytes", descriptor.sizeBytes().orElse(-1L),
                 "path", artifact.toString()));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("coordinate=" + descriptor.markerCoordinate());
         out.line("sha256=" + descriptor.sha256().orElse(""));
         out.line("path=" + artifact);
       } else {
-        out.success("Model ready: " + descriptor.alias());
-        out.properties(
-            Map.of(
-                "Coordinate", descriptor.markerCoordinate(),
-                "Path", artifact,
-                "Size", descriptor.sizeBytes().map(CliOutput::humanBytes).orElse("unknown")));
+        boolean cached = progress.completionSource() == ModelInstallProgress.Source.CACHE;
+        String elapsed = formatElapsed(progress.elapsedSeconds());
+        out.success(
+            cached
+                ? descriptor.alias() + " already cached and verified in " + elapsed
+                : descriptor.alias() + " ready in " + elapsed);
+        out.hint(
+            "  "
+                + descriptor.sizeBytes().map(CliOutput::humanBytes).orElse("unknown size")
+                + " · SHA-256 verified");
+        Map<String, Object> details = new LinkedHashMap<>();
+        details.put("Path", displayPath(artifact));
+        details.put("Coordinate", descriptor.markerCoordinate());
+        out.properties(details);
       }
       return 0;
+    }
+
+    private static String formatElapsed(double seconds) {
+      if (seconds < 60) {
+        return String.format(Locale.ROOT, "%.1fs", seconds);
+      }
+      int minutes = (int) (seconds / 60);
+      return String.format(Locale.ROOT, "%dm %.1fs", minutes, seconds - minutes * 60);
+    }
+
+    private static String displayPath(Path path) {
+      String home = System.getProperty("user.home");
+      String value = path.toString();
+      if (home != null && !home.isBlank() && value.startsWith(home + java.io.File.separator)) {
+        return "~" + value.substring(home.length());
+      }
+      return value;
     }
   }
 
@@ -1385,7 +1486,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   @FunctionalInterface
   interface ArtifactInstaller {
     Path install(
-        ModelJarDescriptor descriptor, Path destination, Consumer<String> progressReporter);
+        ModelJarDescriptor descriptor,
+        Path destination,
+        Consumer<ModelInstallProgress> progressReporter);
   }
 
   private record CachedModel(ModelJarDescriptor descriptor, Path path) {}

@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.modeljars.ModelDimensions;
+import org.modeljars.ModelInstallProgress;
 import org.modeljars.ModelJarCache;
 import org.modeljars.ModelJarCoordinate;
 import org.modeljars.ModelJarDescriptor;
@@ -144,7 +145,19 @@ class ModelJarsCliTest {
             ModelJarRegistry.of(List.of(descriptor)),
             (selected, destination, progress) -> {
               installedAt.set(destination);
-              progress.accept("downloading " + selected.alias());
+              progress.accept(
+                  new ModelInstallProgress.DownloadStarted(
+                      selected.alias(),
+                      selected.downloadUri().orElseThrow(),
+                      destination,
+                      0,
+                      selected.sizeBytes().orElseThrow()));
+              progress.accept(
+                  new ModelInstallProgress.Completed(
+                      selected.alias(),
+                      destination,
+                      selected.sizeBytes().orElseThrow(),
+                      ModelInstallProgress.Source.DOWNLOAD));
               progressMessage.set("reported");
               return destination;
             });
@@ -178,9 +191,49 @@ class ModelJarsCliTest {
     assertEquals(0, result.status());
     assertEquals(expected, installedAt.get());
     assertTrue(result.output().contains("path=" + expected));
+    assertTrue(result.error().contains("Downloading " + descriptor.alias()));
+    assertFalse(result.error().contains("\u001B["));
     assertEquals("reported", progressMessage.get());
     assertEquals(expected + System.lineSeparator(), quiet.output());
     assertTrue(quiet.error().isEmpty());
+  }
+
+  @Test
+  void keepsJsonCleanAndAllowsProgressToBeDisabled() {
+    ModelJarDescriptor descriptor = descriptor();
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(descriptor)),
+            (selected, destination, progress) -> {
+              long size = selected.sizeBytes().orElseThrow();
+              progress.accept(
+                  new ModelInstallProgress.DownloadStarted(
+                      selected.alias(), selected.downloadUri().orElseThrow(), destination, 0, size));
+              progress.accept(
+                  new ModelInstallProgress.DownloadAdvanced(selected.alias(), size, size));
+              progress.accept(
+                  new ModelInstallProgress.VerificationStarted(
+                      selected.alias(), destination, size, ModelInstallProgress.Source.DOWNLOAD));
+              progress.accept(
+                  new ModelInstallProgress.VerificationAdvanced(selected.alias(), size, size));
+              progress.accept(
+                  new ModelInstallProgress.Completed(
+                      selected.alias(), destination, size, ModelInstallProgress.Source.DOWNLOAD));
+              return destination;
+            });
+
+    Result json = run(cli, "pull", descriptor.alias(), "--output", "json");
+    Result disabled = run(cli, "pull", descriptor.alias(), "--progress", "off");
+
+    assertEquals(0, json.status());
+    assertTrue(json.output().stripLeading().startsWith("{"), json.output());
+    assertTrue(json.output().contains("\"sizeBytes\": 4294967296"), json.output());
+    assertFalse(json.output().contains("Downloading"), json.output());
+    assertFalse(json.output().contains("\u001B["), json.output());
+    assertTrue(json.error().contains("Downloading " + descriptor.alias()), json.error());
+    assertFalse(json.error().contains("\u001B["), json.error());
+    assertEquals(0, disabled.status());
+    assertTrue(disabled.error().isEmpty(), disabled.error());
   }
 
   @Test

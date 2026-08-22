@@ -33,7 +33,7 @@ public final class ModelJarInstaller {
 
   private final ModelJarRegistry registry;
   private final RetryDelay retryDelay;
-  private final Consumer<String> progressReporter;
+  private final ProgressReporter progressReporter;
 
   /**
    * Creates an installer backed by a model registry.
@@ -41,7 +41,10 @@ public final class ModelJarInstaller {
    * @param registry registry used to resolve model selectors
    */
   public ModelJarInstaller(ModelJarRegistry registry) {
-    this(registry, ModelJarInstaller::pauseBeforeRetry, ModelJarInstaller::reportProgress);
+    this(
+        registry,
+        ModelJarInstaller::pauseBeforeRetry,
+        legacyProgressReporter(ModelJarInstaller::reportProgress));
   }
 
   /**
@@ -53,15 +56,46 @@ public final class ModelJarInstaller {
    */
   public static ModelJarInstaller reportingTo(
       ModelJarRegistry registry, Consumer<String> progressReporter) {
-    return new ModelJarInstaller(registry, ModelJarInstaller::pauseBeforeRetry, progressReporter);
+    return new ModelJarInstaller(
+        registry,
+        ModelJarInstaller::pauseBeforeRetry,
+        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")));
+  }
+
+  /**
+   * Creates an installer with structured byte-level progress suitable for terminal rendering.
+   *
+   * @param registry registry used to resolve model selectors
+   * @param progressReporter receiver for typed download, verification, retry, and completion events
+   * @return installer that forwards structured progress to the supplied receiver
+   */
+  public static ModelJarInstaller reportingProgressTo(
+      ModelJarRegistry registry, Consumer<ModelInstallProgress> progressReporter) {
+    return new ModelJarInstaller(
+        registry,
+        ModelJarInstaller::pauseBeforeRetry,
+        Objects.requireNonNull(progressReporter, "progressReporter")::accept);
   }
 
   ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
-    this(registry, retryDelay, ModelJarInstaller::reportProgress);
+    this(
+        registry,
+        retryDelay,
+        legacyProgressReporter(ModelJarInstaller::reportProgress));
   }
 
   ModelJarInstaller(
       ModelJarRegistry registry, RetryDelay retryDelay, Consumer<String> progressReporter) {
+    this(
+        registry,
+        retryDelay,
+        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")));
+  }
+
+  private ModelJarInstaller(
+      ModelJarRegistry registry,
+      RetryDelay retryDelay,
+      ProgressReporter progressReporter) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
     this.progressReporter = Objects.requireNonNull(progressReporter, "progressReporter");
@@ -114,15 +148,13 @@ public final class ModelJarInstaller {
     Objects.requireNonNull(destination, "destination");
 
     if (Files.exists(destination)) {
+      verify(destination, descriptor, ModelInstallProgress.Source.CACHE);
       progressReporter.accept(
-          "Verifying cached model "
-              + descriptor.alias()
-              + " ("
-              + displaySize(descriptor)
-              + ") at "
-              + destination.toAbsolutePath().normalize());
-      verify(destination, descriptor);
-      progressReporter.accept("Model cache verified: " + descriptor.alias());
+          new ModelInstallProgress.Completed(
+              descriptor.alias(),
+              destination.toAbsolutePath().normalize(),
+              sizeBytes(descriptor),
+              ModelInstallProgress.Source.CACHE));
       return destination;
     }
 
@@ -147,17 +179,21 @@ public final class ModelJarInstaller {
       Files.createDirectories(parent);
       temporary = Files.createTempFile(parent, destination.getFileName() + ".", ".part");
       progressReporter.accept(
-          "Downloading model "
-              + descriptor.alias()
-              + " ("
-              + formatBytes(expectedSize)
-              + ") to "
-              + destination.toAbsolutePath().normalize());
+          new ModelInstallProgress.DownloadStarted(
+              descriptor.alias(),
+              downloadUri,
+              destination.toAbsolutePath().normalize(),
+              Files.size(temporary),
+              expectedSize));
       download(descriptor.alias(), downloadUri, temporary, expectedSize);
-      progressReporter.accept("Download complete; verifying SHA-256 for " + descriptor.alias());
-      verify(temporary, descriptor);
+      verify(temporary, descriptor, ModelInstallProgress.Source.DOWNLOAD);
       moveIntoPlace(temporary, destination);
-      progressReporter.accept("Model ready in cache: " + descriptor.alias());
+      progressReporter.accept(
+          new ModelInstallProgress.Completed(
+              descriptor.alias(),
+              destination.toAbsolutePath().normalize(),
+              expectedSize,
+              ModelInstallProgress.Source.DOWNLOAD));
       return destination;
     } catch (IOException e) {
       throw new ModelJarException("Unable to install model artifact " + descriptor.alias(), e);
@@ -186,15 +222,13 @@ public final class ModelJarInstaller {
       throw new ModelJarException(
           "Model artifact is not available in the offline cache: " + artifact);
     }
+    verify(artifact, descriptor, ModelInstallProgress.Source.OFFLINE);
     progressReporter.accept(
-        "Verifying offline model "
-            + descriptor.alias()
-            + " ("
-            + displaySize(descriptor)
-            + ") at "
-            + artifact.toAbsolutePath().normalize());
-    verify(artifact, descriptor);
-    progressReporter.accept("Offline model cache verified: " + descriptor.alias());
+        new ModelInstallProgress.Completed(
+            descriptor.alias(),
+            artifact.toAbsolutePath().normalize(),
+            sizeBytes(descriptor),
+            ModelInstallProgress.Source.OFFLINE));
     return artifact;
   }
 
@@ -205,6 +239,17 @@ public final class ModelJarInstaller {
    * @param descriptor immutable model marker metadata
    */
   public void verify(Path artifact, ModelJarDescriptor descriptor) {
+    verify(artifact, descriptor, ModelInstallProgress.Source.EXPLICIT);
+    progressReporter.accept(
+        new ModelInstallProgress.Completed(
+            descriptor.alias(),
+            artifact.toAbsolutePath().normalize(),
+            sizeBytes(descriptor),
+            ModelInstallProgress.Source.EXPLICIT));
+  }
+
+  private void verify(
+      Path artifact, ModelJarDescriptor descriptor, ModelInstallProgress.Source source) {
     Objects.requireNonNull(artifact, "artifact");
     Objects.requireNonNull(descriptor, "descriptor");
     long expectedSize =
@@ -229,7 +274,10 @@ public final class ModelJarInstaller {
                 + ", got "
                 + actualSize);
       }
-      String actualSha256 = sha256(artifact);
+      progressReporter.accept(
+          new ModelInstallProgress.VerificationStarted(
+              descriptor.alias(), artifact.toAbsolutePath().normalize(), expectedSize, source));
+      String actualSha256 = sha256(artifact, descriptor.alias(), expectedSize);
       if (!actualSha256.equals(expectedSha256)) {
         throw new ModelJarException(
             "Model artifact SHA-256 mismatch for "
@@ -272,16 +320,17 @@ public final class ModelJarInstaller {
         lastFailure = e;
       }
       if (attempt < MAX_DOWNLOAD_ATTEMPTS) {
+        long completedBytes = Files.size(destination);
+        long delayMillis = retryDelayMillis(attempt);
         progressReporter.accept(
-            "Model download interrupted at "
-                + formatBytes(Files.size(destination))
-                + "; retrying "
-                + alias
-                + " (attempt "
-                + (attempt + 1)
-                + " of "
-                + MAX_DOWNLOAD_ATTEMPTS
-                + ")");
+            new ModelInstallProgress.Retrying(
+                alias,
+                completedBytes,
+                expectedSize,
+                attempt + 1,
+                MAX_DOWNLOAD_ATTEMPTS,
+                delayMillis,
+                lastFailure == null ? null : lastFailure.getMessage()));
         retryDelay.pause(attempt);
       }
     }
@@ -298,7 +347,7 @@ public final class ModelJarInstaller {
   }
 
   private static void pauseBeforeRetry(int failedAttempt) throws IOException {
-    long delayMillis = INITIAL_RETRY_DELAY_MILLIS << (failedAttempt - 1);
+    long delayMillis = retryDelayMillis(failedAttempt);
     try {
       Thread.sleep(delayMillis);
     } catch (InterruptedException e) {
@@ -345,26 +394,14 @@ public final class ModelJarInstaller {
                       StandardOpenOption.WRITE,
                       StandardOpenOption.TRUNCATE_EXISTING)) {
         int read;
-        long downloaded = offset;
-        int nextPercentage = Math.max(10, ((int) (offset * 100 / expectedSize) / 10 + 1) * 10);
+        long downloaded = append ? offset : 0;
         while ((read = input.read(buffer)) != -1) {
           if (read > 0) {
             output.write(buffer, 0, read);
             downloaded += read;
-            int percentage = (int) Math.min(100, downloaded * 100.0 / expectedSize);
-            if (percentage >= nextPercentage) {
-              progressReporter.accept(
-                  "Downloading "
-                      + alias
-                      + ": "
-                      + percentage
-                      + "% ("
-                      + formatBytes(downloaded)
-                      + " of "
-                      + formatBytes(expectedSize)
-                      + ")");
-              nextPercentage = percentage / 10 * 10 + 10;
-            }
+            progressReporter.accept(
+                new ModelInstallProgress.DownloadAdvanced(
+                    alias, Math.min(downloaded, expectedSize), expectedSize));
           }
         }
       }
@@ -406,13 +443,20 @@ public final class ModelJarInstaller {
     void pause(int failedAttempt) throws IOException;
   }
 
-  private static String sha256(Path artifact) throws IOException {
+  private String sha256(Path artifact, String alias, long totalBytes) throws IOException {
     MessageDigest digest = sha256Digest();
     byte[] buffer = new byte[BUFFER_SIZE];
+    long completedBytes = 0;
     try (InputStream input = Files.newInputStream(artifact)) {
       int read;
       while ((read = input.read(buffer)) >= 0) {
-        digest.update(buffer, 0, read);
+        if (read > 0) {
+          digest.update(buffer, 0, read);
+          completedBytes += read;
+          progressReporter.accept(
+              new ModelInstallProgress.VerificationAdvanced(
+                  alias, Math.min(completedBytes, totalBytes), totalBytes));
+        }
       }
     }
     return HexFormat.of().formatHex(digest.digest());
@@ -434,8 +478,14 @@ public final class ModelJarInstaller {
     }
   }
 
-  private static String displaySize(ModelJarDescriptor descriptor) {
-    return descriptor.sizeBytes().map(ModelJarInstaller::formatBytes).orElse("unknown size");
+  private static long retryDelayMillis(int failedAttempt) {
+    return INITIAL_RETRY_DELAY_MILLIS << (failedAttempt - 1);
+  }
+
+  private static long sizeBytes(ModelJarDescriptor descriptor) {
+    return descriptor
+        .sizeBytes()
+        .orElseThrow(() -> new ModelJarException("Marker has no sizeBytes: " + descriptor.alias()));
   }
 
   private static String formatBytes(long bytes) {
@@ -453,5 +503,100 @@ public final class ModelJarInstaller {
 
   private static void reportProgress(String message) {
     LOGGER.log(System.Logger.Level.INFO, message);
+  }
+
+  private static ProgressReporter legacyProgressReporter(Consumer<String> reporter) {
+    return new LegacyProgressReporter(reporter);
+  }
+
+  @FunctionalInterface
+  private interface ProgressReporter {
+    void accept(ModelInstallProgress progress);
+  }
+
+  private static final class LegacyProgressReporter implements ProgressReporter {
+    private final Consumer<String> reporter;
+    private int nextDownloadPercentage = 10;
+
+    private LegacyProgressReporter(Consumer<String> reporter) {
+      this.reporter = Objects.requireNonNull(reporter, "reporter");
+    }
+
+    @Override
+    public void accept(ModelInstallProgress progress) {
+      if (progress instanceof ModelInstallProgress.DownloadStarted started) {
+        nextDownloadPercentage = 10;
+        reporter.accept(
+            "Downloading model "
+                + started.alias()
+                + " ("
+                + formatBytes(started.totalBytes())
+                + ") to "
+                + started.destination());
+      } else if (progress instanceof ModelInstallProgress.DownloadAdvanced advanced) {
+        int percentage =
+            advanced.totalBytes() == 0
+                ? 100
+                : (int) Math.min(100, advanced.completedBytes() * 100.0 / advanced.totalBytes());
+        if (percentage >= nextDownloadPercentage) {
+          reporter.accept(
+              "Downloading "
+                  + advanced.alias()
+                  + ": "
+                  + percentage
+                  + "% ("
+                  + formatBytes(advanced.completedBytes())
+                  + " of "
+                  + formatBytes(advanced.totalBytes())
+                  + ")");
+          nextDownloadPercentage = percentage / 10 * 10 + 10;
+        }
+      } else if (progress instanceof ModelInstallProgress.Retrying retrying) {
+        reporter.accept(
+            "Model download interrupted at "
+                + formatBytes(retrying.completedBytes())
+                + "; retrying "
+                + retrying.alias()
+                + " (attempt "
+                + retrying.attempt()
+                + " of "
+                + retrying.maximumAttempts()
+                + ")");
+      } else if (progress instanceof ModelInstallProgress.VerificationStarted started) {
+        reporter.accept(verificationMessage(started));
+      } else if (progress instanceof ModelInstallProgress.Completed completed) {
+        reporter.accept(completedMessage(completed));
+      }
+    }
+
+    private static String verificationMessage(ModelInstallProgress.VerificationStarted started) {
+      return switch (started.source()) {
+        case DOWNLOAD -> "Download complete; verifying SHA-256 for " + started.alias();
+        case CACHE ->
+            "Verifying cached model "
+                + started.alias()
+                + " ("
+                + formatBytes(started.totalBytes())
+                + ") at "
+                + started.artifact();
+        case OFFLINE ->
+            "Verifying offline model "
+                + started.alias()
+                + " ("
+                + formatBytes(started.totalBytes())
+                + ") at "
+                + started.artifact();
+        case EXPLICIT -> "Verifying model " + started.alias() + " at " + started.artifact();
+      };
+    }
+
+    private static String completedMessage(ModelInstallProgress.Completed completed) {
+      return switch (completed.source()) {
+        case DOWNLOAD -> "Model ready in cache: " + completed.alias();
+        case CACHE -> "Model cache verified: " + completed.alias();
+        case OFFLINE -> "Offline model cache verified: " + completed.alias();
+        case EXPLICIT -> "Model verified: " + completed.alias();
+      };
+    }
   }
 }

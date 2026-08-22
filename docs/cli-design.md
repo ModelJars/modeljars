@@ -32,8 +32,10 @@ shipped CLI keeps its own small responsive table renderer because its
 columns are catalog-specific and must degrade predictably on narrow terminals.
 
 [JLine](https://jline.org/docs/terminal/) supplies the zero-argument interactive shell with line
-editing, persistent history, and Picocli-aware tab completion. Supplying a command bypasses JLine
-and retains deterministic one-shot execution. [OSHI](https://www.oshi.ooo/) offers broad hardware
+editing, persistent history, and Picocli-aware tab completion. Its terminal and `Display`
+abstractions also render model downloads on stderr without corrupting the interactive prompt or
+machine-readable stdout. Supplying a command retains deterministic one-shot execution while using
+JLine only when stderr is a capable terminal. [OSHI](https://www.oshi.ooo/) offers broad hardware
 inventory, but its JNA and
 JDK-25 FFM variants add native-access and packaging constraints to a binary released for five
 platforms. The current bounded host probe uses JDK management APIs plus direct, timeout-limited OS
@@ -48,6 +50,9 @@ Windows output.
   backend metadata as labelled continuation lines.
 - JSON is the stable structured interface. Plain output is tab- or key/value-oriented. Neither ever
   contains ANSI escapes.
+- Pull progress is structured in `modeljars-core`, not parsed from log messages. Terminal rendering
+  is throttled independently of byte events; redirected output uses stable phase lines, and quiet
+  output is path-only.
 - `NO_COLOR`, `--color never`, and redirected stdout disable color; `--color always` is useful for
   snapshots and demos.
 - Hardware inventory is not backend availability. A discovered GPU is shown as detected while GPU

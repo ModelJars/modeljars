@@ -79,6 +79,11 @@ executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platf
 also generated; publication begins once the `modeljars` candidate completes SDKMAN vendor
 onboarding.
 
+On a terminal, `pull` renders one animated download and verification region with byte progress,
+smoothed transfer speed, and ETA, then replaces it with the verified path and coordinate. Redirected
+and dumb terminals receive stable phase updates without control characters. Use
+`--progress auto|bar|plain|off` to override detection; `--quiet` remains path-only.
+
 Interactive output uses responsive, aligned tables and color only when stdout is a terminal.
 Catalog and cache listings are compact by default; add `--details` to show complete capability and
 backend continuation fields without truncation. `list --coordinates` independently adds the exact

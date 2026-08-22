@@ -13,7 +13,7 @@ the session. Supplying any arguments executes exactly one command and returns to
 ```bash
 modeljars search [query] [--capability <name>] [--backend <name>] [--sort <field>] [--details]
 modeljars show <alias|source|coordinate> [--coordinates] [--details]
-modeljars pull <alias|source|coordinate> [--cache <directory>] [--quiet]
+modeljars pull <alias|source|coordinate> [--cache <directory>] [--progress <mode>] [--quiet]
 modeljars list [--coordinates] [--details]
 modeljars snippet <model> [--tool <tool>]
 modeljars info
@@ -32,6 +32,14 @@ downloads and verifies the artifact before atomically placing it in the shared c
 cache. `list` contains the files currently present at known catalog paths; `pull` and the JVM
 Runtime verify them again before use. Familiar aliases include `available`, `ls`, `inspect`, `rm`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
+
+`pull` uses structured byte-level installer events. A capable terminal receives a continuously
+updated two-line region for both download and SHA-256 verification, including percentage, bytes,
+smoothed transfer speed, and ETA. Retries remain visible above the live region, cached artifacts are
+identified explicitly, and the prompt is restored before the command returns. `--progress` accepts
+`auto`, `bar`, `plain`, or `off`; automatic mode falls back to stable 25-percent phase lines when
+stderr is not an interactive terminal. Progress uses stderr, while JSON, plain, and quiet results
+remain clean on stdout. `--quiet` suppresses progress regardless of the global setting.
 
 `snippet` emits copy-ready Maven, Gradle, and Gradle Kotlin DSL declarations by default. Select any
 combination of Maven, Gradle, Gradle Kotlin DSL, sbt, Ivy, Leiningen, and JBang by repeating

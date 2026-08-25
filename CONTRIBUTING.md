@@ -40,7 +40,7 @@ Qualification requires:
 - identical GGUF bytes, prompts, controls, and host hardware for Models, Ollama, and llama.cpp
   comparator reports in the separate tuned performance phase;
 - raw report files, artifact and report SHA-256 values, environment identity, and a passing
-  `production-rag-model-contribution-v4` verdict.
+  `production-rag-model-contribution-v5` verdict.
 
 New or changed qualified entries must include `defaultConfigurationSmoke`
 metadata pointing to the immutable Models report. CI fetches that report from

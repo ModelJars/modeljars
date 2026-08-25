@@ -57,7 +57,8 @@
               ModelJARs are versioned JAR files that make AI models available to the
               <a href="https://integrallis.github.io/models/">Models</a> JVM inference library.
               Think of WebJars, but for AI models: standard dependency coordinates,
-              immutable metadata, and measured runtime support.
+              immutable metadata, and measured runtime support for exact GGUF files and
+              Safetensors checkpoint bundles.
             </p>
             <div class="catalog-actions" aria-label="Get started">
               <a class="primary-button" href="#modeljars-cli">Install the native CLI</a>
@@ -187,7 +188,7 @@ modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m</code></pre>
                   <span class="step-number">03</span>
                   <h3>Pull and verify</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars pull qwen_qwen2_5_0_5b_instruct_bf16
 modeljars list</code></pre>
               </article>
               <article>
@@ -203,8 +204,9 @@ modeljars search gemma --output json</code></pre>
               </article>
             </div>
             <p class="guide-runtime-note">
-              Model weights come directly from their immutable, revision-pinned upstream URL and
-              must match the marker's exact byte count and SHA-256 before entering the cache.
+              Model files come directly from immutable, revision-pinned upstream URLs. Every file
+              in a GGUF or Safetensors artifact must match the marker's exact byte count and
+              SHA-256 before the complete artifact enters the cache.
             </p>
           </div>
         </div>
@@ -229,7 +231,7 @@ modeljars search gemma --output json</code></pre>
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.17")
+  implementation("org.modeljars:modeljars:0.1.18")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>

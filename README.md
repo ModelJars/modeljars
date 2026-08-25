@@ -72,8 +72,10 @@ modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
 ```
 
-`pull` uses the same content-addressed cache as the JVM Runtime. It downloads from the descriptor's
-exact immutable URL, verifies byte size and SHA-256, and never starts inference. Release automation
+`pull` uses the same content-addressed cache as the JVM Runtime. It downloads every file declared by
+the descriptor from its exact immutable revision, verifies each byte size and SHA-256, and never
+starts inference. Single-file GGUF artifacts and multi-file Safetensors bundles use the same command.
+Release automation
 builds native binaries for macOS, Linux, and Windows on their host architectures and publishes an
 executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platform archives are
 also generated; publication begins once the `modeljars` candidate completes SDKMAN vendor
@@ -133,8 +135,10 @@ dependencies {
 
 `modeljars` exposes `modeljars-core`, Models, and both Models execution backends. Each marker
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
-Java reference. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and
-the fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
+Java reference. The runtime also carries the current qualification decisions so corrected evidence
+or a revocation supersedes older marker metadata on the classpath. It does not add the aggregate
+model catalog. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and the
+fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to
@@ -157,10 +161,21 @@ hf://ggml-org/Qwen3-0.6B-GGUF
 
 For this launch catalog, external weights are downloaded directly from an exact, commit-pinned
 Hugging Face revision. The marker JAR contains metadata rather than the large weights, including the
-source page, immutable download URL, revision, byte count, and SHA-256. The JVM Runtime and CLI store
-verified weights in a content-addressed cache below `${user.home}/.modeljars/cache/sha256/`.
+source page, immutable file URLs, revision, byte counts, and SHA-256 digests. The JVM Runtime and CLI
+store verified files together in a content-addressed cache below
+`${user.home}/.modeljars/cache/sha256/`.
 Application code never constructs or passes that path. Run `modeljars show <model>` to inspect all
 of that provenance before downloading.
+
+The first qualified Safetensors bundle is available as:
+
+```text
+org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct.bf16:2.5.0-bf16.1
+```
+
+Its marker pins `config.json`, `model.safetensors`, `tokenizer.json`, and
+`tokenizer_config.json`. `modeljars pull qwen_qwen2_5_0_5b_instruct_bf16`
+installs and verifies the complete directory required by Models.
 
 Qwen2.5-Coder markers include:
 

@@ -37,7 +37,7 @@ plugins {
 
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
-val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v4"
+val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v5"
 
 fun isNormalizedRepositoryRelativePath(path: String): Boolean {
     if (
@@ -1585,7 +1585,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.17-SNAPSHOT")
+            .orElse("0.1.18-SNAPSHOT")
             .get()
 }
 
@@ -1941,6 +1941,51 @@ project(":modeljars-cli") {
 project(":modeljars") {
     description = "Application-facing ModelJars JVM Runtime"
 
+    val runtimeQualificationResources =
+        layout.buildDirectory.dir("generated/resources/runtime-qualifications")
+    val runtimeRagQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.properties")
+        }
+    val runtimeRagQualificationMetadata =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/qualifications-v1.json")
+        }
+    val runtimeEmbeddingQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
+        }
+    val generateRuntimeQualificationResources =
+        tasks.register("generateRuntimeQualificationResources") {
+            inputs.file(qualificationCatalogFile)
+            if (embeddingQualificationCatalogFile.isFile) {
+                inputs.file(embeddingQualificationCatalogFile)
+            }
+            outputs.files(
+                runtimeRagQualificationRegistry,
+                runtimeRagQualificationMetadata,
+                runtimeEmbeddingQualificationRegistry,
+            )
+            doLast {
+                val qualifications = requireNotNull(ragQualifications)
+                val registry = runtimeRagQualificationRegistry.get().asFile
+                registry.parentFile.mkdirs()
+                registry.writeText(
+                    qualifications.registryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeRagQualificationMetadata.get().asFile.writeText(
+                    JsonOutput.prettyPrint(JsonOutput.toJson(qualifications.raw)) + "\n",
+                    StandardCharsets.UTF_8,
+                )
+                runtimeEmbeddingQualificationRegistry.get().asFile.writeText(
+                    embeddingQualifications?.registryProperties()
+                        ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+            }
+        }
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(25)
@@ -1953,6 +1998,15 @@ project(":modeljars") {
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
         testImplementation(project(":modeljars-catalog"))
+    }
+
+    extensions.configure<SourceSetContainer> {
+        named("main") {
+            resources.srcDir(runtimeQualificationResources)
+        }
+    }
+    tasks.named("processResources") {
+        dependsOn(generateRuntimeQualificationResources)
     }
 
     tasks.register<Test>("qwen25SafetensorsIntegrationTest") {

@@ -27,10 +27,12 @@ catalog domains/tags, capabilities, and common discovery aliases (`fintech` find
 `finance` tag). Its default table is a compact one-row summary; `--details` adds complete
 capabilities and supported backends beneath each result. `show --details` exposes the same two
 fields for one model. `show` prints the exact source page,
-download URL, upstream revision, byte size, SHA-256, license, and destination cache path. `pull`
-downloads and verifies the artifact before atomically placing it in the shared content-addressed
-cache. `list` contains the files currently present at known catalog paths; `pull` and the JVM
-Runtime verify them again before use. Familiar aliases include `available`, `ls`, `inspect`, `rm`,
+download URLs, upstream revision, byte sizes, SHA-256 digests, license, and destination cache path.
+`pull` downloads and verifies the complete artifact manifest before atomically placing it in the
+shared content-addressed cache. A GGUF marker commonly has one file; a Safetensors marker can require
+configuration, tokenizer, and one or more weight files. `list` contains complete installed artifacts;
+`pull` and the JVM Runtime verify every declared file again before use. Familiar aliases include
+`available`, `ls`, `inspect`, `rm`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
 
 `pull` uses structured byte-level installer events. A capable terminal receives a continuously
@@ -101,7 +103,7 @@ credentials. Store the decrypted values in the `ModelJars/modeljars` repository 
 tokens or GPG fingerprints.
 
 `.github/workflows/sdkman-publish.yml` can be dispatched independently for an existing GitHub
-release, which allows an SDKMAN publication to backfill `v0.1.17` without rebuilding native
+release, which allows an SDKMAN publication to backfill `v0.1.18` without rebuilding native
 binaries or republishing other package channels. It validates that every ZIP has a single
 `modeljars-<version>/` root and the expected executable under `bin/`, then submits all five platform
 archives with their SHA-256. Only after every platform succeeds does it set the version as the
@@ -125,7 +127,7 @@ external publication.
 To backfill an existing release after the two SDKMAN secrets have been configured:
 
 ```bash
-gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.17
+gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.18
 ```
 
 Both `make_default` and `announce` default to `true` for a stable backfill. Set `announce=false`

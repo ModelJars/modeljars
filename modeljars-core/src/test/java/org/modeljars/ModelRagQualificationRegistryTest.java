@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 class ModelRagQualificationRegistryTest {
   private static final int AGGREGATE_QUALIFIED_MODELS = 29;
   private static final String AGGREGATE_MODELS_REVISION =
-      "7ba11421ece87d6738ce8a21b11b47b02e807a06";
+      "1b82987b471c96592f0162439925870218c593c4";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -133,6 +133,37 @@ class ModelRagQualificationRegistryTest {
   }
 
   @Test
+  void newerRejectionSupersedesOlderQualifiedMarkerEvidence(@TempDir Path root) throws Exception {
+    Path olderRoot = root.resolve("older-qualified-marker");
+    Path newerRoot = root.resolve("newer-runtime-decision");
+    Properties older = properties(1.0, 1.0, true);
+    Properties newer = properties(0.0, 0.1, false);
+    newer.setProperty("modeljars.qualifications.generatedAt", "2026-08-25T13:39:00Z");
+    newer.setProperty("modeljars.qualifications.policyVersion", "production-rag-model-contribution-v5");
+    newer.setProperty("modeljars.qualifications.modelsRevision", "f".repeat(40));
+    newer.setProperty("modeljars.qualifications.qualifiedModels", "0");
+    newer.setProperty("modeljars.qualifications.rejectedModels", "1");
+    newer.setProperty("qualification.qwen3_0_6b_q4_0.verdict", "FAILED_MODEL_CONTRIBUTION_GATE");
+    writeResource(olderRoot, older);
+    writeResource(newerRoot, newer);
+
+    try (var loader =
+        new java.net.URLClassLoader(
+            new java.net.URL[] {olderRoot.toUri().toURL(), newerRoot.toUri().toURL()}, null)) {
+      ModelRagQualificationRegistry registry =
+          ModelRagQualificationRegistry.fromClasspath(loader);
+
+      assertEquals(1, registry.qualifications().size());
+      assertEquals(0, registry.qualifiedModels());
+      assertEquals(1, registry.rejectedModels());
+      assertEquals(
+          "FAILED_MODEL_CONTRIBUTION_GATE",
+          registry.qualifications().getFirst().verdict());
+      assertFalse(registry.qualifications().getFirst().productionUsable());
+    }
+  }
+
+  @Test
   void aggregateCatalogPublishesQualifiedSmolLm2RustFfmEvidence() {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
 
@@ -170,11 +201,11 @@ class ModelRagQualificationRegistryTest {
 
     assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
-    assertEquals(0, registry.rejectedModels());
+    assertEquals(1, registry.rejectedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
-        "models@37fc4a8b9d421505487b678c7ce841d1baa20eb4 "
-            + "com.integrallis:vectors-core@0.1.5",
+        "models@ac80da9f89d908c1ac4b69cb95fa63c6b21cc890 "
+            + "com.integrallis:vectors-core@0.1.12",
         qualification.backendVersion());
     assertEquals("gemma4", qualification.promptTemplate());
     assertEquals("USABLE", qualification.performanceTier());
@@ -185,10 +216,10 @@ class ModelRagQualificationRegistryTest {
     assertEquals(1.0, qualification.rawCorrectAnswerRate());
     assertEquals(18.0 / 27.0, qualification.modelAnswerRate());
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
-    assertEquals(1834.6652392, qualification.p95TtftMillis());
-    assertEquals(12.838381625708218, qualification.p50DecodeTokensPerSecond());
+    assertEquals(1861.6564421, qualification.p95TtftMillis());
+    assertEquals(12.908019635314483, qualification.p50DecodeTokensPerSecond());
     assertEquals(
-        "2234bd65597ed56c2dbc2936e389e145c3bf471fa2d7202cd7e6a802f2523ed8",
+        "bc97bcee59d3795a9ad3e2ab36f1ee91311cc1ace64f4d66faef3fde8c01e26c",
         qualification.reportSha256());
     assertTrue(qualification.productionUsable());
     assertTrue(registry.qualified().contains(qualification));
@@ -914,11 +945,13 @@ class ModelRagQualificationRegistryTest {
         "3fca8449921c16205d24d60cff87b9162ed933fb3871748b1dcada56ff77686e",
         danubeTwo.reportSha256());
     assertEquals("h2o", danubeThree.promptTemplate());
-    assertEquals(1.0 / 3.0, danubeThree.modelAnswerRate());
-    assertEquals(82.08539689080071, danubeThree.p50DecodeTokensPerSecond());
+    assertEquals(3.0 / 27.0, danubeThree.modelAnswerRate());
+    assertEquals(82.03029896850386, danubeThree.p50DecodeTokensPerSecond());
     assertEquals(
-        "f3953bfd66fe21a31ae63f1bb05b2929d1dd5dcab4be49ac7af2e341137b0b84",
+        "f88f48bef85c926a7a5ee5bd2382f0888c0034f5c69a40ded4bd5dc07823885c",
         danubeThree.reportSha256());
+    assertEquals("FAILED_MODEL_CONTRIBUTION_GATE", danubeThree.verdict());
+    assertEquals(RagUseCaseTier.UNQUALIFIED, danubeThree.useCaseTier());
     assertEquals("chatml-answer", yiCoder.promptTemplate());
     assertEquals(15.0 / 27.0, yiCoder.modelAnswerRate());
     assertEquals(29.737367126827113, yiCoder.p50DecodeTokensPerSecond());
@@ -934,8 +967,39 @@ class ModelRagQualificationRegistryTest {
         yiCoder.reportUri());
     assertTrue(smolLm.productionUsable());
     assertTrue(danubeTwo.productionUsable());
-    assertTrue(danubeThree.productionUsable());
+    assertFalse(danubeThree.productionUsable());
     assertTrue(yiCoder.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedQwen25SafetensorsEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen_qwen2_5_0_5b_instruct_bf16"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("production-rag-model-contribution-v5", registry.policyVersion());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(1, registry.rejectedModels());
+    assertEquals("pure-java", qualification.backend());
+    assertEquals("chatml", qualification.promptTemplate());
+    assertEquals("USABLE", qualification.performanceTier());
+    assertEquals("QUALIFIED", qualification.verdict());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(0.0, qualification.rawCorrectAnswerRate());
+    assertEquals(15.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(14.512799448459633, qualification.p50DecodeTokensPerSecond());
+    assertEquals(
+        "782aa9fb3e9821e88dd07c0b668cb7e3278506eb2275eb41949d35810365ac02",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
   }
 
   @Test

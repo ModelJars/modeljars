@@ -16,6 +16,7 @@ modeljars show <alias|source|coordinate> [--coordinates] [--details]
 modeljars pull <alias|source|coordinate> [--cache <directory>] [--progress <mode>] [--quiet]
 modeljars list [--coordinates] [--details]
 modeljars snippet <model> [--tool <tool>]
+modeljars contribute <owner/repository> [--file <path>] [--domain <name>]
 modeljars info
 modeljars remove <exact-model>
 modeljars cache-dir
@@ -54,6 +55,14 @@ catalog capabilities, and cache usage. The project banner heads the interactive 
 usability are separate: a
 GPU may be detected while GPU model offload remains unsupported, and Apple Foundation Models are
 reported as eligible until `backend-apple` performs its runtime availability check.
+
+`contribute` turns a public Hugging Face repository into a verified candidate report. It resolves
+the requested branch or tag to an immutable commit, selects a single GGUF or the complete standard
+Safetensors bundle, uses upstream LFS SHA-256 metadata for model weights, hashes smaller repository
+files directly, and writes a new Markdown issue body without overwriting an existing file. When a
+repository has multiple GGUF variants, repeat `--file` to select the intended artifact. The command
+prints one safely quoted `gh issue create` command; submission begins candidate intake and does not
+bypass Models compatibility or controlled qualification.
 
 The default output is a responsive table. Installed-model listings preserve complete model names
 and requested dependency coordinates instead of truncating identifiers; `--details` opts into

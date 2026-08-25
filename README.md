@@ -416,9 +416,21 @@ correct run measures 0.99950 and wrong pooling measures 0.66156. Cosine is scale
 vector length is gated separately at 1e-3. Evidence is recorded as `ModelEmbeddingQualification`,
 whose tier is `SEMANTIC_SEARCH` or `UNQUALIFIED`.
 
-The [qualification and submission guide](https://modeljars.org/contribute/) lists host
-prerequisites, the harness command, acceptance thresholds, evidence files, and pull request steps.
+The [qualification and submission guide](https://modeljars.org/contribute/) lists candidate
+submission, maintainer host prerequisites, harness commands, acceptance thresholds, evidence files,
+and publication steps.
 “Not yet qualified” means the controlled run has not occurred; it is not a failed result.
+
+The native CLI prepares a new candidate from a public Hugging Face repository in one command:
+
+```bash
+modeljars contribute Qwen/Qwen2.5-0.5B-Instruct --domain general
+```
+
+It pins the immutable revision, selects the required GGUF or Safetensors files, verifies their
+sizes and SHA-256 digests, writes the candidate report, and prints the single `gh issue create`
+command needed to submit it. Compatibility, qualification, and publication remain reviewed
+maintainer gates.
 
 ## Catalog development
 

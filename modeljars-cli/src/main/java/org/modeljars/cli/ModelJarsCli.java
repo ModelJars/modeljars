@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
@@ -68,6 +69,7 @@ import picocli.shell.jline3.PicocliJLineCompleter;
       ModelJarsCli.PullCommand.class,
       ModelJarsCli.RemoveCommand.class,
       ModelJarsCli.CoordinatesCommand.class,
+      ModelJarsCli.ContributeCommand.class,
       ModelJarsCli.InfoCommand.class,
       ModelJarsCli.CacheDirectoryCommand.class,
       ModelJarsCli.VersionCommand.class,
@@ -100,6 +102,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final ModelJarRegistry registry;
   private final ArtifactInstaller installer;
   private final SystemCapabilities.Probe systemProbe;
+  private final ContributionService contributionService;
 
   @Spec private CommandSpec commandSpec;
 
@@ -144,16 +147,29 @@ public final class ModelJarsCli implements Callable<Integer> {
   private Terminal activeTerminal;
 
   ModelJarsCli(ModelJarRegistry registry, ArtifactInstaller installer) {
-    this(registry, installer, new SystemCapabilities()::detect);
+    this(
+        registry,
+        installer,
+        new SystemCapabilities()::detect,
+        new HuggingFaceContributionService());
   }
 
   ModelJarsCli(
       ModelJarRegistry registry,
       ArtifactInstaller installer,
       SystemCapabilities.Probe systemProbe) {
+    this(registry, installer, systemProbe, new HuggingFaceContributionService());
+  }
+
+  ModelJarsCli(
+      ModelJarRegistry registry,
+      ArtifactInstaller installer,
+      SystemCapabilities.Probe systemProbe,
+      ContributionService contributionService) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
+    this.contributionService = Objects.requireNonNull(contributionService, "contributionService");
   }
 
   /**
@@ -1320,6 +1336,127 @@ public final class ModelJarsCli implements Callable<Integer> {
         printDeclarations(descriptor, out, !markerOnly, selected);
       }
       return 0;
+    }
+  }
+
+  @Command(
+      name = "contribute",
+      aliases = {"submit-model"},
+      description = "Pin and prepare a model candidate submission from Hugging Face.",
+      mixinStandardHelpOptions = true)
+  static final class ContributeCommand implements Callable<Integer> {
+    @ParentCommand private ModelJarsCli parent;
+
+    @Parameters(index = "0", paramLabel = "OWNER/REPOSITORY", description = "Hugging Face repository or URL.")
+    private String source;
+
+    @Option(
+        names = "--revision",
+        defaultValue = "main",
+        paramLabel = "REVISION",
+        description = "Revision to resolve to an immutable commit (default: ${DEFAULT-VALUE}).")
+    private String revision;
+
+    @Option(
+        names = "--file",
+        paramLabel = "PATH",
+        description = "Select a repository file; repeat for an explicit artifact file set.")
+    private List<String> files = new ArrayList<>();
+
+    @Option(
+        names = "--license",
+        paramLabel = "SPDX",
+        description = "Override or supply the upstream SPDX license identifier.")
+    private String license;
+
+    @Option(
+        names = "--domain",
+        split = ",",
+        paramLabel = "DOMAIN",
+        description = "Intended catalog domain; repeat or comma-separate values.")
+    private List<String> domains = new ArrayList<>();
+
+    @Option(
+        names = "--capability",
+        split = ",",
+        paramLabel = "CAPABILITY",
+        description = "Override upstream capability hints; repeat or comma-separate values.")
+    private List<String> capabilities = new ArrayList<>();
+
+    @Option(
+        names = "--output-file",
+        paramLabel = "FILE",
+        description = "Write the candidate issue body to this new file.")
+    private Path outputFile;
+
+    @Override
+    public Integer call() throws Exception {
+      ContributionDraft draft =
+          parent.contributionService.prepare(
+              new ContributionRequest(
+                  source,
+                  revision,
+                  files,
+                  Optional.ofNullable(license),
+                  domains,
+                  capabilities));
+      Path destination =
+          Optional.ofNullable(outputFile)
+              .orElseGet(
+                  () ->
+                      Path.of(
+                          "modeljars-submission-"
+                              + draft.repository().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-")
+                              + ".md"))
+              .toAbsolutePath()
+              .normalize();
+      Path parentDirectory = destination.getParent();
+      if (parentDirectory != null && !Files.isDirectory(parentDirectory)) {
+        throw new IllegalArgumentException("Output directory does not exist: " + parentDirectory);
+      }
+      Files.writeString(
+          destination,
+          draft.markdown(),
+          StandardCharsets.UTF_8,
+          StandardOpenOption.CREATE_NEW,
+          StandardOpenOption.WRITE);
+
+      String submit =
+          "gh issue create --repo ModelJars/modeljars --title "
+              + shellQuote(draft.title())
+              + " --body-file "
+              + shellQuote(destination.toString());
+      if (parent.out().format() == CliOutput.Format.JSON) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("repository", draft.repository());
+        value.put("revision", draft.revision());
+        value.put("format", draft.format());
+        value.put("files", draft.files().size());
+        value.put("outputFile", destination.toString());
+        value.put("submitCommand", submit);
+        parent.out().json(value);
+      } else if (parent.out().format() == CliOutput.Format.PLAIN) {
+        parent.out().line(destination.toString());
+        parent.out().line(submit);
+      } else {
+        parent.out().success("Candidate submission prepared: " + draft.name());
+        Map<String, Object> facts = new LinkedHashMap<>();
+        facts.put("Repository", draft.repository());
+        facts.put("Revision", draft.revision());
+        facts.put("Format", draft.format());
+        facts.put("Files", draft.files().size());
+        facts.put("Issue body", destination);
+        parent.out().properties(facts);
+        parent.out().section("Submit to ModelJars");
+        parent.out().line(submit);
+        parent.out().hint(
+            "The issue starts candidate intake; Models compatibility and controlled qualification remain maintainer-reviewed gates.");
+      }
+      return 0;
+    }
+
+    private static String shellQuote(String value) {
+      return '\'' + value.replace("'", "'\\''") + '\'';
     }
   }
 

@@ -1879,6 +1879,7 @@ project(":modeljars-cli") {
         implementation(project(":modeljars-core"))
         implementation("info.picocli:picocli:4.7.7")
         implementation("info.picocli:picocli-shell-jline3:4.7.7")
+        implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
         annotationProcessor("info.picocli:picocli-codegen:4.7.7")
         runtimeOnly(project(":modeljars-catalog"))
     }

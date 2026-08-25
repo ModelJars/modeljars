@@ -5,6 +5,24 @@ ModelJars is intended to be a neutral, community-maintained catalog of JVM model
 Anyone may open a pull request. Only maintainers can merge catalog changes, and only GitHub Actions
 running from the protected `main` branch can publish artifacts.
 
+## Submit a Candidate
+
+Install the ModelJars CLI, then point it at a public Hugging Face repository:
+
+```bash
+modeljars contribute Qwen/Qwen2.5-0.5B-Instruct --domain general
+```
+
+The command resolves the requested revision to an immutable commit, selects a single GGUF or the
+complete standard Safetensors bundle, verifies byte sizes and SHA-256 digests, and writes a new
+candidate issue body. It then prints one copy-ready `gh issue create` command. Repositories with
+multiple GGUF variants require `--file`; `--license`, `--capability`, and `--domain` can correct or
+complete upstream metadata.
+
+This is the preferred contribution path. A candidate issue is an intake record, not a claim that
+Models can execute the artifact or that it passed qualification. Maintainers carry the accepted
+candidate through runtime tests, controlled measurements, the catalog pull request, and publishing.
+
 ## Catalog Changes
 
 Catalog pull requests must:
@@ -37,8 +55,9 @@ Qualification requires:
 - a successful `default-correctness` report for the exact model/backend pair,
   using library-default Models properties, the longest-common-prefix cache,
   every workload case, and no failed generation attempts;
-- identical GGUF bytes, prompts, controls, and host hardware for Models, Ollama, and llama.cpp
-  comparator reports in the separate tuned performance phase;
+- a format-compatible independent reference in the separate performance phase: Ollama for
+  compatible GGUF artifacts or the pinned Transformers reference for formats Ollama and llama.cpp
+  cannot ingest; llama.cpp remains supporting GGUF evidence;
 - raw report files, artifact and report SHA-256 values, environment identity, and a passing
   `production-rag-model-contribution-v5` verdict.
 

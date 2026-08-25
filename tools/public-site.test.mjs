@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,39 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 function read(relativePath) {
   return readFile(path.join(repositoryRoot, relativePath), "utf8");
 }
+
+test("keeps every local link and asset on every static page resolvable", async () => {
+  const pages = [
+    "site/index.html",
+    "site/model.html",
+    "site/benchmarks/index.html",
+    "site/apple/index.html",
+    "site/contribute/index.html",
+    "site/404.html",
+  ];
+
+  for (const page of pages) {
+    const html = await read(page);
+    for (const [, reference] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
+      if (!reference.startsWith("/") || reference.startsWith("//")) continue;
+      const pathname = reference.split(/[?#]/, 1)[0];
+      if (!pathname) continue;
+      const target =
+        pathname === "/"
+          ? "site/index.html"
+          : pathname.endsWith("/")
+            ? `site${pathname}index.html`
+            : `site${pathname}`;
+      await assert.doesNotReject(
+        Promise.any([
+          access(path.join(repositoryRoot, target)),
+          access(path.join(repositoryRoot, "media/icons", path.basename(pathname))),
+        ]),
+        `${page} references missing local resource ${pathname}`,
+      );
+    }
+  }
+});
 
 test("publishes only artifacts that passed production qualification", async () => {
   const [catalog, qualifications, build] = await Promise.all([
@@ -35,13 +68,14 @@ test("publishes only artifacts that passed production qualification", async () =
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {
-  const [index, model, benchmarks, apple, contribution, detailScript, readme, operations] =
+  const [index, model, benchmarks, apple, contribution, notFound, detailScript, readme, operations] =
     await Promise.all([
     read("site/index.html"),
     read("site/model.html"),
     read("site/benchmarks/index.html"),
     read("site/apple/index.html"),
     read("site/contribute/index.html"),
+    read("site/404.html"),
     read("site/assets/model-detail.js"),
     read("README.md"),
     read("docs/modeljars-operations-and-model-candidates.md"),
@@ -63,7 +97,11 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
       /https:\/\/integrallis\.github\.io\/models\/docs\/models\/current\/index\.html/,
     );
     assert.doesNotMatch(page, /docs\/models\/current\/getting-started\.html/);
+    assert.match(page, /src="\/assets\/install-drawer\.js" type="module"/);
   }
+
+  assert.match(notFound, /ModelJARs\.org/);
+  assert.match(notFound, /src="\/assets\/install-drawer\.js" type="module"/);
 
   assert.match(
     index,
@@ -78,6 +116,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(index, />Models<\/a> JVM inference library/);
   assert.doesNotMatch(index, />Models JVM inference library<\/a>/);
   assert.match(index, /Think of WebJars, but for AI models/);
+  assert.match(index, /GGUF and Safetensors/);
   assert.match(
     index,
     /<a class="primary-button" href="#modeljars-cli">Install the native CLI<\/a>/,
@@ -115,12 +154,14 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.doesNotMatch(index, /Not evaluated|Evaluated, not qualified/);
 
   assert.match(benchmarks, /qualified artifacts with controlled cross-engine studies/i);
+  assert.doesNotMatch(benchmarks, /same GGUF bytes/i);
   assert.match(benchmarks, /generated directly from\s+the qualification ledger/i);
   assert.match(benchmarks, /Guarded RAG uses/);
 
   assert.match(contribution, /Artifact verification/);
   assert.match(contribution, /Production qualification/);
-  assert.match(contribution, /run-controlled-rag-qualification\.sh/);
+  assert.match(contribution, /modeljars contribute/);
+  assert.match(contribution, /GGUF and Safetensors/i);
   assert.match(contribution, /not yet qualified/i);
   assert.match(contribution, /pull request/i);
   assert.match(contribution, /Retrieval recall/);

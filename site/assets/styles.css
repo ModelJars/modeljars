@@ -181,6 +181,150 @@ pre {
   mask: url("/assets/fontawesome-mug-hot.svg") center / contain no-repeat;
 }
 
+.install-cli-launcher {
+  position: fixed;
+  z-index: 32;
+  top: 78px;
+  right: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--accent);
+  border-right: 0;
+  border-radius: 7px 0 0 7px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 24px rgb(23 28 26 / 18%);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 760;
+  transition: opacity 150ms ease, transform 180ms ease;
+}
+
+.install-cli-launcher:hover,
+.install-cli-launcher:focus-visible {
+  background: var(--accent-strong);
+}
+
+.install-cli-launcher.drawer-open {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.install-cli-drawer {
+  position: fixed;
+  z-index: 31;
+  top: 74px;
+  right: 14px;
+  width: min(410px, calc(100vw - 28px));
+  max-height: calc(100vh - 90px);
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 18px 50px rgb(23 28 26 / 22%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(calc(100% + 28px));
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.install-cli-drawer.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.install-cli-heading,
+.install-cli-options section > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.install-cli-heading h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.install-cli-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.install-cli-drawer > p {
+  margin: 12px 0 18px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.install-cli-options {
+  display: grid;
+  gap: 12px;
+}
+
+.install-cli-options section {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.install-cli-options section > div {
+  min-height: 38px;
+  padding: 0 11px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-subtle);
+}
+
+.install-cli-options h3 {
+  margin: 0;
+  font-size: 0.76rem;
+}
+
+.install-cli-options button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.install-cli-options button.copied {
+  color: var(--text);
+}
+
+.install-cli-options pre {
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-size: 0.7rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.install-cli-more {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .catalog-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1179,6 +1323,32 @@ select {
   color: var(--muted);
 }
 
+.artifact-manifest {
+  min-width: 760px;
+  margin-top: 18px;
+}
+
+.artifact-manifest th,
+.artifact-manifest td {
+  text-align: left;
+}
+
+.artifact-manifest th > code,
+.artifact-manifest th > small {
+  display: block;
+}
+
+.artifact-manifest th > small {
+  margin-top: 4px;
+  color: var(--faint);
+  font-size: 0.64rem;
+  font-weight: 550;
+}
+
+.artifact-manifest td:nth-child(2) {
+  text-align: right;
+}
+
 .related-list {
   margin-top: 18px;
   border-top: 1px solid var(--line);
@@ -1950,6 +2120,15 @@ select {
 @media (max-width: 560px) {
   .header-inner {
     min-height: 58px;
+  }
+
+  .install-cli-launcher {
+    top: 68px;
+  }
+
+  .install-cli-drawer {
+    top: 66px;
+    max-height: calc(100vh - 80px);
   }
 
   .nav {

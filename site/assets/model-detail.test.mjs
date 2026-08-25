@@ -2,12 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  artifactDownloadBytes,
+  artifactManifest,
   embeddingJavaSnippet,
   gradleSnippet,
   javaSnippet,
   mavenSnippet,
   modelIdFromPath,
   qualificationSummary,
+  resourceMemoryNote,
 } from "./model-detail.js";
 
 const coordinate = "org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1";
@@ -55,6 +58,33 @@ test("renders qualified embedding loading without paths or pooling guesses", () 
   assert.match(snippet, /ModelJars\.openEmbedding\(MODEL\)/);
   assert.match(snippet, /embeddings\.embed/);
   assert.doesNotMatch(snippet, /Path|Pooling|PureJavaBackend/);
+});
+
+test("describes the complete artifact manifest rather than only the primary weight", () => {
+  const model = {
+    downloadUri: "https://huggingface.co/acme/model/resolve/abc/model.safetensors",
+    sizeBytes: 988_097_824,
+    sha256: "f".repeat(64),
+    files: [
+      { path: "config.json", role: "model-configuration", sizeBytes: 659, sha256: "a".repeat(64) },
+      { path: "model.safetensors", role: "model-weights", sizeBytes: 988_097_824, sha256: "f".repeat(64) },
+      { path: "tokenizer.json", role: "tokenizer", sizeBytes: 7_031_645, sha256: "b".repeat(64) },
+    ],
+  };
+
+  assert.equal(artifactManifest(model).length, 3);
+  assert.equal(artifactDownloadBytes(model), 995_130_128);
+  assert.deepEqual(artifactManifest(model).map(({ path }) => path), [
+    "config.json",
+    "model.safetensors",
+    "tokenizer.json",
+  ]);
+});
+
+test("does not claim embedding-only models allocate a generation KV cache", () => {
+  assert.match(resourceMemoryNote({ capabilities: ["text-generation"] }), /KV cache/);
+  assert.doesNotMatch(resourceMemoryNote({ capabilities: ["semantic-search"] }), /KV cache/);
+  assert.match(resourceMemoryNote({ capabilities: ["semantic-search"] }), /embedding working buffers/i);
 });
 
 test("summarizes exact RAG qualification evidence without hiding fallbacks", () => {

@@ -18,6 +18,7 @@
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <script src="/assets/static-page.js" type="module"></script>
+    <script src="/assets/install-drawer.js" type="module"></script>
   </head>
   <body>
     <header class="site-header">
@@ -56,6 +57,32 @@
         </p>
       </header>
 
+      <section class="documentation-section" aria-labelledby="candidate-title">
+        <h2 id="candidate-title">Start with one CLI command</h2>
+        <p>
+          Give the CLI a public Hugging Face repository. It resolves the requested branch or tag to
+          an immutable commit, selects the required GGUF or Safetensors files, verifies their byte
+          sizes and SHA-256 digests, and prepares the candidate report.
+        </p>
+        <div class="code-block">
+          <div><span>Prepare a candidate</span></div>
+          <pre><code>modeljars contribute Qwen/Qwen2.5-0.5B-Instruct --domain general</code></pre>
+        </div>
+        <p>
+          The CLI writes a new Markdown file and prints one copy-ready
+          <code>gh issue create</code> command to submit it. It never overwrites an existing report.
+          If a repository contains several GGUF variants, choose one with
+          <code>--file model-name.gguf</code>. Use <code>--license</code>,
+          <code>--capability</code>, or <code>--domain</code> only when upstream metadata needs an
+          explicit correction or addition.
+        </p>
+        <p class="callout">
+          This creates a verified catalog candidate, not a compatibility or qualification claim.
+          Maintainers own the runtime tests, controlled measurements, metadata pull request, and
+          publication steps that follow.
+        </p>
+      </section>
+
       <section class="documentation-section" aria-labelledby="status-title">
         <h2 id="status-title">Three distinct states</h2>
         <dl class="definition-list">
@@ -69,8 +96,9 @@
           <div>
             <dt>Artifact verification</dt>
             <dd>
-              CI downloads those exact bytes and tests the GGUF parser, tokenizer, tensor layout,
-              generation path, and deterministic output references needed by the model.
+              CI downloads those exact bytes and tests the applicable format reader, tokenizer,
+              tensor manifest, execution graph, and deterministic output references needed by the
+              model. GGUF and Safetensors are both supported catalog formats.
             </dd>
           </div>
           <div>
@@ -88,12 +116,13 @@
       </section>
 
       <section class="documentation-section" aria-labelledby="workflow-title">
-        <h2 id="workflow-title">Qualification workflow</h2>
+        <h2 id="workflow-title">What happens after submission</h2>
         <ol class="workflow-list">
           <li>
-            <strong>Pin one immutable artifact.</strong>
-            Record the upstream repository, commit, exact download URI, license, size, SHA-256,
-            architecture, quantization, capabilities, and intended workload.
+            <strong>The CLI pins one immutable artifact.</strong>
+            The candidate report records the upstream repository and commit, every required file,
+            its size and SHA-256, the reported license and architecture, capabilities, and intended
+            domain.
           </li>
           <li>
             <strong>Prove Models compatibility.</strong>
@@ -102,10 +131,9 @@
             tokenizer, graph, or kernel support belongs there and must be covered test-first.
           </li>
           <li>
-            <strong>Run on a controlled Linux host.</strong>
-            Use Java 25, a clean Models checkout, no competing inference process, and enough memory
-            for the model. The harness records the CPU, memory, JVM, Models revision, artifact
-            digest, prompt controls, and every request.
+            <strong>Maintainers run the applicable controlled workload.</strong>
+            The generation and embedding harnesses record the host, JVM, Models revision, complete
+            artifact identity, prompt or probe controls, and every measured request.
           </li>
           <li>
             <strong>Pass with library defaults.</strong>
@@ -114,28 +142,29 @@
             correctness must be 100%. A tuned result cannot override this gate.
           </li>
           <li>
-            <strong>Compare identical bytes separately.</strong>
-            The harness measures Models and same-host Ollama and llama.cpp comparators with the same
-            GGUF, prompts, context, sampling controls, thread count, warmups, and iterations.
-            Ollama and llama.cpp are qualification comparators, not ModelJars runtime dependencies.
+            <strong>Use a compatible independent reference.</strong>
+            GGUF studies can compare Models, Ollama, and llama.cpp against identical artifact bytes
+            and controls. Safetensors studies use the pinned Transformers reference when Ollama and
+            llama.cpp cannot ingest that format. Comparators are qualification tools, not ModelJars
+            runtime dependencies.
           </li>
           <li>
-            <strong>Submit reproducible evidence.</strong>
-            Commit the raw reports to the Models repository, then update ModelJars catalog and
-            qualification metadata, including <code>defaultConfigurationSmoke</code>, in a pull
-            request. CI fetches the default report from the pinned Models commit, verifies its
-            digest and controls, and rebuilds the marker and public catalog.
+            <strong>Publish reproducible evidence.</strong>
+            Maintainers commit the raw reports to Models, then update the ModelJars catalog and
+            qualification metadata in a reviewed pull request. CI fetches the pinned reports,
+            verifies their digests and controls, and rebuilds the marker and public catalog.
           </li>
         </ol>
       </section>
 
       <section class="documentation-section" aria-labelledby="command-title">
-        <h2 id="command-title">Run the controlled harness</h2>
+        <h2 id="command-title">How maintainers reproduce qualification</h2>
         <p>
-          The current harness lives in the Models repository. It fails closed when prerequisites,
-          artifact identity, comparator controls, or policy gates do not match.
+          The Models repository owns the qualification tools. The all-in-one controlled driver
+          below is the GGUF path; it fails closed when host prerequisites, artifact identity,
+          comparator controls, or policy gates do not match.
         </p>
-        <h3>Host prerequisites</h3>
+        <h3>GGUF host prerequisites</h3>
         <ul class="checklist">
           <li>Linux on a dedicated or otherwise idle host with enough RAM for all three engines.</li>
           <li>Java 25, a clean Models checkout, and the model artifact on a local filesystem.</li>
@@ -173,6 +202,13 @@ scripts/run-controlled-rag-qualification.sh \
             </tbody>
           </table>
         </div>
+        <p>
+          For Safetensors, maintainers run <code>models-rag-bench</code> against the pinned Hugging
+          Face snapshot directory, then run the pinned deterministic Transformers reference against
+          the same weights and controls. The
+          <a href="https://github.com/integrallis/models/tree/main/models-rag-bench">Models RAG benchmark guide</a>
+          contains the exact commands for both runs.
+        </p>
         <p class="callout">
           A contributor's local run is a preflight result, not publication authority. A maintainer
           must reproduce or review the run on the controlled host, pin the Models commit, and
@@ -208,11 +244,13 @@ scripts/run-controlled-rag-qualification.sh \
         </div>
         <p>
           Qualification requires the absolute quality and usable-latency gates plus a qualifying
-          same-host Ollama comparison. The llama.cpp comparison is retained as an additional
-          performance diagnostic. A <code>PRODUCTION_READY</code> result uses the stricter latency
-          ceilings of 100 ms retrieval, 1 second TTFT, 100 ms per output token, and 5 seconds end to
-          end. These are ModelJars acceptance SLOs for the versioned workload, not guarantees for
-          every application, prompt length, concurrency level, or machine.
+          authoritative-engine comparison: Ollama for compatible GGUF artifacts or the pinned
+          Transformers reference for formats those native engines cannot ingest. llama.cpp is
+          retained as an additional GGUF performance diagnostic. A <code>PRODUCTION_READY</code>
+          result uses the stricter latency ceilings of 100 ms retrieval, 1 second TTFT, 100 ms per
+          output token, and 5 seconds end to end. These are ModelJars acceptance SLOs for the
+          versioned workload, not guarantees for every application, prompt length, concurrency
+          level, or machine.
         </p>
       </section>
 
@@ -249,11 +287,12 @@ scripts/run-controlled-rag-qualification.sh \
       </section>
 
       <section class="documentation-section" aria-labelledby="submit-title">
-        <h2 id="submit-title">Pull request checklist</h2>
+        <h2 id="submit-title">Publication checklist</h2>
         <p>
-          Runtime support and evidence are reviewed in
+          Contributors can track the candidate issue created by the CLI. Runtime support and
+          evidence are reviewed in
           <a href="https://github.com/integrallis/models">integrallis/models</a> first. The
-          ModelJars pull request then adds the marker descriptor and qualification record that
+          maintainer pull request then adds the marker descriptor and qualification record that
           reference the accepted Models commit and report.
         </p>
         <ul class="checklist">
@@ -266,9 +305,9 @@ scripts/run-controlled-rag-qualification.sh \
           <li>A clean local run of <code>npm test</code> and <code>./gradlew test verifyCatalog</code>.</li>
         </ul>
         <p>
-          Start with the repository's
+          The repository's
           <a href="https://github.com/ModelJars/modeljars/blob/main/CONTRIBUTING.md">contribution rules</a>
-          and open a pull request. Only maintainers can merge, and only protected GitHub Actions
+          remain authoritative. Only maintainers can merge, and only protected GitHub Actions
           workflows can publish accepted marker artifacts.
         </p>
       </section>

@@ -424,6 +424,9 @@ class ModelJarsCliTest {
     for (String command : List.of("info", "system", "env")) {
       assertTrue(help.output().contains(command), command + " missing from help output");
     }
+    for (String command : List.of("contribute", "submit-model")) {
+      assertTrue(help.output().contains(command), command + " missing from help output");
+    }
     assertFalse(help.output().contains("generate-completion"));
     assertEquals(0, snippet.status());
     assertTrue(snippet.output().contains("<artifactId>example.model.q4_0</artifactId>"));
@@ -480,6 +483,55 @@ class ModelJarsCliTest {
 
     assertEquals(2, result.status());
     assertTrue(result.error().contains("matches multiple variants"));
+  }
+
+  @Test
+  void preparesAVerifiedContributionFileAndPrintsTheSingleSubmitCommand() throws IOException {
+    ContributionDraft draft =
+        new ContributionDraft(
+            "Qwen/Demo",
+            URI.create("https://huggingface.co/Qwen/Demo"),
+            "a".repeat(40),
+            "Demo Q4_0",
+            "gguf",
+            Optional.of("qwen2"),
+            Optional.of("Apache-2.0"),
+            List.of("text-generation", "chat"),
+            List.of("general"),
+            List.of(new ContributionFile("demo-q4_0.gguf", "model-weights", "b".repeat(64), 42)));
+    AtomicReference<ContributionRequest> requested = new AtomicReference<>();
+    ContributionService contributions =
+        request -> {
+          requested.set(request);
+          return draft;
+        };
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(descriptor())),
+            (selected, destination, progress) -> destination,
+            ModelJarsCliTest::snapshot,
+            contributions);
+    Path output = temporaryDirectory.resolve("candidate.md");
+
+    Result result =
+        run(
+            cli,
+            "contribute",
+            "Qwen/Demo",
+            "--file",
+            "demo-q4_0.gguf",
+            "--domain",
+            "coding",
+            "--output-file",
+            output.toString());
+
+    assertEquals(0, result.status());
+    assertEquals("Qwen/Demo", requested.get().source());
+    assertEquals(List.of("demo-q4_0.gguf"), requested.get().files());
+    assertEquals(List.of("coding"), requested.get().domains());
+    assertTrue(Files.readString(output).contains("ModelJars candidate submission"));
+    assertTrue(result.output().contains("gh issue create --repo ModelJars/modeljars"));
+    assertTrue(result.output().contains("--body-file '" + output.toAbsolutePath() + "'"));
   }
 
   private static ModelJarsCli cli(ModelJarDescriptor... descriptors) {

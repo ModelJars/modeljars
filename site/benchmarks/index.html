@@ -18,6 +18,7 @@
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <script src="/assets/benchmarks.js" type="module"></script>
+    <script src="/assets/install-drawer.js" type="module"></script>
   </head>
   <body>
     <header class="site-header">
@@ -74,9 +75,9 @@
           </div>
           <p>
             The table contains the qualified artifacts with controlled cross-engine studies. Each
-            row uses the same GGUF bytes and generation controls across the selected Models
-            backend, llama.cpp, and Ollama; these engines are comparators, not ModelJars runtime
-            dependencies.
+            row uses identical artifact files, prompts, and generation controls for every engine
+            compatible with that format. llama.cpp and Ollama are comparators where applicable,
+            not ModelJars runtime dependencies.
           </p>
         </div>
 

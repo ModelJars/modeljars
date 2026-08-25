@@ -18,6 +18,7 @@
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <script src="/assets/app.js" type="module"></script>
+    <script src="/assets/install-drawer.js" type="module"></script>
   </head>
   <body>
     <header class="site-header">
@@ -57,8 +58,8 @@
               ModelJARs are versioned JAR files that make AI models available to the
               <a href="https://integrallis.github.io/models/">Models</a> JVM inference library.
               Think of WebJars, but for AI models: standard dependency coordinates,
-              immutable metadata, and measured runtime support for exact GGUF files and
-              Safetensors checkpoint bundles.
+              immutable metadata, and measured runtime support across GGUF and Safetensors
+              model formats.
             </p>
             <div class="catalog-actions" aria-label="Get started">
               <a class="primary-button" href="#modeljars-cli">Install the native CLI</a>

@@ -143,22 +143,70 @@ function publisher(model) {
     .split("/")[0];
 }
 
-function dimensionRows(model, memory) {
+export function artifactManifest(model) {
+  if (Array.isArray(model.files) && model.files.length > 0) {
+    return model.files.map((file) => ({ ...file }));
+  }
+  let path = "model artifact";
+  try {
+    const candidate = new URL(model.downloadUri).pathname.split("/").pop();
+    if (candidate) path = decodeURIComponent(candidate);
+  } catch {
+    // The integrity record remains useful even when an older descriptor lacks a parseable URL.
+  }
+  return [{ path, role: "model-weights", sizeBytes: model.sizeBytes, sha256: model.sha256 }];
+}
+
+export function artifactDownloadBytes(model) {
+  return artifactManifest(model).reduce((total, file) => total + Number(file.sizeBytes || 0), 0);
+}
+
+function isGenerationModel(model) {
+  return (model.capabilities || []).some((capability) =>
+    ["chat", "generation", "text-generation"].includes(capability),
+  );
+}
+
+export function resourceMemoryNote(model) {
+  return isGenerationModel(model)
+    ? "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional."
+    : "Memory baseline covers the complete artifact bytes. Embedding working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
+}
+
+function dimensionRows(model, memory, downloadBytes, generationModel) {
   const dimensions = model.dimensions || {};
   const rows = [
     ["Parameters", formatParameters(dimensions.parameterCount)],
-    ["Download", formatBytes(model.sizeBytes)],
+    ["Download", formatBytes(downloadBytes)],
     ["Context", dimensions.contextLength?.toLocaleString("en-US") + " tokens"],
     ["Embedding width", dimensions.embeddingLength?.toLocaleString("en-US")],
     ["Layers", dimensions.blockCount?.toLocaleString("en-US")],
     ["Attention heads", dimensions.attentionHeadCount?.toLocaleString("en-US")],
     ["KV heads", dimensions.keyValueHeadCount?.toLocaleString("en-US")],
-    ["Memory baseline", memory ? `>= ${formatBytes(memory.minimumBytes)} at 4,096 tokens` : null],
+    [
+      "Memory baseline",
+      memory
+        ? `>= ${formatBytes(memory.minimumBytes)}${generationModel ? " at 4,096 tokens" : ""}`
+        : null,
+    ],
   ].filter(([, value]) => value && !String(value).startsWith("undefined"));
 
   return rows
     .map(
       ([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd></div>`,
+    )
+    .join("");
+}
+
+function renderArtifactManifest(model) {
+  return artifactManifest(model)
+    .map(
+      (file) => `
+        <tr>
+          <th scope="row"><code>${escapeHtml(file.path)}</code><small>${escapeHtml(file.role)}</small></th>
+          <td>${escapeHtml(formatBytes(file.sizeBytes))}</td>
+          <td><code>${escapeHtml(file.sha256)}</code></td>
+        </tr>`,
     )
     .join("");
 }
@@ -293,7 +341,11 @@ function renderModel(model, catalog) {
   const target = document.querySelector("#model-detail");
   const profile = verificationProfile(model);
   const planningContext = Math.min(4_096, model.dimensions?.contextLength || 4_096);
-  const memory = estimateMemory(model, planningContext, 2);
+  const generationModel = isGenerationModel(model);
+  const downloadBytes = artifactDownloadBytes(model);
+  const memory = generationModel
+    ? estimateMemory(model, planningContext, 2)
+    : { minimumBytes: downloadBytes };
   const tags = [
     ...(model.domains || []),
     ...(model.capabilities || []),
@@ -377,10 +429,9 @@ function renderModel(model, catalog) {
         <section class="detail-section" aria-labelledby="contents-title">
           <p class="eyebrow">Descriptor</p>
           <h2 id="contents-title">What is inside</h2>
-          <dl class="dimension-grid">${dimensionRows(model, memory)}</dl>
+          <dl class="dimension-grid">${dimensionRows(model, memory, downloadBytes, generationModel)}</dl>
           <p class="resource-note">
-            Memory baseline includes mapped weights and a full-precision KV cache. Backend
-            workspace, repacking, JVM, allocator, and operating-system overhead are additional.
+            ${escapeHtml(resourceMemoryNote(model))}
           </p>
         </section>
 
@@ -390,8 +441,13 @@ function renderModel(model, catalog) {
           <dl class="integrity-list">
             <div><dt>Source</dt><dd><a href="${safeExternalUrl(model.sourceUri)}">${escapeHtml(model.sourceId)}</a></dd></div>
             <div><dt>Revision</dt><dd><code>${escapeHtml(model.revision)}</code></dd></div>
-            <div><dt>SHA-256</dt><dd><code>${escapeHtml(model.sha256)}</code></dd></div>
           </dl>
+          <div class="table-scroll" tabindex="0" aria-label="Complete artifact manifest">
+            <table class="benchmark-table artifact-manifest">
+              <thead><tr><th scope="col">File</th><th scope="col">Size</th><th scope="col">SHA-256</th></tr></thead>
+              <tbody>${renderArtifactManifest(model)}</tbody>
+            </table>
+          </div>
         </section>
 
         ${renderRelated(model, catalog)}
@@ -406,7 +462,7 @@ function renderModel(model, catalog) {
           <h2>Model facts</h2>
           <dl class="sidebar-facts">
             <div><dt>Parameters</dt><dd>${escapeHtml(formatParameters(model.dimensions?.parameterCount))}</dd></div>
-            <div><dt>Download</dt><dd>${escapeHtml(formatBytes(model.sizeBytes))}</dd></div>
+            <div><dt>Download</dt><dd>${escapeHtml(formatBytes(downloadBytes))}</dd></div>
             <div><dt>Size class</dt><dd>${escapeHtml(sizeTier(model).replace("-", " "))}</dd></div>
             <div><dt>Architecture</dt><dd>${escapeHtml(model.architecture)}</dd></div>
             <div><dt>Version</dt><dd>${escapeHtml(model.modelVersion)}</dd></div>

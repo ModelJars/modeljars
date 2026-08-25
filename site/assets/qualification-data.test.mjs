@@ -65,7 +65,7 @@ const qualification = {
 const document = {
   schemaVersion: 1,
   generatedAt: "2026-07-24T06:00:00Z",
-  policyVersion: "production-rag-model-contribution-v4",
+  policyVersion: "production-rag-model-contribution-v5",
   modelsRevision: revision,
   targetQualifiedModels: 25,
   qualifiedModels: 1,

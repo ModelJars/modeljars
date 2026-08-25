@@ -77,7 +77,7 @@ test("launch qualification requires correct model-generated answers", async () =
     build,
     /require\(entry\.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE\)/,
   );
-  assert.equal(qualifications.policyVersion, "production-rag-model-contribution-v4");
+  assert.equal(qualifications.policyVersion, "production-rag-model-contribution-v5");
   assert.ok(
     qualifications.entries
       .filter((entry) => entry.qualified)

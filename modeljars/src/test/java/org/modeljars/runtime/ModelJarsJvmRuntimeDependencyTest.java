@@ -1,6 +1,7 @@
 package org.modeljars.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,6 +59,22 @@ class ModelJarsJvmRuntimeDependencyTest {
             .getClassLoader()
             .getResource(
                 "META-INF/modeljars/models/wordtour_glove_6b_300d_optimal/wordtour_opt.txt"));
+  }
+
+  @Test
+  void runtimeCarriesCurrentRejectionsThatOverrideStaleMarkerEvidence() {
+    ModelRagQualification rejected =
+        ModelRagQualificationRegistry.fromClasspath().qualifications().stream()
+            .filter(
+                qualification ->
+                    qualification
+                        .modelId()
+                        .equals("h2oai_h2o_danube3_500m_chat_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertFalse(rejected.productionUsable());
+    assertEquals("FAILED_MODEL_CONTRIBUTION_GATE", rejected.verdict());
   }
 
   @Test

@@ -252,8 +252,8 @@ Recommended fields:
 | `tokenizer` | Tokenizer family, for example `gpt2-bpe`, `sentencepiece`, `tekken`, `bigcode`, `gemma`. |
 | `quantization` | Exact tensor storage family and whether the runtime implements it. |
 | `localPath` | Default local cache path, never a required hard-coded path. |
-| `files` | File list for split GGUF or sidecar artifacts. |
-| `sha256` | Integrity check for each file when available. |
+| `files` | Ordered manifest for every required file in a split GGUF, Safetensors checkpoint, or sidecar bundle. |
+| `sha256` | Mandatory integrity check for each installable file. |
 | `license` | License identifier and whether the model is gated or has use restrictions. |
 | `capabilities` | `chat`, `text-generation`, `code-completion`, `fim`, `text-embedding`, `semantic-search`, `multimodal`, etc. |
 | `backends` | Compatibility flags for `pure-java`, `llama.cpp`, `ollama`, `apple-foundation`, `onnx`, `mlx`. |

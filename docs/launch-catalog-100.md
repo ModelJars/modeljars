@@ -42,10 +42,12 @@ List<ModelJarDescriptor> models =
     ModelJarRegistry.fromClasspath().descriptors();
 ```
 
-The Java 25 `org.modeljars:modeljars` JVM Runtime brings the registry API, Models library, and both
-execution backends. It does not bring the aggregate catalog. Applications add selected marker JARs
-in compile scope; each marker is both the model-version declaration and the source of the generated
-reference used by `ModelJars.open`.
+The Java 25 `org.modeljars:modeljars` JVM Runtime brings the registry API, Models library, both
+execution backends, and the current qualification decisions. Keeping those decisions in the runtime
+allows corrected evidence or a revocation to supersede metadata in an older marker. It does not
+bring the aggregate model catalog. Applications add selected marker JARs in compile scope; each
+marker is both the model-version declaration and the source of the generated reference used by
+`ModelJars.open`.
 
 ## Metadata contract
 

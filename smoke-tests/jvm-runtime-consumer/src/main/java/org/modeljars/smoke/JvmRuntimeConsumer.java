@@ -20,13 +20,9 @@ public final class JvmRuntimeConsumer {
 
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
-    if (descriptors.size() != 1 || qualifications.qualifiedModels() != 1) {
+    if (descriptors.size() != 1) {
       throw new IllegalStateException(
-          "The selected marker must contribute exactly one qualified artifact: "
-              + descriptors.size()
-              + " descriptors, "
-              + qualifications.qualifiedModels()
-              + " qualified artifacts");
+          "The selected marker must contribute exactly one descriptor: " + descriptors.size());
     }
     if (!"qwen3_0_6b_q4_0"
         .equals(ModelJarRegistry.fromClasspath().resolve(MODEL).orElseThrow().alias())) {
@@ -36,7 +32,8 @@ public final class JvmRuntimeConsumer {
     var descriptorIds =
         descriptors.stream().map(descriptor -> descriptor.alias()).collect(Collectors.toSet());
     var qualifiedIds =
-        qualifications.qualified().stream()
+        descriptors.stream()
+            .flatMap(descriptor -> qualifications.qualificationsFor(descriptor).stream())
             .map(ModelRagQualification::modelId)
             .collect(Collectors.toSet());
     if (!descriptorIds.equals(qualifiedIds)) {

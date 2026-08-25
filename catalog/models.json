@@ -2097,6 +2097,81 @@
       }
     },
     {
+      "id": "qwen_qwen2_5_0_5b_instruct_bf16",
+      "name": "Qwen2.5-0.5B-Instruct BF16",
+      "description": "Pinned Hugging Face Safetensors snapshot for Qwen2.5-0.5B-Instruct, including the exact configuration and tokenizer files required by the Models runtime.",
+      "sourceId": "hf://Qwen/Qwen2.5-0.5B-Instruct",
+      "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+      "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/model.safetensors",
+      "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct.bf16:2.5.0-bf16.1",
+      "modelVersion": "2.5.0",
+      "variant": "bf16",
+      "format": "safetensors",
+      "architecture": "qwen2",
+      "quantization": "BF16",
+      "localPath": "${user.home}/.modeljars/models/Qwen2.5-0.5B-Instruct/model.safetensors",
+      "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "sizeBytes": 988097824,
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/7ae557604adf67be50417f59c2c2f167def9a775/LICENSE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "huggingface-tokenizer",
+        "chat-template",
+        "bfloat16"
+      ],
+      "files": [
+        {
+          "path": "config.json",
+          "role": "model-configuration",
+          "sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
+          "sizeBytes": 659
+        },
+        {
+          "path": "model.safetensors",
+          "role": "model-weights",
+          "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+          "sizeBytes": 988097824
+        },
+        {
+          "path": "tokenizer.json",
+          "role": "tokenizer",
+          "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+          "sizeBytes": 7031645
+        },
+        {
+          "path": "tokenizer_config.json",
+          "role": "tokenizer-configuration",
+          "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+          "sizeBytes": 7305
+        }
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": false
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 630167424,
+        "contextLength": 32768,
+        "embeddingLength": 896,
+        "blockCount": 24,
+        "attentionHeadCount": 14,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 4864,
+        "attentionBlockCount": 24
+      }
+    },
+    {
       "id": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
       "name": "Qwen2.5-0.5B-Instruct GGUF Q4_K_M",
       "description": "Pinned local-inference GGUF artifact for Qwen2.5-0.5B-Instruct, verified by immutable revision, byte size, and SHA-256.",

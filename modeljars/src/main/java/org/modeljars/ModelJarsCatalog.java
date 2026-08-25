@@ -127,7 +127,8 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
   public List<DiscoveredModel> discover() {
     List<DiscoveredModel> discovered = new ArrayList<>();
     for (ModelJarDescriptor descriptor : models.descriptors()) {
-      if (!"gguf".equals(descriptor.format())) {
+      if (!"gguf".equals(descriptor.format())
+          && !("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty())) {
         continue;
       }
       if (!descriptor.capabilities().contains("text-generation")) {
@@ -164,7 +165,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     }
     try {
       Path artifact = ModelJarCache.artifactPath(descriptor);
-      return Files.isRegularFile(artifact);
+      return ModelJarCache.isComplete(descriptor, artifact);
     } catch (RuntimeException e) {
       // A descriptor without a digest cannot be content-addressed, so it is not in the cache.
       return false;

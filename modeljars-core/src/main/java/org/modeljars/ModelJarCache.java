@@ -1,5 +1,6 @@
 package org.modeljars;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -51,6 +52,24 @@ public final class ModelJarCache {
    * @return content-addressed artifact path
    */
   public static Path artifactPath(ModelJarDescriptor descriptor, Path cacheDirectory) {
+    Path bundle = bundlePath(descriptor, cacheDirectory);
+    String artifactName =
+        descriptor.primaryFile().map(ModelArtifactFile::path).orElse("model." + descriptor.format());
+    Path artifact = bundle.resolve(artifactName).normalize();
+    if (!artifact.startsWith(bundle)) {
+      throw new ModelJarException("Model artifact path escapes its cache bundle: " + artifactName);
+    }
+    return artifact;
+  }
+
+  /**
+   * Returns the content-addressed directory that owns every file in a model artifact.
+   *
+   * @param descriptor immutable model metadata
+   * @param cacheDirectory cache root
+   * @return normalized model bundle directory
+   */
+  public static Path bundlePath(ModelJarDescriptor descriptor, Path cacheDirectory) {
     Objects.requireNonNull(descriptor, "descriptor");
     String sha256 =
         descriptor
@@ -66,8 +85,48 @@ public final class ModelJarCache {
     return normalize(cacheDirectory)
         .resolve("sha256")
         .resolve(sha256.substring(0, 2))
-        .resolve(sha256)
-        .resolve("model." + format);
+        .resolve(sha256);
+  }
+
+  /**
+   * Returns whether every file required by a descriptor is present without following symbolic
+   * links.
+   *
+   * @param descriptor immutable model metadata
+   * @param artifact primary artifact path returned by {@link #artifactPath(ModelJarDescriptor,
+   *     Path)}
+   * @return whether the complete model is installed
+   */
+  public static boolean isComplete(ModelJarDescriptor descriptor, Path artifact) {
+    Objects.requireNonNull(descriptor, "descriptor");
+    Path normalizedArtifact =
+        Objects.requireNonNull(artifact, "artifact").toAbsolutePath().normalize();
+    if (descriptor.files().isEmpty()) {
+      return Files.isRegularFile(normalizedArtifact, java.nio.file.LinkOption.NOFOLLOW_LINKS);
+    }
+    Path bundle = fileRoot(descriptor, normalizedArtifact);
+    if (bundle == null
+        || !Files.isDirectory(bundle, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+      return false;
+    }
+    return descriptor.files().stream()
+        .map(file -> bundle.resolve(file.path()).normalize())
+        .allMatch(
+            path ->
+                path.startsWith(bundle)
+                    && Files.isRegularFile(path, java.nio.file.LinkOption.NOFOLLOW_LINKS));
+  }
+
+  private static Path fileRoot(ModelJarDescriptor descriptor, Path artifact) {
+    Path root = artifact;
+    int pathParts = Path.of(descriptor.primaryFile().orElseThrow().path()).getNameCount();
+    for (int part = 0; part < pathParts; part++) {
+      root = root.getParent();
+      if (root == null) {
+        return null;
+      }
+    }
+    return root;
   }
 
   private static Path normalize(Path path) {

@@ -146,6 +146,9 @@ public final class ModelJarInstaller {
   public Path install(ModelJarDescriptor descriptor, Path destination) {
     Objects.requireNonNull(descriptor, "descriptor");
     Objects.requireNonNull(destination, "destination");
+    if (!descriptor.files().isEmpty()) {
+      return installFiles(descriptor, destination);
+    }
 
     if (Files.exists(destination)) {
       verify(destination, descriptor, ModelInstallProgress.Source.CACHE);
@@ -218,6 +221,9 @@ public final class ModelJarInstaller {
   public Path verifyCached(ModelJarDescriptor descriptor, Path artifact) {
     Objects.requireNonNull(descriptor, "descriptor");
     Objects.requireNonNull(artifact, "artifact");
+    if (!descriptor.files().isEmpty()) {
+      return verifyCachedFiles(descriptor, artifact);
+    }
     if (!Files.isRegularFile(artifact)) {
       throw new ModelJarException(
           "Model artifact is not available in the offline cache: " + artifact);
@@ -239,6 +245,24 @@ public final class ModelJarInstaller {
    * @param descriptor immutable model marker metadata
    */
   public void verify(Path artifact, ModelJarDescriptor descriptor) {
+    if (!descriptor.files().isEmpty()) {
+      Path installation = requireFileRoot(descriptor, artifact);
+      for (ModelArtifactFile file : descriptor.files()) {
+        verifyFile(
+            installation.resolve(file.path()),
+            descriptor.alias(),
+            file.sizeBytes(),
+            file.sha256(),
+            ModelInstallProgress.Source.EXPLICIT);
+      }
+      progressReporter.accept(
+          new ModelInstallProgress.Completed(
+              descriptor.alias(),
+              installation,
+              totalSizeBytes(descriptor),
+              ModelInstallProgress.Source.EXPLICIT));
+      return;
+    }
     verify(artifact, descriptor, ModelInstallProgress.Source.EXPLICIT);
     progressReporter.accept(
         new ModelInstallProgress.Completed(
@@ -263,6 +287,16 @@ public final class ModelJarInstaller {
             .orElseThrow(
                 () -> new ModelJarException("Marker has no SHA-256: " + descriptor.alias()));
 
+    verifyFile(
+        artifact, descriptor.alias(), expectedSize, expectedSha256, source);
+  }
+
+  private void verifyFile(
+      Path artifact,
+      String alias,
+      long expectedSize,
+      String expectedSha256,
+      ModelInstallProgress.Source source) {
     try {
       long actualSize = Files.size(artifact);
       if (actualSize != expectedSize) {
@@ -276,8 +310,8 @@ public final class ModelJarInstaller {
       }
       progressReporter.accept(
           new ModelInstallProgress.VerificationStarted(
-              descriptor.alias(), artifact.toAbsolutePath().normalize(), expectedSize, source));
-      String actualSha256 = sha256(artifact, descriptor.alias(), expectedSize);
+              alias, artifact.toAbsolutePath().normalize(), expectedSize, source));
+      String actualSha256 = sha256(artifact, alias, expectedSize);
       if (!actualSha256.equals(expectedSha256)) {
         throw new ModelJarException(
             "Model artifact SHA-256 mismatch for "
@@ -289,6 +323,129 @@ public final class ModelJarInstaller {
       }
     } catch (IOException e) {
       throw new ModelJarException("Unable to verify model artifact: " + artifact, e);
+    }
+  }
+
+  private Path installFiles(ModelJarDescriptor descriptor, Path primaryDestination) {
+    Path installation = requireFileRoot(descriptor, primaryDestination);
+    boolean downloaded = false;
+    for (ModelArtifactFile file : descriptor.files()) {
+      Path destination = installation.resolve(file.path());
+      if (Files.exists(destination)) {
+        verifyFile(
+            destination,
+            descriptor.alias(),
+            file.sizeBytes(),
+            file.sha256(),
+            ModelInstallProgress.Source.CACHE);
+      } else {
+        installFile(descriptor.alias(), file, destination);
+        downloaded = true;
+      }
+    }
+    ModelInstallProgress.Source source =
+        downloaded ? ModelInstallProgress.Source.DOWNLOAD : ModelInstallProgress.Source.CACHE;
+    progressReporter.accept(
+        new ModelInstallProgress.Completed(
+            descriptor.alias(), installation, totalSizeBytes(descriptor), source));
+    return installation;
+  }
+
+  private void installFile(String alias, ModelArtifactFile file, Path destination) {
+    Path parent = destination.getParent();
+    if (parent == null) {
+      throw new ModelJarException("Model file has no parent directory: " + destination);
+    }
+    Path temporary = null;
+    try {
+      Files.createDirectories(parent);
+      temporary = Files.createTempFile(parent, destination.getFileName() + ".", ".part");
+      progressReporter.accept(
+          new ModelInstallProgress.DownloadStarted(
+              alias,
+              file.downloadUri(),
+              destination,
+              Files.size(temporary),
+              file.sizeBytes()));
+      download(alias, file.downloadUri(), temporary, file.sizeBytes());
+      verifyFile(
+          temporary,
+          alias,
+          file.sizeBytes(),
+          file.sha256(),
+          ModelInstallProgress.Source.DOWNLOAD);
+      moveIntoPlace(temporary, destination);
+    } catch (IOException e) {
+      throw new ModelJarException("Unable to install model artifact " + alias, e);
+    } finally {
+      if (temporary != null) {
+        try {
+          Files.deleteIfExists(temporary);
+        } catch (IOException ignored) {
+          // The installation result or primary failure is more useful than temporary-file cleanup.
+        }
+      }
+    }
+  }
+
+  private Path verifyCachedFiles(ModelJarDescriptor descriptor, Path primaryArtifact) {
+    Path installation = requireFileRoot(descriptor, primaryArtifact);
+    for (ModelArtifactFile file : descriptor.files()) {
+      Path artifact = installation.resolve(file.path());
+      if (!Files.isRegularFile(artifact)) {
+        throw new ModelJarException(
+            "Model artifact is not available in the offline cache: " + artifact);
+      }
+      verifyFile(
+          artifact,
+          descriptor.alias(),
+          file.sizeBytes(),
+          file.sha256(),
+          ModelInstallProgress.Source.OFFLINE);
+    }
+    progressReporter.accept(
+        new ModelInstallProgress.Completed(
+            descriptor.alias(),
+            installation,
+            totalSizeBytes(descriptor),
+            ModelInstallProgress.Source.OFFLINE));
+    return installation;
+  }
+
+  private static Path requireFileRoot(
+      ModelJarDescriptor descriptor, Path primaryArtifact) {
+    Path normalizedPrimary = primaryArtifact.toAbsolutePath().normalize();
+    ModelArtifactFile primary = descriptor.primaryFile().orElseThrow();
+    Path installation = normalizedPrimary;
+    int primaryPathParts = Path.of(primary.path()).getNameCount();
+    for (int part = 0; part < primaryPathParts; part++) {
+      installation = installation.getParent();
+      if (installation == null) {
+        throw new ModelJarException("Model path has no installation root: " + primaryArtifact);
+      }
+    }
+    Path expectedPrimary = installation.resolve(primary.path()).normalize();
+    if (!expectedPrimary.equals(normalizedPrimary) || !expectedPrimary.startsWith(installation)) {
+      throw new ModelJarException(
+          "Primary model destination must end with " + primary.path() + ": " + primaryArtifact);
+    }
+    for (ModelArtifactFile file : descriptor.files()) {
+      if (!installation.resolve(file.path()).normalize().startsWith(installation)) {
+        throw new ModelJarException("Model file escapes its installation directory: " + file.path());
+      }
+    }
+    return installation;
+  }
+
+  private static long totalSizeBytes(ModelJarDescriptor descriptor) {
+    try {
+      long total = 0;
+      for (ModelArtifactFile file : descriptor.files()) {
+        total = Math.addExact(total, file.sizeBytes());
+      }
+      return total;
+    } catch (ArithmeticException e) {
+      throw new ModelJarException("Model artifact size exceeds the supported range", e);
     }
   }
 

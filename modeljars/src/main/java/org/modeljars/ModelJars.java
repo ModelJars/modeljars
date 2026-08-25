@@ -512,14 +512,17 @@ public final class ModelJars {
   }
 
   private static Path cachePath(ModelJarDescriptor descriptor, Path cacheDirectory) {
-    if (!descriptor.format().equals("gguf")) {
+    boolean supported =
+        descriptor.format().equals("gguf")
+            || (descriptor.format().equals("safetensors") && !descriptor.files().isEmpty());
+    if (!supported) {
       throw new ModelJarException(
           "Models backends cannot load ModelJar format " + descriptor.format());
     }
     return ModelJarCache.artifactPath(descriptor, cacheDirectory);
   }
 
-  private static InferenceBackend loadBackend(
+  static InferenceBackend loadBackend(
       String backend, Path artifact, BackendConfiguration configuration) {
     return switch (backend) {
       case JAVA_BACKEND -> PureJavaBackend.load(artifact, configuration);

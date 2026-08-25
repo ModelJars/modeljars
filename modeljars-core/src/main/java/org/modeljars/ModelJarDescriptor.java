@@ -3,6 +3,7 @@ package org.modeljars;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import java.util.Set;
  * @param license model license identifier
  * @param capabilities normalized model capabilities
  * @param features normalized architecture and packaging features
+ * @param files immutable files required by a multi-file model artifact
  * @param backendSupport supported inference backends by normalized identifier
  * @param name human-readable model name
  * @param description short catalog description
@@ -55,6 +57,7 @@ public record ModelJarDescriptor(
     Optional<String> license,
     Set<String> capabilities,
     Set<String> features,
+    List<ModelArtifactFile> files,
     Map<String, Boolean> backendSupport,
     Optional<String> name,
     Optional<String> description,
@@ -94,12 +97,52 @@ public record ModelJarDescriptor(
     license = normalizedOptional(license, "license");
     capabilities = normalizedSet(capabilities, "capabilities");
     features = normalizedSet(features, "features");
+    files = List.copyOf(Objects.requireNonNull(files, "files"));
+    if (files.stream().map(ModelArtifactFile::path).distinct().count() != files.size()) {
+      throw new IllegalArgumentException("files must use distinct paths");
+    }
+    if (!files.isEmpty()) {
+      if (!features.contains("multi-file-artifact")) {
+        throw new IllegalArgumentException(
+            "multi-file model artifacts must advertise multi-file-artifact");
+      }
+      if (files.size() < 2) {
+        throw new IllegalArgumentException("multi-file model artifacts must contain at least two files");
+      }
+      String primarySha256 =
+          sha256.orElseThrow(
+              () -> new IllegalArgumentException("multi-file model artifacts require sha256"));
+      long primarySize =
+          sizeBytes.orElseThrow(
+              () -> new IllegalArgumentException("multi-file model artifacts require sizeBytes"));
+      if (files.stream()
+          .noneMatch(file -> file.sha256().equals(primarySha256) && file.sizeBytes() == primarySize)) {
+        throw new IllegalArgumentException(
+            "one multi-file artifact entry must match the primary sha256 and sizeBytes");
+      }
+    }
     backendSupport = Map.copyOf(Objects.requireNonNull(backendSupport, "backendSupport"));
     name = normalizedOptional(name, "name");
     description = normalizedOptional(description, "description");
     licenseUri = Objects.requireNonNull(licenseUri, "licenseUri");
     domains = normalizedSet(domains, "domains");
     dimensions = Objects.requireNonNull(dimensions, "dimensions");
+  }
+
+  /**
+   * Returns the file matching the descriptor's primary digest and size.
+   *
+   * @return primary artifact file, or empty for a single-file descriptor
+   */
+  public Optional<ModelArtifactFile> primaryFile() {
+    if (files.isEmpty()) {
+      return Optional.empty();
+    }
+    String primarySha256 = sha256.orElseThrow();
+    long primarySize = sizeBytes.orElseThrow();
+    return files.stream()
+        .filter(file -> file.sha256().equals(primarySha256) && file.sizeBytes() == primarySize)
+        .findFirst();
   }
 
   /**

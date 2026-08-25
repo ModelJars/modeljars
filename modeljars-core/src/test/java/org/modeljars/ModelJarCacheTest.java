@@ -48,6 +48,7 @@ class ModelJarCacheTest {
         Optional.of("Apache-2.0"),
         Set.of("text-generation"),
         Set.of(),
+        java.util.List.of(),
         Map.of("java", true),
         Optional.of("Example"),
         Optional.empty(),

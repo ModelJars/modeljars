@@ -2009,6 +2009,9 @@ project(":modeljars") {
     tasks.named("processResources") {
         dependsOn(generateRuntimeQualificationResources)
     }
+    tasks.named<Jar>("sourcesJar") {
+        dependsOn(generateRuntimeQualificationResources)
+    }
 
     tasks.register<Test>("qwen25SafetensorsIntegrationTest") {
         description = "Runs the pinned Qwen2.5 Safetensors snapshot through ModelJars."

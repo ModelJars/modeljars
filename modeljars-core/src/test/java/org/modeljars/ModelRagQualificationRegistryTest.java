@@ -1085,6 +1085,7 @@ class ModelRagQualificationRegistryTest {
         Optional.of("Apache-2.0"),
         Set.of("chat"),
         Set.of(),
+        java.util.List.of(),
         Map.of("llama.cpp", true),
         Optional.of("Qwen3 0.6B Q4_0"),
         Optional.empty(),

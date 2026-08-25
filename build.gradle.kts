@@ -1480,6 +1480,40 @@ fun fetchHuggingFaceRevision(repository: String, revision: String): Map<String, 
     )
 }
 
+fun fetchPinnedSha256(uri: URI, expectedSize: Long): String {
+    require(expectedSize <= 16L * 1024L * 1024L) {
+        "Refusing to hash non-LFS artifact larger than 16 MiB: $uri"
+    }
+    val connection = uri.toURL().openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
+    connection.connectTimeout = 30_000
+    connection.readTimeout = 60_000
+    connection.setRequestProperty("Accept-Encoding", "identity")
+    connection.setRequestProperty("User-Agent", "ModelJars-Catalog-Verifier/0.1")
+    try {
+        require(connection.responseCode == HttpURLConnection.HTTP_OK) {
+            "Hugging Face returned HTTP ${connection.responseCode} for $uri"
+        }
+        val digest = MessageDigest.getInstance("SHA-256")
+        var received = 0L
+        connection.inputStream.use { input ->
+            val buffer = ByteArray(64 * 1024)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+                received += count
+            }
+        }
+        require(received == expectedSize) {
+            "Size mismatch for $uri: expected=$expectedSize, received=$received"
+        }
+        return HexFormat.of().formatHex(digest.digest())
+    } finally {
+        connection.disconnect()
+    }
+}
+
 fun verifyHuggingFaceRevision(entries: List<CatalogEntry>) {
     val first = entries.first()
     val repository = first.sourceId.removePrefix("hf://")
@@ -1495,19 +1529,53 @@ fun verifyHuggingFaceRevision(entries: List<CatalogEntry>) {
             }
 
     entries.forEach { entry ->
-        val filename =
+        data class Artifact(val path: String, val sha256: String, val sizeBytes: Long, val uri: URI)
+
+        val primaryPath =
             URI.create(entry.downloadUri).path.substringAfter("/resolve/${entry.revision}/")
-        val sibling = siblings[filename] ?: error("Missing $filename at $repository@${entry.revision}")
-        val lfs = sibling["lfs"].stringKeyMap("LFS metadata for $repository/$filename")
-        val remoteSize =
-            (lfs["size"] as? Number)?.toLong()
-                ?: (sibling["size"] as? Number)?.toLong()
-                ?: error("Missing size for $repository/$filename")
-        require(remoteSize == entry.sizeBytes) {
-            "Size mismatch for $repository/$filename: catalog=${entry.sizeBytes}, remote=$remoteSize"
-        }
-        require(lfs.requiredString("sha256") == entry.sha256) {
-            "SHA-256 mismatch for $repository/$filename"
+        val primaryFile =
+            entry.files.firstOrNull {
+                it.sha256 == entry.sha256 && it.sizeBytes == entry.sizeBytes
+            }
+        val artifacts =
+            if (entry.files.isEmpty()) {
+                listOf(Artifact(primaryPath, entry.sha256, entry.sizeBytes, URI.create(entry.downloadUri)))
+            } else {
+                val primary = requireNotNull(primaryFile) {
+                    "Multi-file entry has no primary artifact: ${entry.id}"
+                }
+                val downloadBase = entry.downloadUri.removeSuffix(primary.path)
+                entry.files.map { file ->
+                    Artifact(
+                        file.path,
+                        file.sha256,
+                        file.sizeBytes,
+                        URI.create(downloadBase + file.path),
+                    )
+                }
+            }
+
+        artifacts.forEach { artifact ->
+            val sibling =
+                siblings[artifact.path]
+                    ?: error("Missing ${artifact.path} at $repository@${entry.revision}")
+            val lfs =
+                (sibling["lfs"] as? Map<*, *>)
+                    ?.map { (key, value) -> key.toString() to value }
+                    ?.toMap()
+            val remoteSize =
+                (lfs?.get("size") as? Number)?.toLong()
+                    ?: (sibling["size"] as? Number)?.toLong()
+                    ?: error("Missing size for $repository/${artifact.path}")
+            require(remoteSize == artifact.sizeBytes) {
+                "Size mismatch for $repository/${artifact.path}: " +
+                    "catalog=${artifact.sizeBytes}, remote=$remoteSize"
+            }
+            val remoteSha256 =
+                lfs?.get("sha256") as? String ?: fetchPinnedSha256(artifact.uri, remoteSize)
+            require(remoteSha256 == artifact.sha256) {
+                "SHA-256 mismatch for $repository/${artifact.path}"
+            }
         }
     }
 }
@@ -1885,6 +1953,21 @@ project(":modeljars") {
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
         testImplementation(project(":modeljars-catalog"))
+    }
+
+    tasks.register<Test>("qwen25SafetensorsIntegrationTest") {
+        description = "Runs the pinned Qwen2.5 Safetensors snapshot through ModelJars."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching("org.modeljars.Qwen25SafetensorsIntegrationTest")
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        providers.gradleProperty("qwen25SafetensorsDirectory").orNull?.let {
+            systemProperty("modeljars.fixtures.qwen25SafetensorsDirectory", it)
+        }
+        outputs.upToDateWhen { false }
     }
 }
 
@@ -2614,7 +2697,8 @@ tasks.register<Sync>("generateSite") {
 
 tasks.register("verifyRemoteCatalogMetadata") {
     group = "verification"
-    description = "Verify pinned Hugging Face revisions, sizes, and LFS hashes without model downloads"
+    description =
+        "Verify pinned Hugging Face revisions, file sizes, and hashes without downloading weights"
     inputs.file(file("catalog/models.json"))
 
     doLast {

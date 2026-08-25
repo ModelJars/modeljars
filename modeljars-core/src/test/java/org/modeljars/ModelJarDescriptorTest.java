@@ -32,6 +32,7 @@ class ModelJarDescriptorTest {
             Optional.empty(),
             Set.of("text-generation"),
             Set.of(),
+            java.util.List.of(),
             Map.of("llama.cpp", true),
             Optional.empty(),
             Optional.empty(),

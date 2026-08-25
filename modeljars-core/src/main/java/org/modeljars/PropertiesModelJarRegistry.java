@@ -69,6 +69,10 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
   private static ModelJarDescriptor descriptor(String alias, Properties properties) {
     String prefix = MODEL_PREFIX + alias + ".";
     Map<String, Boolean> backends = backends(prefix, properties);
+    Optional<URI> downloadUri = optional(prefix, "downloadUri", properties).map(URI::create);
+    Optional<String> sha256 = optional(prefix, "sha256", properties);
+    Optional<Long> sizeBytes =
+        optional(prefix, "sizeBytes", properties).map(PropertiesModelJarRegistry::parseSizeBytes);
     return new ModelJarDescriptor(
         alias,
         required(prefix, "sourceId", properties),
@@ -81,19 +85,85 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         optional(prefix, "path", properties).map(PropertiesModelJarRegistry::expandPath),
         optional(prefix, "classpathResource", properties),
         optional(prefix, "sourceUri", properties).map(URI::create),
-        optional(prefix, "downloadUri", properties).map(URI::create),
+        downloadUri,
         optional(prefix, "revision", properties),
-        optional(prefix, "sha256", properties),
-        optional(prefix, "sizeBytes", properties).map(PropertiesModelJarRegistry::parseSizeBytes),
+        sha256,
+        sizeBytes,
         optional(prefix, "license", properties),
         csv(optional(prefix, "capabilities", properties).orElse("")),
         csv(optional(prefix, "features", properties).orElse("")),
+        files(prefix, properties, downloadUri, sha256, sizeBytes),
         backends,
         optional(prefix, "name", properties),
         optional(prefix, "description", properties),
         optional(prefix, "licenseUri", properties).map(URI::create),
         csv(optional(prefix, "domains", properties).orElse("")),
         dimensions(prefix, properties));
+  }
+
+  private static List<ModelArtifactFile> files(
+      String prefix,
+      Properties properties,
+      Optional<URI> primaryDownloadUri,
+      Optional<String> primarySha256,
+      Optional<Long> primarySizeBytes) {
+    int count =
+        optional(prefix, "file.count", properties)
+            .map(value -> parseInteger("file.count", value))
+            .orElse(0);
+    if (count < 0) {
+      throw new ModelJarException("Invalid file.count: " + count);
+    }
+    if (count == 0) {
+      return List.of();
+    }
+    URI primaryUri =
+        primaryDownloadUri.orElseThrow(
+            () -> new ModelJarException("Multi-file marker has no download URI: " + prefix));
+    String digest =
+        primarySha256.orElseThrow(
+            () -> new ModelJarException("Multi-file marker has no SHA-256: " + prefix));
+    long bytes =
+        primarySizeBytes.orElseThrow(
+            () -> new ModelJarException("Multi-file marker has no sizeBytes: " + prefix));
+    record FileProperties(String path, String role, String sha256, long sizeBytes) {}
+    List<FileProperties> values =
+        java.util.stream.IntStream.range(0, count)
+            .mapToObj(
+                index -> {
+                  String filePrefix = prefix + "file." + "%03d".formatted(index) + ".";
+                  return new FileProperties(
+                      required(filePrefix, "path", properties),
+                      required(filePrefix, "role", properties),
+                      required(filePrefix, "sha256", properties),
+                      parseSizeBytes(required(filePrefix, "sizeBytes", properties)));
+                })
+            .toList();
+    FileProperties primary =
+        values.stream()
+            .filter(file -> file.sha256().equalsIgnoreCase(digest) && file.sizeBytes() == bytes)
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "Multi-file marker has no file matching its primary artifact: " + prefix));
+    String primaryUriText = primaryUri.toString();
+    if (!primaryUriText.endsWith(primary.path())) {
+      throw new ModelJarException(
+          "Multi-file marker download URI does not end with primary file path: " + prefix);
+    }
+    String downloadBase =
+        primaryUriText.substring(0, primaryUriText.length() - primary.path().length());
+    return values.stream()
+        .map(
+            file ->
+                new ModelArtifactFile(
+                    file.path(),
+                    file.role(),
+                    URI.create(downloadBase + file.path()),
+                    file.sha256(),
+                    file.sizeBytes()))
+        .toList();
   }
 
   private static ModelDimensions dimensions(String prefix, Properties properties) {

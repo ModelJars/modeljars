@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.modeljars.ModelArtifactFile;
 import org.modeljars.ModelDimensions;
 import org.modeljars.ModelInstallProgress;
 import org.modeljars.ModelJarCache;
@@ -268,6 +269,80 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void removesEveryFileInAMultiFileModelBundle() throws IOException {
+    ModelJarDescriptor descriptor = multiFileDescriptor();
+    Path primary = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
+    Path bundle = primary.getParent();
+    Files.createDirectories(bundle);
+    Files.write(primary, new byte[] {1, 2, 3, 4});
+    Files.writeString(bundle.resolve("config.json"), "{}");
+
+    Result removed =
+        run(cli(descriptor), "remove", descriptor.alias(), "--cache", temporaryDirectory.toString());
+
+    assertEquals(0, removed.status());
+    assertFalse(Files.exists(primary));
+    assertFalse(Files.exists(bundle.resolve("config.json")));
+    assertFalse(Files.exists(bundle));
+  }
+
+  @Test
+  void refusesToRemoveAMultiFileBundleContainingAnUnexpectedFile() throws IOException {
+    ModelJarDescriptor descriptor = multiFileDescriptor();
+    Path primary = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
+    Path bundle = primary.getParent();
+    Files.createDirectories(bundle);
+    Files.write(primary, new byte[] {1, 2, 3, 4});
+    Files.writeString(bundle.resolve("config.json"), "{}");
+    Path unexpected = Files.writeString(bundle.resolve("notes.txt"), "keep me");
+
+    Result removed =
+        run(cli(descriptor), "remove", descriptor.alias(), "--cache", temporaryDirectory.toString());
+
+    assertEquals(2, removed.status());
+    assertTrue(removed.error().contains("unexpected cache file"));
+    assertTrue(Files.isRegularFile(primary));
+    assertTrue(Files.isRegularFile(bundle.resolve("config.json")));
+    assertTrue(Files.isRegularFile(unexpected));
+  }
+
+  @Test
+  void doesNotListAnIncompleteMultiFileBundleAsCached() throws IOException {
+    ModelJarDescriptor descriptor = multiFileDescriptor();
+    Path primary = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
+    Files.createDirectories(primary.getParent());
+    Files.write(primary, new byte[] {1, 2, 3, 4});
+
+    Result listed = run(cli(descriptor), "list", "--cache", temporaryDirectory.toString());
+
+    assertEquals(0, listed.status());
+    assertFalse(listed.output().contains(descriptor.alias()));
+    assertTrue(listed.output().contains("No qualified models are present"));
+  }
+
+  @Test
+  void reportsTheCompleteMultiFileBundleSizeInSystemInfo() throws IOException {
+    ModelJarDescriptor descriptor = multiFileDescriptor();
+    Path primary = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
+    Files.createDirectories(primary.getParent());
+    Files.write(primary, new byte[] {1, 2, 3, 4});
+    Files.writeString(primary.getParent().resolve("config.json"), "{}");
+
+    Result result =
+        run(
+            cli(descriptor),
+            "env",
+            "--cache",
+            temporaryDirectory.toString(),
+            "--output",
+            "json");
+
+    assertEquals(0, result.status());
+    assertTrue(result.output().contains("\"cachedModels\": 1"));
+    assertTrue(result.output().contains("\"cachedBytes\": 6"));
+  }
+
+  @Test
   void keepsLongListCoordinatesAndAliasesIntactAtNormalTerminalWidth() throws IOException {
     ModelJarDescriptor descriptor =
         descriptor(
@@ -462,6 +537,7 @@ class ModelJarsCliTest {
         Optional.of("Apache-2.0"),
         Set.of("text-generation"),
         Set.of("chat-template"),
+        java.util.List.of(),
         Map.of("java", true, "native", true),
         Optional.of("Example model"),
         Optional.of("Small deterministic test model."),
@@ -480,6 +556,47 @@ class ModelJarsCliTest {
             Optional.of(128),
             Optional.of(128),
             Optional.of(32)));
+  }
+
+  private static ModelJarDescriptor multiFileDescriptor() {
+    URI base = URI.create("https://huggingface.co/example/model/resolve/" + "b".repeat(40) + "/");
+    List<ModelArtifactFile> files =
+        List.of(
+            new ModelArtifactFile(
+                "model.safetensors",
+                "weights",
+                base.resolve("model.safetensors"),
+                "a".repeat(64),
+                4),
+            new ModelArtifactFile(
+                "config.json", "config", base.resolve("config.json"), "c".repeat(64), 2));
+    ModelJarDescriptor source = descriptor("example_bf16", "BF16");
+    return new ModelJarDescriptor(
+        source.alias(),
+        source.sourceId(),
+        source.markerCoordinate(),
+        source.modelVersion(),
+        source.variant(),
+        "safetensors",
+        source.architecture(),
+        source.quantization(),
+        source.localPath(),
+        source.classpathResource(),
+        source.sourceUri(),
+        Optional.of(base.resolve("model.safetensors")),
+        source.revision(),
+        Optional.of("a".repeat(64)),
+        Optional.of(4L),
+        source.license(),
+        source.capabilities(),
+        Set.of("chat-template", "multi-file-artifact"),
+        files,
+        source.backendSupport(),
+        source.name(),
+        source.description(),
+        source.licenseUri(),
+        source.domains(),
+        source.dimensions());
   }
 
   private static SystemCapabilities.Snapshot snapshot() {

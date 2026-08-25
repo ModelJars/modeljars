@@ -469,7 +469,8 @@ public final class ModelJarsCli implements Callable<Integer> {
   }
 
   private boolean cached(ModelJarDescriptor descriptor) {
-    return Files.isRegularFile(ModelJarCache.artifactPath(descriptor, cacheDirectory()));
+    Path artifact = ModelJarCache.artifactPath(descriptor, cacheDirectory());
+    return ModelJarCache.isComplete(descriptor, artifact);
   }
 
   private static boolean matchesQuery(ModelJarDescriptor descriptor, String query) {
@@ -521,7 +522,8 @@ public final class ModelJarsCli implements Callable<Integer> {
     values.put("domains", sorted(descriptor.domains()));
     values.put("backends", descriptor.backendSupport());
     values.put("dimensions", dimensionsMap(descriptor.dimensions()));
-    values.put("status", Files.isRegularFile(cachePath) ? "cached" : "not_pulled");
+    values.put(
+        "status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not_pulled");
     values.put("cachePath", cachePath.toString());
     return values;
   }
@@ -860,7 +862,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                       new CachedModel(
                           descriptor,
                           ModelJarCache.artifactPath(descriptor, parent.cacheDirectory())))
-              .filter(model -> Files.isRegularFile(model.path()))
+              .filter(model -> ModelJarCache.isComplete(model.descriptor(), model.path()))
               .sorted(Comparator.comparing(model -> model.descriptor().alias()))
               .toList();
       render(models);
@@ -1024,7 +1026,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       Map<String, Object> identity = new LinkedHashMap<>();
       identity.put("Alias", descriptor.alias());
       identity.put("Coordinate", descriptor.markerCoordinate());
-      identity.put("Status", Files.isRegularFile(cachePath) ? "cached" : "not pulled");
+      identity.put(
+          "Status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not pulled");
       identity.put("Architecture", descriptor.architecture());
       identity.put("Format", descriptor.format().toUpperCase(Locale.ROOT));
       identity.put("Quantization", descriptor.quantization());
@@ -1051,7 +1054,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
       Map<String, Object> local = new LinkedHashMap<>();
       local.put("Cache path", cachePath);
-      if (Files.isRegularFile(cachePath)) {
+      if (ModelJarCache.isComplete(descriptor, cachePath)) {
         local.put("Modified", MODIFIED_TIME.format(modified(cachePath)));
       }
       int context = Math.min(4096, descriptor.dimensions().contextLength().orElse(4096));
@@ -1167,32 +1170,104 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Override
     public Integer call() throws IOException {
       ModelJarDescriptor descriptor = parent.resolveExact(selector);
-      Path root = parent.cacheDirectory();
+      Path root = parent.cacheDirectory().toAbsolutePath().normalize();
       Path artifact = ModelJarCache.artifactPath(descriptor, root);
       if (!artifact.startsWith(root)) {
         throw new IllegalStateException("Resolved cache path is outside the configured cache");
       }
-      if (Files.isSymbolicLink(artifact)) {
-        throw new IllegalStateException("Refusing to remove a symbolic link from the model cache");
-      }
-      if (!Files.isRegularFile(artifact)) {
+      Path removedPath =
+          descriptor.files().isEmpty() ? artifact : ModelJarCache.bundlePath(descriptor, root);
+      if (!ModelJarCache.isComplete(descriptor, artifact)) {
         if (force) {
           return 0;
         }
-        throw new IllegalArgumentException("Model is not present in the local cache: " + descriptor.alias());
+        throw new IllegalArgumentException(
+            "Model is not present in the local cache: " + descriptor.alias());
       }
-      Files.delete(artifact);
+      requireNoSymbolicLinks(root, removedPath);
+      if (descriptor.files().isEmpty()) {
+        Files.delete(artifact);
+      } else {
+        removeBundle(descriptor, removedPath);
+      }
       CliOutput out = parent.out();
       if (out.format() == CliOutput.Format.JSON) {
-        out.json(Map.of("alias", descriptor.alias(), "removed", true, "path", artifact.toString()));
+        out.json(
+            Map.of("alias", descriptor.alias(), "removed", true, "path", removedPath.toString()));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("removed=" + descriptor.alias());
-        out.line("path=" + artifact);
+        out.line("path=" + removedPath);
       } else {
         out.success("Removed " + descriptor.alias());
-        out.hint(artifact.toString());
+        out.hint(removedPath.toString());
       }
       return 0;
+    }
+
+    private static void requireNoSymbolicLinks(Path root, Path target) {
+      Path current = root;
+      if (Files.isSymbolicLink(current)) {
+        throw new IllegalStateException(
+            "Refusing to remove through a symbolic link in the model cache");
+      }
+      for (Path part : root.relativize(target)) {
+        current = current.resolve(part);
+        if (Files.isSymbolicLink(current)) {
+          throw new IllegalStateException(
+              "Refusing to remove through a symbolic link in the model cache");
+        }
+      }
+    }
+
+    private static void removeBundle(ModelJarDescriptor descriptor, Path bundle) throws IOException {
+      Set<Path> expectedFiles = new java.util.LinkedHashSet<>();
+      Set<Path> expectedDirectories = new java.util.LinkedHashSet<>();
+      expectedDirectories.add(bundle);
+      for (var file : descriptor.files()) {
+        Path expected = bundle.resolve(file.path()).normalize();
+        if (!expected.startsWith(bundle)) {
+          throw new IllegalStateException("Resolved model file is outside its cache bundle");
+        }
+        expectedFiles.add(expected);
+        Path directory = expected.getParent();
+        while (directory != null && directory.startsWith(bundle)) {
+          expectedDirectories.add(directory);
+          if (directory.equals(bundle)) {
+            break;
+          }
+          directory = directory.getParent();
+        }
+      }
+
+      List<Path> contents;
+      try (var paths = Files.walk(bundle)) {
+        contents = paths.toList();
+      }
+      for (Path path : contents) {
+        if (Files.isSymbolicLink(path)) {
+          throw new IllegalStateException("Refusing to remove a symbolic link from the model cache");
+        }
+        if (Files.isDirectory(path)) {
+          if (!expectedDirectories.contains(path)) {
+            throw new IllegalStateException(
+                "Refusing to remove unexpected cache directory: " + path);
+          }
+        } else if (!Files.isRegularFile(path) || !expectedFiles.contains(path)) {
+          throw new IllegalStateException("Refusing to remove unexpected cache file: " + path);
+        }
+      }
+      if (!expectedFiles.stream().allMatch(Files::isRegularFile)) {
+        throw new IllegalStateException("Model cache bundle is incomplete: " + bundle);
+      }
+
+      for (Path path : expectedFiles) {
+        Files.delete(path);
+      }
+      List<Path> directories = new java.util.ArrayList<>(expectedDirectories);
+      directories.sort(Comparator.comparingInt(Path::getNameCount).reversed());
+      for (Path path : directories) {
+        Files.delete(path);
+      }
     }
   }
 
@@ -1510,16 +1585,40 @@ public final class ModelJarsCli implements Callable<Integer> {
     long bytes = 0;
     for (ModelJarDescriptor descriptor : descriptors) {
       Path path = ModelJarCache.artifactPath(descriptor, cacheDirectory);
-      if (Files.isRegularFile(path)) {
+      if (ModelJarCache.isComplete(descriptor, path)) {
         count++;
         try {
-          bytes = Math.addExact(bytes, Files.size(path));
-        } catch (IOException | ArithmeticException ignored) {
-          bytes = Math.addExact(bytes, descriptor.sizeBytes().orElse(0L));
+          bytes = Math.addExact(bytes, installedSize(descriptor, path, cacheDirectory));
+        } catch (IOException ignored) {
+          bytes = Math.addExact(bytes, declaredSize(descriptor));
         }
       }
     }
     return new CacheSummary(count, bytes, cacheDirectory);
+  }
+
+  private static long installedSize(
+      ModelJarDescriptor descriptor, Path primaryArtifact, Path cacheDirectory) throws IOException {
+    if (descriptor.files().isEmpty()) {
+      return Files.size(primaryArtifact);
+    }
+    Path bundle = ModelJarCache.bundlePath(descriptor, cacheDirectory);
+    long bytes = 0;
+    for (var file : descriptor.files()) {
+      bytes = Math.addExact(bytes, Files.size(bundle.resolve(file.path())));
+    }
+    return bytes;
+  }
+
+  private static long declaredSize(ModelJarDescriptor descriptor) {
+    if (descriptor.files().isEmpty()) {
+      return descriptor.sizeBytes().orElse(0L);
+    }
+    long bytes = 0;
+    for (var file : descriptor.files()) {
+      bytes = Math.addExact(bytes, file.sizeBytes());
+    }
+    return bytes;
   }
 
   private static Map<String, String> dependencyDeclarations(

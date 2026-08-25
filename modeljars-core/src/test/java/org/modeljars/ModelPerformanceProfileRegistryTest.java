@@ -1748,6 +1748,7 @@ class ModelPerformanceProfileRegistryTest {
         Optional.of("Apache-2.0"),
         Set.of("text-generation"),
         Set.of(),
+        java.util.List.of(),
         Map.of("pure-java", true),
         Optional.empty(),
         Optional.empty(),

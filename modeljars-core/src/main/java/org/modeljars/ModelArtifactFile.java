@@ -4,7 +4,15 @@ import java.net.URI;
 import java.util.Locale;
 import java.util.Objects;
 
-/** One immutable file required to load a multi-file model artifact. */
+/**
+ * One immutable file required to load a multi-file model artifact.
+ *
+ * @param path normalized relative path inside the installed artifact directory
+ * @param role file purpose, such as {@code weights}, {@code config}, or {@code tokenizer}
+ * @param downloadUri immutable source URI used to retrieve the file
+ * @param sha256 lowercase SHA-256 digest of the file contents
+ * @param sizeBytes expected file size in bytes
+ */
 public record ModelArtifactFile(
     String path, String role, URI downloadUri, String sha256, long sizeBytes) {
   /** Validates and normalizes immutable artifact-file metadata. */

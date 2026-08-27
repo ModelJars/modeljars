@@ -2432,6 +2432,20 @@ project(":modeljars") {
         outputs.upToDateWhen { false }
     }
 
+    tasks.register<Test>("needle2CactIntegrationTest") {
+        description = "Runs the pinned Needle 2 CACT artifact through ModelJars tool calling."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching("org.modeljars.Needle2CactIntegrationTest")
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        providers.gradleProperty("needle2CactArtifact").orNull?.let {
+            systemProperty("modeljars.fixtures.needle2Cact", it)
+        }
+        outputs.upToDateWhen { false }
+    }
 }
 
 val jvmRuntimePom =

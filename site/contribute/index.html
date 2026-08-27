@@ -210,6 +210,18 @@ scripts/run-controlled-rag-qualification.sh \
           <a href="https://github.com/integrallis/models/tree/main/models-rag-bench">Models RAG benchmark guide</a>
           contains the exact commands for both runs.
         </p>
+        <p>
+          For Needle 2 CACT, the Models tool-conformance command loads the checksum-pinned artifact
+          directly into the Java backend. It does not install or run the upstream Needle engine.
+        </p>
+        <div class="code-block">
+          <div><span>Needle 2 CACT qualification</span></div>
+          <pre><code>./gradlew :models-bench:run --args='needle2-tool-qualification \
+  --model /absolute/path/to/needle2.cact \
+  --models-revision 0123456789abcdef0123456789abcdef01234567 \
+  --report /absolute/path/to/models/models-bench/benchmark-results/needle2-cact-pure-java.json \
+  --max-tokens 256'</code></pre>
+        </div>
         <p class="callout">
           A contributor's local run is a preflight result, not publication authority. A maintainer
           must reproduce or review the run on the controlled host, pin the Models commit, and
@@ -287,6 +299,33 @@ scripts/run-controlled-rag-qualification.sh \
         </p>
       </section>
 
+      <section class="documentation-section" aria-labelledby="tool-policy-title">
+        <h2 id="tool-policy-title">Tool-calling acceptance policy</h2>
+        <p>
+          The versioned conformance suite records every generated call, the exact Models commit,
+          artifact digest, source-case digest, prompt template, generation controls, and host.
+        </p>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable tool-calling policy">
+          <table class="benchmark-table policy-table">
+            <thead>
+              <tr><th scope="col">Policy metric</th><th scope="col">Requirement</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Structured output</th><td>100%</td></tr>
+              <tr><th scope="row">Exact tool selection</th><td>100%</td></tr>
+              <tr><th scope="row">Schema validity</th><td>100%</td></tr>
+              <tr><th scope="row">Declared arguments only</th><td>100%</td></tr>
+              <tr><th scope="row">Expected arguments</th><td>At least 90%</td></tr>
+              <tr><th scope="row">Unsupported-query refusal</th><td>100%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The upstream implementation supplies frozen reference cases only. Qualification executes
+          tokenization, retrieval, constrained decoding, and generation in-process through Models.
+        </p>
+      </section>
+
       <section class="documentation-section" aria-labelledby="submit-title">
         <h2 id="submit-title">Publication checklist</h2>
         <p>
@@ -302,8 +341,8 @@ scripts/run-controlled-rag-qualification.sh \
           <li>Exact revision, byte size, SHA-256, dimensions, and backend declaration.</li>
           <li>Models exact-artifact tests and deterministic output evidence.</li>
           <li>Raw controlled reports committed to Models, the qualification verdict, and report SHA-256 values.</li>
-          <li>A matching entry in <code>catalog/qualifications.json</code> only after maintainer approval.</li>
-          <li>A clean local run of <code>npm test</code> and <code>./gradlew test verifyCatalog</code>.</li>
+          <li>A matching entry in the applicable RAG, embedding, or tool qualification manifest only after maintainer approval.</li>
+          <li>A clean local run of <code>npm test</code> and <code>./gradlew spotlessCheck test verifyCatalog</code>.</li>
         </ul>
         <p>
           The repository's

@@ -58,7 +58,7 @@
               ModelJARs are versioned JAR files that make AI models available to the
               <a href="https://integrallis.github.io/models/">Models</a> JVM inference library.
               Think of WebJars, but for AI models: standard dependency coordinates,
-              immutable metadata, and measured runtime support across GGUF and Safetensors
+              immutable metadata, and measured runtime support across GGUF, Safetensors, and CACT
               model formats.
             </p>
             <div class="catalog-actions" aria-label="Get started">
@@ -206,7 +206,7 @@ modeljars search gemma --output json</code></pre>
             </div>
             <p class="guide-runtime-note">
               Model files come directly from immutable, revision-pinned upstream URLs. Every file
-              in a GGUF or Safetensors artifact must match the marker's exact byte count and
+              in a GGUF, Safetensors, or CACT artifact must match the marker's exact byte count and
               SHA-256 before the complete artifact enters the cache.
             </p>
           </div>

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,8 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
+import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Smollm2_360m_Instruct_Q8_0;
 
 class ModelJarsTest {
@@ -36,8 +51,7 @@ class ModelJarsTest {
   void opensAQualifiedModelWithoutExposingItsInstalledPath() {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(QWEN).orElseThrow();
-    ModelRagQualificationRegistry qualifications =
-        ModelRagQualificationRegistry.fromClasspath();
+    ModelRagQualificationRegistry qualifications = ModelRagQualificationRegistry.fromClasspath();
     ModelPerformanceProfileRegistry profiles = ModelPerformanceProfileRegistry.fromClasspath();
     ModelPerformanceProfile profile =
         profiles.profilesFor(descriptor).stream()
@@ -96,10 +110,7 @@ class ModelJarsTest {
             .filter(
                 profile ->
                     "unsigned-pairwise"
-                        .equals(
-                            profile
-                                .recommendations()
-                                .get("models.purejava.q4Kernel")))
+                        .equals(profile.recommendations().get("models.purejava.q4Kernel")))
             .findFirst()
             .orElseThrow()
             .runtimeSelector();
@@ -118,8 +129,7 @@ class ModelJarsTest {
             () -> List.of("-Djdk.graal.MaximumInliningSize=10000"));
 
     try (var loaded =
-        loader.load(
-            model, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
+        loader.load(model, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
       assertEquals("fixture", loaded.modelName());
       assertEquals(
           Map.of(
@@ -144,11 +154,7 @@ class ModelJarsTest {
         profiles.profilesFor(descriptor).stream()
             .filter(
                 profile ->
-                    "24"
-                        .equals(
-                            profile
-                                .recommendations()
-                                .get("models.purejava.prefillBatchSize")))
+                    "24".equals(profile.recommendations().get("models.purejava.prefillBatchSize")))
             .findFirst()
             .orElseThrow()
             .runtimeSelector();
@@ -221,9 +227,7 @@ class ModelJarsTest {
         assertThrows(
             ModelJarException.class,
             () ->
-                loader.load(
-                    QWEN,
-                    ModelLoadOptions.builder().backend(ModelBackend.NATIVE).build()));
+                loader.load(QWEN, ModelLoadOptions.builder().backend(ModelBackend.NATIVE).build()));
 
     assertTrue(failure.getMessage().contains("qualified"));
     assertTrue(failure.getMessage().contains("rust-ffm"));
@@ -255,8 +259,7 @@ class ModelJarsTest {
 
     ModelJarException failure =
         assertThrows(
-            ModelJarException.class,
-            () -> loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults()));
+            ModelJarException.class, () -> loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults()));
 
     assertTrue(failure.getMessage().contains("--enable-native-access=ALL-UNNAMED"));
     assertNull(installed.get());
@@ -295,15 +298,15 @@ class ModelJarsTest {
             Map::of);
 
     try (var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults())) {
-      ModelPrompt prompt =
-          runtime.chatTemplate().render(List.of(ChatMessage.user("hello")));
+      ModelPrompt prompt = runtime.chatTemplate().render(List.of(ChatMessage.user("hello")));
 
       assertSame(runtime.pipeline(), runtime.model());
       assertSame(runtime.pipeline().tokenizer(), runtime.tokenizer());
       assertEquals("fixture", runtime.metadata().modelName());
       assertEquals(32, runtime.contextWindow().capacity());
       assertTrue(runtime.contextWindow().position().isEmpty());
-      assertEquals("", runtime.model().generate(prompt, SamplingOptions.builder().maxTokens(1).build()));
+      assertEquals(
+          "", runtime.model().generate(prompt, SamplingOptions.builder().maxTokens(1).build()));
       assertEquals(1, backend.structuredEncodes);
       assertEquals(0, backend.plainEncodes);
     }

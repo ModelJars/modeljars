@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -51,8 +66,7 @@ class ModelJarInstallerTest {
     Path markerDestination = tempDir.resolve("legacy/model.gguf");
     Path cacheDestination = tempDir.resolve("sha256/ab/abcdef/model.gguf");
     Files.write(source, modelBytes);
-    ModelJarDescriptor descriptor =
-        descriptor(source, markerDestination, sha256(modelBytes));
+    ModelJarDescriptor descriptor = descriptor(source, markerDestination, sha256(modelBytes));
     ModelJarInstaller installer =
         new ModelJarInstaller(new InMemoryModelJarRegistry(List.of(descriptor)));
 
@@ -151,8 +165,7 @@ class ModelJarInstallerTest {
     assertEquals(cacheDestination, installer.verifyCached(descriptor, cacheDestination));
     Files.delete(cacheDestination);
     assertThrows(
-        ModelJarException.class,
-        () -> installer.verifyCached(descriptor, cacheDestination));
+        ModelJarException.class, () -> installer.verifyCached(descriptor, cacheDestination));
   }
 
   @Test
@@ -309,8 +322,7 @@ class ModelJarInstallerTest {
           int offset =
               range == null
                   ? 0
-                  : Integer.parseInt(
-                      range.substring("bytes=".length(), range.length() - 1));
+                  : Integer.parseInt(range.substring("bytes=".length(), range.length() - 1));
           if (range == null) {
             exchange.sendResponseHeaders(200, modelBytes.length);
           } else {
@@ -318,12 +330,7 @@ class ModelJarInstallerTest {
                 .getResponseHeaders()
                 .set(
                     "Content-Range",
-                    "bytes "
-                        + offset
-                        + "-"
-                        + (modelBytes.length - 1)
-                        + "/"
-                        + modelBytes.length);
+                    "bytes " + offset + "-" + (modelBytes.length - 1) + "/" + modelBytes.length);
             exchange.sendResponseHeaders(206, modelBytes.length - offset);
           }
           int bytesToWrite = Math.min(32 * 1024, modelBytes.length - offset);

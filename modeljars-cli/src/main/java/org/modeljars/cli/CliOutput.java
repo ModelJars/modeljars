@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import java.io.PrintStream;
@@ -131,12 +146,14 @@ final class CliOutput {
 
   void section(String heading) {
     stream.println();
-    stream.println(color ? BOLD_CYAN + heading.toUpperCase(Locale.ROOT) + RESET : heading.toUpperCase(Locale.ROOT));
+    stream.println(
+        color
+            ? BOLD_CYAN + heading.toUpperCase(Locale.ROOT) + RESET
+            : heading.toUpperCase(Locale.ROOT));
   }
 
   void properties(Map<String, ?> values) {
-    int labelWidth =
-        values.keySet().stream().mapToInt(String::length).max().orElse(0);
+    int labelWidth = values.keySet().stream().mapToInt(String::length).max().orElse(0);
     values.forEach(
         (label, value) -> {
           String paddedLabel = pad(label, labelWidth, Alignment.LEFT);
@@ -152,10 +169,7 @@ final class CliOutput {
     table(columns, rows, List.of());
   }
 
-  void table(
-      List<Column> columns,
-      List<List<Cell>> rows,
-      List<List<Detail>> details) {
+  void table(List<Column> columns, List<List<Cell>> rows, List<List<Detail>> details) {
     if (columns.isEmpty()) {
       return;
     }
@@ -218,8 +232,7 @@ final class CliOutput {
     return widths;
   }
 
-  private void printRow(
-      List<Column> columns, int[] widths, List<Cell> cells, boolean heading) {
+  private void printRow(List<Column> columns, int[] widths, List<Cell> cells, boolean heading) {
     StringBuilder line = new StringBuilder();
     for (int index = 0; index < columns.size(); index++) {
       if (index > 0) {

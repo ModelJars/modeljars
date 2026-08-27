@@ -93,10 +93,10 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
   /**
    * Describes this machine for profile matching, or nothing when it cannot be described.
    *
-   * <p>Fingerprinting reaches into the incubating Vector API, which a JVM started without
-   * {@code --add-modules jdk.incubator.vector} cannot link. That surfaces as NoClassDefFoundError —
-   * an Error, not an exception — so it would escape a caller catching RuntimeException and take
-   * down discovery for every other catalog too.
+   * <p>Fingerprinting reaches into the incubating Vector API, which a JVM started without {@code
+   * --add-modules jdk.incubator.vector} cannot link. That surfaces as NoClassDefFoundError — an
+   * Error, not an exception — so it would escape a caller catching RuntimeException and take down
+   * discovery for every other catalog too.
    *
    * <p>An empty map simply matches no profile, which leaves throughput to the router's estimator.
    * Losing measured figures is a far smaller loss than losing the whole fleet.
@@ -114,12 +114,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
       ModelRagQualificationRegistry qualifications,
       ModelPerformanceProfileRegistry profiles,
       Map<String, String> runtime) {
-    this(
-        models,
-        qualifications,
-        ModelToolQualificationRegistry.fromClasspath(),
-        profiles,
-        runtime);
+    this(models, qualifications, ModelToolQualificationRegistry.fromClasspath(), profiles, runtime);
   }
 
   ModelJarsCatalog(
@@ -228,9 +223,9 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    *
    * <p>Reads {@code rawCorrectAnswerRate} rather than {@code correctAnswerRate}. The latter is
    * policy-adjusted — a correct refusal to answer counts as correct — and is 1.0 for every model in
-   * the catalogue, so it cannot rank anything. The raw rate spreads from 0.0 to 0.78 across the same
-   * models, which is the difference between a quality dimension that discriminates and one that
-   * silently tells the router every model is perfect.
+   * the catalogue, so it cannot rank anything. The raw rate spreads from 0.0 to 0.78 across the
+   * same models, which is the difference between a quality dimension that discriminates and one
+   * that silently tells the router every model is perfect.
    *
    * <p>One RAG question-answering workload is a poor proxy for a code or SQL specialist, so this
    * understates them. That is the safe direction: an understated model loses ties to models with
@@ -260,11 +255,9 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
           double conformance =
               Math.min(
                   Math.min(
-                      qualification.toolSelectionExactRate(),
-                      qualification.schemaValidityRate()),
+                      qualification.toolSelectionExactRate(), qualification.schemaValidityRate()),
                   Math.min(
-                      qualification.expectedArgumentAccuracy(),
-                      qualification.refusalAccuracy()));
+                      qualification.expectedArgumentAccuracy(), qualification.refusalAccuracy()));
           quality.merge("tool-use", conformance, Math::max);
         }
       }

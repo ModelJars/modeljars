@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,9 +49,7 @@ class ModelRagQualificationRegistryTest {
         ModelRagQualificationRegistry.fromProperties(properties(1.0, 1.0, true));
 
     assertEquals(Instant.parse("2026-07-24T06:00:00Z"), registry.generatedAt());
-    assertEquals(
-        "production-rag-model-contribution-v4",
-        registry.policyVersion());
+    assertEquals("production-rag-model-contribution-v4", registry.policyVersion());
     assertEquals(MODELS_REVISION, registry.modelsRevision());
     assertEquals(25, registry.targetQualifiedModels());
     assertEquals(1, registry.qualifiedModels());
@@ -94,9 +107,9 @@ class ModelRagQualificationRegistryTest {
       properties(1.0, 1.0, true).store(output, null);
     }
 
-    try (var loader = new java.net.URLClassLoader(new java.net.URL[] {root.toUri().toURL()}, null)) {
-      ModelRagQualificationRegistry registry =
-          ModelRagQualificationRegistry.fromClasspath(loader);
+    try (var loader =
+        new java.net.URLClassLoader(new java.net.URL[] {root.toUri().toURL()}, null)) {
+      ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath(loader);
       assertEquals(1, registry.qualifications().size());
       assertEquals(ARTIFACT_SHA, registry.qualifications().getFirst().artifactSha256());
     }
@@ -117,8 +130,7 @@ class ModelRagQualificationRegistryTest {
     try (var loader =
         new java.net.URLClassLoader(
             new java.net.URL[] {olderRoot.toUri().toURL(), newerRoot.toUri().toURL()}, null)) {
-      ModelRagQualificationRegistry registry =
-          ModelRagQualificationRegistry.fromClasspath(loader);
+      ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath(loader);
 
       assertEquals(2, registry.qualifications().size());
       assertEquals(Instant.parse("2026-08-09T18:42:00Z"), registry.generatedAt());
@@ -139,7 +151,8 @@ class ModelRagQualificationRegistryTest {
     Properties older = properties(1.0, 1.0, true);
     Properties newer = properties(0.0, 0.1, false);
     newer.setProperty("modeljars.qualifications.generatedAt", "2026-08-25T13:39:00Z");
-    newer.setProperty("modeljars.qualifications.policyVersion", "production-rag-model-contribution-v5");
+    newer.setProperty(
+        "modeljars.qualifications.policyVersion", "production-rag-model-contribution-v5");
     newer.setProperty("modeljars.qualifications.modelsRevision", "f".repeat(40));
     newer.setProperty("modeljars.qualifications.qualifiedModels", "0");
     newer.setProperty("modeljars.qualifications.rejectedModels", "1");
@@ -150,15 +163,13 @@ class ModelRagQualificationRegistryTest {
     try (var loader =
         new java.net.URLClassLoader(
             new java.net.URL[] {olderRoot.toUri().toURL(), newerRoot.toUri().toURL()}, null)) {
-      ModelRagQualificationRegistry registry =
-          ModelRagQualificationRegistry.fromClasspath(loader);
+      ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath(loader);
 
       assertEquals(1, registry.qualifications().size());
       assertEquals(0, registry.qualifiedModels());
       assertEquals(1, registry.rejectedModels());
       assertEquals(
-          "FAILED_MODEL_CONTRIBUTION_GATE",
-          registry.qualifications().getFirst().verdict());
+          "FAILED_MODEL_CONTRIBUTION_GATE", registry.qualifications().getFirst().verdict());
       assertFalse(registry.qualifications().getFirst().productionUsable());
     }
   }
@@ -191,11 +202,7 @@ class ModelRagQualificationRegistryTest {
 
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry
-                        .modelId()
-                        .equals("ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -204,8 +211,7 @@ class ModelRagQualificationRegistryTest {
     assertEquals(1, registry.rejectedModels());
     assertEquals("rust-ffm", qualification.backend());
     assertEquals(
-        "models@ac80da9f89d908c1ac4b69cb95fa63c6b21cc890 "
-            + "com.integrallis:vectors-core@0.1.12",
+        "models@ac80da9f89d908c1ac4b69cb95fa63c6b21cc890 " + "com.integrallis:vectors-core@0.1.12",
         qualification.backendVersion());
     assertEquals("gemma4", qualification.promptTemplate());
     assertEquals("USABLE", qualification.performanceTier());
@@ -436,8 +442,7 @@ class ModelRagQualificationRegistryTest {
   void aggregateCatalogPublishesQualifiedQwen25GeneralEvidence() {
     ModelRagQualification qualification =
         ModelRagQualificationRegistry.fromClasspath().qualifications().stream()
-            .filter(
-                entry -> entry.modelId().equals("qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -459,8 +464,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry -> entry.modelId().equals("qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -484,8 +488,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry -> entry.modelId().equals("umarfarookm_umartransit_1b_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("umarfarookm_umartransit_1b_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -533,9 +536,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry.modelId().equals("bartowski_llama_3_2_1b_instruct_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("bartowski_llama_3_2_1b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -559,9 +560,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry.modelId().equals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -585,9 +584,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry.modelId().equals("gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -612,9 +609,7 @@ class ModelRagQualificationRegistryTest {
         registry.qualifications().stream()
             .filter(
                 entry ->
-                    entry
-                        .modelId()
-                        .equals("bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m"))
+                    entry.modelId().equals("bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -637,9 +632,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry.modelId().equals("qwen2_5_math_1_5b_instruct_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("qwen2_5_math_1_5b_instruct_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -666,9 +659,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry.modelId().equals("bartowski_llama_3_2_3b_instruct_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("bartowski_llama_3_2_3b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -704,8 +695,7 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
     ModelRagQualification qualification =
         registry.qualifications().stream()
-            .filter(
-                entry -> entry.modelId().equals("deepseek_coder_1_3b_instruct_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("deepseek_coder_1_3b_instruct_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -870,20 +860,17 @@ class ModelRagQualificationRegistryTest {
     assertEquals(5.0 / 9.0, finance.modelAnswerRate());
     assertEquals(30.16945787255821, finance.p50DecodeTokensPerSecond());
     assertEquals(
-        "42035af3e519215887dfb2633588c8ea04a1e5dc29ff55456517b0464dc1e9be",
-        finance.reportSha256());
+        "42035af3e519215887dfb2633588c8ea04a1e5dc29ff55456517b0464dc1e9be", finance.reportSha256());
     assertEquals("legal", legal.workload());
     assertEquals(4.0 / 9.0, legal.modelAnswerRate());
     assertEquals(27.75538941546097, legal.p50DecodeTokensPerSecond());
     assertEquals(
-        "68a57876f44b951fa5f6a67f8554ab76a46279f16f17d6dca3d4eca3439a1ad7",
-        legal.reportSha256());
+        "68a57876f44b951fa5f6a67f8554ab76a46279f16f17d6dca3d4eca3439a1ad7", legal.reportSha256());
     assertEquals("healthcare", medical.workload());
     assertEquals(4.0 / 9.0, medical.modelAnswerRate());
     assertEquals(29.37754596980454, medical.p50DecodeTokensPerSecond());
     assertEquals(
-        "468f7ede0fdc8487201515b639df8bbeeb73fbdae1af70a42a4517681065140b",
-        medical.reportSha256());
+        "468f7ede0fdc8487201515b639df8bbeeb73fbdae1af70a42a4517681065140b", medical.reportSha256());
     assertTrue(finance.productionUsable());
     assertTrue(legal.productionUsable());
     assertTrue(medical.productionUsable());
@@ -896,37 +883,22 @@ class ModelRagQualificationRegistryTest {
     ModelRagQualification smolLm =
         registry.qualifications().stream()
             .filter(
-                entry ->
-                    entry
-                        .modelId()
-                        .equals("huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m"))
+                entry -> entry.modelId().equals("huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
     ModelRagQualification danubeTwo =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry
-                        .modelId()
-                        .equals("h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
     ModelRagQualification danubeThree =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry
-                        .modelId()
-                        .equals("h2oai_h2o_danube3_500m_chat_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("h2oai_h2o_danube3_500m_chat_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
     ModelRagQualification yiCoder =
         registry.qualifications().stream()
-            .filter(
-                entry ->
-                    entry
-                        .modelId()
-                        .equals("bartowski_yi_coder_1_5b_chat_gguf_q4_k_m"))
+            .filter(entry -> entry.modelId().equals("bartowski_yi_coder_1_5b_chat_gguf_q4_k_m"))
             .findFirst()
             .orElseThrow();
 
@@ -936,8 +908,7 @@ class ModelRagQualificationRegistryTest {
     assertEquals(15.0 / 27.0, smolLm.modelAnswerRate());
     assertEquals(22.83409323014655, smolLm.p50DecodeTokensPerSecond());
     assertEquals(
-        "128dce8b4c8b5eae1e1c1be7cca8c155b144506e33c37b1cb0479dd928af0968",
-        smolLm.reportSha256());
+        "128dce8b4c8b5eae1e1c1be7cca8c155b144506e33c37b1cb0479dd928af0968", smolLm.reportSha256());
     assertEquals("h2o-direct", danubeTwo.promptTemplate());
     assertEquals(1.0 / 3.0, danubeTwo.modelAnswerRate());
     assertEquals(26.092233851604476, danubeTwo.p50DecodeTokensPerSecond());
@@ -956,8 +927,7 @@ class ModelRagQualificationRegistryTest {
     assertEquals(15.0 / 27.0, yiCoder.modelAnswerRate());
     assertEquals(29.737367126827113, yiCoder.p50DecodeTokensPerSecond());
     assertEquals(
-        "7213773355906a05cf1e9c42991246c78265cb775cac2bc87e05e209e787f612",
-        yiCoder.reportSha256());
+        "7213773355906a05cf1e9c42991246c78265cb775cac2bc87e05e209e787f612", yiCoder.reportSha256());
     assertEquals(
         URI.create(
             "https://github.com/integrallis/models/blob/"
@@ -1007,14 +977,12 @@ class ModelRagQualificationRegistryTest {
     Properties wrongSchema = properties(1.0, 1.0, true);
     wrongSchema.setProperty("modeljars.qualifications.schemaVersion", "2");
     assertThrows(
-        ModelJarException.class,
-        () -> ModelRagQualificationRegistry.fromProperties(wrongSchema));
+        ModelJarException.class, () -> ModelRagQualificationRegistry.fromProperties(wrongSchema));
 
     Properties wrongCount = properties(1.0, 1.0, true);
     wrongCount.setProperty("modeljars.qualifications.qualifiedModels", "0");
     assertThrows(
-        ModelJarException.class,
-        () -> ModelRagQualificationRegistry.fromProperties(wrongCount));
+        ModelJarException.class, () -> ModelRagQualificationRegistry.fromProperties(wrongCount));
 
     Properties invalidRate = properties(1.1, 1.0, true);
     assertThrows(
@@ -1048,8 +1016,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty("modeljars.qualifications.schemaVersion", "1");
     properties.setProperty("modeljars.qualifications.generatedAt", "2026-07-24T06:00:00Z");
     properties.setProperty(
-        "modeljars.qualifications.policyVersion",
-        "production-rag-model-contribution-v4");
+        "modeljars.qualifications.policyVersion", "production-rag-model-contribution-v4");
     properties.setProperty("modeljars.qualifications.modelsRevision", MODELS_REVISION);
     properties.setProperty("modeljars.qualifications.targetQualifiedModels", "25");
     properties.setProperty("modeljars.qualifications.qualifiedModels", qualified ? "1" : "0");
@@ -1061,8 +1028,7 @@ class ModelRagQualificationRegistryTest {
     properties.setProperty(prefix + "corpusSha256", "d".repeat(64));
     properties.setProperty(prefix + "promptTemplate", "chatml");
     properties.setProperty(
-        prefix + "groundingPolicy",
-        "trusted-provenance-clause-anchors-extractive-fallback-v4");
+        prefix + "groundingPolicy", "trusted-provenance-clause-anchors-extractive-fallback-v4");
     properties.setProperty(prefix + "artifactSha256", ARTIFACT_SHA);
     properties.setProperty(prefix + "artifactSizeBytes", "429496729");
     properties.setProperty(
@@ -1114,8 +1080,7 @@ class ModelRagQualificationRegistryTest {
             name ->
                 renamed.setProperty(
                     name.replace(
-                        "qualification.qwen3_0_6b_q4_0.",
-                        "qualification." + modelId + "."),
+                        "qualification.qwen3_0_6b_q4_0.", "qualification." + modelId + "."),
                     source.getProperty(name)));
     return renamed;
   }

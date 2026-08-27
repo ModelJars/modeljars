@@ -1,8 +1,22 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
@@ -28,7 +42,8 @@ class HuggingFaceContributionServiceTest {
           "cardData": {"license": "apache-2.0", "tags": ["chat"]},
           "config": {"model_type": "qwen2"}
         }
-        """.formatted(revision);
+        """
+            .formatted(revision);
     String treeJson =
         """
         [
@@ -37,7 +52,8 @@ class HuggingFaceContributionServiceTest {
           {"type":"file","path":"tokenizer.json","size":9,"oid":"c"},
           {"type":"file","path":"tokenizer_config.json","size":16,"oid":"d"}
         ]
-        """.formatted("f".repeat(64));
+        """
+            .formatted("f".repeat(64));
     HuggingFaceContributionService.HttpTransport transport =
         uri -> {
           String path = uri.getPath();
@@ -81,17 +97,18 @@ class HuggingFaceContributionServiceTest {
           "pipeline_tag": "text-generation",
           "cardData": {"license": "apache-2.0", "tags": ["chat"]}
         }
-        """.formatted(revision);
+        """
+            .formatted(revision);
     String treeJson =
         """
         [
           {"type":"file","path":"needle2.cact","size":13737807,
            "lfs":{"oid":"%s","size":13737807}}
         ]
-        """.formatted(artifactSha);
+        """
+            .formatted(artifactSha);
     HuggingFaceContributionService.HttpTransport transport =
-        uri ->
-            uri.getPath().contains("/tree/") ? response(treeJson) : response(modelJson);
+        uri -> uri.getPath().contains("/tree/") ? response(treeJson) : response(modelJson);
 
     ContributionDraft draft =
         new HuggingFaceContributionService(transport)
@@ -106,7 +123,8 @@ class HuggingFaceContributionServiceTest {
 
     assertEquals("cact", draft.format());
     assertEquals("needle2", draft.name());
-    assertEquals(List.of("needle2.cact"), draft.files().stream().map(ContributionFile::path).toList());
+    assertEquals(
+        List.of("needle2.cact"), draft.files().stream().map(ContributionFile::path).toList());
     assertEquals("model-weights", draft.files().getFirst().role());
     assertEquals(artifactSha, draft.files().getFirst().sha256());
   }

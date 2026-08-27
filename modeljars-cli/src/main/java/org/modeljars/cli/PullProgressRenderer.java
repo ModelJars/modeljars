@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import java.io.PrintStream;
@@ -21,7 +36,9 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
   private static final String YELLOW = "\u001B[33m";
   private static final String DIM = "\u001B[2m";
   private static final long FRAME_NANOS = TimeUnit.MILLISECONDS.toNanos(100);
-  private static final String[] UNICODE_SPINNER = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
+  private static final String[] UNICODE_SPINNER = {
+    "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"
+  };
   private static final String[] ASCII_SPINNER = {"|", "/", "-", "\\"};
 
   enum Mode {
@@ -65,11 +82,7 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
   private ModelInstallProgress.Source completionSource;
 
   PullProgressRenderer(
-      Mode requestedMode,
-      Terminal terminal,
-      PrintStream fallback,
-      boolean color,
-      int width) {
+      Mode requestedMode, Terminal terminal, PrintStream fallback, boolean color, int width) {
     this(requestedMode, terminal, fallback, color, width, System::nanoTime);
   }
 
@@ -108,11 +121,7 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
     if (progress instanceof ModelInstallProgress.DownloadStarted started) {
       beginPhase(
           new Snapshot(
-              Phase.DOWNLOAD,
-              started.alias(),
-              started.completedBytes(),
-              started.totalBytes(),
-              now),
+              Phase.DOWNLOAD, started.alias(), started.completedBytes(), started.totalBytes(), now),
           now);
       nextPlainDownloadPercentage = 25;
       if (mode == Mode.PLAIN) {
@@ -125,7 +134,8 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
         renderNow();
       }
     } else if (progress instanceof ModelInstallProgress.DownloadAdvanced advanced) {
-      advance(Phase.DOWNLOAD, advanced.alias(), advanced.completedBytes(), advanced.totalBytes(), now);
+      advance(
+          Phase.DOWNLOAD, advanced.alias(), advanced.completedBytes(), advanced.totalBytes(), now);
       if (mode == Mode.PLAIN) {
         nextPlainDownloadPercentage =
             printPlainProgress("Download", advanced, nextPlainDownloadPercentage);
@@ -157,7 +167,8 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
         renderNow();
       }
     } else if (progress instanceof ModelInstallProgress.VerificationAdvanced advanced) {
-      advance(Phase.VERIFY, advanced.alias(), advanced.completedBytes(), advanced.totalBytes(), now);
+      advance(
+          Phase.VERIFY, advanced.alias(), advanced.completedBytes(), advanced.totalBytes(), now);
       if (mode == Mode.PLAIN) {
         nextPlainVerificationPercentage =
             printPlainProgress("Verify", advanced, nextPlainVerificationPercentage);
@@ -167,11 +178,7 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
       operationCompletedNanos = now;
       snapshot =
           new Snapshot(
-              Phase.VERIFY,
-              completed.alias(),
-              completed.totalBytes(),
-              completed.totalBytes(),
-              now);
+              Phase.VERIFY, completed.alias(), completed.totalBytes(), completed.totalBytes(), now);
       if (mode == Mode.BAR) {
         renderNow();
         clearDisplay();
@@ -304,7 +311,8 @@ final class PullProgressRenderer implements Consumer<ModelInstallProgress>, Auto
       int filled = (int) Math.round(barWidth * percent / 100.0);
       String full = unicode ? "█" : "#";
       String empty = unicode ? "░" : "-";
-      String bar = full.repeat(Math.min(barWidth, filled)) + empty.repeat(Math.max(0, barWidth - filled));
+      String bar =
+          full.repeat(Math.min(barWidth, filled)) + empty.repeat(Math.max(0, barWidth - filled));
       detail = "    " + paint(GREEN, bar) + "  " + paint(DIM, suffix);
     } else {
       detail = "    " + paint(DIM, suffix);

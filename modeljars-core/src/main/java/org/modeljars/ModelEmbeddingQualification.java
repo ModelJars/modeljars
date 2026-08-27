@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Integrallis Software, LLC
+ * Copyright 2025-2026 Integrallis Software, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,9 +94,9 @@ public record ModelEmbeddingQualification(
   /**
    * How far a vector's length may sit from one before normalization is considered broken.
    *
-   * <p>Cosine is scale-invariant, so a runtime that skips L2 normalization agrees with a
-   * normalized reference at exactly 1.0, measured against llama.cpp with {@code --embd-normalize
-   * -1}. Callers that use a bare dot product as a cosine shortcut depend on unit length.
+   * <p>Cosine is scale-invariant, so a runtime that skips L2 normalization agrees with a normalized
+   * reference at exactly 1.0, measured against llama.cpp with {@code --embd-normalize -1}. Callers
+   * that use a bare dot product as a cosine shortcut depend on unit length.
    */
   public static final double MAX_NORM_DEVIATION = 1.0e-3;
 

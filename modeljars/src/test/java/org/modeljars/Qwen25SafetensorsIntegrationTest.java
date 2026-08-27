@@ -1,9 +1,24 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
-import static org.modeljars.catalog.Qwen_Qwen2_5_0_5b_Instruct_Bf16.MODEL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.modeljars.catalog.Qwen_Qwen2_5_0_5b_Instruct_Bf16.MODEL;
 
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
@@ -14,8 +29,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class Qwen25SafetensorsIntegrationTest {
-  private static final String DIRECTORY_PROPERTY =
-      "modeljars.fixtures.qwen25SafetensorsDirectory";
+  private static final String DIRECTORY_PROPERTY = "modeljars.fixtures.qwen25SafetensorsDirectory";
+
   @Test
   void verifiesOpensAndGeneratesThroughTheModelJarsRuntime() {
     String configured = System.getProperty(DIRECTORY_PROPERTY, "").trim();
@@ -39,16 +54,16 @@ class Qwen25SafetensorsIntegrationTest {
 
     try (ModelJarRuntime runtime =
         modelJars.loadRuntime(
-            MODEL,
-            ModelLoadOptions.builder().backend(ModelBackend.JAVA).offline(true).build())) {
+            MODEL, ModelLoadOptions.builder().backend(ModelBackend.JAVA).offline(true).build())) {
       assertEquals(descriptor, runtime.descriptor());
       assertTrue(runtime.qualification().productionUsable());
       assertEquals("qwen2", runtime.metadata().modelFamily());
       var prompt =
           runtime.chatTemplate().render(List.of(ChatMessage.user("Name one JVM language.")));
       String answer =
-          runtime.model().generate(
-              prompt, SamplingOptions.builder().temperature(0).maxTokens(8).build());
+          runtime
+              .model()
+              .generate(prompt, SamplingOptions.builder().temperature(0).maxTokens(8).build());
       assertFalse(answer.isBlank());
     }
   }

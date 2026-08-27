@@ -90,7 +90,7 @@ jobs:
       - name: Validate build
         run: >
           ./gradlew --no-daemon
-          test assemble verifyCatalog verifyJvmRuntimePublication generateSite
+          spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication generateSite
 
       - name: Verify pinned Hugging Face metadata
         if: steps.remote-catalog.outputs.required == 'true'

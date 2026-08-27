@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -111,9 +126,7 @@ class ModelJarsCliTest {
     assertTrue(plain.output().contains("revision=" + "b".repeat(40)));
     assertTrue(plain.output().contains("sha256=" + "a".repeat(64)));
     assertTrue(
-        plain
-            .output()
-            .contains("downloadUri=https://huggingface.co/example/model/model.gguf"));
+        plain.output().contains("downloadUri=https://huggingface.co/example/model/model.gguf"));
   }
 
   @Test
@@ -122,18 +135,12 @@ class ModelJarsCliTest {
     ModelJarsCli cli = cli(descriptor);
 
     Result result =
-        run(
-            cli,
-            "coordinates",
-            descriptor.alias(),
-            "--tool",
-            "maven",
-            "--tool",
-            "gradle-kotlin");
+        run(cli, "coordinates", descriptor.alias(), "--tool", "maven", "--tool", "gradle-kotlin");
 
     assertEquals(0, result.status());
     assertTrue(result.output().contains("<groupId>org.modeljars.huggingface</groupId>"));
-    assertTrue(result.output().contains("implementation(\"" + descriptor.markerCoordinate() + "\")"));
+    assertTrue(
+        result.output().contains("implementation(\"" + descriptor.markerCoordinate() + "\")"));
   }
 
   @Test
@@ -173,13 +180,7 @@ class ModelJarsCliTest {
             "--output",
             "plain");
     Result quiet =
-        run(
-            cli,
-            "pull",
-            descriptor.alias(),
-            "--cache",
-            temporaryDirectory.toString(),
-            "--quiet");
+        run(cli, "pull", descriptor.alias(), "--cache", temporaryDirectory.toString(), "--quiet");
 
     Path expected =
         temporaryDirectory
@@ -209,7 +210,11 @@ class ModelJarsCliTest {
               long size = selected.sizeBytes().orElseThrow();
               progress.accept(
                   new ModelInstallProgress.DownloadStarted(
-                      selected.alias(), selected.downloadUri().orElseThrow(), destination, 0, size));
+                      selected.alias(),
+                      selected.downloadUri().orElseThrow(),
+                      destination,
+                      0,
+                      size));
               progress.accept(
                   new ModelInstallProgress.DownloadAdvanced(selected.alias(), size, size));
               progress.accept(
@@ -245,14 +250,11 @@ class ModelJarsCliTest {
     Files.write(artifact, new byte[] {1, 2, 3, 4});
     ModelJarsCli cli = cli(descriptor);
 
-    Result listed =
-        run(cli, "list", "--cache", temporaryDirectory.toString(), "--coordinates");
-    Result detailed =
-        run(cli, "list", "--cache", temporaryDirectory.toString(), "--details");
+    Result listed = run(cli, "list", "--cache", temporaryDirectory.toString(), "--coordinates");
+    Result detailed = run(cli, "list", "--cache", temporaryDirectory.toString(), "--details");
     Result fuzzyRemoval =
         run(cli, "remove", "example q4", "--cache", temporaryDirectory.toString());
-    Result removed =
-        run(cli, "rm", descriptor.alias(), "--cache", temporaryDirectory.toString());
+    Result removed = run(cli, "rm", descriptor.alias(), "--cache", temporaryDirectory.toString());
 
     assertEquals(0, listed.status());
     assertTrue(listed.output().contains(descriptor.markerCoordinate().toString()));
@@ -278,7 +280,12 @@ class ModelJarsCliTest {
     Files.writeString(bundle.resolve("config.json"), "{}");
 
     Result removed =
-        run(cli(descriptor), "remove", descriptor.alias(), "--cache", temporaryDirectory.toString());
+        run(
+            cli(descriptor),
+            "remove",
+            descriptor.alias(),
+            "--cache",
+            temporaryDirectory.toString());
 
     assertEquals(0, removed.status());
     assertFalse(Files.exists(primary));
@@ -297,7 +304,12 @@ class ModelJarsCliTest {
     Path unexpected = Files.writeString(bundle.resolve("notes.txt"), "keep me");
 
     Result removed =
-        run(cli(descriptor), "remove", descriptor.alias(), "--cache", temporaryDirectory.toString());
+        run(
+            cli(descriptor),
+            "remove",
+            descriptor.alias(),
+            "--cache",
+            temporaryDirectory.toString());
 
     assertEquals(2, removed.status());
     assertTrue(removed.error().contains("unexpected cache file"));
@@ -329,13 +341,7 @@ class ModelJarsCliTest {
     Files.writeString(primary.getParent().resolve("config.json"), "{}");
 
     Result result =
-        run(
-            cli(descriptor),
-            "env",
-            "--cache",
-            temporaryDirectory.toString(),
-            "--output",
-            "json");
+        run(cli(descriptor), "env", "--cache", temporaryDirectory.toString(), "--output", "json");
 
     assertEquals(0, result.status());
     assertTrue(result.output().contains("\"cachedModels\": 1"));
@@ -345,8 +351,7 @@ class ModelJarsCliTest {
   @Test
   void keepsLongListCoordinatesAndAliasesIntactAtNormalTerminalWidth() throws IOException {
     ModelJarDescriptor descriptor =
-        descriptor(
-            "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m", "Q4_K_M");
+        descriptor("second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m", "Q4_K_M");
     Path artifact = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
     Files.createDirectories(artifact.getParent());
     Files.write(artifact, new byte[] {1, 2, 3, 4});
@@ -397,8 +402,7 @@ class ModelJarsCliTest {
     ModelJarsCli cli = cli(descriptor());
 
     Result compact = run(cli, "search", "--width", "72");
-    Result colored =
-        run(cli, "search", "--details", "--color", "always", "--width", "72");
+    Result colored = run(cli, "search", "--details", "--color", "always", "--width", "72");
 
     assertEquals(0, compact.status());
     assertFalse(compact.output().contains("CAPABILITIES"));
@@ -438,10 +442,7 @@ class ModelJarsCliTest {
     ByteArrayOutputStream interactiveOutput = new ByteArrayOutputStream();
     ByteArrayOutputStream interactiveError = new ByteArrayOutputStream();
     String commands =
-        String.join(
-            System.lineSeparator(),
-            "snippet example_q4_0 --tool gradle-kotlin",
-            "");
+        String.join(System.lineSeparator(), "snippet example_q4_0 --tool gradle-kotlin", "");
     int interactiveStatus =
         cli.launch(
             new String[0],
@@ -549,9 +550,7 @@ class ModelJarsCliTest {
             new PrintStream(output, true, StandardCharsets.UTF_8),
             new PrintStream(error, true, StandardCharsets.UTF_8));
     return new Result(
-        status,
-        output.toString(StandardCharsets.UTF_8),
-        error.toString(StandardCharsets.UTF_8));
+        status, output.toString(StandardCharsets.UTF_8), error.toString(StandardCharsets.UTF_8));
   }
 
   private static ModelJarDescriptor descriptor() {
@@ -569,11 +568,7 @@ class ModelJarsCliTest {
         alias,
         "hf://example/model",
         ModelJarCoordinate.parse(
-            "org.modeljars.huggingface:example.model."
-                + variant
-                + ":1.0.0-"
-                + variant
-                + ".1"),
+            "org.modeljars.huggingface:example.model." + variant + ":1.0.0-" + variant + ".1"),
         ModelVersion.parse("1.0.0"),
         variant,
         "gguf",

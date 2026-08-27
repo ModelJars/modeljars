@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -28,7 +43,14 @@ final class HuggingFaceContributionService implements ContributionService {
   private static final URI HUGGING_FACE = URI.create("https://huggingface.co");
   private static final Pattern NEXT_LINK = Pattern.compile("<([^>]+)>;\\s*rel=\"next\"");
   private static final Set<String> CAPABILITY_TAGS =
-      Set.of("chat", "text-generation", "text-embedding", "feature-extraction", "sentence-similarity", "text-to-speech", "audio");
+      Set.of(
+          "chat",
+          "text-generation",
+          "text-embedding",
+          "feature-extraction",
+          "sentence-similarity",
+          "text-to-speech",
+          "audio");
 
   private final HttpTransport transport;
   private final ObjectMapper json = new ObjectMapper();
@@ -70,16 +92,17 @@ final class HuggingFaceContributionService implements ContributionService {
     String format = detectFormat(selected);
     Optional<String> architecture = optionalText(metadata.path("config"), "model_type");
     Optional<String> upstreamLicense =
-        optionalText(metadata.path("cardData"), "license").map(HuggingFaceContributionService::spdxLicense);
+        optionalText(metadata.path("cardData"), "license")
+            .map(HuggingFaceContributionService::spdxLicense);
     List<String> capabilities =
-        request.capabilities().isEmpty() ? upstreamCapabilities(metadata) : distinct(request.capabilities());
+        request.capabilities().isEmpty()
+            ? upstreamCapabilities(metadata)
+            : distinct(request.capabilities());
     String repositoryName = repository[1];
     String name =
         format.equals("gguf") || format.equals("cact")
             ? selected.stream()
-                .filter(
-                    file ->
-                        file.path().toLowerCase(Locale.ROOT).endsWith("." + format))
+                .filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith("." + format))
                 .findFirst()
                 .map(RemoteFile::path)
                 .map(HuggingFaceContributionService::baseName)
@@ -115,7 +138,8 @@ final class HuggingFaceContributionService implements ContributionService {
     while (next != null) {
       HttpResponse response = requiredGet(next);
       JsonNode page = parse(response, next);
-      if (!page.isArray()) throw new IOException("Hugging Face tree response is not an array: " + next);
+      if (!page.isArray())
+        throw new IOException("Hugging Face tree response is not an array: " + next);
       for (JsonNode entry : page) {
         if (!"file".equals(entry.path("type").asText())) continue;
         String path = requiredText(entry, "path", "Hugging Face tree entry");
@@ -156,21 +180,30 @@ final class HuggingFaceContributionService implements ContributionService {
               .map(
                   path -> {
                     RemoteFile file = byPath.get(path);
-                    if (file == null) throw new IllegalArgumentException("File is not present at the pinned revision: " + path);
+                    if (file == null)
+                      throw new IllegalArgumentException(
+                          "File is not present at the pinned revision: " + path);
                     return file;
                   })
               .toList();
-      if (selected.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors"))) {
+      if (selected.stream()
+          .anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors"))) {
         return standardSafetensorsFiles(byPath);
       }
       return selected;
     }
 
     List<RemoteFile> gguf =
-        tree.stream().filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf")).toList();
+        tree.stream()
+            .filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf"))
+            .toList();
     List<RemoteFile> cact =
-        tree.stream().filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact")).toList();
-    boolean standardSafetensors = byPath.containsKey("model.safetensors") || byPath.containsKey("model.safetensors.index.json");
+        tree.stream()
+            .filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact"))
+            .toList();
+    boolean standardSafetensors =
+        byPath.containsKey("model.safetensors")
+            || byPath.containsKey("model.safetensors.index.json");
     int availableFormats =
         (gguf.isEmpty() ? 0 : 1) + (cact.isEmpty() ? 0 : 1) + (standardSafetensors ? 1 : 0);
     if (availableFormats > 1) {
@@ -200,7 +233,8 @@ final class HuggingFaceContributionService implements ContributionService {
     List<String> required = List.of("config.json", "tokenizer.json", "tokenizer_config.json");
     for (String path : required) {
       if (!byPath.containsKey(path)) {
-        throw new IllegalArgumentException("Standard Safetensors contribution is missing required file: " + path);
+        throw new IllegalArgumentException(
+            "Standard Safetensors contribution is missing required file: " + path);
       }
     }
     LinkedHashSet<RemoteFile> selected = new LinkedHashSet<>();
@@ -209,13 +243,15 @@ final class HuggingFaceContributionService implements ContributionService {
       selected.add(byPath.get("model.safetensors"));
     } else {
       RemoteFile index = byPath.get("model.safetensors.index.json");
-      if (index == null) throw new IllegalArgumentException("Safetensors checkpoint has no weights or index");
+      if (index == null)
+        throw new IllegalArgumentException("Safetensors checkpoint has no weights or index");
       selected.add(index);
       byPath.values().stream()
           .filter(file -> file.path().matches("model-\\d+-of-\\d+\\.safetensors"))
           .sorted(Comparator.comparing(RemoteFile::path))
           .forEach(selected::add);
-      if (selected.size() == 2) throw new IllegalArgumentException("Safetensors index has no checkpoint shards");
+      if (selected.size() == 2)
+        throw new IllegalArgumentException("Safetensors index has no checkpoint shards");
     }
     selected.add(byPath.get("tokenizer.json"));
     selected.add(byPath.get("tokenizer_config.json"));
@@ -244,14 +280,18 @@ final class HuggingFaceContributionService implements ContributionService {
 
   private static URI resolveUri(String repository, String revision, String path) {
     String encodedPath =
-        java.util.Arrays.stream(path.split("/", -1)).map(HuggingFaceContributionService::segment).collect(java.util.stream.Collectors.joining("/"));
-    return HUGGING_FACE.resolve('/' + repository + "/resolve/" + segment(revision) + '/' + encodedPath);
+        java.util.Arrays.stream(path.split("/", -1))
+            .map(HuggingFaceContributionService::segment)
+            .collect(java.util.stream.Collectors.joining("/"));
+    return HUGGING_FACE.resolve(
+        '/' + repository + "/resolve/" + segment(revision) + '/' + encodedPath);
   }
 
   private HttpResponse requiredGet(URI uri) throws IOException, InterruptedException {
     HttpResponse response = transport.get(uri);
     if (response.statusCode() < 200 || response.statusCode() >= 300) {
-      throw new IOException("Hugging Face request failed with HTTP " + response.statusCode() + ": " + uri);
+      throw new IOException(
+          "Hugging Face request failed with HTTP " + response.statusCode() + ": " + uri);
     }
     return response;
   }
@@ -264,8 +304,10 @@ final class HuggingFaceContributionService implements ContributionService {
     }
   }
 
-  private static String requiredText(JsonNode node, String field, String context) throws IOException {
-    return optionalText(node, field).orElseThrow(() -> new IOException(context + " is missing " + field));
+  private static String requiredText(JsonNode node, String field, String context)
+      throws IOException {
+    return optionalText(node, field)
+        .orElseThrow(() -> new IOException(context + " is missing " + field));
   }
 
   private static Optional<String> optionalText(JsonNode node, String field) {
@@ -281,17 +323,23 @@ final class HuggingFaceContributionService implements ContributionService {
     JsonNode tags = metadata.path("cardData").path("tags");
     if (tags.isArray()) {
       for (JsonNode tag : tags) {
-        if (tag.isTextual() && CAPABILITY_TAGS.contains(tag.asText())) capabilities.add(tag.asText());
+        if (tag.isTextual() && CAPABILITY_TAGS.contains(tag.asText()))
+          capabilities.add(tag.asText());
       }
     }
     return List.copyOf(capabilities);
   }
 
   private static String detectFormat(List<RemoteFile> files) {
-    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf"))) return "gguf";
-    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact"))) return "cact";
-    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors"))) return "safetensors";
-    throw new IllegalArgumentException("Selected files do not contain GGUF, CACT, or Safetensors model weights");
+    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf")))
+      return "gguf";
+    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact")))
+      return "cact";
+    if (files.stream()
+        .anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors")))
+      return "safetensors";
+    throw new IllegalArgumentException(
+        "Selected files do not contain GGUF, CACT, or Safetensors model weights");
   }
 
   private static String role(String path) {
@@ -299,7 +347,8 @@ final class HuggingFaceContributionService implements ContributionService {
     if (path.equals("tokenizer.json")) return "tokenizer";
     if (path.equals("tokenizer_config.json")) return "tokenizer-configuration";
     if (path.endsWith(".index.json")) return "weights-index";
-    if (path.endsWith(".gguf") || path.endsWith(".cact") || path.endsWith(".safetensors")) return "model-weights";
+    if (path.endsWith(".gguf") || path.endsWith(".cact") || path.endsWith(".safetensors"))
+      return "model-weights";
     return "supporting-file";
   }
 

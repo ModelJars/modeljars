@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Integrallis Software, LLC
+ * Copyright 2025-2026 Integrallis Software, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -126,8 +126,7 @@ class ModelEmbeddingQualificationRegistryTest {
                 "fa26f46ca56facab129b2cc12404a5a8af0d07a5",
                 "ffffffffffffffffffffffffffffffffffffffff")
             .replace(
-                "qwen_qwen3_embedding_0_6b_gguf_q8_0",
-                "ggml_org_embeddinggemma_300m_gguf_q8_0")
+                "qwen_qwen3_embedding_0_6b_gguf_q8_0", "ggml_org_embeddinggemma_300m_gguf_q8_0")
             .replace(
                 "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
                 "b5ce9d77a3fc4b3b39ccb5643c36777911cc4eb46a66962eadfa3f5f60490d63"));
@@ -143,8 +142,7 @@ class ModelEmbeddingQualificationRegistryTest {
       assertEquals("f".repeat(40), registry.modelsRevision());
       assertEquals(
           java.util.Set.of(
-              "qwen_qwen3_embedding_0_6b_gguf_q8_0",
-              "ggml_org_embeddinggemma_300m_gguf_q8_0"),
+              "qwen_qwen3_embedding_0_6b_gguf_q8_0", "ggml_org_embeddinggemma_300m_gguf_q8_0"),
           registry.entries().stream()
               .map(ModelEmbeddingQualificationRegistry.Entry::modelId)
               .collect(java.util.stream.Collectors.toSet()));

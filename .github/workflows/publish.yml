@@ -121,6 +121,7 @@ jobs:
       - name: Build and verify
         run: >
           ./gradlew --no-daemon
+          spotlessCheck
           test
           verifyCatalog
           verifyRemoteCatalogMetadata

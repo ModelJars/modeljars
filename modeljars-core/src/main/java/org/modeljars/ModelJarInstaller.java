@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import java.io.IOException;
@@ -28,8 +43,7 @@ public final class ModelJarInstaller {
   private static final int READ_TIMEOUT_MILLIS = 60_000;
   private static final int MAX_DOWNLOAD_ATTEMPTS = 5;
   private static final long INITIAL_RETRY_DELAY_MILLIS = 1_000;
-  private static final Pattern CONTENT_RANGE =
-      Pattern.compile("bytes (\\d+)-(\\d+)/(\\d+)");
+  private static final Pattern CONTENT_RANGE = Pattern.compile("bytes (\\d+)-(\\d+)/(\\d+)");
 
   private final ModelJarRegistry registry;
   private final RetryDelay retryDelay;
@@ -78,10 +92,7 @@ public final class ModelJarInstaller {
   }
 
   ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
-    this(
-        registry,
-        retryDelay,
-        legacyProgressReporter(ModelJarInstaller::reportProgress));
+    this(registry, retryDelay, legacyProgressReporter(ModelJarInstaller::reportProgress));
   }
 
   ModelJarInstaller(
@@ -93,9 +104,7 @@ public final class ModelJarInstaller {
   }
 
   private ModelJarInstaller(
-      ModelJarRegistry registry,
-      RetryDelay retryDelay,
-      ProgressReporter progressReporter) {
+      ModelJarRegistry registry, RetryDelay retryDelay, ProgressReporter progressReporter) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
     this.progressReporter = Objects.requireNonNull(progressReporter, "progressReporter");
@@ -287,8 +296,7 @@ public final class ModelJarInstaller {
             .orElseThrow(
                 () -> new ModelJarException("Marker has no SHA-256: " + descriptor.alias()));
 
-    verifyFile(
-        artifact, descriptor.alias(), expectedSize, expectedSha256, source);
+    verifyFile(artifact, descriptor.alias(), expectedSize, expectedSha256, source);
   }
 
   private void verifyFile(
@@ -362,18 +370,10 @@ public final class ModelJarInstaller {
       temporary = Files.createTempFile(parent, destination.getFileName() + ".", ".part");
       progressReporter.accept(
           new ModelInstallProgress.DownloadStarted(
-              alias,
-              file.downloadUri(),
-              destination,
-              Files.size(temporary),
-              file.sizeBytes()));
+              alias, file.downloadUri(), destination, Files.size(temporary), file.sizeBytes()));
       download(alias, file.downloadUri(), temporary, file.sizeBytes());
       verifyFile(
-          temporary,
-          alias,
-          file.sizeBytes(),
-          file.sha256(),
-          ModelInstallProgress.Source.DOWNLOAD);
+          temporary, alias, file.sizeBytes(), file.sha256(), ModelInstallProgress.Source.DOWNLOAD);
       moveIntoPlace(temporary, destination);
     } catch (IOException e) {
       throw new ModelJarException("Unable to install model artifact " + alias, e);
@@ -412,8 +412,7 @@ public final class ModelJarInstaller {
     return installation;
   }
 
-  private static Path requireFileRoot(
-      ModelJarDescriptor descriptor, Path primaryArtifact) {
+  private static Path requireFileRoot(ModelJarDescriptor descriptor, Path primaryArtifact) {
     Path normalizedPrimary = primaryArtifact.toAbsolutePath().normalize();
     ModelArtifactFile primary = descriptor.primaryFile().orElseThrow();
     Path installation = normalizedPrimary;
@@ -431,7 +430,8 @@ public final class ModelJarInstaller {
     }
     for (ModelArtifactFile file : descriptor.files()) {
       if (!installation.resolve(file.path()).normalize().startsWith(installation)) {
-        throw new ModelJarException("Model file escapes its installation directory: " + file.path());
+        throw new ModelJarException(
+            "Model file escapes its installation directory: " + file.path());
       }
     }
     return installation;
@@ -535,8 +535,7 @@ public final class ModelJarInstaller {
           verifyContentRange(http.getHeaderField("Content-Range"), offset, expectedSize);
           append = true;
         } else if (status != HttpURLConnection.HTTP_OK) {
-          throw new IOException(
-              "Model download returned HTTP " + status + " for " + alias);
+          throw new IOException("Model download returned HTTP " + status + " for " + alias);
         }
       }
 

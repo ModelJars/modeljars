@@ -36,7 +36,8 @@ Catalog pull requests must:
 - describe the format, architecture, quantization, capabilities, and supported backends;
 - use a new immutable marker artifact version for every published metadata change.
 
-Run `./gradlew test verifyCatalog` before opening a pull request. CI generates every marker JAR and
+Run `./gradlew spotlessCheck test verifyCatalog` before opening a pull request. Use
+`./gradlew spotlessApply` to format Java sources. CI generates every marker JAR and
 the website catalog from the metadata, then rejects duplicate coordinates, mutable download URLs,
 invalid versions, missing integrity fields, or inconsistent filenames.
 

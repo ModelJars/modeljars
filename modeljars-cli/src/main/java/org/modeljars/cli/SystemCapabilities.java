@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import java.io.ByteArrayOutputStream;
@@ -84,9 +99,7 @@ final class SystemCapabilities {
     String cpuInfo = platform.contains("linux") ? read(Path.of("/proc/cpuinfo")) : "";
     String macHardware =
         platform.contains("mac")
-            ? commands
-                .run("/usr/sbin/system_profiler", "SPHardwareDataType")
-                .orElse("")
+            ? commands.run("/usr/sbin/system_profiler", "SPHardwareDataType").orElse("")
             : "";
 
     String processor = processor(platform, cpuInfo, macHardware);
@@ -141,15 +154,15 @@ final class SystemCapabilities {
     return "unknown";
   }
 
-  private int physicalCores(
-      String platform, String cpuInfo, String macHardware, int logicalCores) {
+  private int physicalCores(String platform, String cpuInfo, String macHardware, int logicalCores) {
     if (platform.contains("mac")) {
       return commands
           .run("/usr/sbin/sysctl", "-n", "hw.physicalcpu")
           .flatMap(SystemCapabilities::parsePositiveInt)
-          .or(() ->
-              valueForOptionalLabel(macHardware, "Total Number of Cores:")
-                  .flatMap(SystemCapabilities::parsePositiveInt))
+          .or(
+              () ->
+                  valueForOptionalLabel(macHardware, "Total Number of Cores:")
+                      .flatMap(SystemCapabilities::parsePositiveInt))
           .orElse(logicalCores);
     }
     if (platform.contains("linux")) {
@@ -185,13 +198,9 @@ final class SystemCapabilities {
     String features = cpuInfo;
     if (platform.contains("mac") && architecture.equals("x86_64")) {
       features =
-          commands
-              .run("/usr/sbin/sysctl", "-n", "machdep.cpu.features")
-              .orElse("")
+          commands.run("/usr/sbin/sysctl", "-n", "machdep.cpu.features").orElse("")
               + ' '
-              + commands
-                  .run("/usr/sbin/sysctl", "-n", "machdep.cpu.leaf7_features")
-                  .orElse("");
+              + commands.run("/usr/sbin/sysctl", "-n", "machdep.cpu.leaf7_features").orElse("");
     }
     String normalized = ' ' + features.toLowerCase(Locale.ROOT).replace('\n', ' ') + ' ';
     List<String> result = new ArrayList<>();
@@ -219,19 +228,13 @@ final class SystemCapabilities {
     if (platform.contains("linux")) {
       List<GraphicsDevice> nvidia =
           commands
-              .run(
-                  "nvidia-smi",
-                  "--query-gpu=name,memory.total",
-                  "--format=csv,noheader,nounits")
+              .run("nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits")
               .map(SystemCapabilities::parseNvidiaGraphics)
               .orElseGet(List::of);
       if (!nvidia.isEmpty()) {
         return nvidia;
       }
-      return commands
-          .run("lspci")
-          .map(SystemCapabilities::parsePciGraphics)
-          .orElseGet(List::of);
+      return commands.run("lspci").map(SystemCapabilities::parsePciGraphics).orElseGet(List::of);
     }
     if (platform.contains("win")) {
       return commands
@@ -289,8 +292,7 @@ final class SystemCapabilities {
   }
 
   private static long[] memory() {
-    java.lang.management.OperatingSystemMXBean bean =
-        ManagementFactory.getOperatingSystemMXBean();
+    java.lang.management.OperatingSystemMXBean bean = ManagementFactory.getOperatingSystemMXBean();
     if (bean instanceof com.sun.management.OperatingSystemMXBean extended) {
       return new long[] {extended.getTotalMemorySize(), extended.getFreeMemorySize()};
     }
@@ -310,7 +312,8 @@ final class SystemCapabilities {
 
   static List<GraphicsDevice> parseNvidiaGraphics(String output) {
     List<GraphicsDevice> result = new ArrayList<>();
-    for (String line : output.lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
+    for (String line :
+        output.lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
       String[] fields = line.split(",", 2);
       Optional<Long> memory =
           fields.length == 2
@@ -343,7 +346,8 @@ final class SystemCapabilities {
 
   static List<GraphicsDevice> parseWindowsGraphics(String output) {
     List<GraphicsDevice> result = new ArrayList<>();
-    for (String line : output.lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
+    for (String line :
+        output.lines().map(String::strip).filter(value -> !value.isEmpty()).toList()) {
       String[] fields = line.split("\\t", 2);
       Optional<Long> memory =
           fields.length == 2 ? parsePositiveLong(fields[1].strip()) : Optional.empty();

@@ -199,7 +199,7 @@ jobs:
       - name: Test publication policy and generated artifacts
         run: |
           npm test
-          ./gradlew --no-daemon test verifyCatalog verifyMarkerPublicationIndependence
+          ./gradlew --no-daemon spotlessCheck test verifyCatalog verifyMarkerPublicationIndependence
 
   github-packages:
     name: Publish ${{ matrix.id }} to GitHub Packages

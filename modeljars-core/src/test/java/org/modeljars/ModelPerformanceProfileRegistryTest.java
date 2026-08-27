@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,9 +57,7 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals("graal-jvmci", launch.runtime());
     assertEquals(25, launch.javaFeature());
     assertEquals(
-        List.of(
-            "-Djdk.graal.MaximumInliningSize=10000",
-            "-XX:+UseSerialGC"),
+        List.of("-Djdk.graal.MaximumInliningSize=10000", "-XX:+UseSerialGC"),
         launch.jvmArguments());
     assertEquals(
         List.of(
@@ -68,10 +81,7 @@ class ModelPerformanceProfileRegistryTest {
             "compiler", "graal-jvmci",
             "active-vector-bits", "256");
     assertEquals(1, registry.matching(descriptor(SHA), "pure-java", runtime).size());
-    assertTrue(
-        registry
-            .matching(descriptor(SHA), "pure-java", Map.of("os", "macOS"))
-            .isEmpty());
+    assertTrue(registry.matching(descriptor(SHA), "pure-java", Map.of("os", "macOS")).isEmpty());
     assertTrue(registry.matching(descriptor("0".repeat(64)), "pure-java", runtime).isEmpty());
     assertThrows(
         UnsupportedOperationException.class,
@@ -148,8 +158,7 @@ class ModelPerformanceProfileRegistryTest {
         () -> ModelPerformanceProfileRegistry.fromProperties(missingFeature));
 
     Properties gappedArguments = profileProperties(true);
-    gappedArguments.remove(
-        "profile.smollm2_360m_q8_0_epyc_milan_jdk25.launch.jvmArgument.000");
+    gappedArguments.remove("profile.smollm2_360m_q8_0_epyc_milan_jdk25.launch.jvmArgument.000");
     assertThrows(
         ModelJarException.class,
         () -> ModelPerformanceProfileRegistry.fromProperties(gappedArguments));
@@ -193,8 +202,10 @@ class ModelPerformanceProfileRegistryTest {
       profileProperties(true).store(output, null);
     }
 
-    try (var loader = new java.net.URLClassLoader(new java.net.URL[] {root.toUri().toURL()}, null)) {
-      ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath(loader);
+    try (var loader =
+        new java.net.URLClassLoader(new java.net.URL[] {root.toUri().toURL()}, null)) {
+      ModelPerformanceProfileRegistry registry =
+          ModelPerformanceProfileRegistry.fromClasspath(loader);
       assertEquals(1, registry.profiles().size());
       assertEquals(COORDINATE, registry.profiles().getFirst().markerCoordinate());
     }
@@ -206,8 +217,7 @@ class ModelPerformanceProfileRegistryTest {
     properties.setProperty("modeljars.performance.schemaVersion", "2");
 
     assertThrows(
-        ModelJarException.class,
-        () -> ModelPerformanceProfileRegistry.fromProperties(properties));
+        ModelJarException.class, () -> ModelPerformanceProfileRegistry.fromProperties(properties));
   }
 
   @Test
@@ -227,15 +237,9 @@ class ModelPerformanceProfileRegistryTest {
                             .jvmArguments()
                             .equals(List.of("-Djdk.graal.MaximumInliningSize=10000"))
                         && "unsigned-pairwise"
-                            .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.purejava.q4Kernel"))
+                            .equals(profile.recommendations().get("models.purejava.q4Kernel"))
                         && "true"
-                            .equals(
-                                profile
-                                    .runtimeSelector()
-                                    .get("q4-unsigned-pairwise-supported"))
+                            .equals(profile.runtimeSelector().get("q4-unsigned-pairwise-supported"))
                         && profile
                             .evidence()
                             .benchmarkId()
@@ -264,8 +268,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile.id().equals(
-                            "qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_values")
+                    profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_values")
                         && "true"
                             .equals(
                                 profile
@@ -279,8 +282,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile.id().equals(
-                            "qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_scores")
+                    profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_batched_scores")
                         && "true"
                             .equals(
                                 profile
@@ -297,18 +299,10 @@ class ModelPerformanceProfileRegistryTest {
                     profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_staged_ffn")
                         && "true"
                             .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.purejava.stagedQuantizedFfn"))
+                                profile.recommendations().get("models.purejava.stagedQuantizedFfn"))
                         && "true"
-                            .equals(
-                                profile
-                                    .runtimeSelector()
-                                    .get("q4-unsigned-pairwise-supported"))
-                        && profile
-                            .evidence()
-                            .benchmarkId()
-                            .equals("qwen-staged-q4-ffn-20260722")
+                            .equals(profile.runtimeSelector().get("q4-unsigned-pairwise-supported"))
+                        && profile.evidence().benchmarkId().equals("qwen-staged-q4-ffn-20260722")
                         && profile.evidence().warmups() == 10
                         && profile.evidence().trials() == 30
                         && profile.evidence().generatedTokens() == 1
@@ -330,13 +324,8 @@ class ModelPerformanceProfileRegistryTest {
                     profile.id().equals("qwen3_0_6b_q4_0_epyc_milan_jdk25_batch_24")
                         && "24"
                             .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.purejava.prefillBatchSize"))
-                        && profile
-                            .evidence()
-                            .benchmarkId()
-                            .equals("qwen-prefill-batch-24-20260722")
+                                profile.recommendations().get("models.purejava.prefillBatchSize"))
+                        && profile.evidence().benchmarkId().equals("qwen-prefill-batch-24-20260722")
                         && profile.evidence().warmups() == 10
                         && profile.evidence().trials() == 30
                         && profile.evidence().generatedTokens() == 1
@@ -356,10 +345,7 @@ class ModelPerformanceProfileRegistryTest {
                                 profile
                                     .recommendations()
                                     .get("models.purejava.stagedQuantizedLayer"))
-                        && profile
-                            .evidence()
-                            .benchmarkId()
-                            .equals("qwen-staged-q4-layer-20260722")
+                        && profile.evidence().benchmarkId().equals("qwen-staged-q4-layer-20260722")
                         && profile.evidence().warmups() == 10
                         && profile.evidence().trials() == 30
                         && profile.evidence().generatedTokens() == 1
@@ -389,9 +375,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_rust_ffm")
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_rust_ffm")
                         && profile.backend().equals("rust-ffm")
                         && profile.recommendations().isEmpty()
                         && profile
@@ -418,9 +402,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals("qwen3_1_7b_q8_0_epyc_milan_jdk25_rust_ffm")
+                    profile.id().equals("qwen3_1_7b_q8_0_epyc_milan_jdk25_rust_ffm")
                         && profile.backend().equals("rust-ffm")
                         && profile.recommendations().isEmpty()
                         && profile
@@ -452,10 +434,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals(
-                                "qwen2_5_coder_0_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
+                    profile.id().equals("qwen2_5_coder_0_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
                         && profile.backend().equals("rust-ffm")
                         && profile.recommendations().isEmpty()
                         && profile
@@ -469,11 +448,7 @@ class ModelPerformanceProfileRegistryTest {
                             .equals("qwen2.5-coder-0.5b-q8-rust-ffm-coding-20260724")
                         && profile.evidence().trials() == 27
                         && !profile.evidence().outputHashesMatch()
-                        && profile
-                            .evidence()
-                            .controls()
-                            .get("workload")
-                            .equals("coding")
+                        && profile.evidence().controls().get("workload").equals("coding")
                         && profile
                             .evidence()
                             .controls()
@@ -495,10 +470,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals(
-                                "qwen2_5_coder_0_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
+                    profile.id().equals("qwen2_5_coder_0_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
                         && profile.backend().equals("rust-ffm")
                         && profile
                             .recommendations()
@@ -520,11 +492,7 @@ class ModelPerformanceProfileRegistryTest {
                             .equals("qwen2.5-coder-0.5b-q4-hybrid-coding-20260724")
                         && profile.evidence().trials() == 27
                         && profile.evidence().outputHashesMatch()
-                        && profile
-                            .evidence()
-                            .controls()
-                            .get("workload")
-                            .equals("coding")
+                        && profile.evidence().controls().get("workload").equals("coding")
                         && profile
                             .evidence()
                             .controls()
@@ -541,10 +509,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals(
-                                "qwen2_5_coder_1_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
+                    profile.id().equals("qwen2_5_coder_1_5b_q4_0_epyc_milan_jdk25_rust_ffm_coding")
                         && profile.backend().equals("rust-ffm")
                         && profile
                             .recommendations()
@@ -588,10 +553,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals(
-                                "qwen2_5_coder_1_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
+                    profile.id().equals("qwen2_5_coder_1_5b_q8_0_epyc_milan_jdk25_rust_ffm_coding")
                         && profile.backend().equals("rust-ffm")
                         && profile.recommendations().isEmpty()
                         && profile
@@ -627,20 +589,12 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals("sqlcoder_7b_2_q5_k_m_epyc_milan_jdk25_rust_ffm")
+                    profile.id().equals("sqlcoder_7b_2_q5_k_m_epyc_milan_jdk25_rust_ffm")
                         && profile.backend().equals("rust-ffm")
                         && "true"
-                            .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.native.quantizedDecode"))
+                            .equals(profile.recommendations().get("models.native.quantizedDecode"))
                         && "4"
-                            .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.native.kernels.threads"))
+                            .equals(profile.recommendations().get("models.native.kernels.threads"))
                         && profile
                             .javaLaunch()
                             .orElseThrow()
@@ -676,9 +630,7 @@ class ModelPerformanceProfileRegistryTest {
                     profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_staged_layer")
                         && "true"
                             .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.purejava.stagedQuantizedFfn"))
+                                profile.recommendations().get("models.purejava.stagedQuantizedFfn"))
                         && "true"
                             .equals(
                                 profile
@@ -739,9 +691,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_parallel_ffn")
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_parallel_ffn")
                         && "true"
                             .equals(
                                 profile
@@ -779,21 +729,15 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                        .id()
-                        .equals("smollm2_360m_q8_0_epyc_milan_jdk25_row_accumulator")));
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_row_accumulator")));
     assertTrue(
         registry.profiles().stream()
             .anyMatch(
                 profile ->
-                    profile
-                            .id()
-                            .equals("smollm2_360m_q8_0_epyc_milan_jdk25_float_lane")
+                    profile.id().equals("smollm2_360m_q8_0_epyc_milan_jdk25_float_lane")
                         && "float-lane-accumulated"
                             .equals(
-                                profile
-                                    .recommendations()
-                                    .get("models.purejava.q8BlockMajorKernel"))
+                                profile.recommendations().get("models.purejava.q8BlockMajorKernel"))
                         && profile
                             .javaLaunch()
                             .orElseThrow()
@@ -803,10 +747,7 @@ class ModelPerformanceProfileRegistryTest {
                                     "-Djdk.graal.MaximumInliningSize=10000",
                                     "-XX:CompileCommand=option,com.integrallis.vectors.core.PanamaVectorUtilSupport::ggufQ8_0Q8_0BlockMajorFloatLaneRow,double,CompileThresholdScaling,0.001",
                                     "-XX:CompileCommand=option,com.integrallis.vectors.core.PanamaVectorUtilSupport::ggufQ8_0Q8_0BlockMajorFloatLaneRow,bool,BackgroundCompilation,false"))
-                        && profile
-                            .evidence()
-                            .benchmarkId()
-                            .equals("smollm2-q8-float-lane-20260723")
+                        && profile.evidence().benchmarkId().equals("smollm2-q8-float-lane-20260723")
                         && profile.evidence().warmups() == 5
                         && profile.evidence().trials() == 30
                         && profile.evidence().generatedTokens() == 1
@@ -864,25 +805,19 @@ class ModelPerformanceProfileRegistryTest {
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
             .filter(
                 candidate ->
-                    candidate
-                        .id()
-                        .equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_q6_two_query"))
+                    candidate.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_q6_two_query"))
             .findFirst()
             .orElseThrow();
 
     assertEquals("pure-java", profile.backend());
     assertEquals("hotspot-c2", profile.runtimeSelector().get("compiler"));
     assertEquals(
-        "two-query-block",
-        profile.recommendations().get("models.purejava.q6BatchedKernel"));
+        "two-query-block", profile.recommendations().get("models.purejava.q6BatchedKernel"));
     assertEquals(32, profile.evidence().trials());
     assertEquals(1, profile.evidence().generatedTokens());
-    assertEquals(
-        6146.903508, profile.evidence().baselineMetrics().get("p50TtftMillis"), 0.000001);
-    assertEquals(
-        5899.446693, profile.evidence().candidateMetrics().get("p50TtftMillis"), 0.000001);
-    assertEquals(
-        "pure-java-v19", profile.evidence().controls().get("benchmarkPlanVersion"));
+    assertEquals(6146.903508, profile.evidence().baselineMetrics().get("p50TtftMillis"), 0.000001);
+    assertEquals(5899.446693, profile.evidence().candidateMetrics().get("p50TtftMillis"), 0.000001);
+    assertEquals("pure-java-v19", profile.evidence().controls().get("benchmarkPlanVersion"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -895,18 +830,15 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "minicpm5_1b_q4_k_m_epyc_milan_jdk25_graal_session_q6_two_query"))
+                        .equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_graal_session_q6_two_query"))
             .findFirst()
             .orElseThrow();
 
     assertEquals("pure-java", profile.backend());
     assertEquals("graal-jvmci", profile.runtimeSelector().get("compiler"));
+    assertEquals("25.0.3+9-jvmci-25.1-b19", profile.runtimeSelector().get("vm-version"));
     assertEquals(
-        "25.0.3+9-jvmci-25.1-b19", profile.runtimeSelector().get("vm-version"));
-    assertEquals(
-        "two-query-block",
-        profile.recommendations().get("models.purejava.q6BatchedKernel"));
+        "two-query-block", profile.recommendations().get("models.purejava.q6BatchedKernel"));
     assertEquals(
         List.of("-Djdk.graal.MaximumInliningSize=10000"),
         profile.javaLaunch().orElseThrow().jvmArguments());
@@ -930,9 +862,7 @@ class ModelPerformanceProfileRegistryTest {
 
     ModelPerformanceProfile compilerProfile =
         registry.profiles().stream()
-            .filter(
-                candidate ->
-                    candidate.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25"))
+            .filter(candidate -> candidate.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25"))
             .findFirst()
             .orElseThrow();
     assertEquals("graal-jvmci", compilerProfile.runtimeSelector().get("compiler"));
@@ -947,10 +877,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("eurollm_1_7b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("eurollm_1_7b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -970,10 +897,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("qwen2_5_0_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("qwen2_5_0_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -991,10 +915,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("qwen2_5_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("qwen2_5_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1016,9 +937,7 @@ class ModelPerformanceProfileRegistryTest {
         ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
             .filter(
                 candidate ->
-                    candidate
-                        .id()
-                        .equals("umartransit_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                    candidate.id().equals("umartransit_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1040,10 +959,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         registry.profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("minicpm5_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1065,10 +981,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         registry.profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("llama_3_2_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("llama_3_2_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1090,10 +1003,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         registry.profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("gemma_3_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("gemma_3_1b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1118,8 +1028,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "indian_legal_qwen2_5_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                        .equals("indian_legal_qwen2_5_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1136,8 +1045,7 @@ class ModelPerformanceProfileRegistryTest {
         "893d074044ab1955ee3a4b91b67750440f12dbe683c0ddf3fd7503f04daed6e8",
         profile.evidence().controls().get("candidateReportSha256"));
     assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
-    assertEquals(
-        "0.8425535918769786", profile.evidence().controls().get("decodeRatioToOllama"));
+    assertEquals("0.8425535918769786", profile.evidence().controls().get("decodeRatioToOllama"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1150,8 +1058,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "deepseek_r1_distill_qwen_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                        .equals("deepseek_r1_distill_qwen_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1168,8 +1075,7 @@ class ModelPerformanceProfileRegistryTest {
         "5b1ba2c93ec7ea793fc0e74ed796d06729bf56689d0dc65a293264b5bdc07624",
         profile.evidence().controls().get("candidateReportSha256"));
     assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
-    assertEquals(
-        "0.9894992519851347", profile.evidence().controls().get("decodeRatioToOllama"));
+    assertEquals("0.9894992519851347", profile.evidence().controls().get("decodeRatioToOllama"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1180,9 +1086,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .filter(
                 candidate ->
-                    candidate
-                        .id()
-                        .equals("qwen2_5_math_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                    candidate.id().equals("qwen2_5_math_1_5b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1211,10 +1115,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         registry.profiles().stream()
             .filter(
-                candidate ->
-                    candidate
-                        .id()
-                        .equals("llama_3_2_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("llama_3_2_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1253,9 +1154,7 @@ class ModelPerformanceProfileRegistryTest {
         registry.profiles().stream()
             .filter(
                 candidate ->
-                    candidate
-                        .id()
-                        .equals("deepseek_coder_1_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                    candidate.id().equals("deepseek_coder_1_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1274,8 +1173,7 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "6d4f78972e2f4ec3f9646a312ec05837fbb1d948a6f6e26ae122b33005595cc1",
         profile.evidence().controls().get("candidateReportSha256"));
-    assertEquals(
-        "0b50df8", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals("0b50df8", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
     assertEquals(
         "6cea1f5d58861d898f1f4fab6f0b97bef3fd33ba",
         profile.evidence().controls().get("modelsEvidenceCommit"));
@@ -1292,8 +1190,7 @@ class ModelPerformanceProfileRegistryTest {
     ModelPerformanceProfile profile =
         registry.profiles().stream()
             .filter(
-                candidate ->
-                    candidate.id().equals("smollm3_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                candidate -> candidate.id().equals("smollm3_3b_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1312,8 +1209,7 @@ class ModelPerformanceProfileRegistryTest {
     assertEquals(
         "ef419f16217b83d76db30acd312292b63b74f90ce1f81173601d31a0c1cedb36",
         profile.evidence().controls().get("candidateReportSha256"));
-    assertEquals(
-        "372defe", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
+    assertEquals("372defe", profile.evidence().controls().get("modelJarsCommitAtMeasurement"));
     assertEquals(
         "6756812c16ff795dc21ff09f44be8287a74950f5",
         profile.evidence().controls().get("modelsEvidenceCommit"));
@@ -1333,8 +1229,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "tinyllama_1_1b_chat_v1_0_q4_0_epyc_milan_jdk25_rust_ffm"))
+                        .equals("tinyllama_1_1b_chat_v1_0_q4_0_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1373,8 +1268,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "king3djbl_nexus_finance_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                        .equals("king3djbl_nexus_finance_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1403,8 +1297,7 @@ class ModelPerformanceProfileRegistryTest {
         "6c738d43217f3c8f5466bfb476511f57262bde75",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        30.16945787255821,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        30.16945787255821, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertEquals("finance", profile.evidence().controls().get("workload"));
     assertEquals("\\n", profile.evidence().controls().get("stopSequences"));
     assertEquals("chatml-no-think", profile.evidence().controls().get("promptTemplate"));
@@ -1452,8 +1345,7 @@ class ModelPerformanceProfileRegistryTest {
         "6c738d43217f3c8f5466bfb476511f57262bde75",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        27.75538941546097,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        27.75538941546097, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertEquals("legal", profile.evidence().controls().get("workload"));
     assertEquals(" Therefore", profile.evidence().controls().get("stopSequences"));
     assertEquals("chatml-direct", profile.evidence().controls().get("promptTemplate"));
@@ -1472,8 +1364,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "king3djbl_nexus_medical_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                        .equals("king3djbl_nexus_medical_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1502,8 +1393,7 @@ class ModelPerformanceProfileRegistryTest {
         "cd2337780ae1940c2b403e6202bb1c2f58a5d6f8",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        29.37754596980454,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        29.37754596980454, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertEquals("healthcare", profile.evidence().controls().get("workload"));
     assertEquals(" So the answer is", profile.evidence().controls().get("stopSequences"));
     assertEquals("chatml-direct", profile.evidence().controls().get("promptTemplate"));
@@ -1522,8 +1412,7 @@ class ModelPerformanceProfileRegistryTest {
                 candidate ->
                     candidate
                         .id()
-                        .equals(
-                            "qwen_qwen2_5_3b_instruct_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
+                        .equals("qwen_qwen2_5_3b_instruct_gguf_q4_k_m_epyc_milan_jdk25_rust_ffm"))
             .findFirst()
             .orElseThrow();
 
@@ -1569,8 +1458,7 @@ class ModelPerformanceProfileRegistryTest {
         "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        22.83409323014655,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        22.83409323014655, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1605,8 +1493,7 @@ class ModelPerformanceProfileRegistryTest {
         "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        26.092233851604476,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        26.092233851604476, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1642,8 +1529,7 @@ class ModelPerformanceProfileRegistryTest {
         "7ba11421ece87d6738ce8a21b11b47b02e807a06",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        82.08539689080071,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        82.08539689080071, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertEquals("27-identical", profile.evidence().controls().get("pairedOutputHashes"));
     assertTrue(profile.safeForAutomaticSelection());
   }
@@ -1679,8 +1565,7 @@ class ModelPerformanceProfileRegistryTest {
         "bc9ac1d08d49c6e70a9396af9b086942db1fe419",
         profile.evidence().controls().get("modelsEvidenceCommit"));
     assertEquals(
-        29.737367126827113,
-        profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
+        29.737367126827113, profile.evidence().candidateMetrics().get("p50DecodeTokensPerSecond"));
     assertTrue(profile.safeForAutomaticSelection());
   }
 
@@ -1703,11 +1588,9 @@ class ModelPerformanceProfileRegistryTest {
     properties.setProperty(prefix + "launch.javaFeature", "25");
     properties.setProperty(
         prefix + "launch.jvmArgument.000", "-Djdk.graal.MaximumInliningSize=10000");
-    properties.setProperty(
-        prefix + "launch.jvmArgument.001", "-XX:+UseSerialGC");
+    properties.setProperty(prefix + "launch.jvmArgument.001", "-XX:+UseSerialGC");
     properties.setProperty(prefix + "evidence.benchmarkId", "inference-matrix-20260718");
-    properties.setProperty(
-        prefix + "evidence.measuredAt", "2026-07-18T18:52:34.731627458Z");
+    properties.setProperty(prefix + "evidence.measuredAt", "2026-07-18T18:52:34.731627458Z");
     properties.setProperty(prefix + "evidence.baseline", "hotspot-c2");
     properties.setProperty(prefix + "evidence.candidate", "graal-jvmci");
     properties.setProperty(prefix + "evidence.warmups", "2");
@@ -1715,14 +1598,10 @@ class ModelPerformanceProfileRegistryTest {
     properties.setProperty(prefix + "evidence.generatedTokens", "64");
     properties.setProperty(
         prefix + "evidence.outputHashesMatch", Boolean.toString(outputHashesMatch));
-    properties.setProperty(
-        prefix + "evidence.baseline.metric.decodeTokensPerSecond", "21.226575");
-    properties.setProperty(
-        prefix + "evidence.baseline.metric.p95TtftMillis", "2643.733682");
-    properties.setProperty(
-        prefix + "evidence.candidate.metric.decodeTokensPerSecond", "44.703344");
-    properties.setProperty(
-        prefix + "evidence.candidate.metric.p95TtftMillis", "1299.085687");
+    properties.setProperty(prefix + "evidence.baseline.metric.decodeTokensPerSecond", "21.226575");
+    properties.setProperty(prefix + "evidence.baseline.metric.p95TtftMillis", "2643.733682");
+    properties.setProperty(prefix + "evidence.candidate.metric.decodeTokensPerSecond", "44.703344");
+    properties.setProperty(prefix + "evidence.candidate.metric.p95TtftMillis", "1299.085687");
     properties.setProperty(prefix + "evidence.control.seed", "42");
     properties.setProperty(prefix + "evidence.control.promptSha256", "2db2d875");
     return properties;

@@ -75,9 +75,11 @@ final class HuggingFaceContributionService implements ContributionService {
         request.capabilities().isEmpty() ? upstreamCapabilities(metadata) : distinct(request.capabilities());
     String repositoryName = repository[1];
     String name =
-        format.equals("gguf")
+        format.equals("gguf") || format.equals("cact")
             ? selected.stream()
-                .filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf"))
+                .filter(
+                    file ->
+                        file.path().toLowerCase(Locale.ROOT).endsWith("." + format))
                 .findFirst()
                 .map(RemoteFile::path)
                 .map(HuggingFaceContributionService::baseName)
@@ -166,17 +168,32 @@ final class HuggingFaceContributionService implements ContributionService {
 
     List<RemoteFile> gguf =
         tree.stream().filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf")).toList();
+    List<RemoteFile> cact =
+        tree.stream().filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact")).toList();
     boolean standardSafetensors = byPath.containsKey("model.safetensors") || byPath.containsKey("model.safetensors.index.json");
-    if (standardSafetensors && gguf.isEmpty()) return standardSafetensorsFiles(byPath);
-    if (gguf.size() == 1 && !standardSafetensors) return gguf;
+    int availableFormats =
+        (gguf.isEmpty() ? 0 : 1) + (cact.isEmpty() ? 0 : 1) + (standardSafetensors ? 1 : 0);
+    if (availableFormats > 1) {
+      throw new IllegalArgumentException(
+          "Repository contains more than one supported model format; choose one with --file");
+    }
+    if (standardSafetensors) return standardSafetensorsFiles(byPath);
+    if (gguf.size() == 1) return gguf;
+    if (cact.size() == 1) return cact;
     if (gguf.size() > 1) {
       throw new IllegalArgumentException(
           "Repository contains multiple GGUF files; choose one with --file: "
               + gguf.stream().map(RemoteFile::path).sorted().limit(12).toList());
     }
     if (standardSafetensors) return standardSafetensorsFiles(byPath);
+    if (cact.size() > 1) {
+      throw new IllegalArgumentException(
+          "Repository contains multiple CACT files; choose one with --file: "
+              + cact.stream().map(RemoteFile::path).sorted().limit(12).toList());
+    }
     throw new IllegalArgumentException(
-        "No single GGUF file or standard Safetensors checkpoint was found; select files with --file");
+        "No single GGUF or CACT file, or standard Safetensors checkpoint, was found; "
+            + "select files with --file");
   }
 
   private static List<RemoteFile> standardSafetensorsFiles(Map<String, RemoteFile> byPath) {
@@ -272,8 +289,9 @@ final class HuggingFaceContributionService implements ContributionService {
 
   private static String detectFormat(List<RemoteFile> files) {
     if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".gguf"))) return "gguf";
+    if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact"))) return "cact";
     if (files.stream().anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors"))) return "safetensors";
-    throw new IllegalArgumentException("Selected files do not contain GGUF or Safetensors model weights");
+    throw new IllegalArgumentException("Selected files do not contain GGUF, CACT, or Safetensors model weights");
   }
 
   private static String role(String path) {
@@ -281,7 +299,7 @@ final class HuggingFaceContributionService implements ContributionService {
     if (path.equals("tokenizer.json")) return "tokenizer";
     if (path.equals("tokenizer_config.json")) return "tokenizer-configuration";
     if (path.endsWith(".index.json")) return "weights-index";
-    if (path.endsWith(".gguf") || path.endsWith(".safetensors")) return "model-weights";
+    if (path.endsWith(".gguf") || path.endsWith(".cact") || path.endsWith(".safetensors")) return "model-weights";
     return "supporting-file";
   }
 

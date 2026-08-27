@@ -76,6 +76,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
 
   private final ModelJarRegistry models;
   private final ModelRagQualificationRegistry qualifications;
+  private final ModelToolQualificationRegistry toolQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final Map<String, String> runtime;
 
@@ -84,6 +85,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     this(
         ModelJarRegistry.fromClasspath(),
         ModelRagQualificationRegistry.fromClasspath(),
+        ModelToolQualificationRegistry.fromClasspath(),
         ModelPerformanceProfileRegistry.fromClasspath(),
         currentRuntime());
   }
@@ -112,8 +114,23 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
       ModelRagQualificationRegistry qualifications,
       ModelPerformanceProfileRegistry profiles,
       Map<String, String> runtime) {
+    this(
+        models,
+        qualifications,
+        ModelToolQualificationRegistry.fromClasspath(),
+        profiles,
+        runtime);
+  }
+
+  ModelJarsCatalog(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelToolQualificationRegistry toolQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      Map<String, String> runtime) {
     this.models = models;
     this.qualifications = qualifications;
+    this.toolQualifications = toolQualifications;
     this.profiles = profiles;
     this.runtime = Map.copyOf(runtime);
   }
@@ -128,6 +145,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     List<DiscoveredModel> discovered = new ArrayList<>();
     for (ModelJarDescriptor descriptor : models.descriptors()) {
       if (!"gguf".equals(descriptor.format())
+          && !"cact".equals(descriptor.format())
           && !("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty())) {
         continue;
       }
@@ -226,13 +244,31 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
         best = Math.max(best, qualification.rawCorrectAnswerRate());
       }
     }
-    if (best <= 0.0 || tags.isEmpty()) {
+    if (tags.isEmpty()) {
       return Map.of();
     }
     Map<String, Double> quality = new HashMap<>();
-    for (String tag : tags) {
-      quality.put(tag, best);
+    if (best > 0.0) {
+      for (String tag : tags) {
+        quality.put(tag, best);
+      }
     }
-    return quality;
+    if (tags.contains("tool-use")) {
+      for (ModelToolQualification qualification :
+          toolQualifications.qualificationsFor(descriptor)) {
+        if (qualification.qualified()) {
+          double conformance =
+              Math.min(
+                  Math.min(
+                      qualification.toolSelectionExactRate(),
+                      qualification.schemaValidityRate()),
+                  Math.min(
+                      qualification.expectedArgumentAccuracy(),
+                      qualification.refusalAccuracy()));
+          quality.merge("tool-use", conformance, Math::max);
+        }
+      }
+    }
+    return Map.copyOf(quality);
   }
 }

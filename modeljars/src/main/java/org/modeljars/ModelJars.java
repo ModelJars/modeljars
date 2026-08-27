@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Resolves, verifies, configures, and opens qualified models from ModelJars metadata.
@@ -33,6 +34,7 @@ public final class ModelJars {
 
   private final ModelJarRegistry models;
   private final ModelRagQualificationRegistry qualifications;
+  private final ModelToolQualificationRegistry toolQualifications;
   private final ModelEmbeddingQualificationRegistry embeddingQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
@@ -90,8 +92,33 @@ public final class ModelJars {
       EmbeddingBackendLoader embeddingBackendLoader,
       Supplier<Map<String, String>> runtimeEnvironment,
       Supplier<List<String>> jvmArguments) {
+    this(
+        models,
+        qualifications,
+        ModelToolQualificationRegistry.fromClasspath(),
+        embeddingQualifications,
+        profiles,
+        installer,
+        backendLoader,
+        embeddingBackendLoader,
+        runtimeEnvironment,
+        jvmArguments);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelToolQualificationRegistry toolQualifications,
+      ModelEmbeddingQualificationRegistry embeddingQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      EmbeddingBackendLoader embeddingBackendLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this.models = Objects.requireNonNull(models, "models");
     this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
+    this.toolQualifications = Objects.requireNonNull(toolQualifications, "toolQualifications");
     this.embeddingQualifications =
         Objects.requireNonNull(embeddingQualifications, "embeddingQualifications");
     this.profiles = Objects.requireNonNull(profiles, "profiles");
@@ -243,7 +270,8 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
-    ModelRagQualification qualification = selectQualification(descriptor, options.backend());
+    ModelExecutionQualification qualification =
+        selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
     requireNativeAccess(backend, activeJvmArguments);
@@ -307,11 +335,13 @@ public final class ModelJars {
     }
   }
 
-  private ModelRagQualification selectQualification(
+  private ModelExecutionQualification selectQualification(
       ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
-    List<ModelRagQualification> candidates =
-        qualifications.qualificationsFor(descriptor).stream()
-            .filter(ModelRagQualification::productionUsable)
+    List<ModelExecutionQualification> candidates =
+        Stream.<ModelExecutionQualification>concat(
+                qualifications.qualificationsFor(descriptor).stream(),
+                toolQualifications.qualificationsFor(descriptor).stream())
+            .filter(ModelExecutionQualification::productionUsable)
             .toList();
     if (requestedBackend != ModelBackend.AUTO) {
       String backend = requestedBackend.backendId();
@@ -329,12 +359,9 @@ public final class ModelJars {
     }
     return candidates.stream()
         .min(
-            Comparator.comparingDouble(ModelRagQualification::p95EndToEndMillis)
-                .thenComparing(
-                    Comparator.comparingDouble(
-                            ModelRagQualification::p50DecodeTokensPerSecond)
-                        .reversed())
-                .thenComparing(ModelRagQualification::backend))
+            Comparator.comparingDouble(ModelExecutionQualification::p95EndToEndMillis)
+                .thenComparing(ModelExecutionQualification::backend)
+                .thenComparing(ModelExecutionQualification::workload))
         .orElseThrow(
             () ->
                 new ModelJarException(
@@ -375,7 +402,7 @@ public final class ModelJars {
 
   private BackendConfiguration configuration(
       ModelJarDescriptor descriptor,
-      ModelRagQualification qualification,
+      ModelExecutionQualification qualification,
       Map<String, String> runtime,
       List<String> activeJvmArguments) {
     List<ModelPerformanceProfile> safeProfiles =
@@ -514,6 +541,7 @@ public final class ModelJars {
   private static Path cachePath(ModelJarDescriptor descriptor, Path cacheDirectory) {
     boolean supported =
         descriptor.format().equals("gguf")
+            || descriptor.format().equals("cact")
             || (descriptor.format().equals("safetensors") && !descriptor.files().isEmpty());
     if (!supported) {
       throw new ModelJarException(

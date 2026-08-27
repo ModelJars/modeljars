@@ -66,6 +66,12 @@ export function modelTerms(model) {
       qualification.oracleBackend,
       qualification.useCaseTier,
     ]),
+    ...(model.toolQualifications || []).flatMap((qualification) => [
+      qualification.backend,
+      qualification.verdict,
+      qualification.workload,
+      qualification.useCaseTier,
+    ]),
     ...FACET_FIELDS.backends(model),
   ];
 
@@ -119,6 +125,8 @@ export function verificationProfile(model) {
     checks.push(
       `${qualification.probes}-probe equivalence with ${qualification.oracleBackend}`,
     );
+  } else if (qualification?.structuredOutputRate !== undefined) {
+    checks.push(`${qualification.attempts}-case tool-calling qualification`);
   } else if (qualification) {
     checks.push(`${qualification.attempts}-request RAG qualification`);
   }

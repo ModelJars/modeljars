@@ -170,12 +170,12 @@ export function validateQualificationCatalog(value, models) {
 
 export function primaryQualification(model) {
   const rag = Array.isArray(model?.ragQualifications) ? model.ragQualifications : [];
+  const tool = Array.isArray(model?.toolQualifications) ? model.toolQualifications : [];
   const embedding = Array.isArray(model?.embeddingQualifications)
     ? model.embeddingQualifications
     : [];
-  // RAG evidence wins when a model carries both: it grades answer quality, which is the
-  // stronger claim. Embedding evidence certifies that the runtime reproduces the model.
-  const entries = [...rag, ...embedding];
+  // Prefer workload evidence over equivalence evidence when an artifact carries both.
+  const entries = [...rag, ...tool, ...embedding];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
@@ -183,6 +183,7 @@ export function qualificationLabel(qualification) {
   if (!qualification?.qualified) return qualification ? "Evaluated" : "Not evaluated";
   if (qualification.useCaseTier === "GENERATIVE_RAG") return "Generative RAG";
   if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
+  if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";
   return "Guarded RAG";
 }
 

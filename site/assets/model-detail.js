@@ -67,6 +67,11 @@ export function isEmbeddingEvidence(qualification) {
   return Boolean(qualification) && qualification.probes !== undefined;
 }
 
+/** True for tool-calling conformance evidence rather than RAG or embedding evidence. */
+export function isToolEvidence(qualification) {
+  return Boolean(qualification) && qualification.structuredOutputRate !== undefined;
+}
+
 export function qualificationSummary(qualification) {
   if (!qualification) return null;
   if (isEmbeddingEvidence(qualification)) {
@@ -91,6 +96,34 @@ export function qualificationSummary(qualification) {
       ttft: null,
       tpot: null,
       endToEnd: null,
+      decode: null,
+      peakRss: null,
+      rawQuality: null,
+      finalQuality: null,
+      fallbackRate: null,
+    };
+  }
+  if (isToolEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      promptTemplate: qualification.promptTemplate,
+      attempts: qualification.attempts,
+      passed: qualification.passed,
+      structured: formatPercent(qualification.structuredOutputRate),
+      selection: formatPercent(qualification.toolSelectionExactRate),
+      schema: formatPercent(qualification.schemaValidityRate),
+      declaredOnly: formatPercent(qualification.declaredArgumentsOnlyRate),
+      arguments: formatPercent(qualification.expectedArgumentAccuracy),
+      refusal: formatPercent(qualification.refusalAccuracy),
+      endToEnd: formatDuration(qualification.p95EndToEndMillis),
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
+      groundingPolicy: null,
+      ttft: null,
+      tpot: null,
       decode: null,
       peakRss: null,
       rawQuality: null,
@@ -226,6 +259,8 @@ function checkRows(profile) {
             labels.get(check) ||
               (check.endsWith("-request RAG qualification")
                 ? "The exact artifact completed the controlled end-to-end RAG workload."
+                : check.endsWith("-case tool-calling qualification")
+                  ? "The exact artifact completed the controlled tool-calling conformance suite."
                 : "Verified catalog evidence."),
           )}</small></span>
         </li>`,
@@ -271,10 +306,41 @@ function renderEmbeddingQualification(summary) {
     </section>`;
 }
 
+function renderToolQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="tool-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="tool-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.passed))}/${escapeHtml(String(summary.attempts))} cases</span>
+      </div>
+      <p>
+        The exact artifact ran the ${escapeHtml(summary.workload)} conformance suite in process on
+        ${escapeHtml(summary.backend)} using the ${escapeHtml(summary.promptTemplate)} tool syntax.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>Structured output</dt><dd>${escapeHtml(summary.structured)}</dd></div>
+        <div><dt>Tool selection</dt><dd>${escapeHtml(summary.selection)}</dd></div>
+        <div><dt>Schema validity</dt><dd>${escapeHtml(summary.schema)}</dd></div>
+        <div><dt>Declared arguments</dt><dd>${escapeHtml(summary.declaredOnly)}</dd></div>
+        <div><dt>Argument accuracy</dt><dd>${escapeHtml(summary.arguments)}</dd></div>
+        <div><dt>Refusal accuracy</dt><dd>${escapeHtml(summary.refusal)}</dd></div>
+        <div><dt>End to end p95</dt><dd>${escapeHtml(summary.endToEnd)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw conformance JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
+  if (isToolEvidence(qualification)) return renderToolQualification(summary);
   return `
     <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="rag-evidence-title">
       <div class="verification-heading">

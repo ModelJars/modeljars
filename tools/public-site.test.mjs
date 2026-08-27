@@ -116,7 +116,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(index, />Models<\/a> JVM inference library/);
   assert.doesNotMatch(index, />Models JVM inference library<\/a>/);
   assert.match(index, /Think of WebJars, but for AI models/);
-  assert.match(index, /GGUF and Safetensors/);
+  assert.match(index, /GGUF, Safetensors, and CACT/);
   assert.match(
     index,
     /<a class="primary-button" href="#modeljars-cli">Install the native CLI<\/a>/,
@@ -161,7 +161,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(contribution, /Artifact verification/);
   assert.match(contribution, /Production qualification/);
   assert.match(contribution, /modeljars contribute/);
-  assert.match(contribution, /GGUF and Safetensors/i);
+  assert.match(contribution, /GGUF, Safetensors, and CACT/i);
   assert.match(contribution, /not yet qualified/i);
   assert.match(contribution, /pull request/i);
   assert.match(contribution, /Retrieval recall/);

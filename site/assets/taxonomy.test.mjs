@@ -183,3 +183,34 @@ test("surfaces embedding evidence in search terms", () => {
   assert.ok(terms.includes("text-embedding"));
   assert.ok(terms.includes("semantic_search") || terms.includes("semantic-search"));
 });
+
+test("facets and describes tool-calling conformance evidence", () => {
+  const toolModel = {
+    ...qwenCoder,
+    id: "needle2",
+    format: "cact",
+    architecture: "needle2",
+    ragQualifications: [],
+    toolQualifications: [
+      {
+        qualified: true,
+        useCaseTier: "TOOL_CALLING",
+        backend: "pure-java",
+        verdict: "PASS",
+        workload: "needle2-upstream-playground-v1",
+        attempts: 13,
+        structuredOutputRate: 1,
+      },
+    ],
+  };
+
+  assert.deepEqual(buildFacets([toolModel]).qualifications, [
+    { value: "tool-calling", count: 1 },
+  ]);
+  assert.deepEqual(verificationProfile(toolModel), {
+    level: "qualified",
+    label: "Tool calling",
+    checks: ["Pinned artifact", "Complete metadata", "13-case tool-calling qualification"],
+  });
+  assert.ok(modelTerms(toolModel).includes("needle2-upstream-playground-v1"));
+});

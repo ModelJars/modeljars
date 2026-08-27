@@ -277,20 +277,25 @@ function collectQualifiedIds(qualifications, modelsById) {
  * Keeps only publications whose exact artifact passed a qualification policy.
  *
  * A generator qualifies through the RAG workload, an embedder through the
- * embedding equivalence gate. Either is sufficient, and both bind evidence to
- * the catalog SHA-256 and byte size so stale evidence cannot publish.
+ * embedding equivalence gate, and a tool model through conformance. Any one is
+ * sufficient, and every policy binds evidence to the catalog SHA-256 and byte
+ * size so stale evidence cannot publish.
  */
 export function filterQualifiedPublications(
   delta,
   catalog,
   qualifications,
   embeddingQualifications = { schemaVersion: 1, entries: [] },
+  toolQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
   const modelsById = new Map(catalog.models.map((model) => [model.id, model]));
   const qualifiedIds = collectQualifiedIds(qualifications, modelsById);
   for (const id of collectQualifiedIds(embeddingQualifications, modelsById)) {
+    qualifiedIds.add(id);
+  }
+  for (const id of collectQualifiedIds(toolQualifications, modelsById)) {
     qualifiedIds.add(id);
   }
 

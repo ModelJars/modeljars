@@ -643,6 +643,36 @@ test("publishes an artifact qualified only by embedding equivalence", () => {
   );
 });
 
+test("publishes an artifact qualified only by tool conformance", () => {
+  const toolModel = model({
+    id: "needle2",
+    markerCoordinate:
+      "org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1",
+    sha256: "b".repeat(64),
+  });
+  const delta = selectCatalogPublications(catalog([toolModel]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([toolModel]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([
+      {
+        modelId: toolModel.id,
+        artifactSha256: toolModel.sha256,
+        artifactSizeBytes: toolModel.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [toolModel.id],
+  );
+});
+
 test("withholds an embedding artifact whose evidence did not qualify", () => {
   const embedder = model({
     id: "embedding_model",

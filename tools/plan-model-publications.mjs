@@ -24,6 +24,8 @@ function parseArguments(argumentsList) {
         "--previous-qualifications",
         "--embedding-qualifications",
         "--previous-embedding-qualifications",
+        "--tool-qualifications",
+        "--previous-tool-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -36,6 +38,7 @@ function parseArguments(argumentsList) {
           "[--qualifications FILE --previous-qualifications FILE] " +
           "[--embedding-qualifications FILE " +
           "--previous-embedding-qualifications FILE] " +
+          "[--tool-qualifications FILE --previous-tool-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -71,6 +74,23 @@ function parseArguments(argumentsList) {
       "--previous-qualifications is required for a qualification-aware delta",
     );
   }
+  if (
+    values.has("--previous-tool-qualifications") &&
+    (!values.has("--previous") || !values.has("--tool-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-tool-qualifications requires --previous and --tool-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--tool-qualifications") &&
+    !values.has("--previous-tool-qualifications")
+  ) {
+    throw new Error(
+      "--previous-tool-qualifications is required for a tool-qualification-aware delta",
+    );
+  }
   return values;
 }
 
@@ -78,17 +98,24 @@ async function readCatalog(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
 
-function qualifiedCatalog(catalog, qualificationManifest, embeddingManifest) {
+function qualifiedCatalog(
+  catalog,
+  qualificationManifest,
+  embeddingManifest,
+  toolManifest,
+) {
   filterQualifiedPublications(
     { publications: [], removed: [] },
     catalog,
     qualificationManifest,
     embeddingManifest,
+    toolManifest,
   );
   const qualifiedIds = new Set(
     [
       ...qualificationManifest.entries,
       ...(embeddingManifest?.entries ?? []),
+      ...(toolManifest?.entries ?? []),
     ]
       .filter((entry) => entry.qualified === true)
       .map((entry) => entry.modelId),
@@ -137,6 +164,11 @@ async function main() {
     embeddingQualificationPath === undefined
       ? undefined
       : await readCatalog(embeddingQualificationPath);
+  const toolQualificationPath = argumentsMap.get("--tool-qualifications");
+  const currentToolQualifications =
+    toolQualificationPath === undefined
+      ? undefined
+      : await readCatalog(toolQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -157,17 +189,24 @@ async function main() {
       const previousEmbeddingPath = argumentsMap.get(
         "--previous-embedding-qualifications",
       );
+      const previousToolPath = argumentsMap.get(
+        "--previous-tool-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
         previousEmbeddingPath === undefined
           ? undefined
           : await readCatalog(previousEmbeddingPath),
+        previousToolPath === undefined
+          ? undefined
+          : await readCatalog(previousToolPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
         currentQualifications,
         currentEmbeddingQualifications,
+        currentToolQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -194,6 +233,7 @@ async function main() {
           current,
           currentQualifications,
           currentEmbeddingQualifications,
+          currentToolQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

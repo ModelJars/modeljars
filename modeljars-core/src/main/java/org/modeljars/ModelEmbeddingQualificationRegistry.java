@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Integrallis Software, LLC
+ * Copyright 2025-2026 Integrallis Software, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,8 +118,7 @@ public final class ModelEmbeddingQualificationRegistry {
         try (InputStream stream = resources.nextElement().openStream()) {
           ModelEmbeddingQualificationRegistry registry = parse(stream);
           Instant generatedAt = timestamp(registry.generatedAt);
-          if (metadata == null
-              || generatedAt.isAfter(timestamp(metadata.generatedAt))) {
+          if (metadata == null || generatedAt.isAfter(timestamp(metadata.generatedAt))) {
             metadata = registry;
           } else if (generatedAt.equals(timestamp(metadata.generatedAt))) {
             requireCompatibleMetadataAtSameInstant(metadata, registry);
@@ -164,8 +163,7 @@ public final class ModelEmbeddingQualificationRegistry {
   }
 
   private static void requireCompatibleMetadataAtSameInstant(
-      ModelEmbeddingQualificationRegistry first,
-      ModelEmbeddingQualificationRegistry other) {
+      ModelEmbeddingQualificationRegistry first, ModelEmbeddingQualificationRegistry other) {
     if (!first.policyVersion.equals(other.policyVersion)
         || !first.modelsRevision.equals(other.modelsRevision)) {
       throw new ModelJarException(
@@ -180,7 +178,8 @@ public final class ModelEmbeddingQualificationRegistry {
     try {
       return Instant.parse(value);
     } catch (DateTimeParseException malformed) {
-      throw new ModelJarException("Invalid embedding qualification generatedAt: " + value, malformed);
+      throw new ModelJarException(
+          "Invalid embedding qualification generatedAt: " + value, malformed);
     }
   }
 

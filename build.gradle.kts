@@ -32,6 +32,7 @@ import org.w3c.dom.Element
 plugins {
     `java-library`
     `maven-publish`
+    id("com.diffplug.spotless") version "6.25.0" apply false
     id("org.graalvm.buildtools.native") version "1.1.6" apply false
 }
 
@@ -1932,6 +1933,25 @@ allprojects {
 
 val modelsVersion = providers.gradleProperty("modelsVersion").get()
 
+val apacheLicenseHeader =
+    """
+    /*
+     * Copyright 2025-2026 Integrallis Software, LLC
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     *     https://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+    """.trimIndent()
+
 val githubPreviewVersionPattern =
     Regex("""\d+\.\d+\.\d+-preview\.\d+\.\d+\.[0-9a-f]{12}""")
 val stableCliVersionPattern = Regex("""\d+\.\d+\.\d+""")
@@ -1972,6 +1992,7 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "maven-publish")
     apply(plugin = "signing")
+    apply(plugin = "com.diffplug.spotless")
 
     java {
         toolchain {
@@ -1995,6 +2016,17 @@ subprojects {
 
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
+    }
+
+    configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+        java {
+            target("src/**/*.java")
+            googleJavaFormat("1.35.0")
+            removeUnusedImports()
+            trimTrailingWhitespace()
+            endWithNewline()
+            licenseHeader(apacheLicenseHeader)
+        }
     }
 
     tasks.withType<Jar>().configureEach {
@@ -2399,6 +2431,7 @@ project(":modeljars") {
         }
         outputs.upToDateWhen { false }
     }
+
 }
 
 val jvmRuntimePom =

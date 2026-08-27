@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import com.integrallis.models.api.BackendConfiguration;
@@ -162,16 +177,14 @@ public final class ModelJars {
   }
 
   /**
-   * Opens a qualified model with explicit loading controls and qualification-owned prompt
-   * metadata.
+   * Opens a qualified model with explicit loading controls and qualification-owned prompt metadata.
    *
    * @param model immutable model selector or generated catalog reference
    * @param options backend, cache, and network controls
    * @return loaded model runtime with qualification-owned prompt metadata
    */
   public static ModelJarRuntime openRuntime(ModelJar model, ModelLoadOptions options) {
-    requireVectorModule(
-        ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
     return classpathLoader().loadRuntime(model, options);
   }
 
@@ -270,8 +283,7 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
-    ModelExecutionQualification qualification =
-        selectQualification(descriptor, options.backend());
+    ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
     requireNativeAccess(backend, activeJvmArguments);
@@ -303,9 +315,7 @@ public final class ModelJars {
     environment.put("modeljars-qualification-workload", "oracle-equivalence-v1");
     EmbeddingBackend backend =
         embeddingBackendLoader.load(
-            artifact,
-            qualification,
-            new BackendConfiguration(environment, Map.of(), List.of()));
+            artifact, qualification, new BackendConfiguration(environment, Map.of(), List.of()));
     return new ModelJarEmbeddingRuntime(backend, descriptor, qualification);
   }
 
@@ -410,8 +420,7 @@ public final class ModelJars {
             .filter(ModelPerformanceProfile::safeForAutomaticSelection)
             .sorted(
                 Comparator.comparingInt(
-                        (ModelPerformanceProfile profile) ->
-                            profile.runtimeSelector().size())
+                        (ModelPerformanceProfile profile) -> profile.runtimeSelector().size())
                     .reversed()
                     .thenComparing(ModelPerformanceProfile::id))
             .toList();
@@ -437,8 +446,7 @@ public final class ModelJars {
     }
     Map<String, String> recommendations = mergeRecommendations(applicableProfiles);
     decisions.add(
-        profileSelectionDecision(
-            safeProfiles, applicableProfiles, qualification.backend()));
+        profileSelectionDecision(safeProfiles, applicableProfiles, qualification.backend()));
     return new BackendConfiguration(environment, recommendations, decisions);
   }
 
@@ -461,13 +469,10 @@ public final class ModelJars {
         "modeljars.performance-profile-launch",
         OptimizationStatus.DISABLED,
         "required JVM startup arguments are not active",
-        Map.of(
-            "profiles", profileIds(profiles),
-            "missing-jvm-arguments", missingArguments));
+        Map.of("profiles", profileIds(profiles), "missing-jvm-arguments", missingArguments));
   }
 
-  private static Map<String, String> mergeRecommendations(
-      List<ModelPerformanceProfile> profiles) {
+  private static Map<String, String> mergeRecommendations(List<ModelPerformanceProfile> profiles) {
     Map<String, String> recommendations = new LinkedHashMap<>();
     for (ModelPerformanceProfile profile : profiles) {
       profile
@@ -577,8 +582,7 @@ public final class ModelJars {
         };
     PureJavaBackend backend = PureJavaBackend.load(artifact, configuration);
     try {
-      var builder =
-          GgufEmbeddingBackend.builder(backend).normalize(qualification.normalized());
+      var builder = GgufEmbeddingBackend.builder(backend).normalize(qualification.normalized());
       if (!backend.supportsSequenceEmbedding()) {
         builder.pooling(pooling);
       }

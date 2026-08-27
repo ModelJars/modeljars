@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import java.util.ArrayList;
@@ -46,8 +61,7 @@ public record JavaLaunchProfile(String runtime, int javaFeature, List<String> jv
       throw new IllegalArgumentException("javaExecutable must not be blank");
     }
     Objects.requireNonNull(applicationArguments, "applicationArguments");
-    List<String> command =
-        new ArrayList<>(1 + jvmArguments.size() + applicationArguments.size());
+    List<String> command = new ArrayList<>(1 + jvmArguments.size() + applicationArguments.size());
     command.add(javaExecutable.trim());
     command.addAll(jvmArguments);
     applicationArguments.forEach(

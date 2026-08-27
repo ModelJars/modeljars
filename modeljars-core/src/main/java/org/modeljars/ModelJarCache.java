@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import java.nio.file.Files;
@@ -17,9 +32,9 @@ public final class ModelJarCache {
   /**
    * Returns the configured cache root.
    *
-   * <p>The {@code modeljars.cache} system property takes precedence over the
-   * {@code MODELJARS_CACHE} environment variable. When neither is set, the cache lives below
-   * {@code ${user.home}/.modeljars/cache}.
+   * <p>The {@code modeljars.cache} system property takes precedence over the {@code
+   * MODELJARS_CACHE} environment variable. When neither is set, the cache lives below {@code
+   * ${user.home}/.modeljars/cache}.
    *
    * @return normalized absolute cache root
    */
@@ -54,7 +69,10 @@ public final class ModelJarCache {
   public static Path artifactPath(ModelJarDescriptor descriptor, Path cacheDirectory) {
     Path bundle = bundlePath(descriptor, cacheDirectory);
     String artifactName =
-        descriptor.primaryFile().map(ModelArtifactFile::path).orElse("model." + descriptor.format());
+        descriptor
+            .primaryFile()
+            .map(ModelArtifactFile::path)
+            .orElse("model." + descriptor.format());
     Path artifact = bundle.resolve(artifactName).normalize();
     if (!artifact.startsWith(bundle)) {
       throw new ModelJarException("Model artifact path escapes its cache bundle: " + artifactName);
@@ -105,8 +123,7 @@ public final class ModelJarCache {
       return Files.isRegularFile(normalizedArtifact, java.nio.file.LinkOption.NOFOLLOW_LINKS);
     }
     Path bundle = fileRoot(descriptor, normalizedArtifact);
-    if (bundle == null
-        || !Files.isDirectory(bundle, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+    if (bundle == null || !Files.isDirectory(bundle, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
       return false;
     }
     return descriptor.files().stream()

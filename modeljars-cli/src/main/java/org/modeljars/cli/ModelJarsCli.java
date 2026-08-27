@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars.cli;
 
 import java.io.IOException;
@@ -47,12 +62,12 @@ import org.modeljars.ModelJarInstaller;
 import org.modeljars.ModelJarRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ParentCommand;
 import picocli.CommandLine.ScopeType;
 import picocli.CommandLine.Spec;
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.shell.jline3.PicocliJLineCompleter;
 
 /** Standalone command line interface for discovering and prefetching qualified ModelJars. */
@@ -184,8 +199,7 @@ public final class ModelJarsCli implements Callable<Integer> {
             ModelJarInstaller.reportingProgressTo(registry, progress)
                 .install(descriptor, destination);
     int status =
-        new ModelJarsCli(registry, installer)
-            .launch(args, System.in, System.out, System.err, true);
+        new ModelJarsCli(registry, installer).launch(args, System.in, System.out, System.err, true);
     if (status != 0) {
       System.exit(status);
     }
@@ -210,12 +224,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       PrintStream standardError,
       boolean systemTerminal) {
     return launch(
-        args,
-        standardInput,
-        standardOutput,
-        standardError,
-        systemTerminal,
-        defaultHistoryPath());
+        args, standardInput, standardOutput, standardError, systemTerminal, defaultHistoryPath());
   }
 
   int launch(
@@ -228,8 +237,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     Objects.requireNonNull(args, "args");
     return args.length == 0
         ? runInteractive(standardInput, standardOutput, standardError, systemTerminal, history)
-        : runOneShot(
-            args, standardInput, standardOutput, standardError, systemTerminal);
+        : runOneShot(args, standardInput, standardOutput, standardError, systemTerminal);
   }
 
   private int runOneShot(
@@ -328,7 +336,8 @@ public final class ModelJarsCli implements Callable<Integer> {
         }
       }
     } catch (IOException exception) {
-      standardError.println("Error: unable to open interactive terminal: " + exception.getMessage());
+      standardError.println(
+          "Error: unable to open interactive terminal: " + exception.getMessage());
       return 2;
     } finally {
       activeTerminal = null;
@@ -382,7 +391,8 @@ public final class ModelJarsCli implements Callable<Integer> {
           if (exception.getCause() instanceof ModelJarException) {
             reported = exception.getCause();
           }
-          error.println("Error: " + Objects.requireNonNullElse(reported.getMessage(), reported.toString()));
+          error.println(
+              "Error: " + Objects.requireNonNullElse(reported.getMessage(), reported.toString()));
           error.println("Run 'modeljars <command> --help' for usage.");
           return 2;
         });
@@ -443,13 +453,16 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
 
     List<ModelJarDescriptor> sourceMatches =
-        descriptors().stream().filter(descriptor -> descriptor.sourceId().equals(requested)).toList();
+        descriptors().stream()
+            .filter(descriptor -> descriptor.sourceId().equals(requested))
+            .toList();
     if (sourceMatches.size() == 1) {
       return sourceMatches.getFirst();
     }
     if (sourceMatches.size() > 1) {
       throw new IllegalArgumentException(
-          "Source matches multiple variants; use an alias or exact marker coordinate: " + requested);
+          "Source matches multiple variants; use an alias or exact marker coordinate: "
+              + requested);
     }
     List<ModelJarDescriptor> queryMatches =
         descriptors().stream()
@@ -513,12 +526,12 @@ public final class ModelJarsCli implements Callable<Integer> {
         .filter(token -> !token.isEmpty())
         .allMatch(
             token ->
-                Stream.concat(Stream.of(token), SEARCH_ALIASES.getOrDefault(token, List.of()).stream())
+                Stream.concat(
+                        Stream.of(token), SEARCH_ALIASES.getOrDefault(token, List.of()).stream())
                     .anyMatch(searchable::contains));
   }
 
-  private static Map<String, Object> descriptorMap(
-      ModelJarDescriptor descriptor, Path cachePath) {
+  private static Map<String, Object> descriptorMap(ModelJarDescriptor descriptor, Path cachePath) {
     Map<String, Object> values = new LinkedHashMap<>();
     values.put("alias", descriptor.alias());
     values.put("name", descriptor.name().orElse(null));
@@ -538,8 +551,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     values.put("domains", sorted(descriptor.domains()));
     values.put("backends", descriptor.backendSupport());
     values.put("dimensions", dimensionsMap(descriptor.dimensions()));
-    values.put(
-        "status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not_pulled");
+    values.put("status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not_pulled");
     values.put("cachePath", cachePath.toString());
     return values;
   }
@@ -596,8 +608,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
   private static int detectTerminalWidth() {
     Optional<Integer> configured =
-        Optional.ofNullable(System.getenv("COLUMNS"))
-            .flatMap(ModelJarsCli::positiveInteger);
+        Optional.ofNullable(System.getenv("COLUMNS")).flatMap(ModelJarsCli::positiveInteger);
     if (configured.isPresent()) {
       return Math.max(40, configured.orElseThrow());
     }
@@ -714,12 +725,16 @@ public final class ModelJarsCli implements Callable<Integer> {
               .filter(descriptor -> matches(modelFormat, descriptor.format()))
               .filter(
                   descriptor ->
-                      backend == null || descriptor.supportsBackend(backend.toLowerCase(Locale.ROOT)))
+                      backend == null
+                          || descriptor.supportsBackend(backend.toLowerCase(Locale.ROOT)))
               .filter(descriptor -> !installed || parent.cached(descriptor))
               .filter(
                   descriptor ->
                       !fitsMemory
-                          || descriptor.sizeBytes().map(size -> size <= availableMemory).orElse(false))
+                          || descriptor
+                              .sizeBytes()
+                              .map(size -> size <= availableMemory)
+                              .orElse(false))
               .sorted(comparator)
               .toList();
       List<ModelJarDescriptor> matches =
@@ -796,8 +811,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                   .orElse(0));
       List<CliOutput.Column> columns = new ArrayList<>();
       columns.add(CliOutput.Column.left("MODEL", modelWidth, modelWidth));
-      columns.add(
-          CliOutput.Column.left("ARCH", architectureWidth, architectureWidth));
+      columns.add(CliOutput.Column.left("ARCH", architectureWidth, architectureWidth));
       columns.add(CliOutput.Column.left("QUANT", quantizationWidth, quantizationWidth));
       columns.add(CliOutput.Column.right("SIZE", sizeWidth, sizeWidth));
       columns.add(CliOutput.Column.left("STATUS", 9, 9));
@@ -866,7 +880,9 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Option(names = "--coordinates", description = "Include marker coordinates in the table.")
     private boolean coordinates;
 
-    @Option(names = {"-v", "--details"}, description = "Show capabilities for each model.")
+    @Option(
+        names = {"-v", "--details"},
+        description = "Show capabilities for each model.")
     private boolean details;
 
     @Override
@@ -892,8 +908,7 @@ public final class ModelJarsCli implements Callable<Integer> {
             models.stream()
                 .map(
                     model -> {
-                      Map<String, Object> value =
-                          descriptorMap(model.descriptor(), model.path());
+                      Map<String, Object> value = descriptorMap(model.descriptor(), model.path());
                       value.put("modified", modified(model.path()).toString());
                       return value;
                     })
@@ -968,9 +983,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                         fields.add(
                             CliOutput.Detail.text(
                                 "CAPABILITIES", capabilities(model.descriptor())));
-                        fields.add(
-                            CliOutput.Detail.text(
-                                "BACKENDS", backends(model.descriptor())));
+                        fields.add(CliOutput.Detail.text("BACKENDS", backends(model.descriptor())));
                       }
                       if (coordinates) {
                         fields.add(
@@ -1028,7 +1041,8 @@ public final class ModelJarsCli implements Callable<Integer> {
         if (coordinates) {
           printDeclarations(descriptor, out, true, List.of());
         } else {
-          out.hint("Run 'modeljars coordinates " + descriptor.alias() + "' for build declarations.");
+          out.hint(
+              "Run 'modeljars coordinates " + descriptor.alias() + "' for build declarations.");
         }
       }
       return 0;
@@ -1047,10 +1061,21 @@ public final class ModelJarsCli implements Callable<Integer> {
       identity.put("Architecture", descriptor.architecture());
       identity.put("Format", descriptor.format().toUpperCase(Locale.ROOT));
       identity.put("Quantization", descriptor.quantization());
-      descriptor.dimensions().parameterCount().ifPresent(value -> identity.put("Parameters", humanParameters(value)));
-      descriptor.dimensions().contextLength().ifPresent(value -> identity.put("Context", value + " tokens"));
-      descriptor.dimensions().embeddingLength().ifPresent(value -> identity.put("Embedding", value + " dimensions"));
-      descriptor.sizeBytes().ifPresent(value -> identity.put("Download", CliOutput.humanBytes(value)));
+      descriptor
+          .dimensions()
+          .parameterCount()
+          .ifPresent(value -> identity.put("Parameters", humanParameters(value)));
+      descriptor
+          .dimensions()
+          .contextLength()
+          .ifPresent(value -> identity.put("Context", value + " tokens"));
+      descriptor
+          .dimensions()
+          .embeddingLength()
+          .ifPresent(value -> identity.put("Embedding", value + " dimensions"));
+      descriptor
+          .sizeBytes()
+          .ifPresent(value -> identity.put("Download", CliOutput.humanBytes(value)));
       if (details) {
         identity.put("Capabilities", capabilities(descriptor));
         identity.put("Backends", backends(descriptor));
@@ -1099,7 +1124,9 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Parameters(paramLabel = "MODEL", description = "Alias, source ID, or exact coordinate.")
     private String selector;
 
-    @Option(names = {"-q", "--quiet"}, description = "Print only the installed model path.")
+    @Option(
+        names = {"-q", "--quiet"},
+        description = "Print only the installed model path.")
     private boolean quiet;
 
     @Override
@@ -1110,7 +1137,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       PullProgressRenderer progress = parent.pullProgress(quiet);
       try (progress) {
         artifact =
-            parent.installer
+            parent
+                .installer
                 .install(descriptor, destination, progress)
                 .toAbsolutePath()
                 .normalize();
@@ -1180,7 +1208,9 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Parameters(paramLabel = "MODEL", description = "Exact alias, source ID, or coordinate.")
     private String selector;
 
-    @Option(names = {"-f", "--force"}, description = "Succeed when the model is not cached.")
+    @Option(
+        names = {"-f", "--force"},
+        description = "Succeed when the model is not cached.")
     private boolean force;
 
     @Override
@@ -1235,7 +1265,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       }
     }
 
-    private static void removeBundle(ModelJarDescriptor descriptor, Path bundle) throws IOException {
+    private static void removeBundle(ModelJarDescriptor descriptor, Path bundle)
+        throws IOException {
       Set<Path> expectedFiles = new java.util.LinkedHashSet<>();
       Set<Path> expectedDirectories = new java.util.LinkedHashSet<>();
       expectedDirectories.add(bundle);
@@ -1261,7 +1292,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       }
       for (Path path : contents) {
         if (Files.isSymbolicLink(path)) {
-          throw new IllegalStateException("Refusing to remove a symbolic link from the model cache");
+          throw new IllegalStateException(
+              "Refusing to remove a symbolic link from the model cache");
         }
         if (Files.isDirectory(path)) {
           if (!expectedDirectories.contains(path)) {
@@ -1347,7 +1379,10 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class ContributeCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(index = "0", paramLabel = "OWNER/REPOSITORY", description = "Hugging Face repository or URL.")
+    @Parameters(
+        index = "0",
+        paramLabel = "OWNER/REPOSITORY",
+        description = "Hugging Face repository or URL.")
     private String source;
 
     @Option(
@@ -1394,19 +1429,17 @@ public final class ModelJarsCli implements Callable<Integer> {
       ContributionDraft draft =
           parent.contributionService.prepare(
               new ContributionRequest(
-                  source,
-                  revision,
-                  files,
-                  Optional.ofNullable(license),
-                  domains,
-                  capabilities));
+                  source, revision, files, Optional.ofNullable(license), domains, capabilities));
       Path destination =
           Optional.ofNullable(outputFile)
               .orElseGet(
                   () ->
                       Path.of(
                           "modeljars-submission-"
-                              + draft.repository().toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-")
+                              + draft
+                                  .repository()
+                                  .toLowerCase(Locale.ROOT)
+                                  .replaceAll("[^a-z0-9]+", "-")
                               + ".md"))
               .toAbsolutePath()
               .normalize();
@@ -1449,8 +1482,10 @@ public final class ModelJarsCli implements Callable<Integer> {
         parent.out().properties(facts);
         parent.out().section("Submit to ModelJars");
         parent.out().line(submit);
-        parent.out().hint(
-            "The issue starts candidate intake; Models compatibility and controlled qualification remain maintainer-reviewed gates.");
+        parent
+            .out()
+            .hint(
+                "The issue starts candidate intake; Models compatibility and controlled qualification remain maintainer-reviewed gates.");
       }
       return 0;
     }
@@ -1502,8 +1537,12 @@ public final class ModelJarsCli implements Callable<Integer> {
       host.put("Operating system", snapshot.operatingSystem());
       host.put("Architecture", snapshot.architecture());
       host.put("Processor", snapshot.processor());
-      host.put("CPU cores", snapshot.physicalCores() + " physical / " + snapshot.logicalCores() + " logical");
-      host.put("SIMD", snapshot.simd().isEmpty() ? "not discovered" : String.join(", ", snapshot.simd()));
+      host.put(
+          "CPU cores",
+          snapshot.physicalCores() + " physical / " + snapshot.logicalCores() + " logical");
+      host.put(
+          "SIMD",
+          snapshot.simd().isEmpty() ? "not discovered" : String.join(", ", snapshot.simd()));
       host.put(
           "Memory",
           CliOutput.humanBytes(snapshot.totalMemoryBytes())
@@ -1653,7 +1692,8 @@ public final class ModelJarsCli implements Callable<Integer> {
             String path = prefix.isEmpty() ? key : prefix + '.' + key;
             if (value instanceof Map<?, ?> nested) {
               Map<String, Object> converted = new LinkedHashMap<>();
-              nested.forEach((nestedKey, nestedValue) -> converted.put(nestedKey.toString(), nestedValue));
+              nested.forEach(
+                  (nestedKey, nestedValue) -> converted.put(nestedKey.toString(), nestedValue));
               flattened.putAll(flatten(converted, path));
             } else {
               flattened.put(path, Objects.toString(value, ""));
@@ -1768,16 +1808,13 @@ public final class ModelJarsCli implements Callable<Integer> {
   }
 
   private static String declaration(
-      ModelJarDescriptor descriptor,
-      DependencyCoordinates.Tool tool,
-      boolean includeRuntime) {
+      ModelJarDescriptor descriptor, DependencyCoordinates.Tool tool, boolean includeRuntime) {
     String marker = DependencyCoordinates.render(descriptor.markerCoordinate(), tool);
     if (!includeRuntime || version().equals("development")) {
       return marker;
     }
     ModelJarCoordinate runtime =
-        new ModelJarCoordinate(
-            "org.modeljars", "modeljars", version(), Optional.empty(), "jar");
+        new ModelJarCoordinate("org.modeljars", "modeljars", version(), Optional.empty(), "jar");
     return DependencyCoordinates.render(runtime, tool) + System.lineSeparator() + marker;
   }
 
@@ -1793,7 +1830,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       out.line(declaration(descriptor, tool, includeRuntime));
     }
     if (includeRuntime && version().equals("development")) {
-      out.hint("Development build: runtime dependency omitted because no release version is embedded.");
+      out.hint(
+          "Development build: runtime dependency omitted because no release version is embedded.");
     }
   }
 }

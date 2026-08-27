@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -26,10 +41,7 @@ class MultiFileModelJarInstallerTest {
 
     assertEquals(
         List.of(
-            "config.json",
-            "weights/model.safetensors",
-            "tokenizer.json",
-            "tokenizer_config.json"),
+            "config.json", "weights/model.safetensors", "tokenizer.json", "tokenizer_config.json"),
         descriptor.files().stream().map(ModelArtifactFile::path).toList());
     assertEquals("model-weights", descriptor.files().get(1).role());
     assertEquals(sha256(fixture.model()), descriptor.files().get(1).sha256());
@@ -90,10 +102,10 @@ class MultiFileModelJarInstallerTest {
     Path weights = Files.createDirectories(upstream.resolve("weights"));
     Path model =
         Files.write(weights.resolve("model.safetensors"), new byte[] {4, 8, 15, 16, 23, 42});
-    Path tokenizer =
-        Files.writeString(upstream.resolve("tokenizer.json"), "{\"version\":\"1.0\"}");
+    Path tokenizer = Files.writeString(upstream.resolve("tokenizer.json"), "{\"version\":\"1.0\"}");
     Path tokenizerConfig =
-        Files.writeString(upstream.resolve("tokenizer_config.json"), "{\"eos_token\":\"<|im_end|>\"}");
+        Files.writeString(
+            upstream.resolve("tokenizer_config.json"), "{\"eos_token\":\"<|im_end|>\"}");
     Path destination = temporaryDirectory.resolve("cache/weights/model.safetensors");
 
     Properties properties = new Properties();
@@ -136,7 +148,8 @@ class MultiFileModelJarInstallerTest {
 
   private static String sha256(Path path) throws IOException {
     try {
-      return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)));
+      return HexFormat.of()
+          .formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)));
     } catch (NoSuchAlgorithmException e) {
       throw new AssertionError(e);
     }

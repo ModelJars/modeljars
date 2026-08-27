@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Integrallis Software, LLC
+ * Copyright 2025-2026 Integrallis Software, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ package org.modeljars;
  * evidence. This one records whether a runtime reproduces an embedding model, since retrieval
  * quality is a published property of the weights.
  *
- * <p>Two values, because an artifact agreeing at 0.9999 supports the same use cases as one
- * agreeing at 0.9995.
+ * <p>Two values, because an artifact agreeing at 0.9999 supports the same use cases as one agreeing
+ * at 0.9995.
  */
 public enum EmbeddingUseCaseTier {
 

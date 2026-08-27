@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025-2026 Integrallis Software, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.modeljars;
 
 import java.io.IOException;
@@ -219,7 +234,8 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
 
   private static String required(String prefix, String property, Properties properties) {
     return optional(prefix, property, properties)
-        .orElseThrow(() -> new ModelJarException("Missing required property: " + prefix + property));
+        .orElseThrow(
+            () -> new ModelJarException("Missing required property: " + prefix + property));
   }
 
   private static Optional<String> optional(String prefix, String property, Properties properties) {
@@ -250,8 +266,12 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
 
   private static Path expandPath(String value) {
     String expanded =
-        value.replace("${user.home}", System.getProperty("user.home"))
-            .replace("${modeljars.home}", System.getProperty("modeljars.home", System.getProperty("user.home") + "/.modeljars"));
+        value
+            .replace("${user.home}", System.getProperty("user.home"))
+            .replace(
+                "${modeljars.home}",
+                System.getProperty(
+                    "modeljars.home", System.getProperty("user.home") + "/.modeljars"));
     return Path.of(expanded).toAbsolutePath().normalize();
   }
 }

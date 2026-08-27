@@ -80,7 +80,7 @@ jobs:
         env:
           MODELJARS_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          ./gradlew --no-daemon :modeljars-cli:test :modeljars-cli:nativeCompile \
+          ./gradlew --no-daemon :modeljars-cli:spotlessCheck :modeljars-cli:test :modeljars-cli:nativeCompile \
             "-PmodeljarsVersion=${MODELJARS_VERSION}"
           binary="modeljars-cli/build/native/nativeCompile/${{ matrix.executable }}"
           "$binary" version

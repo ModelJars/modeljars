@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for reporting installed ModelJars to the router.
  *
- * <p>The catalogue and the machine both vary, so these assert the properties that must hold whatever
- * is installed rather than a fixed list of models. What matters is that nothing is invented: an
- * unmeasured figure must be reported as absent, not as a plausible number.
+ * <p>The catalogue and the machine both vary, so these assert the properties that must hold
+ * whatever is installed rather than a fixed list of models. What matters is that nothing is
+ * invented: an unmeasured figure must be reported as absent, not as a plausible number.
  */
 class ModelJarsCatalogTest {
 

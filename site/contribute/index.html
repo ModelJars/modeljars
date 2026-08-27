@@ -61,7 +61,7 @@
         <h2 id="candidate-title">Start with one CLI command</h2>
         <p>
           Give the CLI a public Hugging Face repository. It resolves the requested branch or tag to
-          an immutable commit, selects the required GGUF or Safetensors files, verifies their byte
+          an immutable commit, selects the required GGUF, CACT, or Safetensors files, verifies their byte
           sizes and SHA-256 digests, and prepares the candidate report.
         </p>
         <div class="code-block">
@@ -71,8 +71,8 @@
         <p>
           The CLI writes a new Markdown file and prints one copy-ready
           <code>gh issue create</code> command to submit it. It never overwrites an existing report.
-          If a repository contains several GGUF variants, choose one with
-          <code>--file model-name.gguf</code>. Use <code>--license</code>,
+          If a repository contains several weight files or formats, choose one with
+          <code>--file model-name.gguf</code> or <code>--file model-name.cact</code>. Use <code>--license</code>,
           <code>--capability</code>, or <code>--domain</code> only when upstream metadata needs an
           explicit correction or addition.
         </p>
@@ -98,14 +98,14 @@
             <dd>
               CI downloads those exact bytes and tests the applicable format reader, tokenizer,
               tensor manifest, execution graph, and deterministic output references needed by the
-              model. GGUF and Safetensors are both supported catalog formats.
+              model. GGUF, Safetensors, and CACT are supported catalog formats.
             </dd>
           </div>
           <div>
             <dt>Production qualification</dt>
             <dd>
-              The exact artifact and Models backend first pass the complete RAG workload with
-              library defaults, then satisfy the separate tuned performance gates.
+              The exact artifact and Models backend pass the complete workload for its published
+              capability: RAG generation, embedding equivalence, or tool-calling conformance.
             </dd>
           </div>
         </dl>
@@ -144,9 +144,10 @@
           <li>
             <strong>Use a compatible independent reference.</strong>
             GGUF studies can compare Models, Ollama, and llama.cpp against identical artifact bytes
-            and controls. Safetensors studies use the pinned Transformers reference when Ollama and
-            llama.cpp cannot ingest that format. Comparators are qualification tools, not ModelJars
-            runtime dependencies.
+            and controls. Safetensors studies use the pinned Transformers reference. CACT studies
+            use the pinned upstream implementation only as a compatibility oracle, then execute the
+            conformance suite entirely through Models. Comparators are qualification tools, not
+            ModelJars runtime dependencies.
           </li>
           <li>
             <strong>Publish reproducible evidence.</strong>

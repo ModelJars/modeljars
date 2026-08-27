@@ -18,6 +18,7 @@ META-INF/modeljars/performance-v1.properties
 META-INF/modeljars/performance-v1.json
 META-INF/modeljars/qualifications-v1.properties
 META-INF/modeljars/qualifications-v1.json
+META-INF/modeljars/tool-qualifications-v1.properties
 ```
 
 Descriptors point to upstream model locations or bundled resources, checksums, licenses, formats,
@@ -74,7 +75,8 @@ modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
 
 `pull` uses the same content-addressed cache as the JVM Runtime. It downloads every file declared by
 the descriptor from its exact immutable revision, verifies each byte size and SHA-256, and never
-starts inference. Single-file GGUF artifacts and multi-file Safetensors bundles use the same command.
+starts inference. Single-file GGUF and CACT artifacts and multi-file Safetensors bundles use the
+same command.
 Release automation
 builds native binaries for macOS, Linux, and Windows on their host architectures and publishes an
 executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platform archives are
@@ -177,6 +179,16 @@ Its marker pins `config.json`, `model.safetensors`, `tokenizer.json`, and
 `tokenizer_config.json`. `modeljars pull qwen_qwen2_5_0_5b_instruct_bf16`
 installs and verifies the complete directory required by Models.
 
+The first qualified CACT artifact is Needle 2, a compact tool-calling model:
+
+```text
+org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1
+```
+
+`modeljars pull cactus_compute_needle2_cact_cq2_mixed` installs the pinned
+`needle2.cact` bytes. Models parses the embedded tokenizer and mixed CQ2/CQ4 graph and executes
+generation, constrained tool syntax, retrieval, and auxiliary heads in Java.
+
 Qwen2.5-Coder markers include:
 
 ```text
@@ -230,6 +242,11 @@ requirements apply only when every required JVM argument is active; omitted prof
 arguments remain visible in backend diagnostics. The runtime owns the backend and closes it at the
 end of the `try` block. The older `ModelJars.open` model-only API remains available when the caller
 already owns prompt selection.
+
+Production inference always runs in process through Models. ModelJars never delegates generation or
+embedding to Ollama, llama.cpp, Python, Needle, or a hosted service. Those systems may be used as
+isolated correctness or performance comparators during qualification; the optional Models
+Rust/FFM backend contains project-owned math kernels while Java retains the model graph.
 
 Qualified embedding markers use the same path-free loading contract. Pooling, normalization,
 vector width, artifact digest, and backend come from the marker's equivalence evidence rather than
@@ -427,7 +444,7 @@ The native CLI prepares a new candidate from a public Hugging Face repository in
 modeljars contribute Qwen/Qwen2.5-0.5B-Instruct --domain general
 ```
 
-It pins the immutable revision, selects the required GGUF or Safetensors files, verifies their
+It pins the immutable revision, selects the required GGUF, CACT, or Safetensors files, verifies their
 sizes and SHA-256 digests, writes the candidate report, and prints the single `gh issue create`
 command needed to submit it. Compatibility, qualification, and publication remain reviewed
 maintainer gates.

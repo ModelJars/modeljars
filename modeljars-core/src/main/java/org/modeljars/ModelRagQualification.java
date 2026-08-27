@@ -71,7 +71,8 @@ public record ModelRagQualification(
     double modelAnswerRate,
     double modelAnswerCorrectRate,
     double extractiveFallbackRate,
-    ModelQualificationEnvironment environment) {
+    ModelQualificationEnvironment environment)
+    implements ModelExecutionQualification {
 
   public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
   public static final double MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90;

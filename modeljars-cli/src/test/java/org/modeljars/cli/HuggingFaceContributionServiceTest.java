@@ -70,6 +70,47 @@ class HuggingFaceContributionServiceTest {
     assertEquals(sha256(smallFiles.get("config.json")), draft.files().get(0).sha256());
   }
 
+  @Test
+  void discoversASingleCactArtifactWithoutManualFileSelection() throws Exception {
+    String revision = "9".repeat(40);
+    String artifactSha = "a".repeat(64);
+    String modelJson =
+        """
+        {
+          "sha": "%s",
+          "pipeline_tag": "text-generation",
+          "cardData": {"license": "apache-2.0", "tags": ["chat"]}
+        }
+        """.formatted(revision);
+    String treeJson =
+        """
+        [
+          {"type":"file","path":"needle2.cact","size":13737807,
+           "lfs":{"oid":"%s","size":13737807}}
+        ]
+        """.formatted(artifactSha);
+    HuggingFaceContributionService.HttpTransport transport =
+        uri ->
+            uri.getPath().contains("/tree/") ? response(treeJson) : response(modelJson);
+
+    ContributionDraft draft =
+        new HuggingFaceContributionService(transport)
+            .prepare(
+                new ContributionRequest(
+                    "Cactus-Compute/needle2",
+                    "main",
+                    List.of(),
+                    Optional.empty(),
+                    List.of("tool-use"),
+                    List.of("text-generation", "chat", "tool-calling")));
+
+    assertEquals("cact", draft.format());
+    assertEquals("needle2", draft.name());
+    assertEquals(List.of("needle2.cact"), draft.files().stream().map(ContributionFile::path).toList());
+    assertEquals("model-weights", draft.files().getFirst().role());
+    assertEquals(artifactSha, draft.files().getFirst().sha256());
+  }
+
   private static HuggingFaceContributionService.HttpResponse response(String body) {
     return new HuggingFaceContributionService.HttpResponse(
         200, Map.of(), body.getBytes(StandardCharsets.UTF_8));

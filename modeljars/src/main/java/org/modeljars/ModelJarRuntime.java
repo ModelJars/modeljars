@@ -7,6 +7,7 @@ import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.runtime.InferencePipeline;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * A loaded model together with the exact descriptor and prompt template that were qualified for
@@ -17,13 +18,13 @@ import java.util.Objects;
 public final class ModelJarRuntime implements AutoCloseable {
   private final InferencePipeline pipeline;
   private final ModelJarDescriptor descriptor;
-  private final ModelRagQualification qualification;
+  private final ModelExecutionQualification qualification;
   private final ChatTemplate chatTemplate;
 
   ModelJarRuntime(
       InferencePipeline pipeline,
       ModelJarDescriptor descriptor,
-      ModelRagQualification qualification) {
+      ModelExecutionQualification qualification) {
     this.pipeline = Objects.requireNonNull(pipeline, "pipeline");
     this.descriptor = Objects.requireNonNull(descriptor, "descriptor");
     this.qualification = Objects.requireNonNull(qualification, "qualification");
@@ -103,12 +104,53 @@ public final class ModelJarRuntime implements AutoCloseable {
   }
 
   /**
-   * Returns the exact production qualification used for backend and prompt selection.
+   * Returns the exact RAG qualification used for backend and prompt selection.
    *
-   * @return selected production qualification
+   * <p>This compatibility accessor applies to RAG-qualified artifacts. Use {@link
+   * #executionQualification()} or {@link #toolQualification()} for tool-qualified artifacts.
+   *
+   * @return selected RAG qualification
+   * @throws ModelJarException when this artifact was qualified for a different workload
    */
   public ModelRagQualification qualification() {
+    return ragQualification()
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " uses "
+                        + qualification.workload()
+                        + " evidence; use executionQualification()"));
+  }
+
+  /**
+   * Returns the exact execution evidence used for backend and prompt selection.
+   *
+   * @return selected RAG or tool-calling qualification
+   */
+  public ModelExecutionQualification executionQualification() {
     return qualification;
+  }
+
+  /**
+   * Returns the selected RAG evidence when this artifact was RAG-qualified.
+   *
+   * @return selected RAG qualification, if applicable
+   */
+  public Optional<ModelRagQualification> ragQualification() {
+    return qualification instanceof ModelRagQualification rag ? Optional.of(rag) : Optional.empty();
+  }
+
+  /**
+   * Returns the selected tool-calling evidence when this artifact was tool-qualified.
+   *
+   * @return selected tool-calling qualification, if applicable
+   */
+  public Optional<ModelToolQualification> toolQualification() {
+    return qualification instanceof ModelToolQualification tool
+        ? Optional.of(tool)
+        : Optional.empty();
   }
 
   /**

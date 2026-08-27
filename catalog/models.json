@@ -5900,6 +5900,63 @@
         "embeddings",
         "retrieval"
       ]
+    },
+    {
+      "id": "cactus_compute_needle2_cact_cq2_mixed",
+      "name": "Cactus Compute Needle 2 CACT CQ2 Mixed",
+      "description": "Compact 43.6M-parameter Needle 2 model for local tool selection, structured tool calls, argument extraction, and calibrated refusal.",
+      "sourceId": "hf://Cactus-Compute/needle2",
+      "sourceUri": "https://huggingface.co/Cactus-Compute/needle2",
+      "downloadUri": "https://huggingface.co/Cactus-Compute/needle2/resolve/98fbd955b0347e78059be0c253cc1ffa09b87bc7/needle2.cact",
+      "revision": "98fbd955b0347e78059be0c253cc1ffa09b87bc7",
+      "markerCoordinate": "org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1",
+      "modelVersion": "2.0.0",
+      "variant": "cq2_mixed",
+      "format": "cact",
+      "architecture": "needle2",
+      "quantization": "CQ2_MIXED",
+      "localPath": "${user.home}/.modeljars/models/needle2.cact",
+      "sha256": "b43aabfcaf1a6db6acf488076eab71d823c08697c7af4521fc1d174b60ede5ba",
+      "sizeBytes": 13737807,
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/Cactus-Compute/needle2/blob/98fbd955b0347e78059be0c253cc1ffa09b87bc7/LICENSE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling",
+        "structured-output"
+      ],
+      "features": [
+        "pure-java",
+        "pinned-revision",
+        "verified-sha256",
+        "embedded-tokenizer",
+        "mixed-quantization",
+        "sliding-window",
+        "attention-sinks",
+        "contrastive-head",
+        "confidence-head",
+        "tool-retrieval"
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "dimensions": {
+        "parameterCount": 43634423,
+        "contextLength": 2048,
+        "embeddingLength": 512,
+        "blockCount": 27,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 4,
+        "keyLength": 64,
+        "valueLength": 64,
+        "feedForwardLength": 512,
+        "attentionBlockCount": 27
+      },
+      "domains": [
+        "general",
+        "tool-use"
+      ]
     }
   ]
 }

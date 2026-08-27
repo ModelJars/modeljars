@@ -13,6 +13,8 @@ import org.modeljars.ModelEmbeddingQualificationRegistry;
 import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
 import org.modeljars.ModelRagQualificationRegistry;
+import org.modeljars.ModelToolQualification;
+import org.modeljars.ModelToolQualificationRegistry;
 import org.modeljars.ModelVersion;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 
@@ -27,9 +29,10 @@ class ModelJarsJvmRuntimeDependencyTest {
     var descriptors = ModelJarRegistry.fromClasspath().descriptors();
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
     var embeddingQualifications = ModelEmbeddingQualificationRegistry.fromClasspath();
+    var toolQualifications = ModelToolQualificationRegistry.fromClasspath();
 
-    // A generator qualifies through the RAG workload and an embedder through the equivalence
-    // gate. Either is sufficient to publish, so the catalog is the union of both.
+    // A generator qualifies through RAG or tool conformance, and an embedder through reference
+    // equivalence. Any one is sufficient to publish, so the catalog is the union of all three.
     var ragQualified =
         qualifications.qualified().stream()
             .map(ModelRagQualification::modelId)
@@ -38,8 +41,13 @@ class ModelJarsJvmRuntimeDependencyTest {
         embeddingQualifications.qualified().stream()
             .map(ModelEmbeddingQualificationRegistry.Entry::modelId)
             .collect(Collectors.toSet());
+    var toolQualified =
+        toolQualifications.qualified().stream()
+            .map(ModelToolQualification::modelId)
+            .collect(Collectors.toSet());
     var allQualified = new java.util.HashSet<>(ragQualified);
     allQualified.addAll(embeddingQualified);
+    allQualified.addAll(toolQualified);
 
     assertEquals(allQualified.size(), descriptors.size());
     assertEquals(
@@ -50,6 +58,7 @@ class ModelJarsJvmRuntimeDependencyTest {
             .allMatch(
                 descriptor ->
                     !qualifications.qualificationsFor(descriptor).isEmpty()
+                        || !toolQualifications.qualificationsFor(descriptor).isEmpty()
                         || descriptor
                             .sha256()
                             .flatMap(embeddingQualifications::qualificationFor)

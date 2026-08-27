@@ -279,6 +279,47 @@ data class CatalogRagQualifications(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogToolQualification(
+    val modelId: String,
+    val model: String,
+    val backend: String,
+    val backendVersion: String,
+    val workload: String,
+    val promptTemplate: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val reportPath: String,
+    val reportSha256: String,
+    val verdict: String,
+    val qualified: Boolean,
+    val attempts: Int,
+    val passed: Int,
+    val structuredOutputRate: Double,
+    val toolSelectionExactRate: Double,
+    val schemaValidityRate: Double,
+    val declaredArgumentsOnlyRate: Double,
+    val expectedArgumentAccuracy: Double,
+    val refusalAccuracy: Double,
+    val p95EndToEndMillis: Double,
+    val suiteSha256: String,
+    val sourceRepository: String,
+    val sourceRevision: String,
+    val sourcePath: String,
+    val environment: CatalogQualificationEnvironment,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogToolQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val reportRevision: String,
+    val qualifiedModels: Int,
+    val rejectedModels: Int,
+    val entries: List<CatalogToolQualification>,
+    val raw: Map<String, Any?>,
+)
+
 data class CatalogEmbeddingQualification(
     val modelId: String,
     val qualified: Boolean,
@@ -340,6 +381,16 @@ fun propertyValue(value: String): String {
     val escaped = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
     return if (escaped.startsWith(" ")) "\\$escaped" else escaped
 }
+
+fun emptyToolQualificationRegistryProperties(): String =
+    """
+    modeljars.toolQualifications.schemaVersion=1
+    modeljars.toolQualifications.generatedAt=1970-01-01T00:00:00Z
+    modeljars.toolQualifications.policyVersion=none
+    modeljars.toolQualifications.modelsRevision=0000000000000000000000000000000000000000
+    modeljars.toolQualifications.qualifiedModels=0
+    modeljars.toolQualifications.rejectedModels=0
+    """.trimIndent() + "\n"
 
 fun CatalogPerformanceProfile.registryProperties(): String =
     buildString {
@@ -440,6 +491,79 @@ fun CatalogRagQualification.siteMetadata(
                     "GENERATIVE_RAG"
                 else -> "GUARDED_RAG"
             })
+
+fun CatalogToolQualification.registryProperties(
+    qualifications: CatalogToolQualifications,
+): String =
+    buildString {
+        val prefix = "toolQualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(model)}")
+        appendLine("${prefix}backend=${propertyValue(backend)}")
+        appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
+        appendLine("${prefix}workload=${propertyValue(workload)}")
+        appendLine("${prefix}promptTemplate=${propertyValue(promptTemplate)}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
+        appendLine("${prefix}reportPath=${propertyValue(reportPath)}")
+        appendLine(
+            "${prefix}reportUri=" +
+                propertyValue(
+                    "https://github.com/integrallis/models/blob/" +
+                        "${qualifications.reportRevision}/$reportPath",
+                ),
+        )
+        appendLine("${prefix}reportSha256=$reportSha256")
+        appendLine("${prefix}verdict=$verdict")
+        appendLine("${prefix}qualified=$qualified")
+        appendLine("${prefix}attempts=$attempts")
+        appendLine("${prefix}passed=$passed")
+        appendLine("${prefix}structuredOutputRate=$structuredOutputRate")
+        appendLine("${prefix}toolSelectionExactRate=$toolSelectionExactRate")
+        appendLine("${prefix}schemaValidityRate=$schemaValidityRate")
+        appendLine("${prefix}declaredArgumentsOnlyRate=$declaredArgumentsOnlyRate")
+        appendLine("${prefix}expectedArgumentAccuracy=$expectedArgumentAccuracy")
+        appendLine("${prefix}refusalAccuracy=$refusalAccuracy")
+        appendLine("${prefix}p95EndToEndMillis=$p95EndToEndMillis")
+        appendLine("${prefix}suiteSha256=$suiteSha256")
+        appendLine("${prefix}sourceRepository=${propertyValue(sourceRepository)}")
+        appendLine("${prefix}sourceRevision=$sourceRevision")
+        appendLine("${prefix}sourcePath=${propertyValue(sourcePath)}")
+        environment.properties("${prefix}environment.").forEach(::appendLine)
+    }
+
+fun CatalogToolQualifications.registryProperties(
+    entries: List<CatalogToolQualification> = this.entries,
+): String {
+    val qualifications = this
+    return buildString {
+        appendLine("modeljars.toolQualifications.schemaVersion=1")
+        appendLine("modeljars.toolQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.toolQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.toolQualifications.modelsRevision=$modelsRevision")
+        appendLine(
+            "modeljars.toolQualifications.qualifiedModels=" +
+                entries.count(CatalogToolQualification::qualified),
+        )
+        appendLine(
+            "modeljars.toolQualifications.rejectedModels=" +
+                entries.count { !it.qualified },
+        )
+        entries.forEach { append(it.registryProperties(qualifications)) }
+    }
+}
+
+fun CatalogToolQualification.siteMetadata(
+    qualifications: CatalogToolQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.reportRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("policyVersion" to qualifications.policyVersion) +
+        ("useCaseTier" to if (qualified) "TOOL_CALLING" else "UNQUALIFIED")
 
 fun CatalogEmbeddingQualification.registryProperties(): String =
     buildString {
@@ -901,6 +1025,122 @@ val ragQualifications =
         null
     }
 
+val toolQualificationCatalogFile = file("catalog/tool-qualifications.json")
+val toolQualifications =
+    if (toolQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(toolQualificationCatalogFile)
+                .stringKeyMap("catalog/tool-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/tool-qualifications.json must use schemaVersion 1"
+        }
+
+        fun integer(values: Map<String, Any?>, name: String, context: String): Int =
+            (values[name] as? Number)?.toInt()
+                ?: error("$context.$name must be an integer")
+
+        fun longValue(values: Map<String, Any?>, name: String, context: String): Long =
+            (values[name] as? Number)?.toLong()
+                ?: error("$context.$name must be an integer")
+
+        fun decimal(values: Map<String, Any?>, name: String, context: String): Double =
+            (values[name] as? Number)?.toDouble()
+                ?: error("$context.$name must be a number")
+
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Tool qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every tool qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    val context = "tool qualification $modelId"
+                    val suite = raw["suite"].stringKeyMap("$context.suite")
+                    val generation =
+                        raw["generation"].stringKeyMap("$context.generation")
+                    val summary = raw["summary"].stringKeyMap("$context.summary")
+                    val environment =
+                        raw["environment"].stringKeyMap("$context.environment")
+                    CatalogToolQualification(
+                        modelId = modelId,
+                        model = raw.requiredString("model"),
+                        backend = raw.requiredString("backend"),
+                        backendVersion = raw.requiredString("backendVersion"),
+                        workload = suite.requiredString("id"),
+                        promptTemplate = generation.requiredString("promptTemplate"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes = longValue(raw, "artifactSizeBytes", context),
+                        reportPath = raw.requiredString("report"),
+                        reportSha256 = raw.requiredString("reportSha256"),
+                        verdict = summary.requiredString("verdict"),
+                        qualified =
+                            summary["qualified"] as? Boolean
+                                ?: error("$context.summary.qualified must be a boolean"),
+                        attempts = integer(summary, "attempts", "$context.summary"),
+                        passed = integer(summary, "passed", "$context.summary"),
+                        structuredOutputRate =
+                            decimal(summary, "structuredOutputRate", "$context.summary"),
+                        toolSelectionExactRate =
+                            decimal(summary, "toolSelectionExactRate", "$context.summary"),
+                        schemaValidityRate =
+                            decimal(summary, "schemaValidityRate", "$context.summary"),
+                        declaredArgumentsOnlyRate =
+                            decimal(summary, "declaredArgumentsOnlyRate", "$context.summary"),
+                        expectedArgumentAccuracy =
+                            decimal(summary, "expectedArgumentAccuracy", "$context.summary"),
+                        refusalAccuracy =
+                            decimal(summary, "refusalAccuracy", "$context.summary"),
+                        p95EndToEndMillis =
+                            decimal(summary, "p95EndToEndMillis", "$context.summary"),
+                        suiteSha256 = suite.requiredString("sha256"),
+                        sourceRepository = suite.requiredString("sourceRepository"),
+                        sourceRevision = suite.requiredString("sourceRevision"),
+                        sourcePath = suite.requiredString("sourcePath"),
+                        environment =
+                            CatalogQualificationEnvironment(
+                                hostname = environment.requiredString("host"),
+                                osName = environment.requiredString("osName"),
+                                osVersion = environment.requiredString("osVersion"),
+                                architecture = environment.requiredString("architecture"),
+                                cpuModel = environment.requiredString("cpuModel"),
+                                availableProcessors =
+                                    integer(environment, "processors", "$context.environment"),
+                                totalMemoryBytes =
+                                    longValue(
+                                        environment,
+                                        "physicalMemoryBytes",
+                                        "$context.environment",
+                                    ),
+                                maxHeapBytes =
+                                    longValue(
+                                        environment,
+                                        "maxHeapBytes",
+                                        "$context.environment",
+                                    ),
+                                javaVersion = environment.requiredString("javaVersion"),
+                                javaVendor = environment.requiredString("javaVendor"),
+                                vmName = environment.requiredString("vmName"),
+                            ),
+                        raw = raw,
+                    )
+                }
+
+        CatalogToolQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            reportRevision = document.requiredString("reportRevision"),
+            qualifiedModels =
+                integer(document, "qualifiedModels", "tool qualification manifest"),
+            rejectedModels =
+                integer(document, "rejectedModels", "tool qualification manifest"),
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 require(catalogEntries.isNotEmpty()) { "Catalog must contain at least one model" }
 require(catalogEntries.map(CatalogEntry::id).distinct().size == catalogEntries.size) {
     "Catalog IDs must be unique"
@@ -943,6 +1183,26 @@ ragQualifications?.let { qualifications ->
             qualifications.entries.count { !it.qualified },
     ) {
         "Qualification rejectedModels count does not match entries"
+    }
+}
+toolQualifications?.let { qualifications ->
+    require(
+        qualifications.entries.map(CatalogToolQualification::modelId).distinct().size ==
+            qualifications.entries.size,
+    ) {
+        "Tool qualification model IDs must be unique"
+    }
+    require(
+        qualifications.qualifiedModels ==
+            qualifications.entries.count(CatalogToolQualification::qualified),
+    ) {
+        "Tool qualification qualifiedModels count does not match entries"
+    }
+    require(
+        qualifications.rejectedModels ==
+            qualifications.entries.count { !it.qualified },
+    ) {
+        "Tool qualification rejectedModels count does not match entries"
     }
 }
 
@@ -995,9 +1255,12 @@ val publicQualifications =
     }.entries.filter(CatalogRagQualification::qualified)
 val publicEmbeddingQualifications =
     embeddingQualifications?.entries?.filter(CatalogEmbeddingQualification::qualified).orEmpty()
+val publicToolQualifications =
+    toolQualifications?.entries?.filter(CatalogToolQualification::qualified).orEmpty()
 val publicModelIds =
     publicQualifications.map(CatalogRagQualification::modelId).toSet() +
-        publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet()
+        publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet() +
+        publicToolQualifications.map(CatalogToolQualification::modelId).toSet()
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
@@ -1011,6 +1274,20 @@ publicEmbeddingQualifications.forEach { qualification ->
     }
     require(entry.sizeBytes == qualification.artifactSizeBytes) {
         "Embedding qualification size does not match catalog model ${qualification.modelId}"
+    }
+}
+publicToolQualifications.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error("Tool qualification references unknown catalog model: ${qualification.modelId}")
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Tool qualification SHA-256 does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Tool qualification size does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.backends[qualification.backend] == true) {
+        "Tool qualification backend is not advertised by ${qualification.modelId}"
     }
 }
 val publicPerformanceProfiles = performanceProfiles.filter { it.modelId in publicModelIds }
@@ -1188,6 +1465,70 @@ ragQualifications?.let { qualifications ->
         }
         require(qualification.environment.maxHeapBytes > 0) {
             "Qualification heap must be positive for ${qualification.modelId}"
+        }
+    }
+}
+
+toolQualifications?.let { qualifications ->
+    Instant.parse(qualifications.generatedAt)
+    require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Tool qualification modelsRevision must be a 40-character Git commit"
+    }
+    require(qualifications.reportRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Tool qualification reportRevision must be a 40-character Git commit"
+    }
+    qualifications.entries.forEach { qualification ->
+        val model =
+            catalogEntries.singleOrNull { it.id == qualification.modelId }
+                ?: error("Unknown modelId in tool qualification: ${qualification.modelId}")
+        require(qualification.artifactSha256 == model.sha256) {
+            "Tool qualification SHA-256 does not match ${qualification.modelId}"
+        }
+        require(qualification.artifactSizeBytes == model.sizeBytes) {
+            "Tool qualification size does not match ${qualification.modelId}"
+        }
+        require(model.backends[qualification.backend] == true) {
+            "Tool qualification backend is not supported by ${qualification.modelId}"
+        }
+        require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Tool qualification report SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(isNormalizedRepositoryRelativePath(qualification.reportPath)) {
+            "Tool qualification report path is invalid for ${qualification.modelId}"
+        }
+        require(qualification.sourceRevision.matches(Regex("[0-9a-f]{40}"))) {
+            "Tool qualification source revision is invalid for ${qualification.modelId}"
+        }
+        require(URI.create(qualification.sourceRepository).scheme == "https") {
+            "Tool qualification source repository must use HTTPS"
+        }
+        require(qualification.attempts > 0 && qualification.passed in 0..qualification.attempts) {
+            "Tool qualification attempt counts are invalid for ${qualification.modelId}"
+        }
+        listOf(
+            qualification.structuredOutputRate,
+            qualification.toolSelectionExactRate,
+            qualification.schemaValidityRate,
+            qualification.declaredArgumentsOnlyRate,
+            qualification.expectedArgumentAccuracy,
+            qualification.refusalAccuracy,
+        ).forEach { rate ->
+            require(rate in 0.0..1.0) {
+                "Tool qualification rates must be between zero and one for " +
+                    qualification.modelId
+            }
+        }
+        require(qualification.p95EndToEndMillis.isFinite() && qualification.p95EndToEndMillis >= 0) {
+            "Tool qualification latency is invalid for ${qualification.modelId}"
+        }
+        require(qualification.environment.availableProcessors > 0) {
+            "Tool qualification processor count must be positive for ${qualification.modelId}"
+        }
+        require(qualification.environment.totalMemoryBytes > 0) {
+            "Tool qualification memory must be positive for ${qualification.modelId}"
+        }
+        require(qualification.environment.maxHeapBytes > 0) {
+            "Tool qualification heap must be positive for ${qualification.modelId}"
         }
     }
 }
@@ -1769,6 +2110,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/qualifications-v1.json")
         }
+    val candidateTestToolQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/tool-qualifications-v1.properties")
+        }
     val candidateTestPayloadTasks =
         catalogEntries
             .filter { it.packaging == "classpath" }
@@ -1791,6 +2136,9 @@ project(":modeljars-core") {
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
             inputs.file(rootProject.file("catalog/benchmarks.json"))
             inputs.file(qualificationCatalogFile)
+            if (toolQualificationCatalogFile.isFile) {
+                inputs.file(toolQualificationCatalogFile)
+            }
             outputs.files(
                 candidateTestRegistry,
                 candidateTestMetadata,
@@ -1799,6 +2147,7 @@ project(":modeljars-core") {
                 candidateTestBenchmarkMetadata,
                 candidateTestQualificationRegistry,
                 candidateTestQualificationMetadata,
+                candidateTestToolQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -1822,7 +2171,12 @@ project(":modeljars-core") {
                                     ("ragQualifications" to
                                         qualifications.entries
                                             .filter { it.modelId == entry.id }
-                                            .map { it.siteMetadata(qualifications) })
+                                            .map { it.siteMetadata(qualifications) }) +
+                                    ("toolQualifications" to
+                                        toolQualifications?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map { it.siteMetadata(toolQualifications) }
+                                            .orEmpty())
                             },
                         ),
                     ) + "\n",
@@ -1855,6 +2209,11 @@ project(":modeljars-core") {
                 candidateTestQualificationMetadata.get().asFile.writeText(
                     JsonOutput.prettyPrint(JsonOutput.toJson(qualifications.raw)) + "\n",
                     StandardCharsets.UTF_8,
+                )
+                candidateTestToolQualificationRegistry.get().asFile.writeText(
+                    toolQualifications?.registryProperties()
+                        ?: emptyToolQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
                 )
             }
         }
@@ -1956,16 +2315,24 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
         }
+    val runtimeToolQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/tool-qualifications-v1.properties")
+        }
     val generateRuntimeQualificationResources =
         tasks.register("generateRuntimeQualificationResources") {
             inputs.file(qualificationCatalogFile)
             if (embeddingQualificationCatalogFile.isFile) {
                 inputs.file(embeddingQualificationCatalogFile)
             }
+            if (toolQualificationCatalogFile.isFile) {
+                inputs.file(toolQualificationCatalogFile)
+            }
             outputs.files(
                 runtimeRagQualificationRegistry,
                 runtimeRagQualificationMetadata,
                 runtimeEmbeddingQualificationRegistry,
+                runtimeToolQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -1982,6 +2349,11 @@ project(":modeljars") {
                 runtimeEmbeddingQualificationRegistry.get().asFile.writeText(
                     embeddingQualifications?.registryProperties()
                         ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeToolQualificationRegistry.get().asFile.writeText(
+                    toolQualifications?.registryProperties()
+                        ?: emptyToolQualificationRegistryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
             }
@@ -2224,6 +2596,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
         }
+    val aggregateToolQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/tool-qualifications-v1.properties")
+        }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
@@ -2235,6 +2611,9 @@ project(":modeljars-catalog") {
             if (embeddingQualificationCatalogFile.isFile) {
                 inputs.file(embeddingQualificationCatalogFile)
             }
+            if (toolQualificationCatalogFile.isFile) {
+                inputs.file(toolQualificationCatalogFile)
+            }
             outputs.files(
                 aggregateRegistry,
                 aggregateMetadata,
@@ -2244,6 +2623,7 @@ project(":modeljars-catalog") {
                 aggregateQualificationRegistry,
                 aggregateQualificationMetadata,
                 aggregateEmbeddingQualificationRegistry,
+                aggregateToolQualificationRegistry,
             )
             doLast {
                 val registry = aggregateRegistry.get().asFile
@@ -2276,6 +2656,12 @@ project(":modeljars-catalog") {
                                                 it.siteMetadata(
                                                     requireNotNull(embeddingQualifications),
                                                 )
+                                            }) +
+                                    ("toolQualifications" to
+                                        publicToolQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(requireNotNull(toolQualifications))
                                             })
                             },
                         ),
@@ -2287,6 +2673,11 @@ project(":modeljars-catalog") {
                     embeddingQualifications
                         ?.registryProperties(publicEmbeddingQualifications)
                         ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateToolQualificationRegistry.get().asFile.writeText(
+                    toolQualifications?.registryProperties(publicToolQualifications)
+                        ?: emptyToolQualificationRegistryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregatePerformanceRegistry.get().asFile.writeText(
@@ -2414,12 +2805,19 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
             }
+        val markerToolQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/tool-qualifications-v1.properties")
+            }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
                 inputs.file(rootProject.file("catalog/models.json"))
                 inputs.file(rootProject.file("catalog/performance-profiles.json"))
                 inputs.file(qualificationCatalogFile)
+                if (toolQualificationCatalogFile.isFile) {
+                    inputs.file(toolQualificationCatalogFile)
+                }
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
@@ -2428,6 +2826,7 @@ project(":modeljars-catalog") {
                     markerQualificationRegistry,
                     markerQualificationMetadata,
                     markerEmbeddingQualificationRegistry,
+                    markerToolQualificationRegistry,
                     markerDocs,
                 )
                 doLast {
@@ -2436,11 +2835,25 @@ project(":modeljars-catalog") {
                         requireNotNull(ragQualifications).entries.filter {
                             it.modelId == entry.id
                         }
+                    val modelToolQualifications =
+                        toolQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
                     markerMetadata.get().asFile.writeText(
-                        JsonOutput.prettyPrint(JsonOutput.toJson(entry.raw)) + "\n",
+                        JsonOutput.prettyPrint(
+                            JsonOutput.toJson(
+                                entry.raw +
+                                    ("ragQualifications" to
+                                        modelQualifications.map {
+                                            it.siteMetadata(requireNotNull(ragQualifications))
+                                        }) +
+                                    ("toolQualifications" to
+                                        modelToolQualifications.map {
+                                            it.siteMetadata(requireNotNull(toolQualifications))
+                                        }),
+                            ),
+                        ) + "\n",
                         StandardCharsets.UTF_8,
                     )
                     markerPerformanceRegistry.get().asFile.writeText(
@@ -2489,6 +2902,11 @@ project(":modeljars-catalog") {
                         ) ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerToolQualificationRegistry.get().asFile.writeText(
+                        toolQualifications?.registryProperties(modelToolQualifications)
+                            ?: emptyToolQualificationRegistryProperties(),
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -2517,6 +2935,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/performance-v1.json",
                         "META-INF/modeljars/qualifications-v1.properties",
                         "META-INF/modeljars/embedding-qualifications-v1.properties",
+                        "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
                 }

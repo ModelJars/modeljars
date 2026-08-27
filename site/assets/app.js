@@ -78,6 +78,10 @@ function renderEntry(model) {
     qualification?.qualified && qualification.p95TtftMillis !== undefined ? qualification : null;
   const embeddingEvidence =
     qualification?.qualified && qualification.probes !== undefined ? qualification : null;
+  const toolEvidence =
+    qualification?.qualified && qualification.structuredOutputRate !== undefined
+      ? qualification
+      : null;
 
   return `
     <article class="catalog-entry">
@@ -100,6 +104,8 @@ function renderEntry(model) {
         ${ragEvidence ? metric("decode", `${ragEvidence.p50DecodeTokensPerSecond.toFixed(1)} tok/s`) : ""}
         ${embeddingEvidence ? metric("agreement", embeddingEvidence.minimumOracleCosine.toFixed(5)) : ""}
         ${embeddingEvidence ? metric("dimensions", String(embeddingEvidence.embeddingDimension)) : ""}
+        ${toolEvidence ? metric("tool selection", `${(toolEvidence.toolSelectionExactRate * 100).toFixed(1)}%`) : ""}
+        ${toolEvidence ? metric("arguments", `${(toolEvidence.expectedArgumentAccuracy * 100).toFixed(1)}%`) : ""}
         ${metric("parameters", formatParameters(dimensions.parameterCount))}
         ${metric("download", formatBytes(model.sizeBytes))}
         ${metric("", context)}

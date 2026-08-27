@@ -154,3 +154,33 @@ test("summarizes embedding evidence without RAG latency fields", () => {
   assert.equal(summary.ttft, null);
   assert.equal(summary.decode, null);
 });
+
+test("summarizes tool conformance without inventing RAG metrics", () => {
+  const summary = qualificationSummary({
+    qualified: true,
+    useCaseTier: "TOOL_CALLING",
+    backend: "pure-java",
+    backendVersion: "models@" + "c".repeat(40),
+    workload: "needle2-upstream-playground-v1",
+    promptTemplate: "needle2",
+    attempts: 13,
+    passed: 11,
+    structuredOutputRate: 1,
+    toolSelectionExactRate: 1,
+    schemaValidityRate: 1,
+    declaredArgumentsOnlyRate: 1,
+    expectedArgumentAccuracy: 0.9166666667,
+    refusalAccuracy: 1,
+    p95EndToEndMillis: 53195,
+    reportUri: "https://github.com/integrallis/models/blob/" + "d".repeat(40) + "/report.json",
+    reportSha256: "e".repeat(64),
+  });
+
+  assert.equal(summary.label, "Tool calling");
+  assert.equal(summary.passed, 11);
+  assert.equal(summary.selection, "100.0%");
+  assert.equal(summary.arguments, "91.7%");
+  assert.equal(summary.endToEnd, "53.20 s");
+  assert.equal(summary.rawQuality, null);
+  assert.equal(summary.evidenceSha256, "e".repeat(64));
+});

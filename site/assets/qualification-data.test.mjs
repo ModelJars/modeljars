@@ -162,6 +162,24 @@ test("treats embedding equivalence evidence as a qualification", () => {
   assert.equal(qualificationLabel(qualification), "Semantic search");
 });
 
+test("selects and labels tool-calling conformance evidence", () => {
+  const toolModel = {
+    id: "cactus_compute_needle2_cact_cq2_mixed",
+    toolQualifications: [
+      {
+        qualified: true,
+        useCaseTier: "TOOL_CALLING",
+        expectedArgumentAccuracy: 0.9166666667,
+      },
+    ],
+  };
+
+  const selected = primaryQualification(toolModel);
+
+  assert.equal(selected.useCaseTier, "TOOL_CALLING");
+  assert.equal(qualificationLabel(selected), "Tool calling");
+});
+
 test("prefers RAG evidence when a model carries both", () => {
   const both = {
     ragQualifications: [{ qualified: true, useCaseTier: "GUARDED_RAG" }],

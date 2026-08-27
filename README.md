@@ -189,6 +189,29 @@ org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.
 `needle2.cact` bytes. Models parses the embedded tokenizer and mixed CQ2/CQ4 graph and executes
 generation, constrained tool syntax, retrieval, and auxiliary heads in Java.
 
+```java
+import static org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed.MODEL;
+
+var weather = new ToolSpec(
+    "get_weather", "Get weather for a city.",
+    "{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},"
+        + "\"required\":[\"city\"]}");
+var options = SamplingOptions.builder().temperature(0).maxTokens(128).build();
+
+try (var runtime = ModelJars.openRuntime(MODEL)) {
+    var tools = List.of(weather);
+    var prompt = runtime.chatTemplate().render(
+        List.of(ChatMessage.user("weather in Lagos")), tools);
+    var constraint = ToolCallTokenConstraints.compile(
+        runtime.tokenizer(), runtime.chatTemplate().toolSyntax(), tools,
+        ignored -> List.of()).orElseThrow();
+    var output = runtime.pipeline().generate(prompt, options, constraint);
+    var calls = ToolCallScanner.scan(
+        output, runtime.chatTemplate().toolSyntax()).toolCalls();
+    var evidence = runtime.toolQualification().orElseThrow();
+}
+```
+
 Qwen2.5-Coder markers include:
 
 ```text

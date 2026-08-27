@@ -38,12 +38,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Smollm2_360m_Instruct_Q8_0;
 
 class ModelJarsTest {
   private static final ModelJar QWEN = Qwen3_0_6b_Q4_0.MODEL;
+  private static final ModelJar NEEDLE2 = Cactus_Compute_Needle2_Cact_Cq2_Mixed.MODEL;
   private static final ModelJar QWEN_EMBEDDING = Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0.MODEL;
   private static final ModelJar SMOLLM = Smollm2_360m_Instruct_Q8_0.MODEL;
 
@@ -97,6 +99,44 @@ class ModelJarsTest {
     assertFalse(backend.closed());
     runtime.close();
     assertTrue(backend.closed());
+  }
+
+  @Test
+  void opensToolQualifiedCactWithItsExactJavaEvidence() {
+    ModelJarRegistry models = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor descriptor = models.resolve(NEEDLE2).orElseThrow();
+    AtomicReference<String> selectedBackend = new AtomicReference<>();
+    AtomicReference<BackendConfiguration> selectedConfiguration = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            models,
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-model.cact"),
+            (backendName, path, configuration) -> {
+              selectedBackend.set(backendName);
+              selectedConfiguration.set(configuration);
+              return new StubBackend();
+            },
+            Map::of);
+
+    try (var runtime = loader.loadRuntime(NEEDLE2, ModelLoadOptions.defaults())) {
+      var qualification = runtime.toolQualification().orElseThrow();
+
+      assertEquals("cact", descriptor.format());
+      assertEquals("needle2", descriptor.architecture());
+      assertEquals("pure-java", selectedBackend.get());
+      assertEquals("needle2-upstream-playground-v1", qualification.workload());
+      assertEquals(0.9166666666666666, qualification.expectedArgumentAccuracy());
+      assertTrue(qualification.productionUsable());
+      assertSame(qualification, runtime.executionQualification());
+      assertTrue(runtime.ragQualification().isEmpty());
+      assertEquals(ChatTemplate.NEEDLE2, runtime.chatTemplate());
+      assertThrows(ModelJarException.class, runtime::qualification);
+      assertEquals(
+          descriptor.sha256().orElseThrow(),
+          selectedConfiguration.get().environment().get("modeljars-artifact-sha256"));
+    }
   }
 
   @Test

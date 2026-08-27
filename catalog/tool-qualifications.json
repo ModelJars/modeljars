@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-27T20:09:52.023985Z",
+  "policyVersion": "needle2-tool-conformance-v1",
+  "modelsRevision": "b31c6bbd1d657db603ac4e56560507309aaf7c9e",
+  "reportRevision": "46aa0bd87cb5a226606784831125740cb4fd1655",
+  "qualifiedModels": 1,
+  "rejectedModels": 0,
+  "entries": [
+    {
+      "modelId": "cactus_compute_needle2_cact_cq2_mixed",
+      "model": "Cactus Compute Needle 2 CACT CQ2 Mixed",
+      "backend": "pure-java",
+      "backendVersion": "models@b31c6bbd1d657db603ac4e56560507309aaf7c9e",
+      "artifactSha256": "b43aabfcaf1a6db6acf488076eab71d823c08697c7af4521fc1d174b60ede5ba",
+      "artifactSizeBytes": 13737807,
+      "report": "models-bench/benchmark-results/certified-20260827/tool-calling/needle2-cact-pure-java.json",
+      "reportSha256": "e0217e643cff12711863b943752b624f0a6772f5c4dc596685ddf4b184f90c78",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "37cf1417d9ff1e66b09cb0b2f094e0e0c444bdb9d885360365a0e54799d13f79",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "needle2"
+      },
+      "summary": {
+        "attempts": 13,
+        "passed": 11,
+        "structuredOutputRate": 1.0,
+        "toolSelectionExactRate": 1.0,
+        "schemaValidityRate": 1.0,
+        "declaredArgumentsOnlyRate": 1.0,
+        "expectedArgumentAccuracy": 0.9166666666666666,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 46295.0,
+        "qualified": true,
+        "verdict": "PASS"
+      },
+      "environment": {
+        "host": "Brians-MacBook-Pro.local",
+        "osName": "Mac OS X",
+        "osVersion": "26.6.1",
+        "architecture": "x86_64",
+        "cpuModel": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+        "processors": 12,
+        "physicalMemoryBytes": 34359738368,
+        "maxHeapBytes": 8589934592,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    }
+  ]
+}

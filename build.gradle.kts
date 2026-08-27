@@ -3582,8 +3582,54 @@ val verifyLaunchQualifications =
         }
     }
 
+val verifyInferenceArchitecture =
+    tasks.register("verifyInferenceArchitecture") {
+        group = "verification"
+        description =
+            "Prohibit external-process and remote-service inference in the ModelJars runtime"
+        val runtimeSourceDirectories =
+            listOf(
+                file("modeljars/src/main/java"),
+                file("modeljars-core/src/main/java"),
+            )
+        inputs.files(runtimeSourceDirectories)
+
+        doLast {
+            val forbiddenTokens =
+                mapOf(
+                    "Process" + "Builder(" to "external process launch",
+                    "Runtime.getRuntime()." + "exec(" to "external process launch",
+                    "127.0.0.1:11434" to "Ollama inference endpoint",
+                    "localhost:11434" to "Ollama inference endpoint",
+                    "127.0.0.1:8080/completion" to "llama.cpp inference endpoint",
+                    "localhost:8080/completion" to "llama.cpp inference endpoint",
+                )
+            val violations =
+                runtimeSourceDirectories
+                    .flatMap { directory ->
+                        fileTree(directory) { include("**/*.java") }.files
+                    }
+                    .flatMap { source ->
+                        val text = source.readText()
+                        forbiddenTokens
+                            .filterKeys(text::contains)
+                            .values
+                            .map { description ->
+                                "${source.relativeTo(rootProject.projectDir)}: $description"
+                            }
+                    }
+                    .sorted()
+            require(violations.isEmpty()) {
+                "ModelJars production inference must stay in process and JVM-owned; " +
+                    "external systems are benchmark-only. Violations found:\n" +
+                    violations.joinToString("\n") { "  - $it" }
+            }
+        }
+    }
+
 tasks.named("check") {
     dependsOn("verifyCatalog")
+    dependsOn(verifyInferenceArchitecture)
     dependsOn(verifyReadmeVersions)
     dependsOn(verifyJvmRuntimePublication)
     dependsOn(verifyMarkerPublicationIndependence)

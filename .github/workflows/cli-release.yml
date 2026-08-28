@@ -14,7 +14,7 @@ on:
         required: false
         type: string
       publish_sdkman:
-        description: Publish to SDKMAN after candidate approval.
+        description: Publish to SDKMAN after candidate approval and repository enablement.
         required: false
         default: false
         type: boolean
@@ -263,7 +263,10 @@ jobs:
           "-PmodeljarsVersion=${VERSION}"
 
   publish-sdkman:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_sdkman
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_sdkman &&
+      vars.SDKMAN_PUBLISH_ENABLED == 'true'
     needs: native
     uses: ./.github/workflows/sdkman-publish.yml
     with:

@@ -45,13 +45,15 @@ test("publishes native and JVM CLI channels without exposing credentials", async
   assert.match(workflow, /publish_sdkman:[\s\S]*default: false/);
   assert.match(
     workflow,
-    /publish-sdkman:[\s\S]*if: github\.event_name == 'workflow_dispatch' && inputs\.publish_sdkman/,
+    /publish-sdkman:[\s\S]*vars\.SDKMAN_PUBLISH_ENABLED == 'true'/,
   );
   assert.match(workflow, /publishMavenPublicationToGitHubPackagesRepository/);
   assert.doesNotMatch(workflow, /gho_|github_pat_|Consumer-Key: [A-Za-z0-9]/);
 
   assert.match(sdkmanWorkflow, /workflow_dispatch:/);
   assert.match(sdkmanWorkflow, /environment: sdkman/);
+  assert.match(sdkmanWorkflow, /publish-platforms:[\s\S]*if: vars\.SDKMAN_PUBLISH_ENABLED == 'true'/);
+  assert.match(sdkmanWorkflow, /finalize:[\s\S]*if: vars\.SDKMAN_PUBLISH_ENABLED == 'true'/);
   assert.match(sdkmanWorkflow, /sdkman\/sdkman-release-action@[0-9a-f]{40}/);
   assert.match(sdkmanWorkflow, /candidate: modeljars/);
   assert.match(sdkmanWorkflow, /checksum-sha-256/);
@@ -63,5 +65,7 @@ test("publishes native and JVM CLI channels without exposing credentials", async
   assert.match(installer, /\.sha256/);
   assert.match(installer, /actual_checksum/);
   assert.match(build, /imageName\.set\("modeljars"\)/);
-  assert.match(docs, /SDKMAN requires its one-time vendor onboarding/);
+  assert.match(docs, /SDKMAN is not an active package channel/);
+  assert.match(docs, /SDKMAN_PUBLISH_ENABLED/);
+  assert.match(docs, /every SDKMAN publication job is skipped/);
 });

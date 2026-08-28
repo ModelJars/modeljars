@@ -141,7 +141,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.20/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.21/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);

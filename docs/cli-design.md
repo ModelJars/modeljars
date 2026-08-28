@@ -71,5 +71,7 @@ Windows output.
   `InferencePipeline`; `embed` calls the qualified embedding runtime. Both use the shared verified
   cache and reject models that lack the corresponding qualification.
 - Chat metrics distinguish model load time, TTFT, total generation time, exact input/output token
-  counts, and decode throughput. Embedding metrics report load and execution time, vector width,
-  and norm. Human, plain, and JSON output carry the same measurements.
+  counts, and decode throughput. TTFT ends at the first emitted token; throughput uses the remaining
+  token intervals, avoiding an inflated rate that counts the first token twice. Embedding metrics
+  report load and execution time, vector width, and norm. Human, plain, and JSON output carry the
+  same measurements.

@@ -53,8 +53,10 @@ well as the prompt.
 starts a multi-turn session when no prompt is supplied. `/clear` resets model context and `/bye`
 exits. `embed` prints the complete vector returned by the qualified embedding runtime. Chat metrics
 include model load time, TTFT, generation time, exact prompt/completion token counts, and tokens per
-second. Embedding metrics include load time, embedding latency, dimensions, and vector norm. The
-same fields are emitted in human, plain, and JSON modes.
+second. TTFT ends at the first emitted token; decode throughput measures the intervals between the
+remaining tokens and is zero when only one token is generated. Embedding metrics include load time,
+embedding latency, dimensions, and vector norm. The same fields are emitted in human, plain, and
+JSON modes.
 
 `pull` uses structured byte-level installer events. A capable terminal receives a continuously
 updated two-line region for both download and SHA-256 verification, including percentage, bytes,

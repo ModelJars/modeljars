@@ -118,6 +118,8 @@ ModelJars and Models APIs used by Java applications—there is no Ollama, llama.
 inference server behind these commands. Omitting the prompt from `run` starts a multi-turn chat;
 `/clear` resets its context and `/bye` exits. Chat output reports model load time, time to first
 token (TTFT), total generation time, exact prompt/completion token counts, and decode throughput.
+TTFT runs from generation start to the first emitted token; throughput measures the token intervals
+after that first token, so a one-token completion has no measurable decode rate and reports zero.
 Embedding output includes the complete vector plus load time, embedding time, dimensions, and
 vector norm. JSON and plain output expose the same measurements for scripts.
 

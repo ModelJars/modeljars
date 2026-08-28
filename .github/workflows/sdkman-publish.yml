@@ -43,6 +43,7 @@ concurrency:
 
 jobs:
   publish-platforms:
+    if: vars.SDKMAN_PUBLISH_ENABLED == 'true'
     name: SDKMAN ${{ matrix.platform }}
     runs-on: ubuntu-24.04
     environment: sdkman
@@ -125,6 +126,7 @@ jobs:
           checksum-sha-256: ${{ steps.archive.outputs.sha256 }}
 
   finalize:
+    if: vars.SDKMAN_PUBLISH_ENABLED == 'true'
     name: Default, announce, and verify SDKMAN release
     needs: publish-platforms
     runs-on: ubuntu-24.04

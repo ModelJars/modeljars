@@ -90,4 +90,5 @@ org.modeljars:modeljars:0.1.18
 The separate CLI release workflow builds host-native executables with GraalVM on GitHub Actions,
 attaches checksummed assets to the GitHub release, publishes
 `org.modeljars:modeljars-cli:0.1.18` to GitHub Packages, and updates the Integrallis Homebrew tap and
-Scoop bucket. SDKMAN publication is credential-gated until vendor onboarding is complete.
+Scoop bucket. The retained SDKMAN workflow is disabled by the `SDKMAN_PUBLISH_ENABLED` repository
+variable until vendor onboarding is approved.

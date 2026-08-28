@@ -153,6 +153,32 @@ public record ModelJarDescriptor(
   /**
    * Creates a descriptor from the original schema, before catalog publication timestamps were
    * introduced.
+   *
+   * @param alias stable catalog alias
+   * @param sourceId upstream model source ID
+   * @param markerCoordinate marker JAR coordinate
+   * @param modelVersion normalized upstream model version
+   * @param variant normalized model variant
+   * @param format model artifact format
+   * @param architecture model architecture
+   * @param quantization model weight quantization
+   * @param localPath configured local artifact path
+   * @param classpathResource model metadata resource packaged in the marker
+   * @param sourceUri upstream model page
+   * @param downloadUri immutable model artifact download location
+   * @param revision immutable upstream source revision
+   * @param sha256 model artifact SHA-256 digest
+   * @param sizeBytes model artifact size in bytes
+   * @param license model license identifier
+   * @param capabilities normalized model capabilities
+   * @param features normalized architecture and packaging features
+   * @param files immutable files required by a multi-file model artifact
+   * @param backendSupport supported inference backends by normalized identifier
+   * @param name human-readable model name
+   * @param description short catalog description
+   * @param licenseUri canonical model license location
+   * @param domains normalized task or industry domains
+   * @param dimensions model dimensions used for discovery and resource estimates
    */
   public ModelJarDescriptor(
       String alias,

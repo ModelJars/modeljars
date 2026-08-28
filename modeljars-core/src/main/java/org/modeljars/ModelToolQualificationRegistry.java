@@ -35,7 +35,10 @@ import java.util.TreeSet;
 
 /** Loads tool-calling qualifications from versioned ModelJars resources. */
 public final class ModelToolQualificationRegistry {
+  /** Classpath location of the version-one tool qualification resource. */
   public static final String RESOURCE = "META-INF/modeljars/tool-qualifications-v1.properties";
+
+  /** Supported tool qualification resource schema version. */
   public static final int SCHEMA_VERSION = 1;
 
   private static final String ROOT_PREFIX = "modeljars.toolQualifications.";
@@ -64,41 +67,88 @@ public final class ModelToolQualificationRegistry {
     }
   }
 
+  /**
+   * Returns when the evidence collection was generated.
+   *
+   * @return time at which this evidence collection was generated
+   */
   public Instant generatedAt() {
     return generatedAt;
   }
 
+  /**
+   * Returns the policy applied to the evidence collection.
+   *
+   * @return qualification policy version applied to the evidence
+   */
   public String policyVersion() {
     return policyVersion;
   }
 
+  /**
+   * Returns the Models implementation revision exercised by the collection.
+   *
+   * @return immutable Models repository revision used for qualification
+   */
   public String modelsRevision() {
     return modelsRevision;
   }
 
+  /**
+   * Counts entries that satisfy the qualification policy.
+   *
+   * @return number of entries satisfying the qualification policy
+   */
   public int qualifiedModels() {
     return Math.toIntExact(
         qualifications.stream().filter(ModelToolQualification::qualified).count());
   }
 
+  /**
+   * Counts entries rejected by the qualification policy.
+   *
+   * @return number of entries rejected by the qualification policy
+   */
   public int rejectedModels() {
     return qualifications.size() - qualifiedModels();
   }
 
+  /**
+   * Returns every entry in stable model-identifier order.
+   *
+   * @return all tool qualification entries ordered by model identifier
+   */
   public List<ModelToolQualification> qualifications() {
     return qualifications;
   }
 
+  /**
+   * Returns only entries approved for production use.
+   *
+   * @return production-usable tool qualification entries
+   */
   public List<ModelToolQualification> qualified() {
     return qualifications.stream().filter(ModelToolQualification::productionUsable).toList();
   }
 
+  /**
+   * Selects qualifications that match a model descriptor's identity, digest, and backend.
+   *
+   * @param descriptor model descriptor to match
+   * @return matching qualifications
+   */
   public List<ModelToolQualification> qualificationsFor(ModelJarDescriptor descriptor) {
     return qualifications.stream()
         .filter(qualification -> qualification.matches(descriptor))
         .toList();
   }
 
+  /**
+   * Loads a versioned qualification resource from a file.
+   *
+   * @param path properties resource to load
+   * @return parsed qualification registry
+   */
   public static ModelToolQualificationRegistry load(Path path) {
     Properties properties = new Properties();
     try (InputStream input = Files.newInputStream(path)) {
@@ -109,10 +159,21 @@ public final class ModelToolQualificationRegistry {
     return fromProperties(properties);
   }
 
+  /**
+   * Loads and merges qualifications visible to the current thread context class loader.
+   *
+   * @return qualifications merged from the current thread context class loader
+   */
   public static ModelToolQualificationRegistry fromClasspath() {
     return fromClasspath(Thread.currentThread().getContextClassLoader());
   }
 
+  /**
+   * Loads and merges all versioned qualification resources visible to a class loader.
+   *
+   * @param classLoader class loader to inspect, or {@code null} to use the library loader
+   * @return merged qualification registry
+   */
   public static ModelToolQualificationRegistry fromClasspath(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null ? ModelToolQualificationRegistry.class.getClassLoader() : classLoader;
@@ -152,6 +213,12 @@ public final class ModelToolQualificationRegistry {
         merged.values().stream().map(SourcedQualification::qualification).toList());
   }
 
+  /**
+   * Parses a versioned qualification registry from properties.
+   *
+   * @param properties qualification properties
+   * @return parsed qualification registry
+   */
   public static ModelToolQualificationRegistry fromProperties(Properties properties) {
     Objects.requireNonNull(properties, "properties");
     int schemaVersion = integer(properties, ROOT_PREFIX + "schemaVersion");

@@ -20,7 +20,37 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Tool-calling conformance evidence bound to one immutable model artifact and backend. */
+/**
+ * Tool-calling conformance evidence bound to one immutable model artifact and backend.
+ *
+ * @param modelId stable catalog model identifier
+ * @param model human-readable model name
+ * @param backend backend used for qualification
+ * @param backendVersion immutable backend version or revision
+ * @param workload qualification workload identifier
+ * @param promptTemplate prompt-template identifier used by the run
+ * @param artifactSha256 qualified model artifact SHA-256 digest
+ * @param artifactSizeBytes qualified model artifact size in bytes
+ * @param reportPath repository-relative qualification report path
+ * @param reportUri public immutable qualification report location
+ * @param reportSha256 qualification report SHA-256 digest
+ * @param verdict qualification verdict
+ * @param qualified whether the evidence satisfies the qualification policy
+ * @param attempts total number of conformance attempts
+ * @param passed number of conformance cases that passed
+ * @param structuredOutputRate fraction of attempts producing structured output
+ * @param toolSelectionExactRate fraction selecting exactly the expected tool
+ * @param schemaValidityRate fraction whose arguments satisfy the declared schema
+ * @param declaredArgumentsOnlyRate fraction containing only declared arguments
+ * @param expectedArgumentAccuracy fraction of expected arguments produced correctly
+ * @param refusalAccuracy fraction of no-tool cases refused correctly
+ * @param p95EndToEndMillis 95th-percentile end-to-end latency in milliseconds
+ * @param suiteSha256 conformance-suite SHA-256 digest
+ * @param sourceRepository upstream source repository used to derive the suite
+ * @param sourceRevision immutable upstream source revision
+ * @param sourcePath repository-relative upstream source path
+ * @param environment machine and JVM environment that produced the evidence
+ */
 public record ModelToolQualification(
     String modelId,
     String model,

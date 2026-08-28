@@ -170,7 +170,19 @@ export function validateQualificationCatalog(value, models) {
 
 export function primaryQualification(model) {
   const rag = Array.isArray(model?.ragQualifications) ? model.ragQualifications : [];
-  const tool = Array.isArray(model?.toolQualifications) ? model.toolQualifications : [];
+  const tool = Array.isArray(model?.toolQualifications)
+    ? model.toolQualifications.map((entry) => {
+        if (typeof entry?.qualified === "boolean" || typeof entry?.summary?.qualified !== "boolean") {
+          return entry;
+        }
+        return {
+          ...entry,
+          ...entry.summary,
+          workload: entry.workload || entry.suite?.id,
+          promptTemplate: entry.promptTemplate || entry.generation?.promptTemplate,
+        };
+      })
+    : [];
   const embedding = Array.isArray(model?.embeddingQualifications)
     ? model.embeddingQualifications
     : [];

@@ -5918,7 +5918,7 @@
       "localPath": "${user.home}/.modeljars/models/needle2.cact",
       "sha256": "b43aabfcaf1a6db6acf488076eab71d823c08697c7af4521fc1d174b60ede5ba",
       "sizeBytes": 13737807,
-      "catalogPublishedAt": "2026-08-27T22:42:06Z",
+      "catalogPublishedAt": "2026-08-28T04:17:24Z",
       "license": "Apache-2.0",
       "licenseUri": "https://huggingface.co/Cactus-Compute/needle2/blob/98fbd955b0347e78059be0c253cc1ffa09b87bc7/LICENSE",
       "capabilities": [

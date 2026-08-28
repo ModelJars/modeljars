@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -118,6 +119,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final ArtifactInstaller installer;
   private final SystemCapabilities.Probe systemProbe;
   private final ContributionService contributionService;
+  private final Clock clock;
 
   @Spec private CommandSpec commandSpec;
 
@@ -166,14 +168,24 @@ public final class ModelJarsCli implements Callable<Integer> {
         registry,
         installer,
         new SystemCapabilities()::detect,
-        new HuggingFaceContributionService());
+        new HuggingFaceContributionService(),
+        Clock.systemUTC());
+  }
+
+  ModelJarsCli(ModelJarRegistry registry, ArtifactInstaller installer, Clock clock) {
+    this(
+        registry,
+        installer,
+        new SystemCapabilities()::detect,
+        new HuggingFaceContributionService(),
+        clock);
   }
 
   ModelJarsCli(
       ModelJarRegistry registry,
       ArtifactInstaller installer,
       SystemCapabilities.Probe systemProbe) {
-    this(registry, installer, systemProbe, new HuggingFaceContributionService());
+    this(registry, installer, systemProbe, new HuggingFaceContributionService(), Clock.systemUTC());
   }
 
   ModelJarsCli(
@@ -181,10 +193,20 @@ public final class ModelJarsCli implements Callable<Integer> {
       ArtifactInstaller installer,
       SystemCapabilities.Probe systemProbe,
       ContributionService contributionService) {
+    this(registry, installer, systemProbe, contributionService, Clock.systemUTC());
+  }
+
+  ModelJarsCli(
+      ModelJarRegistry registry,
+      ArtifactInstaller installer,
+      SystemCapabilities.Probe systemProbe,
+      ContributionService contributionService,
+      Clock clock) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
     this.contributionService = Objects.requireNonNull(contributionService, "contributionService");
+    this.clock = Objects.requireNonNull(clock, "clock");
   }
 
   /**
@@ -193,7 +215,7 @@ public final class ModelJarsCli implements Callable<Integer> {
    * @param args command-line arguments
    */
   public static void main(String[] args) {
-    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+    ModelJarRegistry registry = RemoteCatalogRegistry.loadDefault();
     ArtifactInstaller installer =
         (descriptor, destination, progress) ->
             ModelJarInstaller.reportingProgressTo(registry, progress)
@@ -549,11 +571,21 @@ public final class ModelJarsCli implements Callable<Integer> {
     values.put("capabilities", sorted(descriptor.capabilities()));
     values.put("features", sorted(descriptor.features()));
     values.put("domains", sorted(descriptor.domains()));
+    values.put("publishedAt", descriptor.catalogPublishedAt().map(Instant::toString).orElse(null));
     values.put("backends", descriptor.backendSupport());
     values.put("dimensions", dimensionsMap(descriptor.dimensions()));
     values.put("status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not_pulled");
     values.put("cachePath", cachePath.toString());
     return values;
+  }
+
+  private boolean isNew(ModelJarDescriptor descriptor) {
+    Instant now = clock.instant();
+    Instant threshold = now.minus(Duration.ofHours(48));
+    return descriptor
+        .catalogPublishedAt()
+        .map(publishedAt -> !publishedAt.isBefore(threshold) && !publishedAt.isAfter(now))
+        .orElse(false);
   }
 
   private static Map<String, Object> dimensionsMap(ModelDimensions dimensions) {
@@ -749,21 +781,27 @@ public final class ModelJarsCli implements Callable<Integer> {
         out.json(
             matches.stream()
                 .map(
-                    descriptor ->
-                        descriptorMap(
-                            descriptor,
-                            ModelJarCache.artifactPath(descriptor, parent.cacheDirectory())))
+                    descriptor -> {
+                      Map<String, Object> value =
+                          descriptorMap(
+                              descriptor,
+                              ModelJarCache.artifactPath(descriptor, parent.cacheDirectory()));
+                      value.put("new", parent.isNew(descriptor));
+                      return value;
+                    })
                 .toList());
         return;
       }
       if (out.format() == CliOutput.Format.PLAIN) {
-        out.line("ALIAS\tCAPABILITIES\tARCHITECTURE\tQUANTIZATION\tSIZE_BYTES\tSTATUS\tCOORDINATE");
+        out.line(
+            "ALIAS\tNEW\tCAPABILITIES\tARCHITECTURE\tQUANTIZATION\tSIZE_BYTES\tSTATUS\tCOORDINATE");
         matches.forEach(
             descriptor ->
                 out.line(
                     String.join(
                         "\t",
                         descriptor.alias(),
+                        Boolean.toString(parent.isNew(descriptor)),
                         capabilities(descriptor),
                         descriptor.architecture(),
                         descriptor.quantization(),
@@ -811,6 +849,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                   .orElse(0));
       List<CliOutput.Column> columns = new ArrayList<>();
       columns.add(CliOutput.Column.left("MODEL", modelWidth, modelWidth));
+      columns.add(CliOutput.Column.left("NEW", 3, 3));
       columns.add(CliOutput.Column.left("ARCH", architectureWidth, architectureWidth));
       columns.add(CliOutput.Column.left("QUANT", quantizationWidth, quantizationWidth));
       columns.add(CliOutput.Column.right("SIZE", sizeWidth, sizeWidth));
@@ -821,7 +860,12 @@ public final class ModelJarsCli implements Callable<Integer> {
               .map(
                   descriptor -> {
                     List<CliOutput.Cell> row = new ArrayList<>();
-                    row.add(CliOutput.Cell.text(descriptor.alias()));
+                    boolean recent = parent.isNew(descriptor);
+                    row.add(
+                        new CliOutput.Cell(
+                            descriptor.alias(),
+                            recent ? CliOutput.Tone.WARNING : CliOutput.Tone.NORMAL));
+                    row.add(new CliOutput.Cell(recent ? "NEW" : "", CliOutput.Tone.WARNING));
                     row.add(CliOutput.Cell.text(descriptor.architecture()));
                     row.add(CliOutput.Cell.text(descriptor.quantization()));
                     row.add(

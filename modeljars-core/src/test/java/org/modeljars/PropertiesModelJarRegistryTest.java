@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -52,6 +53,7 @@ class PropertiesModelJarRegistryTest {
         model.qwen.name=Qwen3 0.6B GGUF Q4_0
         model.qwen.description=Compact Qwen3 model for local inference.
         model.qwen.domains=general,coding
+        model.qwen.catalogPublishedAt=2026-08-27T20:00:00Z
         model.qwen.dimension.parameterCount=596049920
         model.qwen.dimension.contextLength=40960
         model.qwen.dimension.embeddingLength=1024
@@ -98,6 +100,8 @@ class PropertiesModelJarRegistryTest {
     assertEquals(40960, descriptor.dimensions().contextLength().orElseThrow());
     assertEquals(1024, descriptor.dimensions().embeddingLength().orElseThrow());
     assertTrue(descriptor.domains().contains("coding"));
+    assertEquals(
+        Instant.parse("2026-08-27T20:00:00Z"), descriptor.catalogPublishedAt().orElseThrow());
     assertTrue(
         descriptor.estimateMemory(4096, KvCachePrecision.FLOAT16).orElseThrow().minimumBytes()
             > descriptor.sizeBytes().orElseThrow());

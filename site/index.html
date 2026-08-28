@@ -155,7 +155,8 @@
               The GraalVM-native ModelJars CLI searches and filters the qualified catalog, exposes
               exact provenance, reports local inference capabilities, produces build-tool
               coordinates, and downloads verified weights into the same cache used by the JVM
-              Runtime.
+              Runtime. It checks the published catalog hash on catalog-backed commands, atomically
+              activates changed metadata, and keeps the last verified catalog available offline.
             </p>
           </div>
           <div class="guide-body">
@@ -208,7 +209,8 @@ modeljars search gemma --output json</code></pre>
             <p class="guide-runtime-note">
               Model files come directly from immutable, revision-pinned upstream URLs. Every file
               in a GGUF, Safetensors, or CACT artifact must match the marker's exact byte count and
-              SHA-256 before the complete artifact enters the cache.
+              SHA-256 before the complete artifact enters the cache. Newly published catalog
+              entries are marked <strong>NEW</strong> in CLI search results for 48 hours.
             </p>
           </div>
         </div>

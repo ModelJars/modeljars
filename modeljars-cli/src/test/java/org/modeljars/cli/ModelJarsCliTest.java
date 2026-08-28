@@ -27,6 +27,10 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +64,7 @@ class ModelJarsCliTest {
     assertTrue(table.output().contains("available"));
     assertFalse(table.output().contains("\t"));
     assertEquals(0, plain.status());
-    assertTrue(plain.output().startsWith("ALIAS\tCAPABILITIES"));
+    assertTrue(plain.output().startsWith("ALIAS\tNEW\tCAPABILITIES"));
     assertTrue(plain.output().contains(descriptor.markerCoordinate().toString()));
   }
 
@@ -102,6 +106,41 @@ class ModelJarsCliTest {
     assertTrue(canonical.output().contains(finance.alias()));
     assertEquals(0, alias.status());
     assertTrue(alias.output().contains(finance.alias()));
+  }
+
+  @Test
+  void highlightsCatalogEntriesPublishedWithinTheLastFortyEightHours() {
+    Instant now = Instant.parse("2026-08-27T20:00:00Z");
+    ModelJarDescriptor recent =
+        descriptor(
+            "recent_model_q4_0",
+            "Q4_0",
+            Set.of("general"),
+            Optional.of(now.minus(Duration.ofHours(47))));
+    ModelJarDescriptor older =
+        descriptor(
+            "older_model_q4_0",
+            "Q4_0",
+            Set.of("general"),
+            Optional.of(now.minus(Duration.ofHours(49))));
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(recent, older)),
+            (selected, destination, progress) -> destination,
+            Clock.fixed(now, ZoneOffset.UTC));
+
+    Result table = run(cli, "--color", "always", "search");
+    Result plain = run(cli, "search", "--output", "plain");
+    Result json = run(cli, "search", "--output", "json");
+
+    assertTrue(table.output().contains("NEW"), table.output());
+    assertTrue(table.output().contains("\u001B[33mrecent_model_q4_0"), table.output());
+    assertFalse(table.output().contains("\u001B[33molder_model_q4_0"), table.output());
+    assertTrue(plain.output().contains("recent_model_q4_0\ttrue\t"), plain.output());
+    assertTrue(plain.output().contains("older_model_q4_0\tfalse\t"), plain.output());
+    assertTrue(json.output().contains("\"new\": true"), json.output());
+    assertTrue(json.output().contains("\"new\": false"), json.output());
+    assertTrue(json.output().contains("\"publishedAt\": \"2026-08-25T21:00:00Z\""), json.output());
   }
 
   @Test
@@ -563,6 +602,14 @@ class ModelJarsCliTest {
 
   private static ModelJarDescriptor descriptor(
       String alias, String quantization, Set<String> domains) {
+    return descriptor(alias, quantization, domains, Optional.empty());
+  }
+
+  private static ModelJarDescriptor descriptor(
+      String alias,
+      String quantization,
+      Set<String> domains,
+      Optional<Instant> catalogPublishedAt) {
     String variant = quantization.toLowerCase(java.util.Locale.ROOT);
     return new ModelJarDescriptor(
         alias,
@@ -590,6 +637,7 @@ class ModelJarsCliTest {
         Optional.of("Small deterministic test model."),
         Optional.empty(),
         domains,
+        catalogPublishedAt,
         new ModelDimensions(
             Optional.of(7_000_000_000L),
             Optional.of(8192),

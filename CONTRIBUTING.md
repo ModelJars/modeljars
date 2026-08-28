@@ -34,6 +34,7 @@ Catalog pull requests must:
 - pin an immutable upstream revision, download URL, byte size, and SHA-256 digest;
 - avoid mirroring model weights in this repository;
 - describe the format, architecture, quantization, capabilities, and supported backends;
+- let maintainers record `catalogPublishedAt` as the first public marker publication instant;
 - use a new immutable marker artifact version for every published metadata change.
 
 Run `./gradlew spotlessCheck test verifyCatalog` before opening a pull request. Use

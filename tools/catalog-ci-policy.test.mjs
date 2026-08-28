@@ -27,6 +27,11 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
 
   assert.match(publishWorkflow, /verifyRemoteCatalogMetadata/);
   assert.doesNotMatch(publishWorkflow, /steps\.remote-catalog/);
+  assert.equal(
+    publishWorkflow.match(/npm run catalog:enrich/g)?.length,
+    1,
+    "one verified commit must not probe every remote GGUF twice",
+  );
 });
 
 function read(relativePath) {

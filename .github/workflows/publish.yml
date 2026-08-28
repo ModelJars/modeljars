@@ -246,12 +246,6 @@ jobs:
           java-version: 25
           cache: gradle
 
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-          cache: npm
-
       - name: Verify release credentials
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
@@ -267,12 +261,6 @@ jobs:
             echo "Signing credentials are not configured in the maven-central environment." >&2
             exit 1
           fi
-
-      - name: Install catalog tooling
-        run: npm ci
-
-      - name: Verify exact GGUF dimensions
-        run: npm run catalog:enrich -- --concurrency=6
 
       - name: Clean release workspace
         run: ./gradlew --no-daemon clean

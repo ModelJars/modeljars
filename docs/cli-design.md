@@ -38,8 +38,9 @@ shipped CLI keeps its own small responsive table renderer because its
 columns are catalog-specific and must degrade predictably on narrow terminals.
 
 [JLine](https://jline.org/docs/terminal/) supplies the zero-argument interactive shell with line
-editing, persistent history, and Picocli-aware tab completion. Model-taking commands complete both
-catalog aliases and non-conflicting persistent nicknames. Its terminal and `Display`
+editing, persistent history, and Picocli-aware tab completion. Model-taking commands complete
+catalog-derived short names, full catalog IDs, and non-conflicting custom aliases. Short names are
+regenerated from each verified catalog snapshot, so catalog additions require no CLI release. Its terminal and `Display`
 abstractions also render model downloads on stderr without corrupting the interactive prompt or
 machine-readable stdout. Supplying a command retains deterministic one-shot execution while using
 JLine only when stderr is a capable terminal. [OSHI](https://www.oshi.ooo/) offers broad hardware

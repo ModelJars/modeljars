@@ -186,14 +186,15 @@ modeljars models embedding --sort size
 modeljars search --capability embedding --sort size
 modeljars search fintech
 modeljars search gemma --details
-modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m</code></pre>
+modeljars alias list
+modeljars show gemma-26b</code></pre>
               </article>
               <article>
                 <div class="guide-step-heading">
                   <span class="step-number">03</span>
                   <h3>Pull and verify</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars pull qwen_qwen2_5_0_5b_instruct_bf16
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars pull qwen-bf16
 modeljars list</code></pre>
               </article>
               <article>
@@ -201,13 +202,12 @@ modeljars list</code></pre>
                   <span class="step-number">04</span>
                   <h3>Run the Java model APIs locally</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars alias set qwen qwen3_0_6b_q4_0
-modeljars run qwen "Name one JVM language other than Java."
-modeljars embed ggml_org_embeddinggemma_300m_gguf_q8_0 "Public transit schedule"
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars run qwen-0.6b "Name one JVM language other than Java."
+modeljars embed embeddinggemma "Public transit schedule"
 
 # Each interaction reports latency, token, and throughput metrics
 modeljars info
-modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
+modeljars snippet gemma-26b --tool maven
 
 # Stable output for scripts and agents
 modeljars search gemma --output json</code></pre>
@@ -217,7 +217,8 @@ modeljars search gemma --output json</code></pre>
               Model files come directly from immutable, revision-pinned upstream URLs. Every file
               in a GGUF, Safetensors, or CACT artifact must match the marker's exact byte count and
               SHA-256 before the complete artifact enters the cache. Newly published catalog
-              entries are marked <strong>NEW</strong> in CLI search results for 48 hours.
+              entries are marked <strong>NEW</strong> in CLI search results for 48 hours. The CLI
+              generates an unambiguous short name for every model in each verified catalog update.
             </p>
           </div>
         </div>

@@ -27,7 +27,7 @@ import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
 
-/** Adds live model names and user nicknames to JLine completion. */
+/** Adds live short names, catalog IDs, and custom aliases to JLine completion. */
 final class ModelArgumentCompleter implements Completer {
   private static final Set<String> MODEL_COMMANDS =
       Set.of(
@@ -86,7 +86,7 @@ final class ModelArgumentCompleter implements Completer {
                     new Candidate(
                         entry.getKey(),
                         entry.getKey(),
-                        "nicknames",
+                        "aliases",
                         entry.getValue(),
                         null,
                         null,

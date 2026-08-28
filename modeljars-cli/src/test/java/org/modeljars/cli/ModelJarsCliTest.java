@@ -66,7 +66,7 @@ class ModelJarsCliTest {
     assertTrue(table.output().contains("available"));
     assertFalse(table.output().contains("\t"));
     assertEquals(0, plain.status());
-    assertTrue(plain.output().startsWith("ALIAS\tNEW\tCAPABILITIES"));
+    assertTrue(plain.output().startsWith("SHORT_NAME\tALIAS\tNEW\tCAPABILITIES"));
     assertTrue(plain.output().contains(descriptor.markerCoordinate().toString()));
   }
 
@@ -105,9 +105,9 @@ class ModelJarsCliTest {
     Result alias = run(cli, "search", "fintech");
 
     assertEquals(0, canonical.status());
-    assertTrue(canonical.output().contains(finance.alias()));
+    assertTrue(canonical.output().contains("example"));
     assertEquals(0, alias.status());
-    assertTrue(alias.output().contains(finance.alias()));
+    assertTrue(alias.output().contains("example"));
   }
 
   @Test
@@ -115,11 +115,11 @@ class ModelJarsCliTest {
     Result result = run(cli(descriptor()), "models", "example");
 
     assertEquals(0, result.status());
-    assertTrue(result.output().contains("example_q4_0"));
+    assertTrue(result.output().contains("example"));
   }
 
   @Test
-  void createsUsesListsAndRemovesPersistentModelNicknames() {
+  void createsUsesListsAndRemovesPersistentCustomAliases() {
     ModelJarDescriptor descriptor = descriptor();
     ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
     ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
@@ -138,6 +138,34 @@ class ModelJarsCliTest {
     assertTrue(listed.output().contains(descriptor.alias()));
     assertEquals(0, removed.status());
     assertTrue(aliases.aliases().isEmpty());
+  }
+
+  @Test
+  void generatesAndResolvesTheCatalogShortNameWithoutUserConfiguration() {
+    ModelJarDescriptor descriptor = descriptor();
+    ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
+    ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
+
+    Result shown = run(cli, "show", "example");
+
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains("Short name"));
+    assertTrue(shown.output().contains("example"));
+    assertTrue(shown.output().contains(descriptor.alias()));
+    assertTrue(aliases.aliases().isEmpty());
+  }
+
+  @Test
+  void generatedCatalogNamesTakePrecedenceOverLegacyCustomAliases() {
+    ModelJarDescriptor descriptor = descriptor();
+    ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
+    aliases.set("example", "missing_model", Set.of());
+    ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
+
+    Result shown = run(cli, "show", "example");
+
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains(descriptor.alias()));
   }
 
   @Test

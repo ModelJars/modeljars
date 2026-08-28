@@ -95,13 +95,17 @@ jobs:
           "$binary" search fintech
           "$binary" search gemma --details --limit 1
           "$binary" info --output json
-          "$binary" coordinates qwen3_0_6b_q4_0 --tool gradle-kotlin
+          aliases="$($binary alias list --output json)"
+          short_name="$(printf '%s' "$aliases" | jq -r '.automatic | to_entries[] | select(.value == "qwen3_0_6b_q4_0") | .key')"
+          test -n "$short_name"
+          "$binary" show "$short_name"
+          "$binary" coordinates "$short_name" --tool gradle-kotlin
           "$binary" run --help
           "$binary" embed --help
           MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \
-            "$binary" alias set qwen qwen3_0_6b_q4_0
+            "$binary" alias set favorite "$short_name"
           MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \
-            "$binary" show qwen
+            "$binary" show favorite
 
       - name: Package release assets
         id: package

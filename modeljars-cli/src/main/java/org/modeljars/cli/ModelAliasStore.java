@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.modeljars.ModelJarCache;
 
-/** Persistent, shell-friendly nicknames for exact catalog model aliases. */
+/** Persistent, user-defined aliases for exact catalog model IDs. */
 final class ModelAliasStore {
   static final String PATH_PROPERTY = "modeljars.aliases.file";
   static final String PATH_ENVIRONMENT = "MODELJARS_ALIASES_FILE";
@@ -83,7 +83,7 @@ final class ModelAliasStore {
     if (catalogNames.stream()
         .anyMatch(catalogName -> catalogName.equalsIgnoreCase(normalizedName))) {
       throw new IllegalArgumentException(
-          "Nickname clashes with a catalog model name: " + normalizedName);
+          "Custom alias clashes with a catalog model name: " + normalizedName);
     }
     Map<String, String> updated = new LinkedHashMap<>(aliases());
     updated.put(normalizedName, normalizedTarget);
@@ -144,7 +144,7 @@ final class ModelAliasStore {
   private static String requireName(String value) {
     if (value == null || !VALID_NAME.matcher(value.strip()).matches()) {
       throw new IllegalArgumentException(
-          "Nickname must contain only letters, numbers, '.', '_' or '-' and must not be blank");
+          "Custom alias must contain only letters, numbers, '.', '_' or '-' and must not be blank");
     }
     return value.strip();
   }

@@ -151,7 +151,7 @@ After SDKMAN approval, enable the repository variable and backfill an existing r
 
 ```bash
 gh variable set SDKMAN_PUBLISH_ENABLED --repo ModelJars/modeljars --body true
-gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.20
+gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.21
 ```
 
 Until approval, leave the variable absent or explicitly set it to `false`. Both `make_default` and

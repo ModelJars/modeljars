@@ -24,6 +24,10 @@ test("builds native CLI assets on every supported host architecture", async () =
   }
   assert.match(workflow, /:modeljars-cli:nativeCompile/);
   assert.match(workflow, /graalvm\/setup-graalvm@[0-9a-f]{40}/);
+  assert.match(
+    workflow,
+    /Install Java 21 compilation toolchain[\s\S]*actions\/setup-java@[0-9a-f]{40}[\s\S]*java-version: 21[\s\S]*Set up GraalVM Native Image/,
+  );
   assert.match(workflow, /"\$binary" search gemma/);
 });
 

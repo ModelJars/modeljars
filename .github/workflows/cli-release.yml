@@ -69,7 +69,7 @@ jobs:
       - name: Set up GraalVM Native Image
         uses: graalvm/setup-graalvm@0def53c0fd8534bc13416c9469f5be45265824fd # v1
         with:
-          java-version: "21"
+          java-version: "25.0.0"
           distribution: graalvm-community
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: gradle
@@ -85,10 +85,17 @@ jobs:
           binary="modeljars-cli/build/native/nativeCompile/${{ matrix.executable }}"
           "$binary" version
           "$binary" search gemma
+          "$binary" models embedding --limit 1
           "$binary" search fintech
           "$binary" search gemma --details --limit 1
           "$binary" info --output json
           "$binary" coordinates qwen3_0_6b_q4_0 --tool gradle-kotlin
+          "$binary" run --help
+          "$binary" embed --help
+          MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \
+            "$binary" alias set qwen qwen3_0_6b_q4_0
+          MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \
+            "$binary" show qwen
 
       - name: Package release assets
         id: package
@@ -249,7 +256,7 @@ jobs:
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
           cache: gradle
 
       - name: Publish executable JAR

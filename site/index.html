@@ -150,13 +150,14 @@
         <div class="guide-inner">
           <div class="guide-intro">
             <p class="eyebrow">No Java required</p>
-            <h2 id="cli-title">Pull models before your app starts</h2>
+            <h2 id="cli-title">Find, pull, and try models locally</h2>
             <p>
               The GraalVM-native ModelJars CLI searches and filters the qualified catalog, exposes
               exact provenance, reports local inference capabilities, produces build-tool
               coordinates, and downloads verified weights into the same cache used by the JVM
               Runtime. It checks the published catalog hash on catalog-backed commands, atomically
               activates changed metadata, and keeps the last verified catalog available offline.
+              Chat and embedding commands execute the same in-process Java APIs applications use.
             </p>
           </div>
           <div class="guide-body">
@@ -181,6 +182,7 @@ modeljars
 
 # Or run a single command
 modeljars search gemma
+modeljars models embedding --sort size
 modeljars search --capability embedding --sort size
 modeljars search fintech
 modeljars search gemma --details
@@ -197,9 +199,14 @@ modeljars list</code></pre>
               <article>
                 <div class="guide-step-heading">
                   <span class="step-number">04</span>
-                  <h3>Inspect this machine and wire your build</h3>
+                  <h3>Run the Java model APIs locally</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars info
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars alias set qwen qwen3_0_6b_q4_0
+modeljars run qwen "Name one JVM language other than Java."
+modeljars embed ggml_org_embeddinggemma_300m_gguf_q8_0 "Public transit schedule"
+
+# Each interaction reports latency, token, and throughput metrics
+modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
 
 # Stable output for scripts and agents

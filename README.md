@@ -63,11 +63,15 @@ modeljars
 
 # Or execute any command once
 modeljars search gemma
+modeljars models embedding --sort size
 modeljars search --capability embedding --sort size
 modeljars search fintech
 modeljars search gemma --details
 modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
 modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
+modeljars alias set qwen qwen3_0_6b_q4_0
+modeljars run qwen "Name one JVM language other than Java."
+modeljars embed ggml_org_embeddinggemma_300m_gguf_q8_0 "Public transit schedule"
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -103,6 +107,19 @@ Run `modeljars help` or `modeljars <command> --help` for the complete command su
 `coordinates`, `coords`, `dependency`, and `deps` are aliases for the same command. With no
 arguments, `modeljars` opens a prompt with history and tab completion; `exit`, `quit`, or Ctrl-D
 returns to the shell. Supplying any command keeps the normal one-shot behavior used by scripts.
+
+Tab completion includes qualified model aliases and user-defined nicknames for model-taking
+commands. Create persistent nicknames with `modeljars alias set <name> <model>`; list them with
+`modeljars alias list` and remove them with `modeljars alias rm <name>`. A nickname cannot replace a
+qualified catalog alias.
+
+`modeljars run <model> [prompt]` and `modeljars embed <model> <text>` execute the same in-process
+ModelJars and Models APIs used by Java applications—there is no Ollama, llama.cpp, or remote
+inference server behind these commands. Omitting the prompt from `run` starts a multi-turn chat;
+`/clear` resets its context and `/bye` exits. Chat output reports model load time, time to first
+token (TTFT), total generation time, exact prompt/completion token counts, and decode throughput.
+Embedding output includes the complete vector plus load time, embedding time, dimensions, and
+vector norm. JSON and plain output expose the same measurements for scripts.
 
 Before catalog-backed commands run, the CLI compares the SHA-256 published at
 `https://modeljars.org/catalog/registry.properties.sha256` with its local qualified catalog. A
@@ -147,8 +164,9 @@ dependencies {
 JAR contributes its own descriptor, qualification evidence, performance profiles, and generated
 Java reference. The runtime also carries the current qualification decisions so corrected evidence
 or a revocation supersedes older marker metadata on the classpath. It does not add the aggregate
-model catalog. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` and the
-fallback CLI JAR remain usable by Java 21 registry and build tooling without the Models runtime.
+model catalog. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` remains
+usable by Java 21 registry and build tooling; the executable CLI JAR now requires Java 25 because it
+includes the same Models runtime used by `run` and `embed`.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to

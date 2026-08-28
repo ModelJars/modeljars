@@ -2295,11 +2295,18 @@ project(":modeljars-cli") {
 
     dependencies {
         implementation(project(":modeljars-core"))
+        implementation(project(":modeljars"))
         implementation("info.picocli:picocli:4.7.7")
         implementation("info.picocli:picocli-shell-jline3:4.7.7")
         implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
         annotationProcessor("info.picocli:picocli-codegen:4.7.7")
         runtimeOnly(project(":modeljars-catalog"))
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
     }
 
     tasks.withType<JavaCompile>().configureEach {
@@ -2316,6 +2323,11 @@ project(":modeljars-cli") {
     extensions.configure<JavaApplication> {
         applicationName = "modeljars"
         mainClass.set("org.modeljars.cli.ModelJarsCli")
+        applicationDefaultJvmArgs =
+            listOf(
+                "--add-modules=jdk.incubator.vector",
+                "--enable-native-access=ALL-UNNAMED",
+            )
     }
 
     val graalvmNative = extensions.getByType<GraalVMExtension>()
@@ -2331,12 +2343,17 @@ project(":modeljars-cli") {
             sharedLibrary.set(false)
             buildArgs.add("--no-fallback")
             buildArgs.add("--enable-url-protocols=http,https")
+            buildArgs.add("--add-modules=jdk.incubator.vector")
+            buildArgs.add("-H:+UnlockExperimentalVMOptions")
+            buildArgs.add("-H:+VectorAPISupport")
+            buildArgs.add("-H:-UnlockExperimentalVMOptions")
+            buildArgs.add("--enable-native-access=ALL-UNNAMED")
         }
         toolchainDetection.set(false)
     }
 
     tasks.named<Jar>("jar") {
-        dependsOn(":modeljars-core:jar", ":modeljars-catalog:jar")
+        dependsOn(":modeljars-core:jar", ":modeljars-catalog:jar", ":modeljars:jar")
         manifest {
             attributes(
                 "Main-Class" to "org.modeljars.cli.ModelJarsCli",

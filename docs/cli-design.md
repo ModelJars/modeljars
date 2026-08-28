@@ -1,13 +1,18 @@
 # ModelJars CLI design
 
-The CLI is intentionally a model discovery, dependency, provenance, cache, and host-capability tool.
-Inference stays in the Java runtime, so commands such as `run`, `serve`, and `ps` should not imply
-that the small native CLI contains a second inference stack.
+The CLI covers model discovery, dependencies, provenance, cache management, host capabilities, and
+small local interactions. Its `run` and `embed` commands call the same in-process ModelJars and
+Models APIs as an application. They do not introduce a second inference implementation or delegate
+to an external model server.
 
 ## Product precedents
 
 - [Ollama's CLI](https://docs.ollama.com/cli) establishes the terse local-model vocabulary:
-  `ls`, `show`, `pull`, `rm`, and command-specific help.
+  `ls`, `show`, `pull`, `rm`, and a `run` command that becomes interactive when its prompt is
+  omitted.
+- [Cactus](https://docs.cactuscompute.com/) and
+  [Needle](https://cactuscompute.com/needle) demonstrate direct local model interaction and
+  structured tool-oriented models without requiring a resident server.
 - [Docker `info`](https://docs.docker.com/reference/cli/docker/system/info/) and
   [Docker `inspect`](https://docs.docker.com/reference/cli/docker/inspect/) provide the useful split
   between machine/runtime capabilities and exact object metadata. Docker's
@@ -19,10 +24,11 @@ that the small native CLI contains a second inference stack.
 - [GitHub CLI formatting](https://cli.github.com/manual/gh_help_formatting) treats structured JSON
   output as an explicit automation surface rather than asking scripts to scrape decorative tables.
 
-This leads to the ModelJars surface: `search/available`, `list/ls`, `show/inspect`, `pull`,
-`remove/rm`, `snippet/coordinates/coords/dependency/deps`, `info/system/env`, `cache-dir`, and
-`version`. The snippet command generates dependency declarations; the CLI deliberately does not
-expose a shell-script generator under the ambiguous name `generate-completion`.
+This leads to the ModelJars surface: `search/available/models`, `list/ls`, `show/inspect`, `pull`,
+`remove/rm/delete`, `alias/nickname`, `run/chat`, `embed/embedding`,
+`snippet/coordinates/coords/dependency/deps`, `info/system/env`, `cache-dir`, and `version`. The
+snippet command generates dependency declarations; the CLI deliberately does not expose a
+shell-script generator under the ambiguous name `generate-completion`.
 
 ## Framework selection
 
@@ -32,7 +38,8 @@ shipped CLI keeps its own small responsive table renderer because its
 columns are catalog-specific and must degrade predictably on narrow terminals.
 
 [JLine](https://jline.org/docs/terminal/) supplies the zero-argument interactive shell with line
-editing, persistent history, and Picocli-aware tab completion. Its terminal and `Display`
+editing, persistent history, and Picocli-aware tab completion. Model-taking commands complete both
+catalog aliases and non-conflicting persistent nicknames. Its terminal and `Display`
 abstractions also render model downloads on stderr without corrupting the interactive prompt or
 machine-readable stdout. Supplying a command retains deterministic one-shot execution while using
 JLine only when stderr is a capable terminal. [OSHI](https://www.oshi.ooo/) offers broad hardware
@@ -60,3 +67,9 @@ Windows output.
   the Java `backend-apple` runtime remains responsible for checking Apple Intelligence and model
   availability.
 - Cache removal requires an exact alias, source ID, or coordinate and refuses symbolic links.
+- `run` renders conversation history with the qualified chat template and streams the Models
+  `InferencePipeline`; `embed` calls the qualified embedding runtime. Both use the shared verified
+  cache and reject models that lack the corresponding qualification.
+- Chat metrics distinguish model load time, TTFT, total generation time, exact input/output token
+  counts, and decode throughput. Embedding metrics report load and execution time, vector width,
+  and norm. Human, plain, and JSON output carry the same measurements.

@@ -15,8 +15,10 @@
  */
 package org.modeljars.cli;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +43,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -71,10 +75,10 @@ import picocli.CommandLine.ScopeType;
 import picocli.CommandLine.Spec;
 import picocli.shell.jline3.PicocliJLineCompleter;
 
-/** Standalone command line interface for discovering and prefetching qualified ModelJars. */
+/** Standalone command line interface for discovering, caching, and trying qualified ModelJars. */
 @Command(
     name = "modeljars",
-    description = "Discover, inspect, and prefetch qualified ModelJars.",
+    description = "Discover, inspect, cache, and run qualified ModelJars.",
     mixinStandardHelpOptions = true,
     versionProvider = ModelJarsCli.VersionProvider.class,
     sortOptions = false,
@@ -84,6 +88,9 @@ import picocli.shell.jline3.PicocliJLineCompleter;
       ModelJarsCli.ShowCommand.class,
       ModelJarsCli.PullCommand.class,
       ModelJarsCli.RemoveCommand.class,
+      ModelJarsCli.AliasCommand.class,
+      ModelJarsCli.RunCommand.class,
+      ModelJarsCli.EmbedCommand.class,
       ModelJarsCli.CoordinatesCommand.class,
       ModelJarsCli.ContributeCommand.class,
       ModelJarsCli.InfoCommand.class,
@@ -120,6 +127,8 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final SystemCapabilities.Probe systemProbe;
   private final ContributionService contributionService;
   private final Clock clock;
+  private final ModelAliasStore aliases;
+  private final ModelInteractions interactions;
 
   @Spec private CommandSpec commandSpec;
 
@@ -162,6 +171,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private PrintStream error;
   private int detectedWidth;
   private Terminal activeTerminal;
+  private InputStream input;
 
   ModelJarsCli(ModelJarRegistry registry, ArtifactInstaller installer) {
     this(
@@ -202,11 +212,31 @@ public final class ModelJarsCli implements Callable<Integer> {
       SystemCapabilities.Probe systemProbe,
       ContributionService contributionService,
       Clock clock) {
+    this(
+        registry,
+        installer,
+        systemProbe,
+        contributionService,
+        clock,
+        ModelAliasStore.defaults(),
+        new DefaultModelInteractions());
+  }
+
+  ModelJarsCli(
+      ModelJarRegistry registry,
+      ArtifactInstaller installer,
+      SystemCapabilities.Probe systemProbe,
+      ContributionService contributionService,
+      Clock clock,
+      ModelAliasStore aliases,
+      ModelInteractions interactions) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
     this.contributionService = Objects.requireNonNull(contributionService, "contributionService");
     this.clock = Objects.requireNonNull(clock, "clock");
+    this.aliases = Objects.requireNonNull(aliases, "aliases");
+    this.interactions = Objects.requireNonNull(interactions, "interactions");
   }
 
   /**
@@ -215,6 +245,7 @@ public final class ModelJarsCli implements Callable<Integer> {
    * @param args command-line arguments
    */
   public static void main(String[] args) {
+    configureLibraryLogging();
     ModelJarRegistry registry = RemoteCatalogRegistry.loadDefault();
     ArtifactInstaller installer =
         (descriptor, destination, progress) ->
@@ -227,6 +258,15 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
   }
 
+  private static void configureLibraryLogging() {
+    Logger.getLogger("").setLevel(Level.WARNING);
+    for (java.util.logging.Handler handler : Logger.getLogger("").getHandlers()) {
+      handler.setLevel(Level.WARNING);
+    }
+    Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+    Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+  }
+
   @Override
   public Integer call() {
     commandSpec.commandLine().usage(commandSpec.commandLine().getOut());
@@ -235,7 +275,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
   int run(String[] args, PrintStream standardOutput, PrintStream standardError) {
     Objects.requireNonNull(args, "args");
-    prepare(standardOutput, standardError);
+    prepare(InputStream.nullInputStream(), standardOutput, standardError);
     return commandLine().execute(args);
   }
 
@@ -268,7 +308,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       PrintStream standardOutput,
       PrintStream standardError,
       boolean systemTerminal) {
-    prepare(standardOutput, standardError);
+    prepare(standardInput, standardOutput, standardError);
     if (!systemTerminal) {
       return commandLine().execute(args);
     }
@@ -300,7 +340,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       Path history) {
     Objects.requireNonNull(standardInput, "standardInput");
     Objects.requireNonNull(history, "history");
-    prepare(standardOutput, standardError);
+    prepare(standardInput, standardOutput, standardError);
     CommandLine completionCommand = commandLine();
     boolean persistentHistory;
     try {
@@ -328,7 +368,12 @@ public final class ModelJarsCli implements Callable<Integer> {
             LineReaderBuilder.builder()
                 .terminal(terminal)
                 .parser(parser)
-                .completer(new PicocliJLineCompleter(completionCommand.getCommandSpec()))
+                .completer(
+                    (reader, line, candidates) -> {
+                      new PicocliJLineCompleter(completionCommand.getCommandSpec())
+                          .complete(reader, line, candidates);
+                      modelCompleter().complete(reader, line, candidates);
+                    })
                 .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true);
         if (persistentHistory) {
           readerBuilder.variable(LineReader.HISTORY_FILE, history);
@@ -348,7 +393,12 @@ public final class ModelJarsCli implements Callable<Integer> {
               return 0;
             }
             ParsedLine parsed = parser.parse(line, line.length(), Parser.ParseContext.ACCEPT_LINE);
-            run(parsed.words().toArray(String[]::new), standardOutput, standardError);
+            runOneShot(
+                parsed.words().toArray(String[]::new),
+                standardInput,
+                standardOutput,
+                standardError,
+                false);
           } catch (UserInterruptException ignored) {
             standardOutput.println();
           } catch (EndOfFileException ignored) {
@@ -366,7 +416,9 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
   }
 
-  private void prepare(PrintStream standardOutput, PrintStream standardError) {
+  private void prepare(
+      InputStream standardInput, PrintStream standardOutput, PrintStream standardError) {
+    input = Objects.requireNonNull(standardInput, "standardInput");
     output = Objects.requireNonNull(standardOutput, "standardOutput");
     error = Objects.requireNonNull(standardError, "standardError");
     outputFormat = CliOutput.Format.TABLE;
@@ -458,11 +510,39 @@ public final class ModelJarsCli implements Callable<Integer> {
     return registry.descriptors();
   }
 
+  private ModelArgumentCompleter modelCompleter() {
+    return new ModelArgumentCompleter(
+        descriptors().stream().map(ModelJarDescriptor::alias).toList(),
+        aliases::aliases,
+        name ->
+            descriptors().stream()
+                .filter(descriptor -> descriptor.alias().equals(name))
+                .findFirst()
+                .map(this::cached)
+                .orElse(false));
+  }
+
+  private String expandNickname(String selector) {
+    if (selector == null) {
+      return null;
+    }
+    return aliases.aliases().getOrDefault(selector.trim(), selector.trim());
+  }
+
+  private List<String> nicknames(ModelJarDescriptor descriptor) {
+    return aliases.aliases().entrySet().stream()
+        .filter(entry -> entry.getValue().equals(descriptor.alias()))
+        .map(Map.Entry::getKey)
+        .sorted()
+        .toList();
+  }
+
   private ModelJarDescriptor resolve(String selector) {
     if (selector == null || selector.isBlank()) {
       throw new IllegalArgumentException("Model selector must not be blank");
     }
-    String requested = selector.trim();
+    String original = selector.trim();
+    String requested = expandNickname(original);
     List<ModelJarDescriptor> exact =
         descriptors().stream()
             .filter(
@@ -510,7 +590,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   private ModelJarDescriptor resolveExact(String selector) {
     ModelJarDescriptor descriptor = resolve(selector);
     String requested = selector.trim();
+    String expanded = expandNickname(requested);
     if (!descriptor.alias().equals(requested)
+        && !descriptor.alias().equals(expanded)
         && !descriptor.markerCoordinate().toString().equals(requested)
         && !descriptor.sourceId().equals(requested)) {
       throw new IllegalArgumentException(
@@ -614,6 +696,62 @@ public final class ModelJarsCli implements Callable<Integer> {
         .orElse("unknown");
   }
 
+  private static void requireCapability(
+      ModelJarDescriptor descriptor, Set<String> accepted, String operation) {
+    if (descriptor.capabilities().stream().noneMatch(accepted::contains)) {
+      throw new IllegalArgumentException(
+          descriptor.alias() + " is not qualified for " + operation + " interactions");
+    }
+  }
+
+  private static Map<String, Object> chatMetricsMap(ModelInteractions.ChatMetrics metrics) {
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("loadMillis", metrics.loadMillis());
+    values.put("ttftMillis", metrics.ttftMillis());
+    values.put("generationMillis", metrics.generationMillis());
+    values.put("promptTokens", metrics.promptTokens());
+    values.put("completionTokens", metrics.completionTokens());
+    values.put("tokensPerSecond", metrics.tokensPerSecond());
+    return values;
+  }
+
+  private static Map<String, Object> chatMetricsHuman(ModelInteractions.ChatMetrics metrics) {
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("Load time", formatMillis(metrics.loadMillis()));
+    values.put("TTFT", formatMillis(metrics.ttftMillis()));
+    values.put("Generation time", formatMillis(metrics.generationMillis()));
+    values.put("Prompt tokens", metrics.promptTokens());
+    values.put("Completion tokens", metrics.completionTokens());
+    values.put("Throughput", String.format(Locale.ROOT, "%.1f tok/s", metrics.tokensPerSecond()));
+    return values;
+  }
+
+  private static Map<String, Object> embeddingMetricsMap(ModelInteractions.EmbeddingResult result) {
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("loadMillis", result.loadMillis());
+    values.put("embeddingMillis", result.embeddingMillis());
+    values.put("dimensions", result.vector().length);
+    values.put("vectorNorm", result.vectorNorm());
+    return values;
+  }
+
+  private static Map<String, Object> embeddingMetricsHuman(
+      ModelInteractions.EmbeddingResult result) {
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("Load time", formatMillis(result.loadMillis()));
+    values.put("Embedding time", formatMillis(result.embeddingMillis()));
+    values.put("Dimensions", result.vector().length);
+    values.put("Vector norm", String.format(Locale.ROOT, "%.6f", result.vectorNorm()));
+    return values;
+  }
+
+  private static String formatMillis(long millis) {
+    if (millis < 1_000) {
+      return millis + " ms";
+    }
+    return String.format(Locale.ROOT, "%.2f s", millis / 1_000.0);
+  }
+
   private static String backends(ModelJarDescriptor descriptor) {
     return descriptor.backendSupport().entrySet().stream()
         .filter(Map.Entry::getValue)
@@ -665,7 +803,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
   @Command(
       name = "search",
-      aliases = "available",
+      aliases = {"available", "models"},
       description = "Search and filter the qualified model catalog.",
       mixinStandardHelpOptions = true)
   static final class SearchCommand implements Callable<Integer> {
@@ -1081,7 +1219,7 @@ public final class ModelJarsCli implements Callable<Integer> {
         descriptorMap(descriptor, cachePath)
             .forEach((key, value) -> out.line(key + "=" + Objects.toString(value, "")));
       } else {
-        renderHuman(descriptor, cachePath, out, details);
+        renderHuman(descriptor, cachePath, out, details, parent.nicknames(descriptor));
         if (coordinates) {
           printDeclarations(descriptor, out, true, List.of());
         } else {
@@ -1093,12 +1231,19 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
 
     private static void renderHuman(
-        ModelJarDescriptor descriptor, Path cachePath, CliOutput out, boolean details) {
+        ModelJarDescriptor descriptor,
+        Path cachePath,
+        CliOutput out,
+        boolean details,
+        List<String> nicknames) {
       out.line(descriptor.name().orElse(descriptor.alias()));
       descriptor.description().ifPresent(out::hint);
 
       Map<String, Object> identity = new LinkedHashMap<>();
       identity.put("Alias", descriptor.alias());
+      if (!nicknames.isEmpty()) {
+        identity.put("Nicknames", String.join(", ", nicknames));
+      }
       identity.put("Coordinate", descriptor.markerCoordinate());
       identity.put(
           "Status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not pulled");
@@ -1243,7 +1388,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
   @Command(
       name = "remove",
-      aliases = "rm",
+      aliases = {"rm", "delete"},
       description = "Remove a model from the local cache.",
       mixinStandardHelpOptions = true)
   static final class RemoveCommand implements Callable<Integer> {
@@ -1360,6 +1505,348 @@ public final class ModelJarsCli implements Callable<Integer> {
       for (Path path : directories) {
         Files.delete(path);
       }
+    }
+  }
+
+  @Command(
+      name = "alias",
+      aliases = "nickname",
+      description = "Create and manage short model nicknames.",
+      mixinStandardHelpOptions = true,
+      subcommands = {
+        AliasCommand.SetCommand.class,
+        AliasCommand.ListCommand.class,
+        AliasCommand.RemoveCommand.class
+      })
+  static final class AliasCommand implements Callable<Integer> {
+    @ParentCommand private ModelJarsCli parent;
+    @Spec private CommandSpec spec;
+
+    @Override
+    public Integer call() {
+      spec.commandLine().usage(spec.commandLine().getOut());
+      return 0;
+    }
+
+    @Command(
+        name = "set",
+        description = "Assign a short nickname to an exact catalog model.",
+        mixinStandardHelpOptions = true)
+    static final class SetCommand implements Callable<Integer> {
+      @ParentCommand private AliasCommand command;
+
+      @Parameters(index = "0", paramLabel = "NAME", description = "Short shell-friendly name.")
+      private String name;
+
+      @Parameters(index = "1", paramLabel = "MODEL", description = "Catalog model selector.")
+      private String selector;
+
+      @Override
+      public Integer call() {
+        ModelJarsCli parent = command.parent;
+        ModelJarDescriptor descriptor = parent.resolve(selector);
+        Set<String> reserved =
+            parent.descriptors().stream()
+                .map(ModelJarDescriptor::alias)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        parent.aliases.set(name, descriptor.alias(), reserved);
+        CliOutput out = parent.out();
+        if (out.format() == CliOutput.Format.JSON) {
+          out.json(Map.of("name", name, "model", descriptor.alias()));
+        } else if (out.format() == CliOutput.Format.PLAIN) {
+          out.line(name + "=" + descriptor.alias());
+        } else {
+          out.success(name + " → " + descriptor.alias());
+          out.hint("Saved in " + parent.aliases.path());
+        }
+        return 0;
+      }
+    }
+
+    @Command(
+        name = "list",
+        aliases = "ls",
+        description = "List configured model nicknames.",
+        mixinStandardHelpOptions = true)
+    static final class ListCommand implements Callable<Integer> {
+      @ParentCommand private AliasCommand command;
+
+      @Override
+      public Integer call() {
+        ModelJarsCli parent = command.parent;
+        Map<String, String> configured = parent.aliases.aliases();
+        CliOutput out = parent.out();
+        if (out.format() == CliOutput.Format.JSON) {
+          out.json(configured);
+        } else if (out.format() == CliOutput.Format.PLAIN) {
+          configured.forEach((name, model) -> out.line(name + "=" + model));
+        } else if (configured.isEmpty()) {
+          out.line("No model nicknames are configured.");
+          out.hint("Run 'modeljars alias set <name> <model>'.");
+        } else {
+          int nameWidth =
+              Math.max(
+                  "NAME".length(),
+                  configured.keySet().stream().mapToInt(String::length).max().orElse(0));
+          int modelWidth =
+              Math.max(
+                  "MODEL".length(),
+                  configured.values().stream().mapToInt(String::length).max().orElse(0));
+          List<List<CliOutput.Cell>> rows =
+              configured.entrySet().stream()
+                  .map(
+                      entry ->
+                          List.of(
+                              CliOutput.Cell.text(entry.getKey()),
+                              CliOutput.Cell.text(entry.getValue())))
+                  .toList();
+          out.table(
+              List.of(
+                  CliOutput.Column.left("NAME", nameWidth, nameWidth),
+                  CliOutput.Column.left("MODEL", modelWidth, modelWidth)),
+              rows);
+        }
+        return 0;
+      }
+    }
+
+    @Command(
+        name = "remove",
+        aliases = {"rm", "delete"},
+        description = "Remove a model nickname.",
+        mixinStandardHelpOptions = true)
+    static final class RemoveCommand implements Callable<Integer> {
+      @ParentCommand private AliasCommand command;
+
+      @Parameters(paramLabel = "NAME", description = "Configured nickname.")
+      private String name;
+
+      @Override
+      public Integer call() {
+        ModelJarsCli parent = command.parent;
+        if (!parent.aliases.remove(name)) {
+          throw new IllegalArgumentException("No model nickname is configured: " + name);
+        }
+        CliOutput out = parent.out();
+        if (out.format() == CliOutput.Format.JSON) {
+          out.json(Map.of("name", name, "removed", true));
+        } else if (out.format() == CliOutput.Format.PLAIN) {
+          out.line("removed=" + name);
+        } else {
+          out.success("Removed nickname " + name);
+        }
+        return 0;
+      }
+    }
+  }
+
+  @Command(
+      name = "run",
+      aliases = "chat",
+      description = "Run a qualified chat model locally through the ModelJars Java API.",
+      footer = {
+        "Examples:",
+        "  modeljars run qwen 'Name one JVM language.'",
+        "  modeljars run qwen"
+      },
+      mixinStandardHelpOptions = true)
+  static final class RunCommand implements Callable<Integer> {
+    @ParentCommand private ModelJarsCli parent;
+
+    @Parameters(index = "0", paramLabel = "MODEL", description = "Model alias or nickname.")
+    private String selector;
+
+    @Parameters(
+        index = "1..*",
+        arity = "0..*",
+        paramLabel = "PROMPT",
+        description = "Prompt text; omit for an interactive chat.")
+    private List<String> prompt = List.of();
+
+    @Option(names = "--max-tokens", defaultValue = "128", description = "Maximum output tokens.")
+    private int maxTokens;
+
+    @Option(names = "--temperature", defaultValue = "0", description = "Sampling temperature.")
+    private float temperature;
+
+    @Option(names = "--seed", description = "Deterministic sampling seed.")
+    private Long seed;
+
+    @Override
+    public Integer call() throws IOException {
+      ModelJarDescriptor descriptor = parent.resolve(selector);
+      requireCapability(
+          descriptor, Set.of("chat", "generation", "text-generation", "tool-calling"), "chat");
+      ModelInteractions.ChatOptions options =
+          new ModelInteractions.ChatOptions(maxTokens, temperature, seed);
+      try (ModelInteractions.ChatSession session =
+          parent.interactions.openChat(descriptor, parent.cacheDirectory())) {
+        if (prompt.isEmpty()) {
+          return interactive(session, descriptor, options);
+        }
+        String text = String.join(" ", prompt).strip();
+        ModelInteractions.ChatResult result =
+            generate(
+                session,
+                List.of(new ModelInteractions.ChatTurn(ModelInteractions.Role.USER, text)),
+                options,
+                text);
+        render(result, text, descriptor, false);
+        return 0;
+      }
+    }
+
+    private int interactive(
+        ModelInteractions.ChatSession session,
+        ModelJarDescriptor descriptor,
+        ModelInteractions.ChatOptions options)
+        throws IOException {
+      if (parent.out().format() != CliOutput.Format.TABLE) {
+        throw new IllegalArgumentException("Interactive chat requires table output");
+      }
+      List<ModelInteractions.ChatTurn> history = new ArrayList<>();
+      LineReader reader =
+          parent.activeTerminal == null
+              ? null
+              : LineReaderBuilder.builder()
+                  .terminal(parent.activeTerminal)
+                  .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                  .build();
+      BufferedReader buffered =
+          reader == null
+              ? new BufferedReader(new InputStreamReader(parent.input, StandardCharsets.UTF_8))
+              : null;
+      parent.out().hint("Chatting with " + descriptor.alias() + " · /clear resets · /bye exits");
+      while (true) {
+        String line;
+        try {
+          line = reader == null ? buffered.readLine() : reader.readLine(">>> ");
+        } catch (EndOfFileException ignored) {
+          return 0;
+        }
+        if (line == null || line.strip().equalsIgnoreCase("/bye")) {
+          return 0;
+        }
+        String text = line.strip();
+        if (text.isEmpty()) {
+          continue;
+        }
+        if (text.equalsIgnoreCase("/clear")) {
+          history.clear();
+          session.clear();
+          parent.out().hint("Conversation cleared.");
+          continue;
+        }
+        history.add(new ModelInteractions.ChatTurn(ModelInteractions.Role.USER, text));
+        ModelInteractions.ChatResult result = generate(session, history, options, text);
+        render(result, text, descriptor, true);
+        if (!result.text().isBlank()) {
+          history.add(
+              new ModelInteractions.ChatTurn(ModelInteractions.Role.ASSISTANT, result.text()));
+        }
+      }
+    }
+
+    private ModelInteractions.ChatResult generate(
+        ModelInteractions.ChatSession session,
+        List<ModelInteractions.ChatTurn> history,
+        ModelInteractions.ChatOptions options,
+        String promptText) {
+      CliOutput out = parent.out();
+      boolean stream = out.format() == CliOutput.Format.TABLE;
+      if (stream) {
+        out.section("Prompt");
+        out.line(promptText);
+        out.section("Response");
+      }
+      ModelInteractions.ChatResult result =
+          session.generate(history, options, stream ? parent.output::print : ignored -> {});
+      if (stream) {
+        parent.output.println();
+      }
+      return result;
+    }
+
+    private void render(
+        ModelInteractions.ChatResult result,
+        String promptText,
+        ModelJarDescriptor descriptor,
+        boolean interactive) {
+      CliOutput out = parent.out();
+      if (out.format() == CliOutput.Format.JSON) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("model", descriptor.alias());
+        value.put("prompt", promptText);
+        value.put("response", result.text());
+        value.put("metrics", chatMetricsMap(result.metrics()));
+        out.json(value);
+      } else if (out.format() == CliOutput.Format.PLAIN) {
+        out.line("model=" + descriptor.alias());
+        out.line("prompt=" + promptText.replace("\n", "\\n"));
+        out.line("response=" + result.text().replace("\n", "\\n"));
+        chatMetricsMap(result.metrics())
+            .forEach((key, value) -> out.line(key + "=" + Objects.toString(value)));
+      } else {
+        out.section("Metrics");
+        out.properties(chatMetricsHuman(result.metrics()));
+        if (!interactive) {
+          out.hint("Executed locally through ModelJars and Models; no external inference server.");
+        }
+      }
+    }
+  }
+
+  @Command(
+      name = "embed",
+      aliases = "embedding",
+      description = "Create an embedding locally through the ModelJars Java API.",
+      footer = "Example: modeljars embed embeddinggemma 'Public transit schedule'",
+      mixinStandardHelpOptions = true)
+  static final class EmbedCommand implements Callable<Integer> {
+    @ParentCommand private ModelJarsCli parent;
+
+    @Parameters(index = "0", paramLabel = "MODEL", description = "Model alias or nickname.")
+    private String selector;
+
+    @Parameters(index = "1..*", arity = "1..*", paramLabel = "TEXT", description = "Text to embed.")
+    private List<String> text;
+
+    @Override
+    public Integer call() {
+      ModelJarDescriptor descriptor = parent.resolve(selector);
+      requireCapability(
+          descriptor, Set.of("embedding", "embeddings", "text-embedding"), "embedding");
+      String inputText = String.join(" ", text).strip();
+      ModelInteractions.EmbeddingResult result =
+          parent.interactions.embed(descriptor, parent.cacheDirectory(), inputText);
+      List<Float> vector = new ArrayList<>(result.vector().length);
+      for (float value : result.vector()) {
+        vector.add(value);
+      }
+      CliOutput out = parent.out();
+      if (out.format() == CliOutput.Format.JSON) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("model", descriptor.alias());
+        value.put("text", inputText);
+        value.put("vector", vector);
+        value.put("metrics", embeddingMetricsMap(result));
+        out.json(value);
+      } else if (out.format() == CliOutput.Format.PLAIN) {
+        out.line("model=" + descriptor.alias());
+        out.line("text=" + inputText.replace("\n", "\\n"));
+        out.line("vector=" + vector);
+        embeddingMetricsMap(result)
+            .forEach((key, value) -> out.line(key + "=" + Objects.toString(value)));
+      } else {
+        out.section("Input");
+        out.line(inputText);
+        out.section("Embedding");
+        out.line(vector.toString());
+        out.section("Metrics");
+        out.properties(embeddingMetricsHuman(result));
+        out.hint("Executed locally through ModelJars and Models; no external inference server.");
+      }
+      return 0;
     }
   }
 

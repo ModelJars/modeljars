@@ -1,8 +1,9 @@
 # ModelJars CLI distribution
 
 The `modeljars` CLI is compiled with GraalVM Native Image and requires no Java installation at
-runtime. It deliberately contains catalog, provenance, download, verification, and cache-management
-code only. In-process inference remains in the Java 25-or-newer `org.modeljars:modeljars` runtime.
+runtime. Alongside catalog, provenance, download, verification, and cache management, it can invoke
+the Java-native Models runtime directly for qualified chat and embedding models. These interaction
+commands use the same API path as a Java 25 application and do not call an external model server.
 
 ## User commands
 
@@ -11,10 +12,15 @@ Run `modeljars` with no arguments to open the interactive prompt. Command histor
 the session. Supplying any arguments executes exactly one command and returns to the calling shell.
 
 ```bash
-modeljars search [query] [--capability <name>] [--backend <name>] [--sort <field>] [--details]
+modeljars search|available|models [query] [--capability <name>] [--backend <name>] [--sort <field>] [--details]
 modeljars show <alias|source|coordinate> [--coordinates] [--details]
 modeljars pull <alias|source|coordinate> [--cache <directory>] [--progress <mode>] [--quiet]
 modeljars list [--coordinates] [--details]
+modeljars alias set <nickname> <model>
+modeljars alias list
+modeljars alias rm <nickname>
+modeljars run <model> [prompt] [--max-tokens <count>] [--temperature <value>] [--seed <value>]
+modeljars embed <model> <text>
 modeljars snippet <model> [--tool <tool>]
 modeljars contribute <owner/repository> [--file <path>] [--domain <name>]
 modeljars info
@@ -35,8 +41,20 @@ download URLs, upstream revision, byte sizes, SHA-256 digests, license, and dest
 shared content-addressed cache. A GGUF marker commonly has one file; a Safetensors marker can require
 configuration, tokenizer, and one or more weight files. `list` contains complete installed artifacts;
 `pull` and the JVM Runtime verify every declared file again before use. Familiar aliases include
-`available`, `ls`, `inspect`, `rm`,
+`available`, `models`, `ls`, `inspect`, `rm`, `delete`, `chat`, `embedding`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
+
+The interactive prompt tab-completes catalog model aliases and persistent nicknames for `pull`,
+`show`, `remove`, `run`, `embed`, and coordinate commands. Nicknames are stored in
+`~/.modeljars/aliases.properties`, cannot shadow catalog aliases, and work in one-shot commands as
+well as the prompt.
+
+`run` renders the qualified chat template, streams generation through the Models pipeline, and
+starts a multi-turn session when no prompt is supplied. `/clear` resets model context and `/bye`
+exits. `embed` prints the complete vector returned by the qualified embedding runtime. Chat metrics
+include model load time, TTFT, generation time, exact prompt/completion token counts, and tokens per
+second. Embedding metrics include load time, embedding latency, dimensions, and vector norm. The
+same fields are emitted in human, plain, and JSON modes.
 
 `pull` uses structured byte-level installer events. A capable terminal receives a continuously
 updated two-line region for both download and SHA-256 verification, including percentage, bytes,
@@ -92,7 +110,7 @@ SHA-256 sidecar, a prepared SDKMAN archive, and that archive's SHA-256 sidecar t
 release. Building those archives does not publish them to SDKMAN.
 
 The release also publishes `org.modeljars:modeljars-cli:<version>` to GitHub's Maven Packages. The
-same executable JAR is part of the signed Maven Central bundle as a Java 21 fallback.
+same executable JAR is part of the signed Maven Central bundle as a Java 25 fallback.
 
 ## Package channels
 
@@ -100,7 +118,7 @@ same executable JAR is part of the signed Maven Central bundle as a Java 21 fall
 - Scoop: add `https://github.com/integrallis/scoop-bucket`, then `scoop install modeljars`
 - Direct installer: `curl -fsSL https://raw.githubusercontent.com/ModelJars/modeljars/main/install.sh | sh`
 - GitHub Releases: raw executables and prepared SDKMAN archives for every supported target
-- GitHub Packages and Maven Central: Java 21 executable JAR
+- GitHub Packages and Maven Central: Java 25 executable JAR
 
 Homebrew and Scoop publication requires the `PACKAGES_PUBLISH_TOKEN` repository secret. The token
 must be able to push to `integrallis/homebrew-tap` and `integrallis/scoop-bucket`.

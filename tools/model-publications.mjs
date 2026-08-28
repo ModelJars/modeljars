@@ -238,7 +238,11 @@ export function selectCatalogPublications(catalog, ids) {
   return { publications, removed: [] };
 }
 
-function collectQualifiedIds(qualifications, modelsById) {
+function collectQualifiedIds(
+  qualifications,
+  modelsById,
+  isQualified = (qualification) => qualification.qualified === true,
+) {
   if (
     qualifications === null ||
     typeof qualifications !== "object" ||
@@ -266,7 +270,7 @@ function collectQualifiedIds(qualifications, modelsById) {
     if (qualification.artifactSizeBytes !== model.sizeBytes) {
       throw new Error(`Qualification size does not match catalog model ${id}`);
     }
-    if (qualification.qualified === true) {
+    if (isQualified(qualification)) {
       qualifiedIds.add(id);
     }
   }
@@ -295,7 +299,11 @@ export function filterQualifiedPublications(
   for (const id of collectQualifiedIds(embeddingQualifications, modelsById)) {
     qualifiedIds.add(id);
   }
-  for (const id of collectQualifiedIds(toolQualifications, modelsById)) {
+  for (const id of collectQualifiedIds(
+    toolQualifications,
+    modelsById,
+    (qualification) => qualification.summary?.qualified === true,
+  )) {
     qualifiedIds.add(id);
   }
 

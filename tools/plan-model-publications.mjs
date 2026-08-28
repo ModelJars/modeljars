@@ -113,11 +113,16 @@ function qualifiedCatalog(
   );
   const qualifiedIds = new Set(
     [
-      ...qualificationManifest.entries,
-      ...(embeddingManifest?.entries ?? []),
-      ...(toolManifest?.entries ?? []),
+      ...qualificationManifest.entries.filter(
+        (entry) => entry.qualified === true,
+      ),
+      ...(embeddingManifest?.entries ?? []).filter(
+        (entry) => entry.qualified === true,
+      ),
+      ...(toolManifest?.entries ?? []).filter(
+        (entry) => entry.summary?.qualified === true,
+      ),
     ]
-      .filter((entry) => entry.qualified === true)
       .map((entry) => entry.modelId),
   );
   return {

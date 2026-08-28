@@ -614,6 +614,87 @@ test("CLI publishes a newly qualified candidate without a spurious version bump"
   }
 });
 
+test("CLI publishes a newly tool-qualified candidate using the tool evidence schema", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "modeljars-plan-"));
+  try {
+    const entry = model({
+      id: "needle2",
+      markerCoordinate:
+        "org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1",
+    });
+    const previous = path.join(directory, "previous.json");
+    const current = path.join(directory, "current.json");
+    const previousQualifications = path.join(
+      directory,
+      "previous-qualifications.json",
+    );
+    const currentQualifications = path.join(
+      directory,
+      "current-qualifications.json",
+    );
+    const previousToolQualifications = path.join(
+      directory,
+      "previous-tool-qualifications.json",
+    );
+    const currentToolQualifications = path.join(
+      directory,
+      "current-tool-qualifications.json",
+    );
+    const output = path.join(directory, "github-output");
+    await Promise.all([
+      writeFile(previous, JSON.stringify(catalog([entry]))),
+      writeFile(current, JSON.stringify(catalog([entry]))),
+      writeFile(previousQualifications, JSON.stringify(qualifications([]))),
+      writeFile(currentQualifications, JSON.stringify(qualifications([]))),
+      writeFile(
+        previousToolQualifications,
+        JSON.stringify(qualifications([])),
+      ),
+      writeFile(
+        currentToolQualifications,
+        JSON.stringify(
+          qualifications([
+            {
+              modelId: entry.id,
+              artifactSha256: entry.sha256,
+              artifactSizeBytes: entry.sizeBytes,
+              summary: { qualified: true },
+            },
+          ]),
+        ),
+      ),
+    ]);
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        path.join(toolsDirectory, "plan-model-publications.mjs"),
+        "--previous",
+        previous,
+        "--current",
+        current,
+        "--previous-qualifications",
+        previousQualifications,
+        "--qualifications",
+        currentQualifications,
+        "--previous-tool-qualifications",
+        previousToolQualifications,
+        "--tool-qualifications",
+        currentToolQualifications,
+        "--github-output",
+        output,
+      ],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /"change": "added"/);
+    assert.match(await readFile(output, "utf8"), /^count=1$/m);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("publishes an artifact qualified only by embedding equivalence", () => {
   const embedder = model({
     id: "embedding_model",
@@ -662,7 +743,7 @@ test("publishes an artifact qualified only by tool conformance", () => {
         modelId: toolModel.id,
         artifactSha256: toolModel.sha256,
         artifactSizeBytes: toolModel.sizeBytes,
-        qualified: true,
+        summary: { qualified: true },
       },
     ]),
   );

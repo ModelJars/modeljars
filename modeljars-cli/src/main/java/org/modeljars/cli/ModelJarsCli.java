@@ -127,6 +127,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final SystemCapabilities.Probe systemProbe;
   private final ContributionService contributionService;
   private final Clock clock;
+  private final Map<String, String> generatedAliases;
   private final ModelAliasStore aliases;
   private final ModelInteractions interactions;
 
@@ -235,6 +236,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
     this.contributionService = Objects.requireNonNull(contributionService, "contributionService");
     this.clock = Objects.requireNonNull(clock, "clock");
+    this.generatedAliases = GeneratedModelAliases.from(registry.descriptors());
     this.aliases = Objects.requireNonNull(aliases, "aliases");
     this.interactions = Objects.requireNonNull(interactions, "interactions");
   }
@@ -513,7 +515,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private ModelArgumentCompleter modelCompleter() {
     return new ModelArgumentCompleter(
         descriptors().stream().map(ModelJarDescriptor::alias).toList(),
-        aliases::aliases,
+        this::selectorAliases,
         name ->
             descriptors().stream()
                 .filter(descriptor -> descriptor.alias().equals(name))
@@ -522,15 +524,29 @@ public final class ModelJarsCli implements Callable<Integer> {
                 .orElse(false));
   }
 
-  private String expandNickname(String selector) {
+  private Map<String, String> selectorAliases() {
+    Map<String, String> names = new LinkedHashMap<>(aliases.aliases());
+    generatedAliases.forEach(names::put);
+    return Map.copyOf(names);
+  }
+
+  private String expandAlias(String selector) {
     if (selector == null) {
       return null;
     }
-    return aliases.aliases().getOrDefault(selector.trim(), selector.trim());
+    return selectorAliases().getOrDefault(selector.trim(), selector.trim());
   }
 
-  private List<String> nicknames(ModelJarDescriptor descriptor) {
-    return aliases.aliases().entrySet().stream()
+  private String shortName(ModelJarDescriptor descriptor) {
+    return generatedAliases.entrySet().stream()
+        .filter(entry -> entry.getValue().equals(descriptor.alias()))
+        .map(Map.Entry::getKey)
+        .findFirst()
+        .orElse(descriptor.alias());
+  }
+
+  private List<String> alternateNames(ModelJarDescriptor descriptor) {
+    return selectorAliases().entrySet().stream()
         .filter(entry -> entry.getValue().equals(descriptor.alias()))
         .map(Map.Entry::getKey)
         .sorted()
@@ -542,7 +558,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       throw new IllegalArgumentException("Model selector must not be blank");
     }
     String original = selector.trim();
-    String requested = expandNickname(original);
+    String requested = expandAlias(original);
     List<ModelJarDescriptor> exact =
         descriptors().stream()
             .filter(
@@ -590,7 +606,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private ModelJarDescriptor resolveExact(String selector) {
     ModelJarDescriptor descriptor = resolve(selector);
     String requested = selector.trim();
-    String expanded = expandNickname(requested);
+    String expanded = expandAlias(requested);
     if (!descriptor.alias().equals(requested)
         && !descriptor.alias().equals(expanded)
         && !descriptor.markerCoordinate().toString().equals(requested)
@@ -606,13 +622,14 @@ public final class ModelJarsCli implements Callable<Integer> {
     return ModelJarCache.isComplete(descriptor, artifact);
   }
 
-  private static boolean matchesQuery(ModelJarDescriptor descriptor, String query) {
+  private boolean matchesQuery(ModelJarDescriptor descriptor, String query) {
     if (query.isEmpty()) {
       return true;
     }
     String searchable =
         Stream.of(
                 descriptor.alias(),
+                shortName(descriptor),
                 descriptor.name().orElse(""),
                 descriptor.description().orElse(""),
                 descriptor.sourceId(),
@@ -635,8 +652,9 @@ public final class ModelJarsCli implements Callable<Integer> {
                     .anyMatch(searchable::contains));
   }
 
-  private static Map<String, Object> descriptorMap(ModelJarDescriptor descriptor, Path cachePath) {
+  private Map<String, Object> descriptorMap(ModelJarDescriptor descriptor, Path cachePath) {
     Map<String, Object> values = new LinkedHashMap<>();
+    values.put("shortName", shortName(descriptor));
     values.put("alias", descriptor.alias());
     values.put("name", descriptor.name().orElse(null));
     values.put("coordinate", descriptor.markerCoordinate().toString());
@@ -874,7 +892,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       }
       Comparator<ModelJarDescriptor> comparator =
           switch (sort) {
-            case ALIAS -> Comparator.comparing(ModelJarDescriptor::alias);
+            case ALIAS -> Comparator.comparing(parent::shortName);
             case SIZE ->
                 Comparator.comparingLong(
                         (ModelJarDescriptor descriptor) ->
@@ -888,7 +906,7 @@ public final class ModelJarsCli implements Callable<Integer> {
           };
       List<ModelJarDescriptor> allMatches =
           parent.descriptors().stream()
-              .filter(descriptor -> matchesQuery(descriptor, terms))
+              .filter(descriptor -> parent.matchesQuery(descriptor, terms))
               .filter(descriptor -> matches(capability, descriptor.capabilities()))
               .filter(descriptor -> matches(architecture, descriptor.architecture()))
               .filter(descriptor -> matches(quantization, descriptor.quantization()))
@@ -921,7 +939,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                 .map(
                     descriptor -> {
                       Map<String, Object> value =
-                          descriptorMap(
+                          parent.descriptorMap(
                               descriptor,
                               ModelJarCache.artifactPath(descriptor, parent.cacheDirectory()));
                       value.put("new", parent.isNew(descriptor));
@@ -932,12 +950,13 @@ public final class ModelJarsCli implements Callable<Integer> {
       }
       if (out.format() == CliOutput.Format.PLAIN) {
         out.line(
-            "ALIAS\tNEW\tCAPABILITIES\tARCHITECTURE\tQUANTIZATION\tSIZE_BYTES\tSTATUS\tCOORDINATE");
+            "SHORT_NAME\tALIAS\tNEW\tCAPABILITIES\tARCHITECTURE\tQUANTIZATION\tSIZE_BYTES\tSTATUS\tCOORDINATE");
         matches.forEach(
             descriptor ->
                 out.line(
                     String.join(
                         "\t",
+                        parent.shortName(descriptor),
                         descriptor.alias(),
                         Boolean.toString(parent.isNew(descriptor)),
                         capabilities(descriptor),
@@ -957,7 +976,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       int modelWidth =
           Math.max(
               "MODEL".length(),
-              matches.stream().mapToInt(descriptor -> descriptor.alias().length()).max().orElse(0));
+              matches.stream().map(parent::shortName).mapToInt(String::length).max().orElse(0));
       int architectureWidth =
           Math.max(
               "ARCH".length(),
@@ -1001,7 +1020,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                     boolean recent = parent.isNew(descriptor);
                     row.add(
                         new CliOutput.Cell(
-                            descriptor.alias(),
+                            parent.shortName(descriptor),
                             recent ? CliOutput.Tone.WARNING : CliOutput.Tone.NORMAL));
                     row.add(new CliOutput.Cell(recent ? "NEW" : "", CliOutput.Tone.WARNING));
                     row.add(CliOutput.Cell.text(descriptor.architecture()));
@@ -1077,7 +1096,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                           descriptor,
                           ModelJarCache.artifactPath(descriptor, parent.cacheDirectory())))
               .filter(model -> ModelJarCache.isComplete(model.descriptor(), model.path()))
-              .sorted(Comparator.comparing(model -> model.descriptor().alias()))
+              .sorted(Comparator.comparing(model -> parent.shortName(model.descriptor())))
               .toList();
       render(models);
       return 0;
@@ -1090,7 +1109,8 @@ public final class ModelJarsCli implements Callable<Integer> {
             models.stream()
                 .map(
                     model -> {
-                      Map<String, Object> value = descriptorMap(model.descriptor(), model.path());
+                      Map<String, Object> value =
+                          parent.descriptorMap(model.descriptor(), model.path());
                       value.put("modified", modified(model.path()).toString());
                       return value;
                     })
@@ -1098,12 +1118,13 @@ public final class ModelJarsCli implements Callable<Integer> {
         return;
       }
       if (out.format() == CliOutput.Format.PLAIN) {
-        out.line("ALIAS\tSIZE_BYTES\tMODIFIED\tPATH\tCOORDINATE");
+        out.line("SHORT_NAME\tALIAS\tSIZE_BYTES\tMODIFIED\tPATH\tCOORDINATE");
         models.forEach(
             model ->
                 out.line(
                     String.join(
                         "\t",
+                        parent.shortName(model.descriptor()),
                         model.descriptor().alias(),
                         model.descriptor().sizeBytes().map(String::valueOf).orElse(""),
                         modified(model.path()).toString(),
@@ -1119,7 +1140,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
       int modelWidth =
           models.stream()
-              .map(model -> model.descriptor().alias().length())
+              .map(model -> parent.shortName(model.descriptor()).length())
               .max(Integer::compareTo)
               .orElse("MODEL".length());
       int sizeWidth =
@@ -1143,7 +1164,7 @@ public final class ModelJarsCli implements Callable<Integer> {
               .map(
                   model -> {
                     List<CliOutput.Cell> row = new ArrayList<>();
-                    row.add(CliOutput.Cell.text(model.descriptor().alias()));
+                    row.add(CliOutput.Cell.text(parent.shortName(model.descriptor())));
                     row.add(
                         CliOutput.Cell.text(
                             model
@@ -1161,6 +1182,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                 .map(
                     model -> {
                       List<CliOutput.Detail> fields = new ArrayList<>();
+                      fields.add(CliOutput.Detail.text("CATALOG ID", model.descriptor().alias()));
                       if (details) {
                         fields.add(
                             CliOutput.Detail.text(
@@ -1193,7 +1215,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class ShowCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(paramLabel = "MODEL", description = "Alias, source ID, or exact coordinate.")
+    @Parameters(
+        paramLabel = "MODEL",
+        description = "Short name, catalog ID, custom alias, source ID, or exact coordinate.")
     private String selector;
 
     @Option(names = "--coordinates", description = "Also print dependency declarations.")
@@ -1210,16 +1234,23 @@ public final class ModelJarsCli implements Callable<Integer> {
       Path cachePath = ModelJarCache.artifactPath(descriptor, parent.cacheDirectory());
       CliOutput out = parent.out();
       if (out.format() == CliOutput.Format.JSON) {
-        Map<String, Object> value = descriptorMap(descriptor, cachePath);
+        Map<String, Object> value = parent.descriptorMap(descriptor, cachePath);
         if (coordinates) {
           value.put("dependencyDeclarations", dependencyDeclarations(descriptor, true));
         }
         out.json(value);
       } else if (out.format() == CliOutput.Format.PLAIN) {
-        descriptorMap(descriptor, cachePath)
+        parent
+            .descriptorMap(descriptor, cachePath)
             .forEach((key, value) -> out.line(key + "=" + Objects.toString(value, "")));
       } else {
-        renderHuman(descriptor, cachePath, out, details, parent.nicknames(descriptor));
+        renderHuman(
+            descriptor,
+            cachePath,
+            out,
+            details,
+            parent.shortName(descriptor),
+            parent.alternateNames(descriptor));
         if (coordinates) {
           printDeclarations(descriptor, out, true, List.of());
         } else {
@@ -1235,14 +1266,18 @@ public final class ModelJarsCli implements Callable<Integer> {
         Path cachePath,
         CliOutput out,
         boolean details,
-        List<String> nicknames) {
+        String shortName,
+        List<String> alternateNames) {
       out.line(descriptor.name().orElse(descriptor.alias()));
       descriptor.description().ifPresent(out::hint);
 
       Map<String, Object> identity = new LinkedHashMap<>();
-      identity.put("Alias", descriptor.alias());
-      if (!nicknames.isEmpty()) {
-        identity.put("Nicknames", String.join(", ", nicknames));
+      identity.put("Short name", shortName);
+      identity.put("Catalog ID", descriptor.alias());
+      List<String> customNames =
+          alternateNames.stream().filter(name -> !name.equals(shortName)).toList();
+      if (!customNames.isEmpty()) {
+        identity.put("Custom aliases", String.join(", ", customNames));
       }
       identity.put("Coordinate", descriptor.markerCoordinate());
       identity.put(
@@ -1310,7 +1345,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class PullCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(paramLabel = "MODEL", description = "Alias, source ID, or exact coordinate.")
+    @Parameters(
+        paramLabel = "MODEL",
+        description = "Short name, catalog ID, custom alias, source ID, or exact coordinate.")
     private String selector;
 
     @Option(
@@ -1394,7 +1431,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class RemoveCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(paramLabel = "MODEL", description = "Exact alias, source ID, or coordinate.")
+    @Parameters(
+        paramLabel = "MODEL",
+        description = "Exact short name, catalog ID, custom alias, source ID, or coordinate.")
     private String selector;
 
     @Option(
@@ -1511,7 +1550,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   @Command(
       name = "alias",
       aliases = "nickname",
-      description = "Create and manage short model nicknames.",
+      description = "Show automatic short names and manage custom model aliases.",
       mixinStandardHelpOptions = true,
       subcommands = {
         AliasCommand.SetCommand.class,
@@ -1530,7 +1569,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
     @Command(
         name = "set",
-        description = "Assign a short nickname to an exact catalog model.",
+        description = "Assign an optional custom alias to an exact catalog model.",
         mixinStandardHelpOptions = true)
     static final class SetCommand implements Callable<Integer> {
       @ParentCommand private AliasCommand command;
@@ -1546,8 +1585,9 @@ public final class ModelJarsCli implements Callable<Integer> {
         ModelJarsCli parent = command.parent;
         ModelJarDescriptor descriptor = parent.resolve(selector);
         Set<String> reserved =
-            parent.descriptors().stream()
-                .map(ModelJarDescriptor::alias)
+            Stream.concat(
+                    parent.descriptors().stream().map(ModelJarDescriptor::alias),
+                    parent.generatedAliases.keySet().stream())
                 .collect(java.util.stream.Collectors.toUnmodifiableSet());
         parent.aliases.set(name, descriptor.alias(), reserved);
         CliOutput out = parent.out();
@@ -1566,7 +1606,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Command(
         name = "list",
         aliases = "ls",
-        description = "List configured model nicknames.",
+        description = "List automatic short names and configured custom aliases.",
         mixinStandardHelpOptions = true)
     static final class ListCommand implements Callable<Integer> {
       @ParentCommand private AliasCommand command;
@@ -1577,55 +1617,82 @@ public final class ModelJarsCli implements Callable<Integer> {
         Map<String, String> configured = parent.aliases.aliases();
         CliOutput out = parent.out();
         if (out.format() == CliOutput.Format.JSON) {
-          out.json(configured);
+          out.json(Map.of("automatic", parent.generatedAliases, "custom", configured));
         } else if (out.format() == CliOutput.Format.PLAIN) {
-          configured.forEach((name, model) -> out.line(name + "=" + model));
-        } else if (configured.isEmpty()) {
-          out.line("No model nicknames are configured.");
-          out.hint("Run 'modeljars alias set <name> <model>'.");
+          parent.generatedAliases.forEach(
+              (name, model) -> out.line("automatic\t" + name + "=" + model));
+          configured.forEach((name, model) -> out.line("custom\t" + name + "=" + model));
         } else {
+          List<AliasListing> listed = new ArrayList<>();
+          parent.generatedAliases.forEach(
+              (name, model) -> listed.add(new AliasListing(name, model, "automatic")));
+          configured.forEach(
+              (name, model) ->
+                  listed.add(
+                      new AliasListing(
+                          name,
+                          model,
+                          parent.generatedAliases.containsKey(name)
+                              ? "custom (shadowed)"
+                              : "custom")));
           int nameWidth =
               Math.max(
                   "NAME".length(),
-                  configured.keySet().stream().mapToInt(String::length).max().orElse(0));
+                  listed.stream().map(AliasListing::name).mapToInt(String::length).max().orElse(0));
           int modelWidth =
               Math.max(
                   "MODEL".length(),
-                  configured.values().stream().mapToInt(String::length).max().orElse(0));
+                  listed.stream()
+                      .map(AliasListing::model)
+                      .mapToInt(String::length)
+                      .max()
+                      .orElse(0));
+          int sourceWidth =
+              Math.max(
+                  "SOURCE".length(),
+                  listed.stream()
+                      .map(AliasListing::source)
+                      .mapToInt(String::length)
+                      .max()
+                      .orElse(0));
           List<List<CliOutput.Cell>> rows =
-              configured.entrySet().stream()
+              listed.stream()
                   .map(
                       entry ->
                           List.of(
-                              CliOutput.Cell.text(entry.getKey()),
-                              CliOutput.Cell.text(entry.getValue())))
+                              CliOutput.Cell.text(entry.name()),
+                              CliOutput.Cell.text(entry.model()),
+                              CliOutput.Cell.text(entry.source())))
                   .toList();
           out.table(
               List.of(
                   CliOutput.Column.left("NAME", nameWidth, nameWidth),
-                  CliOutput.Column.left("MODEL", modelWidth, modelWidth)),
+                  CliOutput.Column.left("MODEL", modelWidth, modelWidth),
+                  CliOutput.Column.left("SOURCE", sourceWidth, sourceWidth)),
               rows);
         }
         return 0;
       }
+
+      private record AliasListing(String name, String model, String source) {}
     }
 
     @Command(
         name = "remove",
         aliases = {"rm", "delete"},
-        description = "Remove a model nickname.",
+        description = "Remove a custom model alias.",
         mixinStandardHelpOptions = true)
     static final class RemoveCommand implements Callable<Integer> {
       @ParentCommand private AliasCommand command;
 
-      @Parameters(paramLabel = "NAME", description = "Configured nickname.")
+      @Parameters(paramLabel = "NAME", description = "Configured custom alias.")
       private String name;
 
       @Override
       public Integer call() {
         ModelJarsCli parent = command.parent;
         if (!parent.aliases.remove(name)) {
-          throw new IllegalArgumentException("No model nickname is configured: " + name);
+          throw new IllegalArgumentException("No custom model alias is configured: " + name);
         }
         CliOutput out = parent.out();
         if (out.format() == CliOutput.Format.JSON) {
@@ -1633,7 +1700,7 @@ public final class ModelJarsCli implements Callable<Integer> {
         } else if (out.format() == CliOutput.Format.PLAIN) {
           out.line("removed=" + name);
         } else {
-          out.success("Removed nickname " + name);
+          out.success("Removed custom alias " + name);
         }
         return 0;
       }
@@ -1653,7 +1720,10 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class RunCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(index = "0", paramLabel = "MODEL", description = "Model alias or nickname.")
+    @Parameters(
+        index = "0",
+        paramLabel = "MODEL",
+        description = "Short name, catalog ID, or custom alias.")
     private String selector;
 
     @Parameters(
@@ -1805,7 +1875,10 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class EmbedCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(index = "0", paramLabel = "MODEL", description = "Model alias or nickname.")
+    @Parameters(
+        index = "0",
+        paramLabel = "MODEL",
+        description = "Short name, catalog ID, or custom alias.")
     private String selector;
 
     @Parameters(index = "1..*", arity = "1..*", paramLabel = "TEXT", description = "Text to embed.")
@@ -1863,7 +1936,9 @@ public final class ModelJarsCli implements Callable<Integer> {
   static final class CoordinatesCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
-    @Parameters(paramLabel = "MODEL", description = "Alias, source ID, or exact coordinate.")
+    @Parameters(
+        paramLabel = "MODEL",
+        description = "Short name, catalog ID, custom alias, source ID, or exact coordinate.")
     private String selector;
 
     @Option(

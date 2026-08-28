@@ -67,11 +67,11 @@ modeljars models embedding --sort size
 modeljars search --capability embedding --sort size
 modeljars search fintech
 modeljars search gemma --details
-modeljars show ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
-modeljars pull ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m
-modeljars alias set qwen qwen3_0_6b_q4_0
-modeljars run qwen "Name one JVM language other than Java."
-modeljars embed ggml_org_embeddinggemma_300m_gguf_q8_0 "Public transit schedule"
+modeljars alias list
+modeljars show gemma-26b
+modeljars pull qwen-0.6b
+modeljars run qwen-0.6b "Name one JVM language other than Java."
+modeljars embed embeddinggemma "Public transit schedule"
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -108,10 +108,17 @@ Run `modeljars help` or `modeljars <command> --help` for the complete command su
 arguments, `modeljars` opens a prompt with history and tab completion; `exit`, `quit`, or Ctrl-D
 returns to the shell. Supplying any command keeps the normal one-shot behavior used by scripts.
 
-Tab completion includes qualified model aliases and user-defined nicknames for model-taking
-commands. Create persistent nicknames with `modeljars alias set <name> <model>`; list them with
-`modeljars alias list` and remove them with `modeljars alias rm <name>`. A nickname cannot replace a
-qualified catalog alias.
+The CLI generates a short name for every model from the active catalog. It starts with the model
+family and adds only the semantic details needed to remain unambiguous, such as `qwen-0.6b`,
+`qwen-coder-0.5b-q4`, or `qwen-embedding`. The names are recomputed whenever a refreshed catalog is
+loaded, so newly published models receive names without a CLI release or local configuration. A
+name can become more specific when a new model would otherwise collide; the full catalog ID and
+marker coordinate remain stable selectors. `modeljars alias list` shows the complete mapping.
+
+Tab completion includes generated short names, full catalog IDs, and optional user-defined aliases
+for every model-taking command. Create a persistent custom alias with
+`modeljars alias set <name> <model>` and remove it with `modeljars alias rm <name>`. A custom alias
+cannot replace a generated short name or qualified catalog ID.
 
 `modeljars run <model> [prompt]` and `modeljars embed <model> <text>` execute the same in-process
 ModelJars and Models APIs used by Java applications—there is no Ollama, llama.cpp, or remote
@@ -213,7 +220,7 @@ The first qualified CACT artifact is Needle 2, a compact tool-calling model:
 org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1
 ```
 
-`modeljars pull cactus_compute_needle2_cact_cq2_mixed` installs the pinned
+`modeljars pull needle` installs the pinned
 `needle2.cact` bytes. Models parses the embedded tokenizer and mixed CQ2/CQ4 graph and executes
 generation, constrained tool syntax, retrieval, and auxiliary heads in Java.
 

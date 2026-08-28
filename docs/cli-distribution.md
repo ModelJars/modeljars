@@ -13,12 +13,12 @@ the session. Supplying any arguments executes exactly one command and returns to
 
 ```bash
 modeljars search|available|models [query] [--capability <name>] [--backend <name>] [--sort <field>] [--details]
-modeljars show <alias|source|coordinate> [--coordinates] [--details]
-modeljars pull <alias|source|coordinate> [--cache <directory>] [--progress <mode>] [--quiet]
+modeljars show <short-name|catalog-id|source|coordinate> [--coordinates] [--details]
+modeljars pull <short-name|catalog-id|source|coordinate> [--cache <directory>] [--progress <mode>] [--quiet]
 modeljars list [--coordinates] [--details]
-modeljars alias set <nickname> <model>
 modeljars alias list
-modeljars alias rm <nickname>
+modeljars alias set <custom-name> <model>
+modeljars alias rm <custom-name>
 modeljars run <model> [prompt] [--max-tokens <count>] [--temperature <value>] [--seed <value>]
 modeljars embed <model> <text>
 modeljars snippet <model> [--tool <tool>]
@@ -44,10 +44,17 @@ configuration, tokenizer, and one or more weight files. `list` contains complete
 `available`, `models`, `ls`, `inspect`, `rm`, `delete`, `chat`, `embedding`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
 
-The interactive prompt tab-completes catalog model aliases and persistent nicknames for `pull`,
-`show`, `remove`, `run`, `embed`, and coordinate commands. Nicknames are stored in
-`~/.modeljars/aliases.properties`, cannot shadow catalog aliases, and work in one-shot commands as
-well as the prompt.
+Every active catalog snapshot generates one short command name per model. The generator uses the
+family name by itself when possible and adds purpose, parameter size, model series, quantization,
+or format only as needed for uniqueness. Because generation happens after the remote catalog is
+verified and loaded, newly published models receive names without a CLI release. A short name may
+become more specific if a later model creates a collision; catalog IDs and marker coordinates never
+change. `alias list` prints automatic and custom mappings.
+
+The interactive prompt tab-completes generated short names, full catalog IDs, and persistent custom
+aliases for `pull`, `show`, `remove`, `run`, `embed`, and coordinate commands. Custom aliases are
+stored in `~/.modeljars/aliases.properties`, cannot shadow automatic names or catalog IDs, and work
+in one-shot commands as well as the prompt.
 
 `run` renders the qualified chat template, streams generation through the Models pipeline, and
 starts a multi-turn session when no prompt is supplied. `/clear` resets model context and `/bye`

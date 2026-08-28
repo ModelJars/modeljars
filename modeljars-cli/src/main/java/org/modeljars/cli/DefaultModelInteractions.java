@@ -80,6 +80,15 @@ final class DefaultModelInteractions implements ModelInteractions {
     return Math.sqrt(squared);
   }
 
+  static double decodeTokensPerSecond(int completionTokens, long decodeNanos) {
+    int measuredIntervals = Math.max(0, completionTokens - 1);
+    if (measuredIntervals == 0) {
+      return 0;
+    }
+    double decodeSeconds = Math.max(0, decodeNanos) / 1_000_000_000.0;
+    return measuredIntervals / Math.max(0.001, decodeSeconds);
+  }
+
   private static final class RuntimeChatSession implements ChatSession {
     private final ModelJarRuntime runtime;
     private final long loadMillis;
@@ -150,11 +159,9 @@ final class DefaultModelInteractions implements ModelInteractions {
       GenerationUsage completedUsage =
           Objects.requireNonNullElseGet(usage.get(), () -> new GenerationUsage(0, 0));
       long first = firstTokenAt.get() < 0 ? generationCompleted : firstTokenAt.get();
-      double decodeSeconds = Math.max(0, generationCompleted - first) / 1_000_000_000.0;
       double throughput =
-          completedUsage.completionTokens() == 0
-              ? 0
-              : completedUsage.completionTokens() / Math.max(0.001, decodeSeconds);
+          decodeTokensPerSecond(
+              completedUsage.completionTokens(), Math.max(0, generationCompleted - first));
       return new ChatResult(
           output.toString(),
           new ChatMetrics(

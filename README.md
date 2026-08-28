@@ -79,9 +79,8 @@ starts inference. Single-file GGUF and CACT artifacts and multi-file Safetensors
 same command.
 Release automation
 builds native binaries for macOS, Linux, and Windows on their host architectures and publishes an
-executable fallback JAR to Maven Central and GitHub Packages. SDKMAN multi-platform archives are
-also generated; publication begins once the `modeljars` candidate completes SDKMAN vendor
-onboarding.
+executable fallback JAR to Maven Central and GitHub Packages. SDKMAN distribution remains disabled
+until its vendor onboarding approval is complete.
 
 On a terminal, `pull` renders one animated download and verification region with byte progress,
 smoothed transfer speed, and ETA, then replaces it with the verified path and coordinate. Redirected
@@ -92,7 +91,8 @@ Interactive output uses responsive, aligned tables and color only when stdout is
 Catalog and cache listings are compact by default; add `--details` to show complete capability and
 backend continuation fields without truncation. `list --coordinates` independently adds the exact
 marker coordinate. Search includes catalog domains/tags and common discovery aliases, such as
-`fintech` for `finance`.
+`fintech` for `finance`. Entries published during the previous 48 hours carry a visible `NEW`
+marker; plain and JSON output expose the same state without relying on color.
 Every discovery command also supports `--output json` for automation and `--output plain` for stable
 line-oriented output; `NO_COLOR` and `--color never` disable ANSI output. `modeljars info` reports
 CPU, physical and logical cores, SIMD, memory, graphics hardware, Java/native runtime, backend
@@ -103,6 +103,14 @@ Run `modeljars help` or `modeljars <command> --help` for the complete command su
 `coordinates`, `coords`, `dependency`, and `deps` are aliases for the same command. With no
 arguments, `modeljars` opens a prompt with history and tab completion; `exit`, `quit`, or Ctrl-D
 returns to the shell. Supplying any command keeps the normal one-shot behavior used by scripts.
+
+Before catalog-backed commands run, the CLI compares the SHA-256 published at
+`https://modeljars.org/catalog/registry.properties.sha256` with its local qualified catalog. A
+different hash triggers a download of `registry.properties`; the CLI verifies and parses the file,
+then atomically promotes it to `${user.home}/.modeljars/catalog/registry.properties`. That verified
+download replaces the catalog bundled with the executable. If ModelJARs.org cannot be reached, the
+CLI uses the last verified download, or the bundled catalog before the first successful refresh.
+Set `MODELJARS_CATALOG_OFFLINE=true` to suppress network refreshes explicitly.
 
 ## Dependency
 

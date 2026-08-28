@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -113,6 +115,8 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
         optional(prefix, "description", properties),
         optional(prefix, "licenseUri", properties).map(URI::create),
         csv(optional(prefix, "domains", properties).orElse("")),
+        optional(prefix, "catalogPublishedAt", properties)
+            .map(value -> parseInstant("catalogPublishedAt", value)),
         dimensions(prefix, properties));
   }
 
@@ -261,6 +265,14 @@ public final class PropertiesModelJarRegistry extends InMemoryModelJarRegistry {
       return Integer.parseInt(value);
     } catch (NumberFormatException e) {
       throw new ModelJarException("Invalid " + property + ": " + value, e);
+    }
+  }
+
+  private static Instant parseInstant(String property, String value) {
+    try {
+      return Instant.parse(value);
+    } catch (DateTimeParseException exception) {
+      throw new ModelJarException("Invalid " + property + ": " + value, exception);
     }
   }
 

@@ -17,6 +17,7 @@ package org.modeljars;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -51,6 +52,7 @@ import java.util.Set;
  * @param description short catalog description
  * @param licenseUri canonical model license location
  * @param domains normalized task or industry domains
+ * @param catalogPublishedAt time this qualified artifact entered the public catalog
  * @param dimensions model dimensions used for discovery and resource estimates
  */
 public record ModelJarDescriptor(
@@ -78,6 +80,7 @@ public record ModelJarDescriptor(
     Optional<String> description,
     Optional<URI> licenseUri,
     Set<String> domains,
+    Optional<Instant> catalogPublishedAt,
     ModelDimensions dimensions) {
   /** Validates and normalizes marker metadata. */
   public ModelJarDescriptor {
@@ -143,7 +146,67 @@ public record ModelJarDescriptor(
     description = normalizedOptional(description, "description");
     licenseUri = Objects.requireNonNull(licenseUri, "licenseUri");
     domains = normalizedSet(domains, "domains");
+    catalogPublishedAt = Objects.requireNonNull(catalogPublishedAt, "catalogPublishedAt");
     dimensions = Objects.requireNonNull(dimensions, "dimensions");
+  }
+
+  /**
+   * Creates a descriptor from the original schema, before catalog publication timestamps were
+   * introduced.
+   */
+  public ModelJarDescriptor(
+      String alias,
+      String sourceId,
+      ModelJarCoordinate markerCoordinate,
+      ModelVersion modelVersion,
+      String variant,
+      String format,
+      String architecture,
+      String quantization,
+      Optional<Path> localPath,
+      Optional<String> classpathResource,
+      Optional<URI> sourceUri,
+      Optional<URI> downloadUri,
+      Optional<String> revision,
+      Optional<String> sha256,
+      Optional<Long> sizeBytes,
+      Optional<String> license,
+      Set<String> capabilities,
+      Set<String> features,
+      List<ModelArtifactFile> files,
+      Map<String, Boolean> backendSupport,
+      Optional<String> name,
+      Optional<String> description,
+      Optional<URI> licenseUri,
+      Set<String> domains,
+      ModelDimensions dimensions) {
+    this(
+        alias,
+        sourceId,
+        markerCoordinate,
+        modelVersion,
+        variant,
+        format,
+        architecture,
+        quantization,
+        localPath,
+        classpathResource,
+        sourceUri,
+        downloadUri,
+        revision,
+        sha256,
+        sizeBytes,
+        license,
+        capabilities,
+        features,
+        files,
+        backendSupport,
+        name,
+        description,
+        licenseUri,
+        domains,
+        Optional.empty(),
+        dimensions);
   }
 
   /**

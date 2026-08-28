@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.format.DateTimeParseException
 import java.util.HexFormat
 import java.util.Properties
 import java.util.concurrent.Callable
@@ -117,6 +118,7 @@ data class CatalogEntry(
     val vocabularySize: Int?,
     val topology: String?,
     val domains: List<String>,
+    val catalogPublishedAt: String?,
     val dimensions: CatalogDimensions?,
     val capabilities: List<String>,
     val features: List<String>,
@@ -668,6 +670,7 @@ fun CatalogEntry.registryProperties(): String =
         appendLine("${prefix}name=$name")
         appendLine("${prefix}description=$description")
         appendLine("${prefix}domains=${domains.joinToString(",")}")
+        catalogPublishedAt?.let { appendLine("${prefix}catalogPublishedAt=$it") }
         dimensions?.properties(prefix)?.forEach(::appendLine)
         appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
         appendLine("${prefix}features=${features.joinToString(",")}")
@@ -708,6 +711,14 @@ val catalogEntries =
                 (raw["domains"] as? List<*>)
                     ?.map { it as? String ?: error("domains must contain strings") }
                     ?: emptyList()
+            val catalogPublishedAt =
+                raw.optionalString("catalogPublishedAt")?.also { publishedAt ->
+                    try {
+                        Instant.parse(publishedAt)
+                    } catch (exception: DateTimeParseException) {
+                        error("catalogPublishedAt must be an ISO-8601 instant: $publishedAt")
+                    }
+                }
             val files =
                 (raw["files"] as? List<*>)
                     ?.mapIndexed { index, value ->
@@ -800,6 +811,7 @@ val catalogEntries =
                 vocabularySize = (raw["vocabularySize"] as? Number)?.toInt(),
                 topology = raw.optionalString("topology"),
                 domains = domains,
+                catalogPublishedAt = catalogPublishedAt,
                 dimensions = dimensions,
                 capabilities = capabilities,
                 features = features,
@@ -3101,6 +3113,9 @@ val verifyMarkerPublicationIndependence =
 val aggregateCatalogJar =
     project(":modeljars-catalog").tasks.named<Jar>("jar").flatMap { it.archiveFile }
 val generatedSiteCatalog = layout.buildDirectory.file("generated/site/catalog.json")
+val generatedCliCatalog = layout.buildDirectory.file("generated/site/registry.properties")
+val generatedCliCatalogHash =
+    layout.buildDirectory.file("generated/site/registry.properties.sha256")
 val generatedSiteBenchmarks = layout.buildDirectory.file("generated/site/benchmarks.json")
 val generatedSiteQualifications =
     layout.buildDirectory.file("generated/site/qualifications.json")
@@ -3110,15 +3125,28 @@ val generateSiteCatalog =
         inputs.file(aggregateCatalogJar)
         outputs.files(
             generatedSiteCatalog,
+            generatedCliCatalog,
+            generatedCliCatalogHash,
             generatedSiteBenchmarks,
             generatedSiteQualifications,
         )
         doLast {
             val catalogOutput = generatedSiteCatalog.get().asFile
+            val cliCatalogOutput = generatedCliCatalog.get().asFile
+            val cliCatalogHashOutput = generatedCliCatalogHash.get().asFile
             val benchmarkOutput = generatedSiteBenchmarks.get().asFile
             val qualificationOutput = generatedSiteQualifications.get().asFile
             catalogOutput.parentFile.mkdirs()
             ZipFile(aggregateCatalogJar.get().asFile).use { zip ->
+                val registry =
+                    zip.getEntry("META-INF/modeljars/registry.properties")
+                        ?: error("Aggregate ModelJars registry is missing")
+                val registryBytes = zip.getInputStream(registry).use { it.readAllBytes() }
+                cliCatalogOutput.writeBytes(registryBytes)
+                cliCatalogHashOutput.writeText(
+                    sha256(registryBytes) + "\n",
+                    StandardCharsets.US_ASCII,
+                )
                 val catalogMetadata =
                     zip.getEntry("META-INF/modeljars/catalog.json")
                         ?: error("Aggregate ModelJars catalog metadata is missing")
@@ -3202,6 +3230,8 @@ tasks.register<Sync>("generateSite") {
     from("site")
     from("media/icons")
     from(generatedSiteCatalog)
+    from(generatedCliCatalog) { into("catalog") }
+    from(generatedCliCatalogHash) { into("catalog") }
     from(generatedSiteBenchmarks)
     from(generatedSiteQualifications)
     into(generatedSiteDirectory)
@@ -3468,6 +3498,26 @@ tasks.register("verifyCatalog") {
         }
         val siteCatalog = generatedSiteCatalog.get().asFile
         require(siteCatalog.isFile) { "Generated site catalog is missing: $siteCatalog" }
+        val cliCatalog = generatedCliCatalog.get().asFile
+        val cliCatalogHash = generatedCliCatalogHash.get().asFile
+        require(cliCatalog.isFile) { "Generated CLI catalog is missing: $cliCatalog" }
+        require(cliCatalogHash.isFile) {
+            "Generated CLI catalog hash is missing: $cliCatalogHash"
+        }
+        require(cliCatalogHash.readText(StandardCharsets.US_ASCII).trim() == sha256(cliCatalog.readBytes())) {
+            "Generated CLI catalog hash does not match registry.properties"
+        }
+        val cliCatalogProperties = Properties()
+        cliCatalog.inputStream().use(cliCatalogProperties::load)
+        val cliCatalogModelIds =
+            cliCatalogProperties.stringPropertyNames()
+                .asSequence()
+                .filter { it.startsWith("model.") }
+                .map { it.removePrefix("model.").substringBefore('.') }
+                .toSet()
+        require(cliCatalogModelIds == publicModelIds) {
+            "Generated CLI catalog must contain exactly the qualified artifacts"
+        }
         val siteModels =
             JsonSlurper().parse(siteCatalog).let { it as? List<*> }
                 ?: error("Generated site catalog must contain a model array")

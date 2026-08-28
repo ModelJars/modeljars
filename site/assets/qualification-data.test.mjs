@@ -180,6 +180,38 @@ test("selects and labels tool-calling conformance evidence", () => {
   assert.equal(qualificationLabel(selected), "Tool calling");
 });
 
+test("normalizes the published nested tool-calling evidence shape", () => {
+  const toolModel = {
+    id: "cactus_compute_needle2_cact_cq2_mixed",
+    toolQualifications: [
+      {
+        backend: "pure-java",
+        suite: { id: "needle2-upstream-playground-v1" },
+        generation: { promptTemplate: "needle2" },
+        summary: {
+          qualified: true,
+          verdict: "PASS",
+          attempts: 13,
+          passed: 11,
+          structuredOutputRate: 1,
+          toolSelectionExactRate: 1,
+          expectedArgumentAccuracy: 0.9166666667,
+        },
+        useCaseTier: "TOOL_CALLING",
+      },
+    ],
+  };
+
+  const selected = primaryQualification(toolModel);
+
+  assert.equal(selected.qualified, true);
+  assert.equal(selected.workload, "needle2-upstream-playground-v1");
+  assert.equal(selected.promptTemplate, "needle2");
+  assert.equal(selected.structuredOutputRate, 1);
+  assert.equal(selected.expectedArgumentAccuracy, 0.9166666667);
+  assert.equal(qualificationLabel(selected), "Tool calling");
+});
+
 test("prefers RAG evidence when a model carries both", () => {
   const both = {
     ragQualifications: [{ qualified: true, useCaseTier: "GUARDED_RAG" }],

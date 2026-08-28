@@ -561,6 +561,21 @@ fun CatalogToolQualification.siteMetadata(
     qualifications: CatalogToolQualifications,
 ): Map<String, Any?> =
     raw +
+        mapOf(
+            "workload" to workload,
+            "promptTemplate" to promptTemplate,
+            "verdict" to verdict,
+            "qualified" to qualified,
+            "attempts" to attempts,
+            "passed" to passed,
+            "structuredOutputRate" to structuredOutputRate,
+            "toolSelectionExactRate" to toolSelectionExactRate,
+            "schemaValidityRate" to schemaValidityRate,
+            "declaredArgumentsOnlyRate" to declaredArgumentsOnlyRate,
+            "expectedArgumentAccuracy" to expectedArgumentAccuracy,
+            "refusalAccuracy" to refusalAccuracy,
+            "p95EndToEndMillis" to p95EndToEndMillis,
+        ) +
         ("reportUri" to
             "https://github.com/integrallis/models/blob/" +
             "${qualifications.reportRevision}/$reportPath") +

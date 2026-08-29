@@ -100,8 +100,10 @@ jobs:
           test -n "$short_name"
           "$binary" show "$short_name"
           "$binary" coordinates "$short_name" --tool gradle-kotlin
-          "$binary" run --help
-          "$binary" embed --help
+          demo_file="${RUNNER_TEMP}/modeljars-demo.java"
+          "$binary" demo "$short_name" --output-file "$demo_file"
+          test -s "$demo_file"
+          grep -F 'ModelJars.openRuntime(MODEL)' "$demo_file"
           MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \
             "$binary" alias set favorite "$short_name"
           MODELJARS_ALIASES_FILE="${RUNNER_TEMP}/modeljars-aliases.properties" \

@@ -36,8 +36,10 @@ class ModelArgumentCompleterTest {
 
     List<String> pull = complete(completer, "pull qw");
     List<String> show = complete(completer, "show ");
+    List<String> demo = complete(completer, "demo qw");
 
     assertEquals(List.of("qwen", "qwen3_0_6b_q4_0"), pull);
+    assertEquals(List.of("qwen", "qwen3_0_6b_q4_0"), demo);
     assertTrue(show.contains("qwen"));
     assertTrue(show.contains("embeddinggemma_300m_q8_0"));
   }

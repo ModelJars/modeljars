@@ -37,6 +37,8 @@ final class ModelArgumentCompleter implements Completer {
           "remove",
           "rm",
           "delete",
+          "demo",
+          "script",
           "run",
           "chat",
           "embed",

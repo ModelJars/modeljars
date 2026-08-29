@@ -157,7 +157,8 @@
               coordinates, and downloads verified weights into the same cache used by the JVM
               Runtime. It checks the published catalog hash on catalog-backed commands, atomically
               activates changed metadata, and keeps the last verified catalog available offline.
-              Chat and embedding commands execute the same in-process Java APIs applications use.
+              Generated chat, embedding, and tool demos execute the same in-process Java APIs
+              applications use.
             </p>
           </div>
           <div class="guide-body">
@@ -200,12 +201,15 @@ modeljars list</code></pre>
               <article>
                 <div class="guide-step-heading">
                   <span class="step-number">04</span>
-                  <h3>Run the Java model APIs locally</h3>
+                  <h3>Generate and run a Java demo</h3>
                 </div>
-                <pre><code class="language-bash hljs" data-lang="bash">modeljars run qwen-0.6b "Name one JVM language other than Java."
-modeljars embed embeddinggemma "Public transit schedule"
+                <pre><code class="language-bash hljs" data-lang="bash">modeljars demo qwen-0.6b "What is the capital of France? Reply with only the city name."
+jbang qwen3-0-6b-chat-demo.java
 
-# Each interaction reports latency, token, and throughput metrics
+modeljars demo embeddinggemma "Public transit schedule"
+jbang ggml-org-embeddinggemma-300m-embedding-demo.java
+
+# Generated demos use the same public Java APIs as your application
 modeljars info
 modeljars snippet gemma-26b --tool maven
 

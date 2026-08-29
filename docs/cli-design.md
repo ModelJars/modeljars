@@ -1,9 +1,9 @@
 # ModelJars CLI design
 
 The CLI covers model discovery, dependencies, provenance, cache management, host capabilities, and
-small local interactions. Its `run` and `embed` commands call the same in-process ModelJars and
-Models APIs as an application. They do not introduce a second inference implementation or delegate
-to an external model server.
+generation of small executable examples. `demo` writes Java 25 JBang source that calls the same
+in-process ModelJars and Models APIs as an application. It does not introduce a second inference
+implementation or delegate to an external model server.
 
 ## Product precedents
 
@@ -25,7 +25,7 @@ to an external model server.
   output as an explicit automation surface rather than asking scripts to scrape decorative tables.
 
 This leads to the ModelJars surface: `search/available/models`, `list/ls`, `show/inspect`, `pull`,
-`remove/rm/delete`, `alias/nickname`, `run/chat`, `embed/embedding`,
+`remove/rm/delete`, `alias/nickname`, `demo/script/run/chat/embed/embedding`,
 `snippet/coordinates/coords/dependency/deps`, `info/system/env`, `cache-dir`, and `version`. The
 snippet command generates dependency declarations; the CLI deliberately does not expose a
 shell-script generator under the ambiguous name `generate-completion`.
@@ -68,11 +68,10 @@ Windows output.
   the Java `backend-apple` runtime remains responsible for checking Apple Intelligence and model
   availability.
 - Cache removal requires an exact alias, source ID, or coordinate and refuses symbolic links.
-- `run` renders conversation history with the qualified chat template and streams the Models
-  `InferencePipeline`; `embed` calls the qualified embedding runtime. Both use the shared verified
-  cache and reject models that lack the corresponding qualification.
-- Chat metrics distinguish model load time, TTFT, total generation time, exact input/output token
-  counts, and decode throughput. TTFT ends at the first emitted token; throughput uses the remaining
-  token intervals, avoiding an inflated rate that counts the first token twice. Embedding metrics
-  report load and execution time, vector width, and norm. Human, plain, and JSON output carry the
-  same measurements.
+- `demo` selects chat, embedding, or tool-calling source from catalog capabilities and pins the
+  exact marker coordinate. Generated chat and tool programs render the qualified template and use
+  the Models `InferencePipeline`; embedding programs call the qualified embedding runtime.
+- Runtime-owned chat metrics distinguish tokenization, prompt preparation, prefill, TTFT, decode,
+  token counts, and decode throughput. Embedding examples report load and execution time, vector
+  width, and the complete vector. Tool examples execute parsed calls against deterministic
+  in-memory state.

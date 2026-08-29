@@ -2438,6 +2438,8 @@ project(":modeljars") {
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
         testImplementation(project(":modeljars-catalog"))
+        testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
+        testImplementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
     }
 
     extensions.configure<SourceSetContainer> {

@@ -31,13 +31,11 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.modeljars.ModelArtifactFile;
@@ -119,10 +117,45 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void generatesAJBangDemoWithoutOverwritingAnExistingFileUnlessRequested() throws Exception {
+    ModelJarDescriptor descriptor = descriptor();
+    Path script = temporaryDirectory.resolve("model-demo.java");
+    ModelJarsCli cli = cli(descriptor);
+
+    Result generated =
+        run(
+            cli,
+            "demo",
+            descriptor.alias(),
+            "Name one JVM language.",
+            "--output-file",
+            script.toString());
+    String initialSource = Files.readString(script);
+    Result protectedFile = run(cli, "demo", descriptor.alias(), "--output-file", script.toString());
+    Result replaced =
+        run(
+            cli,
+            "demo",
+            descriptor.alias(),
+            "A different prompt",
+            "--output-file",
+            script.toString(),
+            "--force");
+
+    assertEquals(0, generated.status());
+    assertTrue(generated.output().contains("jbang '" + script.toAbsolutePath() + "'"));
+    assertTrue(initialSource.contains("Name one JVM language."));
+    assertEquals(2, protectedFile.status());
+    assertTrue(protectedFile.error().contains("already exists"));
+    assertEquals(0, replaced.status());
+    assertTrue(Files.readString(script).contains("A different prompt"));
+  }
+
+  @Test
   void createsUsesListsAndRemovesPersistentCustomAliases() {
     ModelJarDescriptor descriptor = descriptor();
     ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
-    ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
+    ModelJarsCli cli = cli(aliases, descriptor);
 
     Result created = run(cli, "alias", "set", "demo", descriptor.alias());
     Result shown = run(cli, "show", "demo");
@@ -144,7 +177,7 @@ class ModelJarsCliTest {
   void generatesAndResolvesTheCatalogShortNameWithoutUserConfiguration() {
     ModelJarDescriptor descriptor = descriptor();
     ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
-    ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
+    ModelJarsCli cli = cli(aliases, descriptor);
 
     Result shown = run(cli, "show", "example");
 
@@ -160,165 +193,12 @@ class ModelJarsCliTest {
     ModelJarDescriptor descriptor = descriptor();
     ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
     aliases.set("example", "missing_model", Set.of());
-    ModelJarsCli cli = cli(aliases, ModelInteractions.unavailable(), descriptor);
+    ModelJarsCli cli = cli(aliases, descriptor);
 
     Result shown = run(cli, "show", "example");
 
     assertEquals(0, shown.status());
     assertTrue(shown.output().contains(descriptor.alias()));
-  }
-
-  @Test
-  void runsQualifiedChatAndReportsInteractionMetrics() {
-    ModelJarDescriptor descriptor = descriptor();
-    AtomicReference<List<ModelInteractions.ChatTurn>> messages = new AtomicReference<>();
-    ModelInteractions interactions =
-        new ModelInteractions() {
-          @Override
-          public ChatSession openChat(ModelJarDescriptor selected, Path cacheDirectory) {
-            assertEquals(descriptor, selected);
-            return new ChatSession() {
-              @Override
-              public ChatResult generate(
-                  List<ChatTurn> history, ChatOptions options, Consumer<String> tokens) {
-                messages.set(history);
-                tokens.accept("Kotlin");
-                return new ChatResult("Kotlin", new ChatMetrics(125, 42, 242, 9, 1, 5.0));
-              }
-
-              @Override
-              public void close() {}
-            };
-          }
-
-          @Override
-          public EmbeddingResult embed(
-              ModelJarDescriptor selected, Path cacheDirectory, String text) {
-            throw new AssertionError("embedding was not expected");
-          }
-        };
-    ModelJarsCli cli =
-        cli(
-            new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
-            interactions,
-            descriptor);
-
-    Result result = run(cli, "run", descriptor.alias(), "Name one JVM language.");
-
-    assertEquals(0, result.status());
-    assertEquals(
-        List.of("Name one JVM language."),
-        messages.get().stream().map(ModelInteractions.ChatTurn::text).toList());
-    assertTrue(result.output().contains("Kotlin"));
-    assertTrue(result.output().contains("TTFT"));
-    assertTrue(result.output().contains("42 ms"));
-    assertTrue(result.output().contains("Prompt tokens"));
-    assertTrue(result.output().contains("5.0 tok/s"));
-  }
-
-  @Test
-  void runsMultiTurnChatAndClearsBothHistoryAndModelContext() {
-    ModelJarDescriptor descriptor = descriptor();
-    List<List<ModelInteractions.ChatTurn>> requests = new ArrayList<>();
-    int[] clears = {0};
-    ModelInteractions interactions =
-        new ModelInteractions() {
-          @Override
-          public ChatSession openChat(ModelJarDescriptor selected, Path cacheDirectory) {
-            return new ChatSession() {
-              @Override
-              public ChatResult generate(
-                  List<ChatTurn> history, ChatOptions options, Consumer<String> tokens) {
-                requests.add(List.copyOf(history));
-                String response = "answer-" + requests.size();
-                tokens.accept(response);
-                return new ChatResult(response, new ChatMetrics(10, 2, 4, 3, 1, 500.0));
-              }
-
-              @Override
-              public void clear() {
-                clears[0]++;
-              }
-
-              @Override
-              public void close() {}
-            };
-          }
-
-          @Override
-          public EmbeddingResult embed(
-              ModelJarDescriptor selected, Path cacheDirectory, String text) {
-            throw new AssertionError("embedding was not expected");
-          }
-        };
-    ModelJarsCli cli =
-        cli(
-            new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
-            interactions,
-            descriptor);
-    String input =
-        String.join(System.lineSeparator(), "first", "second", "/clear", "third", "/bye", "");
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-
-    int status =
-        cli.launch(
-            new String[] {"run", descriptor.alias()},
-            new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
-            new PrintStream(output, true, StandardCharsets.UTF_8),
-            new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8),
-            false,
-            temporaryDirectory.resolve("history"));
-
-    assertEquals(0, status);
-    assertEquals(3, requests.size());
-    assertEquals(
-        List.of("first"), requests.get(0).stream().map(ModelInteractions.ChatTurn::text).toList());
-    assertEquals(
-        List.of("first", "answer-1", "second"),
-        requests.get(1).stream().map(ModelInteractions.ChatTurn::text).toList());
-    assertEquals(
-        List.of("third"), requests.get(2).stream().map(ModelInteractions.ChatTurn::text).toList());
-    assertEquals(1, clears[0]);
-    assertTrue(output.toString(StandardCharsets.UTF_8).contains("Conversation cleared"));
-  }
-
-  @Test
-  void embedsTextAndPrintsTheVectorAndMetrics() {
-    ModelJarDescriptor embedding = embeddingDescriptor();
-    ModelInteractions interactions =
-        new ModelInteractions() {
-          @Override
-          public ChatSession openChat(ModelJarDescriptor selected, Path cacheDirectory) {
-            throw new AssertionError("chat was not expected");
-          }
-
-          @Override
-          public EmbeddingResult embed(
-              ModelJarDescriptor selected, Path cacheDirectory, String text) {
-            assertEquals("Public transit schedule", text);
-            return new EmbeddingResult(new float[] {0.25f, -0.5f, 0.75f}, 80, 12, 0.935414);
-          }
-        };
-    ModelJarsCli cli =
-        cli(
-            new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
-            interactions,
-            embedding);
-
-    Result result = run(cli, "embed", embedding.alias(), "Public transit schedule");
-    Result json =
-        run(cli, "embed", embedding.alias(), "Public transit schedule", "--output", "json");
-
-    assertEquals(0, result.status());
-    assertTrue(result.output().contains("Public transit schedule"));
-    assertTrue(result.output().contains("[0.25, -0.5, 0.75]"));
-    assertTrue(result.output().contains("Dimensions"));
-    assertTrue(result.output().contains("3"));
-    assertTrue(result.output().contains("Embedding time"));
-    assertEquals(0, json.status());
-    assertTrue(json.output().contains("\"vector\""));
-    assertTrue(json.output().contains("\"dimensions\": 3"));
-    assertTrue(json.output().contains("\"embeddingMillis\": 12"));
   }
 
   @Test
@@ -793,8 +673,7 @@ class ModelJarsCliTest {
         (selected, destination, progress) -> destination);
   }
 
-  private static ModelJarsCli cli(
-      ModelAliasStore aliases, ModelInteractions interactions, ModelJarDescriptor... descriptors) {
+  private static ModelJarsCli cli(ModelAliasStore aliases, ModelJarDescriptor... descriptors) {
     return new ModelJarsCli(
         ModelJarRegistry.of(List.of(descriptors)),
         (selected, destination, progress) -> destination,
@@ -803,8 +682,7 @@ class ModelJarsCliTest {
           throw new UnsupportedOperationException();
         },
         Clock.systemUTC(),
-        aliases,
-        interactions);
+        aliases);
   }
 
   private static Result run(ModelJarsCli cli, String... arguments) {
@@ -919,48 +797,6 @@ class ModelJarsCliTest {
         source.licenseUri(),
         source.domains(),
         source.dimensions());
-  }
-
-  private static ModelJarDescriptor embeddingDescriptor() {
-    ModelJarDescriptor source = descriptor("embedding_example_q8_0", "Q8_0");
-    return new ModelJarDescriptor(
-        source.alias(),
-        source.sourceId(),
-        source.markerCoordinate(),
-        source.modelVersion(),
-        source.variant(),
-        source.format(),
-        source.architecture(),
-        source.quantization(),
-        source.localPath(),
-        source.classpathResource(),
-        source.sourceUri(),
-        source.downloadUri(),
-        source.revision(),
-        source.sha256(),
-        source.sizeBytes(),
-        source.license(),
-        Set.of("embeddings", "text-embedding"),
-        source.features(),
-        source.files(),
-        source.backendSupport(),
-        Optional.of("Embedding example"),
-        source.description(),
-        source.licenseUri(),
-        source.domains(),
-        new ModelDimensions(
-            source.dimensions().parameterCount(),
-            source.dimensions().contextLength(),
-            source.dimensions().embeddingLength(),
-            source.dimensions().blockCount(),
-            source.dimensions().attentionHeadCount(),
-            source.dimensions().keyValueHeadCount(),
-            source.dimensions().feedForwardLength(),
-            source.dimensions().expertCount(),
-            source.dimensions().expertUsedCount(),
-            source.dimensions().keyLength(),
-            source.dimensions().valueLength(),
-            source.dimensions().attentionBlockCount()));
   }
 
   private static SystemCapabilities.Snapshot snapshot() {

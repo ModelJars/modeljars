@@ -15,10 +15,8 @@
  */
 package org.modeljars.cli;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -75,10 +73,10 @@ import picocli.CommandLine.ScopeType;
 import picocli.CommandLine.Spec;
 import picocli.shell.jline3.PicocliJLineCompleter;
 
-/** Standalone command line interface for discovering, caching, and trying qualified ModelJars. */
+/** Standalone command line interface for discovering, caching, and demonstrating ModelJars. */
 @Command(
     name = "modeljars",
-    description = "Discover, inspect, cache, and run qualified ModelJars.",
+    description = "Discover, inspect, cache, and generate Java demos for qualified ModelJars.",
     mixinStandardHelpOptions = true,
     versionProvider = ModelJarsCli.VersionProvider.class,
     sortOptions = false,
@@ -89,8 +87,7 @@ import picocli.shell.jline3.PicocliJLineCompleter;
       ModelJarsCli.PullCommand.class,
       ModelJarsCli.RemoveCommand.class,
       ModelJarsCli.AliasCommand.class,
-      ModelJarsCli.RunCommand.class,
-      ModelJarsCli.EmbedCommand.class,
+      ModelJarsCli.DemoCommand.class,
       ModelJarsCli.CoordinatesCommand.class,
       ModelJarsCli.ContributeCommand.class,
       ModelJarsCli.InfoCommand.class,
@@ -129,7 +126,6 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final Clock clock;
   private final Map<String, String> generatedAliases;
   private final ModelAliasStore aliases;
-  private final ModelInteractions interactions;
 
   @Spec private CommandSpec commandSpec;
 
@@ -213,14 +209,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       SystemCapabilities.Probe systemProbe,
       ContributionService contributionService,
       Clock clock) {
-    this(
-        registry,
-        installer,
-        systemProbe,
-        contributionService,
-        clock,
-        ModelAliasStore.defaults(),
-        new DefaultModelInteractions());
+    this(registry, installer, systemProbe, contributionService, clock, ModelAliasStore.defaults());
   }
 
   ModelJarsCli(
@@ -229,8 +218,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       SystemCapabilities.Probe systemProbe,
       ContributionService contributionService,
       Clock clock,
-      ModelAliasStore aliases,
-      ModelInteractions interactions) {
+      ModelAliasStore aliases) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
@@ -238,7 +226,6 @@ public final class ModelJarsCli implements Callable<Integer> {
     this.clock = Objects.requireNonNull(clock, "clock");
     this.generatedAliases = GeneratedModelAliases.from(registry.descriptors());
     this.aliases = Objects.requireNonNull(aliases, "aliases");
-    this.interactions = Objects.requireNonNull(interactions, "interactions");
   }
 
   /**
@@ -712,62 +699,6 @@ public final class ModelJarsCli implements Callable<Integer> {
         .map(value -> value.equals("text-generation") ? "generation" : value)
         .reduce((left, right) -> left + ", " + right)
         .orElse("unknown");
-  }
-
-  private static void requireCapability(
-      ModelJarDescriptor descriptor, Set<String> accepted, String operation) {
-    if (descriptor.capabilities().stream().noneMatch(accepted::contains)) {
-      throw new IllegalArgumentException(
-          descriptor.alias() + " is not qualified for " + operation + " interactions");
-    }
-  }
-
-  private static Map<String, Object> chatMetricsMap(ModelInteractions.ChatMetrics metrics) {
-    Map<String, Object> values = new LinkedHashMap<>();
-    values.put("loadMillis", metrics.loadMillis());
-    values.put("ttftMillis", metrics.ttftMillis());
-    values.put("generationMillis", metrics.generationMillis());
-    values.put("promptTokens", metrics.promptTokens());
-    values.put("completionTokens", metrics.completionTokens());
-    values.put("tokensPerSecond", metrics.tokensPerSecond());
-    return values;
-  }
-
-  private static Map<String, Object> chatMetricsHuman(ModelInteractions.ChatMetrics metrics) {
-    Map<String, Object> values = new LinkedHashMap<>();
-    values.put("Load time", formatMillis(metrics.loadMillis()));
-    values.put("TTFT", formatMillis(metrics.ttftMillis()));
-    values.put("Generation time", formatMillis(metrics.generationMillis()));
-    values.put("Prompt tokens", metrics.promptTokens());
-    values.put("Completion tokens", metrics.completionTokens());
-    values.put("Throughput", String.format(Locale.ROOT, "%.1f tok/s", metrics.tokensPerSecond()));
-    return values;
-  }
-
-  private static Map<String, Object> embeddingMetricsMap(ModelInteractions.EmbeddingResult result) {
-    Map<String, Object> values = new LinkedHashMap<>();
-    values.put("loadMillis", result.loadMillis());
-    values.put("embeddingMillis", result.embeddingMillis());
-    values.put("dimensions", result.vector().length);
-    values.put("vectorNorm", result.vectorNorm());
-    return values;
-  }
-
-  private static Map<String, Object> embeddingMetricsHuman(
-      ModelInteractions.EmbeddingResult result) {
-    Map<String, Object> values = new LinkedHashMap<>();
-    values.put("Load time", formatMillis(result.loadMillis()));
-    values.put("Embedding time", formatMillis(result.embeddingMillis()));
-    values.put("Dimensions", result.vector().length);
-    values.put("Vector norm", String.format(Locale.ROOT, "%.6f", result.vectorNorm()));
-    return values;
-  }
-
-  private static String formatMillis(long millis) {
-    if (millis < 1_000) {
-      return millis + " ms";
-    }
-    return String.format(Locale.ROOT, "%.2f s", millis / 1_000.0);
   }
 
   private static String backends(ModelJarDescriptor descriptor) {
@@ -1708,16 +1639,17 @@ public final class ModelJarsCli implements Callable<Integer> {
   }
 
   @Command(
-      name = "run",
-      aliases = "chat",
-      description = "Run a qualified chat model locally through the ModelJars Java API.",
+      name = "demo",
+      aliases = {"script", "run", "chat", "embed", "embedding"},
+      description = "Generate a JBang demo that exercises a model through its public Java API.",
       footer = {
         "Examples:",
-        "  modeljars run qwen 'Name one JVM language.'",
-        "  modeljars run qwen"
+        "  modeljars demo qwen-0.6b",
+        "  modeljars demo embeddinggemma 'Public transit schedule'",
+        "  jbang qwen3-0-6b-chat-demo.java"
       },
       mixinStandardHelpOptions = true)
-  static final class RunCommand implements Callable<Integer> {
+  static final class DemoCommand implements Callable<Integer> {
     @ParentCommand private ModelJarsCli parent;
 
     @Parameters(
@@ -1729,197 +1661,89 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Parameters(
         index = "1..*",
         arity = "0..*",
-        paramLabel = "PROMPT",
-        description = "Prompt text; omit for an interactive chat.")
-    private List<String> prompt = List.of();
+        paramLabel = "INPUT",
+        description = "Optional default prompt or text embedded in the generated demo.")
+    private List<String> input = List.of();
 
-    @Option(names = "--max-tokens", defaultValue = "128", description = "Maximum output tokens.")
-    private int maxTokens;
+    @Option(
+        names = "--output-file",
+        paramLabel = "FILE",
+        description = "Write to FILE instead of the generated name.")
+    private Path outputFile;
 
-    @Option(names = "--temperature", defaultValue = "0", description = "Sampling temperature.")
-    private float temperature;
-
-    @Option(names = "--seed", description = "Deterministic sampling seed.")
-    private Long seed;
+    @Option(names = "--force", description = "Replace an existing regular file.")
+    private boolean force;
 
     @Override
     public Integer call() throws IOException {
       ModelJarDescriptor descriptor = parent.resolve(selector);
-      requireCapability(
-          descriptor, Set.of("chat", "generation", "text-generation", "tool-calling"), "chat");
-      ModelInteractions.ChatOptions options =
-          new ModelInteractions.ChatOptions(maxTokens, temperature, seed);
-      try (ModelInteractions.ChatSession session =
-          parent.interactions.openChat(descriptor, parent.cacheDirectory())) {
-        if (prompt.isEmpty()) {
-          return interactive(session, descriptor, options);
-        }
-        String text = String.join(" ", prompt).strip();
-        ModelInteractions.ChatResult result =
-            generate(
-                session,
-                List.of(new ModelInteractions.ChatTurn(ModelInteractions.Role.USER, text)),
-                options,
-                text);
-        render(result, text, descriptor, false);
-        return 0;
-      }
-    }
+      Optional<String> requestedInput =
+          input.isEmpty() ? Optional.empty() : Optional.of(String.join(" ", input).strip());
+      DemoScriptGenerator.GeneratedDemo demo =
+          new DemoScriptGenerator(version()).generate(descriptor, requestedInput);
+      Path destination =
+          (outputFile == null ? Path.of(demo.fileName()) : outputFile).toAbsolutePath().normalize();
+      write(destination, demo.source());
 
-    private int interactive(
-        ModelInteractions.ChatSession session,
-        ModelJarDescriptor descriptor,
-        ModelInteractions.ChatOptions options)
-        throws IOException {
-      if (parent.out().format() != CliOutput.Format.TABLE) {
-        throw new IllegalArgumentException("Interactive chat requires table output");
-      }
-      List<ModelInteractions.ChatTurn> history = new ArrayList<>();
-      LineReader reader =
-          parent.activeTerminal == null
-              ? null
-              : LineReaderBuilder.builder()
-                  .terminal(parent.activeTerminal)
-                  .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                  .build();
-      BufferedReader buffered =
-          reader == null
-              ? new BufferedReader(new InputStreamReader(parent.input, StandardCharsets.UTF_8))
-              : null;
-      parent.out().hint("Chatting with " + descriptor.alias() + " · /clear resets · /bye exits");
-      while (true) {
-        String line;
-        try {
-          line = reader == null ? buffered.readLine() : reader.readLine(">>> ");
-        } catch (EndOfFileException ignored) {
-          return 0;
-        }
-        if (line == null || line.strip().equalsIgnoreCase("/bye")) {
-          return 0;
-        }
-        String text = line.strip();
-        if (text.isEmpty()) {
-          continue;
-        }
-        if (text.equalsIgnoreCase("/clear")) {
-          history.clear();
-          session.clear();
-          parent.out().hint("Conversation cleared.");
-          continue;
-        }
-        history.add(new ModelInteractions.ChatTurn(ModelInteractions.Role.USER, text));
-        ModelInteractions.ChatResult result = generate(session, history, options, text);
-        render(result, text, descriptor, true);
-        if (!result.text().isBlank()) {
-          history.add(
-              new ModelInteractions.ChatTurn(ModelInteractions.Role.ASSISTANT, result.text()));
-        }
-      }
-    }
-
-    private ModelInteractions.ChatResult generate(
-        ModelInteractions.ChatSession session,
-        List<ModelInteractions.ChatTurn> history,
-        ModelInteractions.ChatOptions options,
-        String promptText) {
-      CliOutput out = parent.out();
-      boolean stream = out.format() == CliOutput.Format.TABLE;
-      if (stream) {
-        out.section("Prompt");
-        out.line(promptText);
-        out.section("Response");
-      }
-      ModelInteractions.ChatResult result =
-          session.generate(history, options, stream ? parent.output::print : ignored -> {});
-      if (stream) {
-        parent.output.println();
-      }
-      return result;
-    }
-
-    private void render(
-        ModelInteractions.ChatResult result,
-        String promptText,
-        ModelJarDescriptor descriptor,
-        boolean interactive) {
       CliOutput out = parent.out();
       if (out.format() == CliOutput.Format.JSON) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("model", descriptor.alias());
-        value.put("prompt", promptText);
-        value.put("response", result.text());
-        value.put("metrics", chatMetricsMap(result.metrics()));
-        out.json(value);
+        out.json(
+            Map.of(
+                "model", descriptor.alias(),
+                "type", demo.type().toString().toLowerCase(Locale.ROOT),
+                "file", destination.toString(),
+                "command", "jbang " + destination));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("model=" + descriptor.alias());
-        out.line("prompt=" + promptText.replace("\n", "\\n"));
-        out.line("response=" + result.text().replace("\n", "\\n"));
-        chatMetricsMap(result.metrics())
-            .forEach((key, value) -> out.line(key + "=" + Objects.toString(value)));
+        out.line("type=" + demo.type().toString().toLowerCase(Locale.ROOT));
+        out.line("file=" + destination);
+        out.line("command=jbang " + destination);
       } else {
-        out.section("Metrics");
-        out.properties(chatMetricsHuman(result.metrics()));
-        if (!interactive) {
-          out.hint("Executed locally through ModelJars and Models; no external inference server.");
-        }
-      }
-    }
-  }
-
-  @Command(
-      name = "embed",
-      aliases = "embedding",
-      description = "Create an embedding locally through the ModelJars Java API.",
-      footer = "Example: modeljars embed embeddinggemma 'Public transit schedule'",
-      mixinStandardHelpOptions = true)
-  static final class EmbedCommand implements Callable<Integer> {
-    @ParentCommand private ModelJarsCli parent;
-
-    @Parameters(
-        index = "0",
-        paramLabel = "MODEL",
-        description = "Short name, catalog ID, or custom alias.")
-    private String selector;
-
-    @Parameters(index = "1..*", arity = "1..*", paramLabel = "TEXT", description = "Text to embed.")
-    private List<String> text;
-
-    @Override
-    public Integer call() {
-      ModelJarDescriptor descriptor = parent.resolve(selector);
-      requireCapability(
-          descriptor, Set.of("embedding", "embeddings", "text-embedding"), "embedding");
-      String inputText = String.join(" ", text).strip();
-      ModelInteractions.EmbeddingResult result =
-          parent.interactions.embed(descriptor, parent.cacheDirectory(), inputText);
-      List<Float> vector = new ArrayList<>(result.vector().length);
-      for (float value : result.vector()) {
-        vector.add(value);
-      }
-      CliOutput out = parent.out();
-      if (out.format() == CliOutput.Format.JSON) {
-        Map<String, Object> value = new LinkedHashMap<>();
-        value.put("model", descriptor.alias());
-        value.put("text", inputText);
-        value.put("vector", vector);
-        value.put("metrics", embeddingMetricsMap(result));
-        out.json(value);
-      } else if (out.format() == CliOutput.Format.PLAIN) {
-        out.line("model=" + descriptor.alias());
-        out.line("text=" + inputText.replace("\n", "\\n"));
-        out.line("vector=" + vector);
-        embeddingMetricsMap(result)
-            .forEach((key, value) -> out.line(key + "=" + Objects.toString(value)));
-      } else {
-        out.section("Input");
-        out.line(inputText);
-        out.section("Embedding");
-        out.line(vector.toString());
-        out.section("Metrics");
-        out.properties(embeddingMetricsHuman(result));
-        out.hint("Executed locally through ModelJars and Models; no external inference server.");
+        out.success("Generated " + demo.type().toString().toLowerCase(Locale.ROOT) + " demo");
+        Map<String, Object> properties = new LinkedHashMap<>();
+        properties.put("Model", parent.shortName(descriptor));
+        properties.put("File", destination);
+        out.properties(properties);
+        out.hint("Run: jbang " + shellQuote(destination.toString()));
       }
       return 0;
+    }
+
+    private void write(Path destination, String source) throws IOException {
+      Path parentDirectory = destination.getParent();
+      if (parentDirectory == null || !Files.isDirectory(parentDirectory)) {
+        throw new IllegalArgumentException("Output directory does not exist: " + parentDirectory);
+      }
+      if (Files.isSymbolicLink(destination)) {
+        throw new IllegalArgumentException("Refusing to replace a symbolic link: " + destination);
+      }
+      if (Files.exists(destination) && !force) {
+        throw new IllegalArgumentException(
+            "Output file already exists; pass --force to replace it: " + destination);
+      }
+      if (Files.exists(destination) && !Files.isRegularFile(destination)) {
+        throw new IllegalArgumentException("Output path is not a regular file: " + destination);
+      }
+      if (force) {
+        Files.writeString(
+            destination,
+            source,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING,
+            StandardOpenOption.WRITE);
+      } else {
+        Files.writeString(
+            destination,
+            source,
+            StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE_NEW,
+            StandardOpenOption.WRITE);
+      }
+    }
+
+    private static String shellQuote(String value) {
+      return "'" + value.replace("'", "'\"'\"'") + "'";
     }
   }
 

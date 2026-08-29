@@ -70,8 +70,8 @@ modeljars search gemma --details
 modeljars alias list
 modeljars show gemma-26b
 modeljars pull qwen-0.6b
-modeljars run qwen-0.6b "Name one JVM language other than Java."
-modeljars embed embeddinggemma "Public transit schedule"
+modeljars demo qwen-0.6b "What is the capital of France? Reply with only the city name."
+modeljars demo embeddinggemma "Public transit schedule"
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -120,15 +120,14 @@ for every model-taking command. Create a persistent custom alias with
 `modeljars alias set <name> <model>` and remove it with `modeljars alias rm <name>`. A custom alias
 cannot replace a generated short name or qualified catalog ID.
 
-`modeljars run <model> [prompt]` and `modeljars embed <model> <text>` execute the same in-process
-ModelJars and Models APIs used by Java applications—there is no Ollama, llama.cpp, or remote
-inference server behind these commands. Omitting the prompt from `run` starts a multi-turn chat;
-`/clear` resets its context and `/bye` exits. Chat output reports model load time, time to first
-token (TTFT), total generation time, exact prompt/completion token counts, and decode throughput.
-TTFT runs from generation start to the first emitted token; throughput measures the token intervals
-after that first token, so a one-token completion has no measurable decode rate and reports zero.
-Embedding output includes the complete vector plus load time, embedding time, dimensions, and
-vector norm. JSON and plain output expose the same measurements for scripts.
+`modeljars demo <model> [input]` writes a small, editable Java 25 JBang program for the model's
+qualified capability. Embedding demos print the input, full vector, dimensions, and load/execution
+times. Chat demos render the qualified template and report runtime-owned tokenization, prompt
+preparation, prefill, TTFT, decode, and token-count measurements. Tool-calling models generate a
+complete in-memory smart-home example that declares tools, constrains decoding, parses calls, and
+executes them. Run the printed `jbang <file>` command; inference then follows the same public
+ModelJars and Models APIs used by an application, with no external model server. `script`, `run`,
+`chat`, `embed`, and `embedding` are aliases for `demo`.
 
 Before catalog-backed commands run, the CLI compares the SHA-256 published at
 `https://modeljars.org/catalog/registry.properties.sha256` with its local qualified catalog. A
@@ -174,8 +173,9 @@ JAR contributes its own descriptor, qualification evidence, performance profiles
 Java reference. The runtime also carries the current qualification decisions so corrected evidence
 or a revocation supersedes older marker metadata on the classpath. It does not add the aggregate
 model catalog. Applications using the JVM Runtime require Java 25 or newer. `modeljars-core` remains
-usable by Java 21 registry and build tooling; the executable CLI JAR now requires Java 25 because it
-includes the same Models runtime used by `run` and `embed`.
+usable by Java 21 registry and build tooling; the executable CLI JAR is compiled for Java 25. The
+native CLI contains catalog, download, verification, and demo-generation code, but not a second
+copy of the Models inference runtime.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to

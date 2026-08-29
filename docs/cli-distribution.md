@@ -1,9 +1,9 @@
 # ModelJars CLI distribution
 
-The `modeljars` CLI is compiled with GraalVM Native Image and requires no Java installation at
-runtime. Alongside catalog, provenance, download, verification, and cache management, it can invoke
-the Java-native Models runtime directly for qualified chat and embedding models. These interaction
-commands use the same API path as a Java 25 application and do not call an external model server.
+The `modeljars` CLI is compiled with GraalVM Native Image and requires no Java installation for
+catalog, provenance, download, verification, and cache management. Model execution is demonstrated
+with generated Java 25 JBang programs. This keeps inference on the same JVM and public APIs an
+application uses without embedding a second execution environment in the native CLI.
 
 ## User commands
 
@@ -19,8 +19,7 @@ modeljars list [--coordinates] [--details]
 modeljars alias list
 modeljars alias set <custom-name> <model>
 modeljars alias rm <custom-name>
-modeljars run <model> [prompt] [--max-tokens <count>] [--temperature <value>] [--seed <value>]
-modeljars embed <model> <text>
+modeljars demo <model> [input] [--output-file <file>] [--force]
 modeljars snippet <model> [--tool <tool>]
 modeljars contribute <owner/repository> [--file <path>] [--domain <name>]
 modeljars info
@@ -41,7 +40,7 @@ download URLs, upstream revision, byte sizes, SHA-256 digests, license, and dest
 shared content-addressed cache. A GGUF marker commonly has one file; a Safetensors marker can require
 configuration, tokenizer, and one or more weight files. `list` contains complete installed artifacts;
 `pull` and the JVM Runtime verify every declared file again before use. Familiar aliases include
-`available`, `models`, `ls`, `inspect`, `rm`, `delete`, `chat`, `embedding`,
+`available`, `models`, `ls`, `inspect`, `rm`, `delete`, `script`, `run`, `chat`, `embed`, `embedding`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
 
 Every active catalog snapshot generates one short command name per model. The generator uses the
@@ -52,18 +51,19 @@ become more specific if a later model creates a collision; catalog IDs and marke
 change. `alias list` prints automatic and custom mappings.
 
 The interactive prompt tab-completes generated short names, full catalog IDs, and persistent custom
-aliases for `pull`, `show`, `remove`, `run`, `embed`, and coordinate commands. Custom aliases are
+aliases for `pull`, `show`, `remove`, `demo`, and coordinate commands. Custom aliases are
 stored in `~/.modeljars/aliases.properties`, cannot shadow automatic names or catalog IDs, and work
 in one-shot commands as well as the prompt.
 
-`run` renders the qualified chat template, streams generation through the Models pipeline, and
-starts a multi-turn session when no prompt is supplied. `/clear` resets model context and `/bye`
-exits. `embed` prints the complete vector returned by the qualified embedding runtime. Chat metrics
-include model load time, TTFT, generation time, exact prompt/completion token counts, and tokens per
-second. TTFT ends at the first emitted token; decode throughput measures the intervals between the
-remaining tokens and is zero when only one token is generated. Embedding metrics include load time,
-embedding latency, dimensions, and vector norm. The same fields are emitted in human, plain, and
-JSON modes.
+`demo` chooses chat, embedding, or tool calling from the selected descriptor and writes a compact,
+editable source file. The generated program declares the exact ModelJars runtime and marker
+coordinates in JBang directives. It accepts a replacement input from command-line arguments and
+otherwise uses the input embedded by the CLI. Chat and tool demos render the qualified template and
+print runtime-owned phase and token metrics; embedding demos print the complete vector, dimensions,
+and load/execution times. Tool demos declare a small smart-home API, constrain generation to its
+schemas, parse the model's calls, and execute them against in-memory state. Existing files are never
+replaced unless `--force` is explicit. `script`, `run`, `chat`, `embed`, and `embedding` are aliases
+for this generator. Running the result requires JBang and Java 25 or newer.
 
 `pull` uses structured byte-level installer events. A capable terminal receives a continuously
 updated two-line region for both download and SHA-256 verification, including percentage, bytes,

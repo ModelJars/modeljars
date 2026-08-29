@@ -379,6 +379,32 @@ implementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
 implementation("org.springframework.ai:spring-ai-rag:2.0.0")
 ```
 
+When a catalog artifact is qualified for tool calling, pass its descriptor capabilities to the
+adapter. Spring AI's `ChatClient` then executes registered Java callbacks and returns the model's
+follow-up answer on both blocking and streaming paths. An artifact qualified only for chat fails
+clearly before generation instead of silently attempting a tool workflow:
+
+```java
+try (var runtime = ModelJars.openRuntime(MODEL)) {
+    var model = new ModelsSpringAiChatModel(
+        runtime.model(),
+        runtime.descriptor().alias(),
+        runtime.chatTemplate(),
+        SamplingOptions.builder().build(),
+        runtime.descriptor().capabilities());
+
+    String answer = ChatClient.create(model)
+        .prompt()
+        .user("What is the weather in Austin?")
+        .tools(new WeatherTools())
+        .call()
+        .content();
+}
+```
+
+The current Apple Foundation Models bridge does not expose Apple's guided-generation or tool API,
+so registering framework tools with that backend is not yet supported.
+
 Use `GroundedRagPrompt.prepare(...)` to screen retrieved evidence and construct the canonical prompt.
 Place its `instructions()` in the framework system message and its `request()` in the user message,
 then render both with `runtime.chatTemplate()`.

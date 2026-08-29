@@ -80,15 +80,15 @@ value bootstraps the complete accepted catalog. Use `verify` before either publi
 The JVM Runtime release contains these coordinates and transitive dependencies:
 
 ```text
-org.modeljars:modeljars:0.1.22
-  -> org.modeljars:modeljars-core:0.1.22
-  -> com.integrallis:models:0.3.13
-  -> com.integrallis:backend-java:0.3.13
-  -> com.integrallis:backend-native:0.3.13
+org.modeljars:modeljars:0.1.23
+  -> org.modeljars:modeljars-core:0.1.23
+  -> com.integrallis:models:0.3.14
+  -> com.integrallis:backend-java:0.3.14
+  -> com.integrallis:backend-native:0.3.14
 ```
 
 The separate CLI release workflow builds host-native executables with GraalVM on GitHub Actions,
 attaches checksummed assets to the GitHub release, publishes
-`org.modeljars:modeljars-cli:0.1.22` to GitHub Packages, and updates the Integrallis Homebrew tap and
+`org.modeljars:modeljars-cli:0.1.23` to GitHub Packages, and updates the Integrallis Homebrew tap and
 Scoop bucket. The retained SDKMAN workflow is disabled by the `SDKMAN_PUBLISH_ENABLED` repository
 variable until vendor onboarding is approved.

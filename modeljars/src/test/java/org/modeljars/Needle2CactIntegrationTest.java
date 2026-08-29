@@ -25,11 +25,18 @@ import com.integrallis.models.runtime.ToolCallTokenConstraints;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import com.integrallis.models.runtime.chat.ToolCallScanner;
+import com.integrallis.models.spring.ai.ModelsSpringAiChatModel;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.stereotype.Service;
 
 class Needle2CactIntegrationTest {
   private static final String ARTIFACT_PROPERTY = "modeljars.fixtures.needle2Cact";
@@ -94,4 +101,58 @@ class Needle2CactIntegrationTest {
       assertTrue(calls.getFirst().argumentsJson().contains("\"subject\":\"expenses\""));
     }
   }
+
+  @Test
+  void executesTheUsersWeatherToolThroughSpringAiChatClient() {
+    String configured = System.getProperty(ARTIFACT_PROPERTY, "").trim();
+    Assumptions.assumeFalse(configured.isEmpty(), () -> "Set -D" + ARTIFACT_PROPERTY);
+    Path artifact = Path.of(configured).toAbsolutePath().normalize();
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+    ModelJarInstaller installer = new ModelJarInstaller(registry);
+    ModelJars modelJars =
+        new ModelJars(
+            registry,
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> installer.verifyCached(candidate, artifact),
+            ModelJars::loadBackend,
+            Map::of,
+            List::of);
+    WeatherTools weatherTools = new WeatherTools();
+    var defaults = SamplingOptions.builder().build();
+
+    try (var runtime =
+        modelJars.loadRuntime(
+            MODEL, ModelLoadOptions.builder().backend(ModelBackend.JAVA).offline(true).build())) {
+      var model =
+          new ModelsSpringAiChatModel(
+              runtime.model(), runtime.descriptor().alias(), runtime.chatTemplate(), defaults);
+      var chatClient =
+          ChatClient.builder(model)
+              .defaultTools(weatherTools)
+              .defaultAdvisors(SimpleLoggerAdvisor.builder().build())
+              .build();
+
+      var answer = chatClient.prompt().user("What is the weather for 88252?").call().content();
+
+      assertEquals(1, weatherTools.invocations.get());
+      assertTrue(answer.contains("88252"), answer);
+      assertTrue(answer.toLowerCase().contains("raining"), answer);
+      assertTrue(answer.contains("78"), answer);
+    }
+  }
+
+  @Service
+  static final class WeatherTools {
+    private final AtomicInteger invocations = new AtomicInteger();
+
+    @Tool(name = "get-weather-for-zipcode", description = "Gets weather for a given zipcode")
+    Weather getWeatherForZipcode(
+        @ToolParam(description = "The zipcode to get weather for") String zipcode) {
+      invocations.incrementAndGet();
+      return new Weather(zipcode, "Raining cats and dogs", 78);
+    }
+  }
+
+  record Weather(String zipcode, String conditions, int temperature) {}
 }

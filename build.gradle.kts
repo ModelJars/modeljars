@@ -1954,7 +1954,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.22-SNAPSHOT")
+            .orElse("0.1.23-SNAPSHOT")
             .get()
 }
 

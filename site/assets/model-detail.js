@@ -268,12 +268,21 @@ function checkRows(profile) {
     .join("");
 }
 
-function copyBlock(label, value, language = "") {
+function copyBlock(label, value, language) {
+  const languageName = language.replace(/^language-/, "");
   return `
     <div class="code-block">
       <div><span>${escapeHtml(label)}</span><button type="button" data-copy="${escapeHtml(value)}">Copy</button></div>
-      <pre><code class="${escapeHtml(language)}">${escapeHtml(value)}</code></pre>
+      <pre><code class="${escapeHtml(language)} hljs" data-lang="${escapeHtml(languageName)}">${escapeHtml(value)}</code></pre>
     </div>`;
+}
+
+function highlightRenderedCode(root) {
+  const highlighter = globalThis.hljs;
+  if (!highlighter) return;
+  root.querySelectorAll("pre code.hljs[data-lang]").forEach((code) => {
+    highlighter.highlightBlock(code);
+  });
 }
 
 function renderEmbeddingQualification(summary) {
@@ -561,6 +570,7 @@ function renderModel(model, catalog) {
         </div>
       </aside>
     </div>`;
+  highlightRenderedCode(target);
 }
 
 async function loadDetail() {

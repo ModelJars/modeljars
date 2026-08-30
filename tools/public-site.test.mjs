@@ -134,14 +134,14 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(apple, /Apple Foundation Models from Java/);
   assert.match(apple, /not a downloadable ModelJAR/);
   assert.match(apple, /LangChain4J and Spring AI/);
-  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.17/);
+  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.18/);
   assert.match(apple, /AppleFoundationModels\.create/);
   assert.match(apple, /client\.availability/);
   assert.match(
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.25/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.26/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);
@@ -231,6 +231,22 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(styles, /\.guide-steps code\s*\{[^}]*white-space:\s*pre/s);
   assert.match(highlighter, /registerLanguage\("java"/);
   assert.match(highlighter, /registerLanguage\("kotlin"/);
+});
+
+test("highlights code blocks rendered on catalog detail pages", async () => {
+  const [model, detail, highlighter] = await Promise.all([
+    read("site/model.html"),
+    read("site/assets/model-detail.js"),
+    read("site/assets/highlight.js"),
+  ]);
+
+  assert.match(model, /<script src="\/assets\/highlight\.js"><\/script>/);
+  assert.match(detail, /class="\$\{escapeHtml\(language\)\} hljs"/);
+  assert.match(detail, /data-lang="\$\{escapeHtml\(languageName\)\}"/);
+  assert.match(detail, /highlightBlock\(code\)/);
+  assert.match(highlighter, /registerLanguage\("java"/);
+  assert.match(highlighter, /registerLanguage\("kotlin"/);
+  assert.match(highlighter, /registerLanguage\("xml"/);
 });
 
 test("links every primary navigation to the CLI and Java guides", async () => {

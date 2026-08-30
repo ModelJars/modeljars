@@ -17,6 +17,7 @@ test("keeps every local link and asset on every static page resolvable", async (
     "site/benchmarks/index.html",
     "site/apple/index.html",
     "site/contribute/index.html",
+    "site/intro/index.html",
     "site/404.html",
   ];
 
@@ -197,6 +198,37 @@ test("CI builds only the current public Pages task", async () => {
     publicationWorkflow,
     /--qualifications catalog\/qualifications\.json/g,
   );
+});
+
+test("offers a non-blocking video introduction from the catalog", async () => {
+  const [index, intro, videoDrawer, styles] = await Promise.all([
+    read("site/index.html"),
+    read("site/intro/index.html"),
+    read("site/assets/video-drawer.js"),
+    read("site/assets/styles.css"),
+  ]);
+
+  assert.match(index, /src="\/assets\/video-drawer\.js" type="module"/);
+  assert.match(videoDrawer, /id="intro-video-teaser"/);
+  assert.match(videoDrawer, /aria-controls="intro-video-drawer"/);
+  assert.match(videoDrawer, /Watch ModelJars in 3 minutes/);
+
+  assert.match(intro, /<video[^>]+controls/);
+  assert.match(intro, /preload="metadata"/);
+  assert.match(intro, /poster="\/media\/modeljars-intro\.webp"/);
+  assert.match(intro, /src="\/media\/modeljars-intro\.mp4"/);
+  assert.match(intro, /3:06/);
+  assert.match(intro, /Built with .* by/);
+
+  assert.match(videoDrawer, /preload="metadata"/);
+  assert.doesNotMatch(videoDrawer, /autoplay/);
+  assert.match(styles, /\.intro-video-teaser\s*\{/);
+  assert.match(styles, /\.intro-video-teaser\s*\{[^}]*position:\s*fixed/s);
+  assert.match(styles, /\.intro-video-teaser\s*\{[^}]*right:\s*0/s);
+  assert.match(styles, /translateX\(calc\(100% - 84px\)\)/);
+  assert.match(styles, /\.intro-video-drawer\s*\{/);
+  assert.match(styles, /\.intro-video-drawer\.open\s*\{/);
+  assert.match(styles, /@media \(max-width: 560px\)[\s\S]*?\.intro-video-drawer\s*\{/s);
 });
 
 test("renders the Java guide as readable, highlighted vertical steps", async () => {

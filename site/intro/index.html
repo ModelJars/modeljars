@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ModelJars in 3 minutes | ModelJARs.org</title>
+    <meta
+      name="description"
+      content="Watch a three-minute introduction to discovering, downloading, and running qualified local AI models from Java with ModelJars.">
+    <meta name="theme-color" content="#ffffff">
+    <meta property="og:title" content="ModelJars in 3 minutes">
+    <meta property="og:description" content="Discover, pull, and run qualified local AI models in-process from Java.">
+    <meta property="og:type" content="video.other">
+    <meta property="og:url" content="https://modeljars.org/intro/">
+    <meta property="og:image" content="https://modeljars.org/media/modeljars-intro.webp">
+    <meta property="og:video" content="https://modeljars.org/media/modeljars-intro.mp4">
+    <link rel="canonical" href="https://modeljars.org/intro/">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/static-page.js" type="module"></script>
+    <script src="/assets/install-drawer.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJARs.org</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Models</a>
+          <a class="nav-cli" href="/#modeljars-cli">CLI</a>
+          <a class="nav-java" href="/#using-modeljars" aria-label="Use from Java">
+            <span class="nav-java-icon" aria-hidden="true"></span>
+            <span>Use from Java</span>
+          </a>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
+          <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/index.html">Docs</a>
+          <a class="nav-secondary" href="/contribute/">Contribute</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="intro-page-shell">
+      <header class="intro-page-heading">
+        <p class="eyebrow">Three-minute overview</p>
+        <h1>ModelJars in 3 minutes</h1>
+        <p class="lede">
+          See how to find qualified models, pull verified weights with the native CLI, and run
+          embeddings and chat directly in the JVM.
+        </p>
+      </header>
+      <video
+        class="intro-page-video"
+        controls
+        preload="metadata"
+        poster="/media/modeljars-intro.webp">
+        <source src="/media/modeljars-intro.mp4" type="video/mp4">
+        Your browser does not support HTML video. You can
+        <a href="/media/modeljars-intro.mp4">download the MP4</a> instead.
+      </video>
+      <div class="intro-page-actions">
+        <span>3:06</span>
+        <a class="primary-button" href="/#catalog">Explore qualified models</a>
+        <a class="secondary-button" href="/#modeljars-cli">Install the CLI</a>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
+        <div>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/index.html">Docs</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="/contribute/">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -63,10 +63,11 @@ Windows output.
   output is path-only.
 - `NO_COLOR`, `--color never`, and redirected stdout disable color; `--color always` is useful for
   snapshots and demos.
-- Hardware inventory is not backend availability. A discovered GPU is shown as detected while GPU
-  model offload remains unsupported. An Apple-silicon host is eligible for Apple Foundation Models;
-  the Java `backend-apple` runtime remains responsible for checking Apple Intelligence and model
-  availability.
+- Hardware inventory is not backend availability. A discovered GPU is shown as detected; the
+  optional Java `backend-tornado` runtime separately qualifies the artifact, vendor, driver, and
+  capacity when an application launches under TornadoVM. The native CLI does not silently install
+  or activate that runtime. An Apple-silicon host is eligible for Apple Foundation Models; the Java
+  `backend-apple` runtime remains responsible for checking Apple Intelligence and model availability.
 - Cache removal requires an exact alias, source ID, or coordinate and refuses symbolic links.
 - `demo` selects chat, embedding, or tool-calling source from catalog capabilities and pins the
   exact marker coordinate. Generated chat and tool programs render the qualified template and use

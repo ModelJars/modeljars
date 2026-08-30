@@ -82,8 +82,10 @@ physical/logical cores, SIMD, memory, graphics devices, CLI runtime, inference-b
 catalog capabilities, and cache usage. The project banner heads the interactive prompt and human
 `info` output; JSON and plain modes remain decoration-free. Hardware detection and backend
 usability are separate: a
-GPU may be detected while GPU model offload remains unsupported, and Apple Foundation Models are
-reported as eligible until `backend-apple` performs its runtime availability check.
+GPU may be detected while the current process lacks the optional qualified `backend-tornado` path,
+and Apple Foundation Models are reported as eligible until `backend-apple` performs its runtime
+availability check. The native CLI does not bundle TornadoVM or present hardware detection as an
+active GPU backend.
 
 `contribute` turns a public Hugging Face repository into a verified candidate report. It resolves
 the requested branch or tag to an immutable commit, selects a single GGUF or the complete standard

@@ -102,6 +102,8 @@ line-oriented output; `NO_COLOR` and `--color never` disable ANSI output. `model
 CPU, physical and logical cores, SIMD, memory, graphics hardware, Java/native runtime, backend
 eligibility, catalog capability counts, and local cache usage. A detected GPU is reported separately
 from a usable inference backend so hardware inventory is never mistaken for supported acceleration.
+The optional Java/Tornado backend performs its own artifact, device, and memory-capacity gate when
+an application starts under a compatible TornadoVM runtime.
 Run `modeljars help` or `modeljars <command> --help` for the complete command surface. Use
 `modeljars snippet <model> --tool maven` or `--tool gradle-kotlin` for a copy-ready dependency;
 `coordinates`, `coords`, `dependency`, and `deps` are aliases for the same command. With no
@@ -176,6 +178,17 @@ model catalog. Applications using the JVM Runtime require Java 25 or newer. `mod
 usable by Java 21 registry and build tooling; the executable CLI JAR is compiled for Java 25. The
 native CLI contains catalog, download, verification, and demo-generation code, but not a second
 copy of the Models inference runtime.
+
+Qualified NVIDIA GPU acceleration is an explicit optional dependency:
+
+```kotlin
+implementation("com.integrallis:backend-tornado:$modelsVersion")
+```
+
+Launch with a compatible TornadoVM PTX distribution. `ModelJars.openRuntime(...)` discovers the
+provider through Java `ServiceLoader`, performs eager readiness for eligible Q4_0 artifacts, and
+uses the Vector API unchanged when the module, device, capacity, or runtime is unavailable. See the
+[Models GPU guide](https://integrallis.github.io/models/docs/models/current/gpu-acceleration.html).
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to
@@ -300,6 +313,10 @@ requirements apply only when every required JVM argument is active; omitted prof
 arguments remain visible in backend diagnostics. The runtime owns the backend and closes it at the
 end of the `try` block. The older `ModelJars.open` model-only API remains available when the caller
 already owns prompt selection.
+
+For a Java-qualified artifact, the runtime also consults optional in-process accelerator providers.
+This does not weaken catalog qualification: unsupported formats and unqualified hardware remain on
+the artifact's normal Models backend.
 
 Production inference always runs in process through Models. ModelJars never delegates generation or
 embedding to Ollama, llama.cpp, Python, Needle, or a hosted service. Those systems may be used as

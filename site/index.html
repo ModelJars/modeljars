@@ -236,7 +236,9 @@ modeljars search gemma --output json</code></pre>
             <p>
               A model JAR identifies and verifies model weights; it is not an inference engine.
               The ModelJars JVM Runtime brings Integrallis Models and its Java and Rust/FFM execution
-              backends, then resolves the qualified profile for the exact artifact.
+              backends, then resolves the qualified profile for the exact artifact. Applications can
+              add Models' optional Java/Tornado backend for capacity-qualified NVIDIA Q4_0 execution;
+              the same API safely retains the Vector API fallback.
             </p>
           </div>
           <div class="guide-body">

@@ -558,7 +558,7 @@ public final class ModelJars {
   static InferenceBackend loadBackend(
       String backend, Path artifact, BackendConfiguration configuration) {
     return switch (backend) {
-      case JAVA_BACKEND -> PureJavaBackend.load(artifact, configuration);
+      case JAVA_BACKEND -> PureJavaBackend.loadAutomatic(artifact, configuration);
       case NATIVE_BACKEND -> RustFfmBackend.load(artifact, configuration);
       default -> throw new ModelJarException("Unsupported Models backend: " + backend);
     };
@@ -580,7 +580,7 @@ public final class ModelJars {
               throw new ModelJarException(
                   "Unsupported qualified embedding pooling: " + qualification.pooling());
         };
-    PureJavaBackend backend = PureJavaBackend.load(artifact, configuration);
+    PureJavaBackend backend = PureJavaBackend.loadAutomatic(artifact, configuration);
     try {
       var builder = GgufEmbeddingBackend.builder(backend).normalize(qualification.normalized());
       if (!backend.supportsSequenceEmbedding()) {

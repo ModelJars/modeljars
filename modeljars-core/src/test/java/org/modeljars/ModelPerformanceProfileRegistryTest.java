@@ -1428,6 +1428,48 @@ class ModelPerformanceProfileRegistryTest {
   }
 
   @Test
+  void aggregateCatalogPublishesQualifiedSixteenCoreQwenProfiles() {
+    ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
+    ModelPerformanceProfile qwen25 =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals(
+                            "qwen_qwen2_5_3b_instruct_gguf_q4_k_m_epyc_9r14_16c_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+    ModelPerformanceProfile qwen35 =
+        registry.profiles().stream()
+            .filter(
+                candidate ->
+                    candidate
+                        .id()
+                        .equals("unsloth_qwen3_5_0_8b_gguf_q4_k_m_epyc_9r14_16c_jdk25_rust_ffm"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals("16", qwen25.runtimeSelector().get("processors"));
+    assertEquals("8", qwen25.recommendations().get("models.native.kernels.threads"));
+    assertEquals("true", qwen25.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("true", qwen25.recommendations().get("models.purejava.batchedAttentionScores"));
+    assertEquals("true", qwen25.recommendations().get("models.purejava.batchedAttentionValues"));
+    assertEquals(
+        "4b9c3d867f4dd3b274db0c568402a752bbd0c47de08c07f9c96244a489f8791c",
+        qwen25.evidence().controls().get("candidateReportSha256"));
+    assertEquals("16", qwen35.runtimeSelector().get("processors"));
+    assertEquals("8", qwen35.recommendations().get("models.native.kernels.threads"));
+    assertEquals("true", qwen35.recommendations().get("models.native.quantizedDecode"));
+    assertEquals("true", qwen35.recommendations().get("models.native.gatedDeltaNet"));
+    assertEquals(
+        "9599f542dae1f161bc9bd02e36e6c9c5f2e53f3a954538d1ad191a6443ce6174",
+        qwen35.evidence().controls().get("candidateReportSha256"));
+    assertTrue(qwen25.safeForAutomaticSelection());
+    assertTrue(qwen35.safeForAutomaticSelection());
+  }
+
+  @Test
   void aggregateCatalogPublishesSmolLmTwoOnePointSevenBillionProfile() {
     ModelPerformanceProfileRegistry registry = ModelPerformanceProfileRegistry.fromClasspath();
     ModelPerformanceProfile profile =

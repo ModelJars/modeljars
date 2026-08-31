@@ -4286,6 +4286,216 @@
           "heap": "host-default"
         }
       }
+    },
+    {
+      "id": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m_epyc_9r14_16c_jdk25_rust_ffm",
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-3b-instruct-gguf.q4_k_m:2.5.0-q4_k_m.1",
+      "artifactSha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC 9R14",
+        "processors": "16",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.4+7-1-24.04-Ubuntu",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "true",
+        "models.purejava.batchedAttentionValues": "true"
+      },
+      "javaLaunch": {
+        "runtime": "hotspot-c2",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen2.5-3b-rust-ffm-general-rag-20260830",
+        "measuredAt": "2026-08-30T22:01:14.299165263Z",
+        "baseline": "release-code-repeat-1",
+        "candidate": "release-code-qualified-three-repeat",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 318.523187,
+          "p50TtftMillis": 920.403047,
+          "p95TtftMillis": 1050.3618617999998,
+          "p50TpotMillis": 33.994847791666665,
+          "p95TpotMillis": 39.52959075714287,
+          "p50PrefillTokensPerSecond": 76.1073057953515,
+          "p50DecodeTokensPerSecond": 29.416222308991635,
+          "p50EndToEndMillis": 1816.437321,
+          "p95EndToEndMillis": 2032.2492366,
+          "peakRssBytes": 2402148352
+        },
+        "candidateMetrics": {
+          "loadMillis": 318.523187,
+          "p50TtftMillis": 875.201421,
+          "p95TtftMillis": 1085.3527588999998,
+          "p50TpotMillis": 33.95959958333333,
+          "p95TpotMillis": 43.004478566666656,
+          "p50PrefillTokensPerSecond": 83.27272291186094,
+          "p50DecodeTokensPerSecond": 29.446754740028776,
+          "p50EndToEndMillis": 1720.746566,
+          "p95EndToEndMillis": 2046.6780933,
+          "peakRssBytes": 2402684928
+        },
+        "controls": {
+          "workload": "general",
+          "cpuModel": "AMD EPYC 9R14",
+          "contextLength": "2048",
+          "threads": "16",
+          "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "repetitionPenalty": "1.0",
+          "promptTemplate": "chatml-no-think",
+          "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v20",
+          "qualificationPolicy": "production-rag-model-contribution-v5",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "f81dc9ce13a8d0029608873a2153880a784c66f3",
+          "modelsEvidenceCommit": "01b39423427d2d5cd11cee41039f46bd69d796ea",
+          "vectorsCommit": "43f1427c057d2523c5dedf14c6626bde1625cf24",
+          "kernelImplementation": "rust-ffm-quantized-v13",
+          "nativeKernelAbi": "5",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "true",
+          "batchedAttentionValues": "true",
+          "nativeQuantizedDecode": "true",
+          "nativeThreads": "8",
+          "candidateReportSha256": "4b9c3d867f4dd3b274db0c568402a752bbd0c47de08c07f9c96244a489f8791c",
+          "ollamaReportSha256": "3c1c29e93ce0bccd2dc39dcb6b7b35383ff8d7dd993818385957a676b4bfe253",
+          "qualificationReportSha256": "b1c5fcd6a118d296dad330d6e0cefe54d5ff8b49a1b903cb9ad2a19eedd78dbe",
+          "pairedOutputHashes": "27-three-repeat-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.8888888888888888",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToOllama": "0.8781696878110975",
+          "endToEndRatioToOllama": "1.3513463964697885",
+          "comparatorExecution": "same-host-sequential-process-isolated",
+          "ollamaVersion": "0.31.1",
+          "jvmBuild": "Ubuntu OpenJDK 25.0.4",
+          "heap": "host-default"
+        }
+      }
+    },
+    {
+      "id": "unsloth_qwen3_5_0_8b_gguf_q4_k_m_epyc_9r14_16c_jdk25_rust_ffm",
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-0.8b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "artifactSha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC 9R14",
+        "processors": "16",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.4+7-1-24.04-Ubuntu",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.quantizedDecode": "true",
+        "models.native.gatedDeltaNet": "true",
+        "models.native.kernels.threads": "8",
+        "models.purejava.prefillBatchSize": "32",
+        "models.purejava.batchedAttentionScores": "false",
+        "models.purejava.batchedAttentionValues": "false"
+      },
+      "javaLaunch": {
+        "runtime": "hotspot-c2",
+        "javaFeature": 25,
+        "jvmArguments": [
+          "--enable-native-access=ALL-UNNAMED"
+        ]
+      },
+      "evidence": {
+        "benchmarkId": "qwen3.5-0.8b-rust-ffm-general-rag-20260830",
+        "measuredAt": "2026-08-30T22:05:43.831207815Z",
+        "baseline": "release-code-repeat-1",
+        "candidate": "release-code-qualified-three-repeat",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 64,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "loadMillis": 421.953179,
+          "p50TtftMillis": 1130.23277,
+          "p95TtftMillis": 1324.9911035999999,
+          "p50TpotMillis": 12.047445090909099,
+          "p95TpotMillis": 14.472507911111087,
+          "p50PrefillTokensPerSecond": 298.2583309557308,
+          "p50DecodeTokensPerSecond": 83.00515108839065,
+          "p50EndToEndMillis": 1465.479643,
+          "p95EndToEndMillis": 1602.406367,
+          "peakRssBytes": 1406701568
+        },
+        "candidateMetrics": {
+          "loadMillis": 421.953179,
+          "p50TtftMillis": 1130.23277,
+          "p95TtftMillis": 1413.0216817,
+          "p50TpotMillis": 12.405714222222228,
+          "p95TpotMillis": 15.89357573333331,
+          "p50PrefillTokensPerSecond": 299.15519470480945,
+          "p50DecodeTokensPerSecond": 80.60801515230057,
+          "p50EndToEndMillis": 1456.876457,
+          "p95EndToEndMillis": 1648.5749218,
+          "peakRssBytes": 1662676992
+        },
+        "controls": {
+          "workload": "general",
+          "cpuModel": "AMD EPYC 9R14",
+          "contextLength": "2048",
+          "threads": "16",
+          "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+          "seed": "42",
+          "temperature": "0.0",
+          "topK": "1",
+          "topP": "1.0",
+          "repetitionPenalty": "1.0",
+          "promptTemplate": "chatml-no-think",
+          "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v20",
+          "qualificationPolicy": "production-rag-model-contribution-v5",
+          "promptCache": "longest-common-prefix",
+          "modelsCommit": "f81dc9ce13a8d0029608873a2153880a784c66f3",
+          "modelsEvidenceCommit": "01b39423427d2d5cd11cee41039f46bd69d796ea",
+          "vectorsCommit": "43f1427c057d2523c5dedf14c6626bde1625cf24",
+          "kernelImplementation": "rust-ffm-quantized-v13",
+          "nativeKernelAbi": "5",
+          "prefillBatchSize": "32",
+          "batchedAttentionScores": "false",
+          "batchedAttentionValues": "false",
+          "nativeQuantizedDecode": "true",
+          "nativeGatedDeltaNet": "true",
+          "nativeThreads": "8",
+          "candidateReportSha256": "9599f542dae1f161bc9bd02e36e6c9c5f2e53f3a954538d1ad191a6443ce6174",
+          "ollamaReportSha256": "01c9fd534e9d1044bcad7b597477b584598eca1c35f68b2263a2658362699a70",
+          "qualificationReportSha256": "6f26c6bd4d525d75cfbade90e94b7e2381a2a69c6c2fbdf22374d4414863493d",
+          "pairedOutputHashes": "27-three-repeat-identical",
+          "correctAnswerRate": "1.0",
+          "modelAnswerRate": "0.5555555555555556",
+          "modelAnswerCorrectRate": "1.0",
+          "decodeRatioToOllama": "1.2849752282485039",
+          "endToEndRatioToOllama": "1.338485949831838",
+          "comparatorExecution": "same-host-sequential-process-isolated",
+          "ollamaVersion": "0.31.1",
+          "jvmBuild": "Ubuntu OpenJDK 25.0.4",
+          "heap": "host-default"
+        }
+      }
     }
   ]
 }

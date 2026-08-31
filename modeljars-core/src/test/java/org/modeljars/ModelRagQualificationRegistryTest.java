@@ -33,9 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 29;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 31;
   private static final String AGGREGATE_MODELS_REVISION =
-      "454161c18d2870ab4d7968b3ba7d17aff00b35b9";
+      "f44c45a5ea2ad0b2327ba273aeb66d87ff11574a";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -970,6 +970,38 @@ class ModelRagQualificationRegistryTest {
         "782aa9fb3e9821e88dd07c0b668cb7e3278506eb2275eb41949d35810365ac02",
         qualification.reportSha256());
     assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesNewQwen25AndQwen35Qualifications() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qwen25 =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("qwen_qwen2_5_3b_instruct_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    ModelRagQualification qwen35 =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("unsloth_qwen3_5_0_8b_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals("USABLE", qwen25.performanceTier());
+    assertEquals("rust-ffm", qwen25.backend());
+    assertEquals(24.0 / 27.0, qwen25.modelAnswerRate());
+    assertEquals(29.446754740028776, qwen25.p50DecodeTokensPerSecond());
+    assertEquals(
+        "4b9c3d867f4dd3b274db0c568402a752bbd0c47de08c07f9c96244a489f8791c", qwen25.reportSha256());
+    assertEquals("USABLE", qwen35.performanceTier());
+    assertEquals("rust-ffm", qwen35.backend());
+    assertEquals(15.0 / 27.0, qwen35.modelAnswerRate());
+    assertEquals(80.60801515230057, qwen35.p50DecodeTokensPerSecond());
+    assertEquals(
+        "9599f542dae1f161bc9bd02e36e6c9c5f2e53f3a954538d1ad191a6443ce6174", qwen35.reportSha256());
+    assertTrue(qwen25.productionUsable());
+    assertTrue(qwen35.productionUsable());
   }
 
   @Test

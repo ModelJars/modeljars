@@ -78,6 +78,16 @@ test("requires a new coordinate when immutable marker metadata changes", () => {
   );
 });
 
+test("records catalog publication time without republishing an immutable marker", () => {
+  const before = model();
+  const after = model({ catalogPublishedAt: "2026-08-31T02:17:48Z" });
+
+  assert.deepEqual(
+    catalogPublicationDelta(catalog([before]), catalog([after])),
+    { publications: [], removed: [] },
+  );
+});
+
 test("requires a new coordinate when a model performance profile changes", () => {
   const entry = model();
   const beforeProfile = {

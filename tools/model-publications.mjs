@@ -107,8 +107,10 @@ function assertProfiles(document, catalog, label) {
 }
 
 function markerSnapshot(model, profileCatalog) {
+  const markerModel = { ...model };
+  delete markerModel.catalogPublishedAt;
   return {
-    model,
+    model: markerModel,
     profiles: profileCatalog.profiles
       .filter((profile) => profile.modelId === model.id)
       .sort((left, right) => left.id.localeCompare(right.id)),

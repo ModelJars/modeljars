@@ -1293,6 +1293,12 @@ val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
 }
+val publicModelsMissingPublicationTime =
+    publicCatalogEntries.filter { it.catalogPublishedAt == null }.map(CatalogEntry::id)
+require(publicModelsMissingPublicationTime.isEmpty()) {
+    "Every qualified catalog model must record catalogPublishedAt: " +
+        publicModelsMissingPublicationTime.sorted().joinToString(", ")
+}
 publicEmbeddingQualifications.forEach { qualification ->
     val entry =
         catalogEntries.singleOrNull { it.id == qualification.modelId }

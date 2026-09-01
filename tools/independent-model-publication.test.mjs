@@ -65,3 +65,16 @@ test("publishes accepted model coordinates independently from platform artifacts
   assert.doesNotMatch(workflow, /:modeljars:publish/);
   assert.doesNotMatch(workflow, /:modeljars-core:publish/);
 });
+
+test("reuses an identical immutable GitHub Package without hiding collisions", async () => {
+  const workflow = await read(".github/workflows/model-artifacts.yml");
+
+  assert.match(workflow, /id: existing_package/);
+  assert.match(workflow, /maven\.pkg\.github\.com\/modeljars\/modeljars/);
+  assert.match(workflow, /cmp --silent/);
+  assert.match(workflow, /Existing immutable package does not match/);
+  assert.match(
+    workflow,
+    /if: steps\.existing_package\.outputs\.exists != 'true'/,
+  );
+});

@@ -234,12 +234,64 @@ jobs:
       - name: Build independent model JAR
         run: ./gradlew --no-daemon "${{ matrix.jarTask }}"
 
+      - name: Verify an existing immutable GitHub Package
+        id: existing_package
+        shell: bash
+        env:
+          COORDINATE: ${{ matrix.coordinate }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOCAL_JAR: ${{ matrix.jarPath }}
+        run: |
+          set -euo pipefail
+          IFS=: read -r group_id artifact_id version extra <<< "${COORDINATE}"
+          if [[ -z "${group_id}" || -z "${artifact_id}" || -z "${version}" || -n "${extra:-}" ]]; then
+            echo "::error::Invalid immutable marker coordinate: ${COORDINATE}"
+            exit 1
+          fi
+          if [[ ! -f "${LOCAL_JAR}" ]]; then
+            echo "::error::Built marker JAR is missing: ${LOCAL_JAR}"
+            exit 1
+          fi
+
+          group_path="${group_id//./\/}"
+          file_name="${artifact_id}-${version}.jar"
+          package_url="https://maven.pkg.github.com/modeljars/modeljars/${group_path}/${artifact_id}/${version}/${file_name}"
+          existing_jar="${RUNNER_TEMP}/existing-${file_name}"
+          if ! status="$(curl --location --silent --show-error \
+            --user "${GITHUB_ACTOR}:${GITHUB_TOKEN}" \
+            --output "${existing_jar}" \
+            --write-out '%{http_code}' \
+            "${package_url}")"; then
+            echo "::error::Could not query GitHub Packages for ${COORDINATE}"
+            exit 1
+          fi
+
+          case "${status}" in
+            200)
+              if ! cmp --silent "${LOCAL_JAR}" "${existing_jar}"; then
+                echo "::error::Existing immutable package does not match ${COORDINATE}"
+                sha256sum "${LOCAL_JAR}" "${existing_jar}"
+                exit 1
+              fi
+              echo "exists=true" >> "${GITHUB_OUTPUT}"
+              echo "Reusing byte-identical GitHub Package ${COORDINATE}." >> "${GITHUB_STEP_SUMMARY}"
+              ;;
+            404)
+              echo "exists=false" >> "${GITHUB_OUTPUT}"
+              ;;
+            *)
+              echo "::error::GitHub Packages returned HTTP ${status} for ${COORDINATE}"
+              exit 1
+              ;;
+          esac
+
       - name: Attest model JAR
         uses: actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6 # v4.2.0
         with:
           subject-path: ${{ matrix.jarPath }}
 
       - name: Publish model JAR and Maven metadata
+        if: steps.existing_package.outputs.exists != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew --no-daemon "${{ matrix.githubTask }}"

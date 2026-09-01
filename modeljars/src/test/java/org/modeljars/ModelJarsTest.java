@@ -29,6 +29,7 @@ import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.OptimizationStatus;
+import com.integrallis.models.api.RerankingModel;
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.runtime.chat.ChatMessage;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
+import org.modeljars.catalog.Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Smollm2_360m_Instruct_Q8_0;
@@ -47,6 +49,8 @@ class ModelJarsTest {
   private static final ModelJar QWEN = Qwen3_0_6b_Q4_0.MODEL;
   private static final ModelJar NEEDLE2 = Cactus_Compute_Needle2_Cact_Cq2_Mixed.MODEL;
   private static final ModelJar QWEN_EMBEDDING = Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0.MODEL;
+  private static final ModelJar MINILM_RERANKER =
+      Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7.MODEL;
   private static final ModelJar SMOLLM = Smollm2_360m_Instruct_Q8_0.MODEL;
 
   @Test
@@ -390,6 +394,42 @@ class ModelJarsTest {
     assertTrue(embedding.closed);
   }
 
+  @Test
+  void opensARerankerOnlyWhenEvidenceMatchesTheExactArtifact() {
+    ModelJarRegistry models = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor descriptor = models.resolve(MINILM_RERANKER).orElseThrow();
+    StubRerankingModel reranker = new StubRerankingModel();
+    AtomicReference<ModelRerankingQualificationRegistry.Entry> selectedQualification =
+        new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            models,
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelToolQualificationRegistry.fromClasspath(),
+            ModelEmbeddingQualificationRegistry.fromClasspath(),
+            ModelRerankingQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-reranker.gguf"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (path, qualification, configuration) -> new StubEmbeddingBackend(),
+            (path, qualification) -> {
+              selectedQualification.set(qualification);
+              return reranker;
+            },
+            Map::of,
+            List::of);
+
+    try (var runtime = loader.loadRerankingRuntime(MINILM_RERANKER, ModelLoadOptions.defaults())) {
+      assertSame(reranker, runtime.model());
+      assertEquals(descriptor, runtime.descriptor());
+      assertEquals(descriptor.alias(), runtime.qualification().modelId());
+      assertEquals(descriptor.sha256().orElseThrow(), selectedQualification.get().artifactSha256());
+      assertEquals(1.0, runtime.model().score("query", "longer"));
+      assertFalse(reranker.closed);
+    }
+    assertTrue(reranker.closed);
+  }
+
   private static final class StubEmbeddingBackend implements EmbeddingBackend {
     private boolean closed;
 
@@ -401,6 +441,20 @@ class ModelJarsTest {
     @Override
     public float[] embed(String text) {
       return new float[dimension()];
+    }
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+  }
+
+  private static final class StubRerankingModel implements RerankingModel {
+    private boolean closed;
+
+    @Override
+    public double score(String query, String document) {
+      return document.length() - query.length();
     }
 
     @Override

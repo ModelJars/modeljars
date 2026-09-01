@@ -4714,6 +4714,59 @@
       }
     },
     {
+      "id": "cstr_ms_marco_minilm_l6_v2_gguf_q4_k_imatrix_g7c_f7",
+      "name": "MS MARCO MiniLM L6 v2 reranker corrected Q4_K imatrix",
+      "description": "Compact BERT cross-encoder reranker qualified against ONNX logits and an independent implementation of the same quantized artifact.",
+      "sourceId": "hf://cstr/ms-marco-MiniLM-L-6-v2-GGUF",
+      "sourceUri": "https://huggingface.co/cstr/ms-marco-MiniLM-L-6-v2-GGUF",
+      "downloadUri": "https://huggingface.co/cstr/ms-marco-MiniLM-L-6-v2-GGUF/resolve/1a9ef5ce8cb08936338233731314f3ff61ce0930/ms-marco-MiniLM-L-6-v2-q4_k-imatrix-g7c-f7.gguf",
+      "revision": "1a9ef5ce8cb08936338233731314f3ff61ce0930",
+      "markerCoordinate": "org.modeljars.huggingface:cstr.ms-marco-minilm-l-6-v2-gguf.q4_k_imatrix_g7c_f7:2.0.0-q4_k_imatrix_g7c_f7.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_imatrix_g7c_f7",
+      "format": "gguf",
+      "architecture": "bert",
+      "quantization": "Q4_K",
+      "localPath": "${user.home}/.jvllm/models/ms-marco-MiniLM-L-6-v2-q4_k-imatrix-g7c-f7.gguf",
+      "sha256": "0752a92bc33289f3fe230d1a33cce471f1a7fe1c8d5a491ca7fff6b068b0fc83",
+      "sizeBytes": 19986112,
+      "catalogPublishedAt": "2026-09-01T15:44:55Z",
+      "license": "Apache-2.0",
+      "capabilities": [
+        "reranking",
+        "text-ranking"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k",
+        "imatrix",
+        "wordpiece",
+        "sentence-pair",
+        "bidirectional-attention",
+        "classifier-pooler",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "domains": [
+        "retrieval",
+        "rag",
+        "reranking",
+        "search"
+      ],
+      "dimensions": {
+        "parameterCount": 22713601,
+        "contextLength": 512,
+        "embeddingLength": 384,
+        "blockCount": 6,
+        "attentionHeadCount": 12,
+        "feedForwardLength": 1536,
+        "attentionBlockCount": 6
+      }
+    },
+    {
       "id": "liquidai_lfm2_5_embedding_350m_gguf_q4_k_m",
       "name": "LFM2.5-Embedding-350M GGUF Q4_K_M",
       "description": "Pinned GGUF embedding artifact for LFM2.5-Embedding-350M, verified by immutable revision, byte size, and SHA-256.",

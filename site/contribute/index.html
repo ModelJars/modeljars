@@ -105,7 +105,7 @@
             <dt>Production qualification</dt>
             <dd>
               The exact artifact and Models backend pass the complete workload for its published
-              capability: RAG generation, embedding equivalence, or tool-calling conformance.
+              capability: RAG generation, embedding equivalence, reranking, or tool-calling conformance.
             </dd>
           </div>
         </dl>
@@ -132,7 +132,7 @@
           </li>
           <li>
             <strong>Maintainers run the applicable controlled workload.</strong>
-            The generation and embedding harnesses record the host, JVM, Models revision, complete
+            The generation, embedding, and reranking harnesses record the host, JVM, Models revision, complete
             artifact identity, prompt or probe controls, and every measured request.
           </li>
           <li>
@@ -299,6 +299,34 @@ scripts/run-controlled-rag-qualification.sh \
         </p>
       </section>
 
+      <section class="documentation-section" aria-labelledby="reranking-policy-title">
+        <h2 id="reranking-policy-title">Reranking acceptance policy</h2>
+        <p>
+          Cross-encoder qualification compares the same fixed query-document pairs with an
+          unquantized reference and an independent implementation of the exact quantized bytes,
+          then measures a practical second-stage workload in fresh JVMs.
+        </p>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable reranking policy">
+          <table class="benchmark-table policy-table">
+            <thead>
+              <tr><th scope="col">Policy metric</th><th scope="col">Requirement</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Maximum ONNX logit delta</th><td>At most 0.15</td></tr>
+              <tr><th scope="row">Maximum same-artifact logit delta</th><td>At most 0.05</td></tr>
+              <tr><th scope="row">Expected top-k order</th><td>Exact</td></tr>
+              <tr><th scope="row">Median cold load</th><td>At most 1 second on the controlled host</td></tr>
+              <tr><th scope="row">Pair p95</th><td>At most 250 ms on the controlled host</td></tr>
+              <tr><th scope="row">Six-document batch p95</th><td>At most 1.2 seconds on the controlled host</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          The evidence pins the artifact, Models commit, reference implementations, pair set,
+          machine, JDK, Vector API width, fresh-process controls, raw scores, and latency samples.
+        </p>
+      </section>
+
       <section class="documentation-section" aria-labelledby="tool-policy-title">
         <h2 id="tool-policy-title">Tool-calling acceptance policy</h2>
         <p>
@@ -341,7 +369,7 @@ scripts/run-controlled-rag-qualification.sh \
           <li>Exact revision, byte size, SHA-256, dimensions, and backend declaration.</li>
           <li>Models exact-artifact tests and deterministic output evidence.</li>
           <li>Raw controlled reports committed to Models, the qualification verdict, and report SHA-256 values.</li>
-          <li>A matching entry in the applicable RAG, embedding, or tool qualification manifest only after maintainer approval.</li>
+          <li>A matching entry in the applicable RAG, embedding, reranking, or tool qualification manifest only after maintainer approval.</li>
           <li>The first public marker publication instant recorded as <code>catalogPublishedAt</code>, which drives the CLI's 48-hour <strong>NEW</strong> marker.</li>
           <li>A clean local run of <code>npm test</code> and <code>./gradlew spotlessCheck test verifyCatalog</code>.</li>
         </ul>

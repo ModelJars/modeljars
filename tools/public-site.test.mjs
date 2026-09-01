@@ -135,14 +135,14 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(apple, /Apple Foundation Models from Java/);
   assert.match(apple, /not a downloadable ModelJAR/);
   assert.match(apple, /LangChain4J and Spring AI/);
-  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.22/);
+  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.23/);
   assert.match(apple, /AppleFoundationModels\.create/);
   assert.match(apple, /client\.availability/);
   assert.match(
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.29/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.30/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);

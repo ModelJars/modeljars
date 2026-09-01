@@ -284,7 +284,7 @@ function collectQualifiedIds(
  *
  * A generator qualifies through the RAG workload, an embedder through the
  * embedding equivalence gate, and a tool model through conformance. Any one is
- * sufficient, and every policy binds evidence to the catalog SHA-256 and byte
+ * sufficient; a reranker qualifies through numerical, ordering, and latency gates. Every policy binds evidence to the catalog SHA-256 and byte
  * size so stale evidence cannot publish.
  */
 export function filterQualifiedPublications(
@@ -293,6 +293,7 @@ export function filterQualifiedPublications(
   qualifications,
   embeddingQualifications = { schemaVersion: 1, entries: [] },
   toolQualifications = { schemaVersion: 1, entries: [] },
+  rerankingQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -306,6 +307,9 @@ export function filterQualifiedPublications(
     modelsById,
     (qualification) => qualification.summary?.qualified === true,
   )) {
+    qualifiedIds.add(id);
+  }
+  for (const id of collectQualifiedIds(rerankingQualifications, modelsById)) {
     qualifiedIds.add(id);
   }
 

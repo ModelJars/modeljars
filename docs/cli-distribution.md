@@ -55,12 +55,13 @@ aliases for `pull`, `show`, `remove`, `demo`, and coordinate commands. Custom al
 stored in `~/.modeljars/aliases.properties`, cannot shadow automatic names or catalog IDs, and work
 in one-shot commands as well as the prompt.
 
-`demo` chooses chat, embedding, or tool calling from the selected descriptor and writes a compact,
+`demo` chooses chat, embedding, reranking, or tool calling from the selected descriptor and writes a compact,
 editable source file. The generated program declares the exact ModelJars runtime and marker
 coordinates in JBang directives. It accepts a replacement input from command-line arguments and
 otherwise uses the input embedded by the CLI. Chat and tool demos render the qualified template and
 print runtime-owned phase and token metrics; embedding demos print the complete vector, dimensions,
-and load/execution times. Tool demos declare a small smart-home API, constrain generation to its
+and load/execution times. Reranking demos score and order a fixed document set through
+`ModelJars.openReranker`. Tool demos declare a small smart-home API, constrain generation to its
 schemas, parse the model's calls, and execute them against in-memory state. Existing files are never
 replaced unless `--force` is explicit. `script`, `run`, `chat`, `embed`, and `embedding` are aliases
 for this generator. Running the result requires JBang and Java 25 or newer.
@@ -160,7 +161,7 @@ After SDKMAN approval, enable the repository variable and backfill an existing r
 
 ```bash
 gh variable set SDKMAN_PUBLISH_ENABLED --repo ModelJars/modeljars --body true
-gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.29
+gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.30
 ```
 
 Until approval, leave the variable absent or explicitly set it to `false`. Both `make_default` and

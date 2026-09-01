@@ -107,6 +107,19 @@ class GeneratedModelAliasesTest {
   }
 
   @Test
+  void givesTheMsMarcoCrossEncoderAHumanRerankerName() {
+    ModelJarDescriptor reranker =
+        descriptor(
+            "cstr_ms_marco_minilm_l6_v2_gguf_q4_k_imatrix_g7c_f7",
+            "MS MARCO MiniLM L6 v2 reranker corrected Q4_K imatrix",
+            "Q4_K",
+            Set.of("reranking", "text-ranking"));
+
+    assertEquals(
+        Map.of("minilm-reranker", reranker.alias()), GeneratedModelAliases.from(List.of(reranker)));
+  }
+
+  @Test
   void expandsTheQuantizationOnlyWhenTwoVariantsShareTheSameCoarseName() {
     ModelJarDescriptor q4 = descriptor("qwen_q4_0", "Qwen3 0.6B GGUF Q4_0", "Q4_0");
     ModelJarDescriptor q4Km = descriptor("qwen_q4_k_m", "Qwen3 0.6B GGUF Q4_K_M", "Q4_K_M");

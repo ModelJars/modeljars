@@ -16,7 +16,6 @@
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -31,7 +30,7 @@ import org.modeljars.ModelVersion;
 
 class DemoScriptGeneratorTest {
 
-  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.29");
+  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.30");
 
   @Test
   void generatesAChatDemoUsingThePublicRuntimeAndRuntimeOwnedMetrics() {
@@ -42,7 +41,7 @@ class DemoScriptGeneratorTest {
     assertEquals("example-chat-demo.java", demo.fileName());
     assertContains(
         demo.source(),
-        "//DEPS org.modeljars:modeljars:0.1.29",
+        "//DEPS org.modeljars:modeljars:0.1.30",
         "//DEPS " + descriptor(Set.of()).markerCoordinate(),
         "ModelJars.openRuntime(MODEL)",
         "runtime.chatTemplate().render",
@@ -93,12 +92,22 @@ class DemoScriptGeneratorTest {
   }
 
   @Test
-  void rejectsModelsWithoutAnExecutableCapability() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> generator.generate(descriptor(Set.of("reranking")), Optional.empty()));
-    assertTrue(failure.getMessage().contains("supported chat, embedding, or Needle tool-calling"));
+  void generatesARerankingDemoThroughThePublicModelJarsApi() {
+    DemoScriptGenerator.GeneratedDemo demo =
+        generator.generate(
+            descriptor(Set.of("reranking", "text-ranking")),
+            Optional.of("How many people live in Berlin?"));
+
+    assertEquals(DemoScriptGenerator.Type.RERANKING, demo.type());
+    assertEquals("example-reranking-demo.java", demo.fileName());
+    assertContains(
+        demo.source(),
+        "ModelJars.openReranker(MODEL)",
+        "How many people live in Berlin?",
+        "model.rerank(query, documents)",
+        "Score",
+        "Load:",
+        "Execution:");
   }
 
   private static void assertContains(String source, String... fragments) {

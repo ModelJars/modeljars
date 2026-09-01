@@ -82,5 +82,23 @@ while `qualification()` exposes the reference-equivalence evidence used to
 select the execution policy. The returned runtime owns the embedding backend
 and must be closed.
 
+## Qualified reranking access
+
+Reranker markers bind a cross-encoder to numerical agreement, exact ordering, and a controlled
+latency envelope. Applications supply a query and candidate documents; scores are meaningful for
+ordering documents within that query.
+
+```java
+import static org.modeljars.catalog.Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7.MODEL;
+
+var candidates = List.of("Berlin has 3.5 million residents.", "Paris is in France.");
+try (var reranker = ModelJars.openReranker(MODEL)) {
+  var ranked = reranker.rerank("How many people live in Berlin?", candidates);
+}
+```
+
+Use `openRerankingRuntime` to retain the descriptor and exact qualification evidence beside the
+owned `RerankingModel`.
+
 The Models documentation describes the complete contract in
 [Inference Pipeline](https://integrallis.github.io/models/docs/models/current/inference-pipeline.html).

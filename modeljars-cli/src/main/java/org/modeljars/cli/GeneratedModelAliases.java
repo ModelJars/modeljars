@@ -41,6 +41,7 @@ final class GeneratedModelAliases {
   private static final List<String> SPECIALIZATIONS =
       List.of(
           "embedding",
+          "reranker",
           "coder",
           "code",
           "math",
@@ -117,9 +118,15 @@ final class GeneratedModelAliases {
       brand = productMatcher.group(1);
       attachedVersion = productMatcher.group(2);
     }
+    if (tokens.contains("minilm")) {
+      brand = "minilm";
+      attachedVersion = null;
+    }
 
     String specialization =
-        SPECIALIZATIONS.stream().filter(tokens::contains).findFirst().orElse(null);
+        descriptor.capabilities().contains("reranking")
+            ? "reranker"
+            : SPECIALIZATIONS.stream().filter(tokens::contains).findFirst().orElse(null);
     String base = specialization == null ? brand : brand + "-" + specialization;
     Set<String> excluded = new HashSet<>(PACKAGING);
     excluded.add(brand);

@@ -21,9 +21,11 @@ import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.Pooling;
+import com.integrallis.models.api.RerankingModel;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
+import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.InferencePipeline;
@@ -51,10 +53,12 @@ public final class ModelJars {
   private final ModelRagQualificationRegistry qualifications;
   private final ModelToolQualificationRegistry toolQualifications;
   private final ModelEmbeddingQualificationRegistry embeddingQualifications;
+  private final ModelRerankingQualificationRegistry rerankingQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
   private final EmbeddingBackendLoader embeddingBackendLoader;
+  private final RerankingModelLoader rerankingModelLoader;
   private final Supplier<Map<String, String>> runtimeEnvironment;
   private final Supplier<List<String>> jvmArguments;
 
@@ -112,12 +116,45 @@ public final class ModelJars {
         qualifications,
         ModelToolQualificationRegistry.fromClasspath(),
         embeddingQualifications,
+        ModelRerankingQualificationRegistry.fromClasspath(),
         profiles,
         installer,
         backendLoader,
         embeddingBackendLoader,
+        ModelJars::loadRerankingModel,
         runtimeEnvironment,
         jvmArguments);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelToolQualificationRegistry toolQualifications,
+      ModelEmbeddingQualificationRegistry embeddingQualifications,
+      ModelRerankingQualificationRegistry rerankingQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      EmbeddingBackendLoader embeddingBackendLoader,
+      RerankingModelLoader rerankingModelLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
+    this.models = Objects.requireNonNull(models, "models");
+    this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
+    this.toolQualifications = Objects.requireNonNull(toolQualifications, "toolQualifications");
+    this.embeddingQualifications =
+        Objects.requireNonNull(embeddingQualifications, "embeddingQualifications");
+    this.rerankingQualifications =
+        Objects.requireNonNull(rerankingQualifications, "rerankingQualifications");
+    this.profiles = Objects.requireNonNull(profiles, "profiles");
+    this.installer = Objects.requireNonNull(installer, "installer");
+    this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
+    this.embeddingBackendLoader =
+        Objects.requireNonNull(embeddingBackendLoader, "embeddingBackendLoader");
+    this.rerankingModelLoader =
+        Objects.requireNonNull(rerankingModelLoader, "rerankingModelLoader");
+    this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment");
+    this.jvmArguments = Objects.requireNonNull(jvmArguments, "jvmArguments");
   }
 
   ModelJars(
@@ -131,18 +168,19 @@ public final class ModelJars {
       EmbeddingBackendLoader embeddingBackendLoader,
       Supplier<Map<String, String>> runtimeEnvironment,
       Supplier<List<String>> jvmArguments) {
-    this.models = Objects.requireNonNull(models, "models");
-    this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
-    this.toolQualifications = Objects.requireNonNull(toolQualifications, "toolQualifications");
-    this.embeddingQualifications =
-        Objects.requireNonNull(embeddingQualifications, "embeddingQualifications");
-    this.profiles = Objects.requireNonNull(profiles, "profiles");
-    this.installer = Objects.requireNonNull(installer, "installer");
-    this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
-    this.embeddingBackendLoader =
-        Objects.requireNonNull(embeddingBackendLoader, "embeddingBackendLoader");
-    this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment");
-    this.jvmArguments = Objects.requireNonNull(jvmArguments, "jvmArguments");
+    this(
+        models,
+        qualifications,
+        toolQualifications,
+        embeddingQualifications,
+        ModelRerankingQualificationRegistry.fromClasspath(),
+        profiles,
+        installer,
+        backendLoader,
+        embeddingBackendLoader,
+        ModelJars::loadRerankingModel,
+        runtimeEnvironment,
+        jvmArguments);
   }
 
   /**
@@ -272,6 +310,70 @@ public final class ModelJars {
     return openEmbeddingRuntime(ModelJar.of(markerCoordinate));
   }
 
+  /**
+   * Opens a qualified cross-encoder reranker.
+   *
+   * @param model marker coordinate to resolve
+   * @return ready-to-use reranking model
+   */
+  public static RerankingModel openReranker(ModelJar model) {
+    return openRerankingRuntime(model).model();
+  }
+
+  /**
+   * Opens a qualified cross-encoder reranker with explicit cache and network controls.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return ready-to-use reranking model
+   */
+  public static RerankingModel openReranker(ModelJar model, ModelLoadOptions options) {
+    return openRerankingRuntime(model, options).model();
+  }
+
+  /**
+   * Opens a qualified cross-encoder reranker and exposes its exact evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @return loaded reranking runtime
+   */
+  public static ModelJarRerankingRuntime openRerankingRuntime(ModelJar model) {
+    return openRerankingRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified cross-encoder reranker and exposes its exact evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return loaded reranking runtime
+   */
+  public static ModelJarRerankingRuntime openRerankingRuntime(
+      ModelJar model, ModelLoadOptions options) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadRerankingRuntime(model, options);
+  }
+
+  /**
+   * Opens an exact qualified reranker marker coordinate.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return ready-to-use reranking model
+   */
+  public static RerankingModel openReranker(String markerCoordinate) {
+    return openReranker(ModelJar.of(markerCoordinate));
+  }
+
+  /**
+   * Opens an exact qualified reranker marker coordinate and exposes its evidence.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return loaded reranking runtime
+   */
+  public static ModelJarRerankingRuntime openRerankingRuntime(String markerCoordinate) {
+    return openRerankingRuntime(ModelJar.of(markerCoordinate));
+  }
+
   TextGenerationModel load(ModelJar model, ModelLoadOptions options) {
     return loadRuntime(model, options).model();
   }
@@ -317,6 +419,24 @@ public final class ModelJars {
         embeddingBackendLoader.load(
             artifact, qualification, new BackendConfiguration(environment, Map.of(), List.of()));
     return new ModelJarEmbeddingRuntime(backend, descriptor, qualification);
+  }
+
+  RerankingModel loadReranker(ModelJar model, ModelLoadOptions options) {
+    return loadRerankingRuntime(model, options).model();
+  }
+
+  ModelJarRerankingRuntime loadRerankingRuntime(ModelJar model, ModelLoadOptions options) {
+    Objects.requireNonNull(model, "model");
+    Objects.requireNonNull(options, "options");
+    ModelJarDescriptor descriptor =
+        models
+            .resolve(model)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    ModelRerankingQualificationRegistry.Entry qualification =
+        selectRerankingQualification(descriptor, options.backend());
+    Path artifact = installer.install(descriptor, options);
+    RerankingModel reranker = rerankingModelLoader.load(artifact, qualification);
+    return new ModelJarRerankingRuntime(reranker, descriptor, qualification);
   }
 
   static void requireVectorModule(boolean available) {
@@ -408,6 +528,36 @@ public final class ModelJars {
                         + (requestedBackend == ModelBackend.AUTO
                             ? "embedding execution"
                             : requestedBackend.backendId() + " embedding execution")));
+  }
+
+  private ModelRerankingQualificationRegistry.Entry selectRerankingQualification(
+      ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
+    String artifactSha256 =
+        descriptor
+            .sha256()
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "Reranking ModelJar "
+                            + descriptor.markerCoordinate()
+                            + " has no pinned artifact digest"));
+    return rerankingQualifications.qualified().stream()
+        .filter(candidate -> candidate.modelId().equals(descriptor.alias()))
+        .filter(candidate -> candidate.artifactSha256().equalsIgnoreCase(artifactSha256))
+        .filter(
+            candidate ->
+                requestedBackend == ModelBackend.AUTO
+                    || candidate.backend().equals(requestedBackend.backendId()))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " has no qualified "
+                        + (requestedBackend == ModelBackend.AUTO
+                            ? "reranking execution"
+                            : requestedBackend.backendId() + " reranking execution")));
   }
 
   private BackendConfiguration configuration(
@@ -602,6 +752,15 @@ public final class ModelJars {
     }
   }
 
+  private static RerankingModel loadRerankingModel(
+      Path artifact, ModelRerankingQualificationRegistry.Entry qualification) {
+    if (!JAVA_BACKEND.equals(qualification.backend())) {
+      throw new ModelJarException(
+          "Unsupported Models reranking backend: " + qualification.backend());
+    }
+    return GgufRerankingModel.load(artifact);
+  }
+
   @FunctionalInterface
   interface ArtifactInstaller {
     Path install(ModelJarDescriptor descriptor, ModelLoadOptions options);
@@ -618,5 +777,10 @@ public final class ModelJars {
         Path artifact,
         ModelEmbeddingQualificationRegistry.Entry qualification,
         BackendConfiguration configuration);
+  }
+
+  @FunctionalInterface
+  interface RerankingModelLoader {
+    RerankingModel load(Path artifact, ModelRerankingQualificationRegistry.Entry qualification);
   }
 }

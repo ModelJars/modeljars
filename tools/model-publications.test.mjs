@@ -764,6 +764,37 @@ test("publishes an artifact qualified only by tool conformance", () => {
   );
 });
 
+test("publishes an artifact qualified only by reranking evidence", () => {
+  const reranker = model({
+    id: "minilm_reranker",
+    markerCoordinate:
+      "org.modeljars.huggingface:example.minilm-reranker.q4_k:1.0.0-q4_k.1",
+    sha256: "c".repeat(64),
+  });
+  const delta = selectCatalogPublications(catalog([reranker]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([reranker]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([
+      {
+        modelId: reranker.id,
+        artifactSha256: reranker.sha256,
+        artifactSizeBytes: reranker.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [reranker.id],
+  );
+});
+
 test("withholds an embedding artifact whose evidence did not qualify", () => {
   const embedder = model({
     id: "embedding_model",

@@ -66,6 +66,11 @@ export function modelTerms(model) {
       qualification.oracleBackend,
       qualification.useCaseTier,
     ]),
+    ...(model.rerankingQualifications || []).flatMap((qualification) => [
+      qualification.backend,
+      qualification.workload,
+      qualification.useCaseTier,
+    ]),
     ...(model.toolQualifications || []).flatMap((qualification) => [
       qualification.backend,
       qualification.verdict,
@@ -127,6 +132,8 @@ export function verificationProfile(model) {
     );
   } else if (qualification?.structuredOutputRate !== undefined) {
     checks.push(`${qualification.attempts}-case tool-calling qualification`);
+  } else if (qualification?.maximumSameArtifactOracleLogitDelta !== undefined) {
+    checks.push(`${qualification.pairs}-pair reranking qualification`);
   } else if (qualification) {
     checks.push(`${qualification.attempts}-request RAG qualification`);
   }

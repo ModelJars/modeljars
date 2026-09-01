@@ -162,6 +162,34 @@ test("facets an embedding model under its semantic-search tier", () => {
   assert.ok(facets.domains.some((facet) => facet.value === "embeddings"));
 });
 
+test("facets a reranker under its measured use-case tier", () => {
+  const reranker = {
+    ...embeddingModel,
+    id: "minilm-reranker",
+    capabilities: ["reranking", "text-ranking"],
+    rerankingQualifications: [
+      {
+        qualified: true,
+        useCaseTier: "SECOND_STAGE_RERANKING",
+        backend: "pure-java",
+        workload: "reranking-oracle-and-latency-v1",
+        pairs: 6,
+        maximumSameArtifactOracleLogitDelta: 0.036392,
+      },
+    ],
+    embeddingQualifications: [],
+  };
+
+  const facets = buildFacets([reranker]);
+
+  assert.deepEqual(
+    facets.qualifications.map((facet) => facet.value),
+    ["second-stage-reranking"],
+  );
+  assert.ok(modelTerms(reranker).includes("reranking-oracle-and-latency-v1"));
+  assert.equal(verificationProfile(reranker).label, "Second-stage reranking");
+});
+
 test("describes embedding evidence without borrowing RAG wording", () => {
   const profile = verificationProfile(embeddingModel);
 

@@ -33,17 +33,29 @@ public final class ModelJarRerankingRuntime implements AutoCloseable {
     this.qualification = Objects.requireNonNull(qualification, "qualification");
   }
 
-  /** Returns the owned, ready-to-use reranking model. */
+  /**
+   * Returns the owned, ready-to-use reranking model.
+   *
+   * @return loaded reranking model
+   */
   public RerankingModel model() {
     return model;
   }
 
-  /** Returns the immutable marker descriptor. */
+  /**
+   * Returns the immutable marker descriptor.
+   *
+   * @return selected ModelJar descriptor
+   */
   public ModelJarDescriptor descriptor() {
     return descriptor;
   }
 
-  /** Returns the evidence bound to the selected artifact bytes. */
+  /**
+   * Returns the evidence bound to the selected artifact bytes.
+   *
+   * @return exact qualification evidence
+   */
   public ModelRerankingQualificationRegistry.Entry qualification() {
     return qualification;
   }

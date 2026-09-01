@@ -43,7 +43,29 @@ public final class ModelRerankingQualificationRegistry {
   private static final String ROOT_PREFIX = "modeljars.rerankingQualifications.";
   private static final String ENTRY_PREFIX = "rerankingQualification.";
 
-  /** Runtime fields needed to select exact qualified reranker bytes. */
+  /**
+   * Runtime fields needed to select exact qualified reranker bytes.
+   *
+   * @param modelId stable ModelJars catalog identifier
+   * @param model human-readable upstream model name
+   * @param backend Models backend used for qualification
+   * @param backendVersion exact Models revision or version used for qualification
+   * @param workload versioned qualification workload identifier
+   * @param artifactSha256 SHA-256 digest of the qualified model bytes
+   * @param artifactSizeBytes size of the qualified model artifact
+   * @param report revision-pinned qualification report URI
+   * @param reportSha256 SHA-256 digest of the qualification report
+   * @param qualified whether the artifact passed every admission gate
+   * @param pairs number of query-document pairs in the correctness workload
+   * @param maximumOnnxLogitDelta largest absolute logit delta from the unquantized ONNX reference
+   * @param maximumSameArtifactOracleLogitDelta largest absolute logit delta from the independent
+   *     same-artifact oracle
+   * @param topKOrderExact whether the retained top-k ordering exactly matched the reference
+   * @param medianColdLoadMillis median cold-load time on the controlled host
+   * @param maximumPairP95Millis largest pair-scoring p95 across controlled processes
+   * @param maximumBatchP95Millis largest batch-scoring p95 across controlled processes
+   * @param medianBatchDocumentsPerSecond median controlled batch throughput
+   */
   public record Entry(
       String modelId,
       String model,
@@ -133,12 +155,21 @@ public final class ModelRerankingQualificationRegistry {
     this.entries = List.copyOf(entries);
   }
 
-  /** Loads and merges every reranking qualification resource visible to the context loader. */
+  /**
+   * Loads and merges every reranking qualification resource visible to the context loader.
+   *
+   * @return the merged qualification registry
+   */
   public static ModelRerankingQualificationRegistry fromClasspath() {
     return fromClasspath(Thread.currentThread().getContextClassLoader());
   }
 
-  /** Loads and merges every reranking qualification resource visible to a class loader. */
+  /**
+   * Loads and merges every reranking qualification resource visible to a class loader.
+   *
+   * @param loader class loader to inspect, or {@code null} for this class's loader
+   * @return the merged qualification registry
+   */
   public static ModelRerankingQualificationRegistry fromClasspath(ClassLoader loader) {
     ClassLoader resolved =
         loader == null ? ModelRerankingQualificationRegistry.class.getClassLoader() : loader;
@@ -180,7 +211,13 @@ public final class ModelRerankingQualificationRegistry {
             metadata.generatedAt, metadata.policyVersion, metadata.modelsRevision, entries);
   }
 
-  /** Parses one reranking qualification properties stream. */
+  /**
+   * Parses one reranking qualification properties stream.
+   *
+   * @param stream properties stream using the supported schema
+   * @return the parsed qualification registry
+   * @throws IOException when the stream cannot be read
+   */
   public static ModelRerankingQualificationRegistry parse(InputStream stream) throws IOException {
     Properties properties = new Properties();
     properties.load(Objects.requireNonNull(stream, "stream"));
@@ -229,17 +266,30 @@ public final class ModelRerankingQualificationRegistry {
         entries);
   }
 
-  /** Returns every recorded entry, ordered by model ID. */
+  /**
+   * Returns every recorded entry, ordered by model ID.
+   *
+   * @return immutable qualification entries
+   */
   public List<Entry> entries() {
     return entries;
   }
 
-  /** Returns only evidence admitted to production. */
+  /**
+   * Returns only evidence admitted to production.
+   *
+   * @return qualified entries ordered by model ID
+   */
   public List<Entry> qualified() {
     return entries.stream().filter(Entry::qualified).toList();
   }
 
-  /** Finds qualified evidence bound to an exact artifact digest. */
+  /**
+   * Finds qualified evidence bound to an exact artifact digest.
+   *
+   * @param artifactSha256 artifact SHA-256 digest
+   * @return matching qualified evidence, if present
+   */
   public Optional<Entry> qualificationFor(String artifactSha256) {
     if (artifactSha256 == null || artifactSha256.isBlank()) {
       return Optional.empty();
@@ -250,17 +300,29 @@ public final class ModelRerankingQualificationRegistry {
         .findFirst();
   }
 
-  /** Returns the ISO-8601 generation time, or empty when no resource was present. */
+  /**
+   * Returns the ISO-8601 generation time, or empty when no resource was present.
+   *
+   * @return resource generation time
+   */
   public String generatedAt() {
     return generatedAt;
   }
 
-  /** Returns the qualification policy version. */
+  /**
+   * Returns the qualification policy version.
+   *
+   * @return qualification policy version
+   */
   public String policyVersion() {
     return policyVersion;
   }
 
-  /** Returns the Models commit that produced the evidence. */
+  /**
+   * Returns the Models commit that produced the evidence.
+   *
+   * @return exact Models revision
+   */
   public String modelsRevision() {
     return modelsRevision;
   }

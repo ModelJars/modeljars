@@ -310,34 +310,66 @@ public final class ModelJars {
     return openEmbeddingRuntime(ModelJar.of(markerCoordinate));
   }
 
-  /** Opens a qualified cross-encoder reranker. */
+  /**
+   * Opens a qualified cross-encoder reranker.
+   *
+   * @param model marker coordinate to resolve
+   * @return ready-to-use reranking model
+   */
   public static RerankingModel openReranker(ModelJar model) {
     return openRerankingRuntime(model).model();
   }
 
-  /** Opens a qualified cross-encoder reranker with explicit cache and network controls. */
+  /**
+   * Opens a qualified cross-encoder reranker with explicit cache and network controls.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return ready-to-use reranking model
+   */
   public static RerankingModel openReranker(ModelJar model, ModelLoadOptions options) {
     return openRerankingRuntime(model, options).model();
   }
 
-  /** Opens a qualified cross-encoder reranker and exposes its exact evidence. */
+  /**
+   * Opens a qualified cross-encoder reranker and exposes its exact evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @return loaded reranking runtime
+   */
   public static ModelJarRerankingRuntime openRerankingRuntime(ModelJar model) {
     return openRerankingRuntime(model, ModelLoadOptions.defaults());
   }
 
-  /** Opens a qualified cross-encoder reranker and exposes its exact evidence. */
+  /**
+   * Opens a qualified cross-encoder reranker and exposes its exact evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return loaded reranking runtime
+   */
   public static ModelJarRerankingRuntime openRerankingRuntime(
       ModelJar model, ModelLoadOptions options) {
     requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
     return classpathLoader().loadRerankingRuntime(model, options);
   }
 
-  /** Opens an exact qualified reranker marker coordinate. */
+  /**
+   * Opens an exact qualified reranker marker coordinate.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return ready-to-use reranking model
+   */
   public static RerankingModel openReranker(String markerCoordinate) {
     return openReranker(ModelJar.of(markerCoordinate));
   }
 
-  /** Opens an exact qualified reranker marker coordinate and exposes its evidence. */
+  /**
+   * Opens an exact qualified reranker marker coordinate and exposes its evidence.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return loaded reranking runtime
+   */
   public static ModelJarRerankingRuntime openRerankingRuntime(String markerCoordinate) {
     return openRerankingRuntime(ModelJar.of(markerCoordinate));
   }

@@ -21,6 +21,26 @@ package org.modeljars;
  * <p>A qualified claim must reproduce both the unquantized reference logits and an independent
  * implementation of the same quantized bytes, preserve the expected ranking, and remain inside the
  * measured second-stage latency envelope.
+ *
+ * @param modelId stable ModelJars catalog identifier
+ * @param model human-readable upstream model name
+ * @param backend Models backend used for qualification
+ * @param backendVersion exact Models revision or version used for qualification
+ * @param workload versioned qualification workload identifier
+ * @param artifactSha256 SHA-256 digest of the qualified model bytes
+ * @param artifactSizeBytes size of the qualified model artifact
+ * @param report revision-pinned qualification report URI
+ * @param reportSha256 SHA-256 digest of the qualification report
+ * @param qualified whether the artifact passed every admission gate
+ * @param pairs number of query-document pairs in the correctness workload
+ * @param maximumOnnxLogitDelta largest absolute logit delta from the unquantized ONNX reference
+ * @param maximumSameArtifactOracleLogitDelta largest absolute logit delta from the independent
+ *     same-artifact oracle
+ * @param topKOrderExact whether the retained top-k ordering exactly matched the reference
+ * @param medianColdLoadMillis median cold-load time on the controlled host
+ * @param maximumPairP95Millis largest pair-scoring p95 across controlled processes
+ * @param maximumBatchP95Millis largest batch-scoring p95 across controlled processes
+ * @param medianBatchDocumentsPerSecond median controlled batch throughput
  */
 public record ModelRerankingQualification(
     String modelId,
@@ -93,7 +113,11 @@ public record ModelRerankingQualification(
     }
   }
 
-  /** Returns true only when the exact artifact passed every production gate. */
+  /**
+   * Returns true only when the exact artifact passed every production gate.
+   *
+   * @return whether the qualification is production-usable
+   */
   public boolean productionUsable() {
     return qualified;
   }

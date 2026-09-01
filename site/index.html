@@ -158,7 +158,7 @@
               coordinates, and downloads verified weights into the same cache used by the JVM
               Runtime. It checks the published catalog hash on catalog-backed commands, atomically
               activates changed metadata, and keeps the last verified catalog available offline.
-              Generated chat, embedding, and tool demos execute the same in-process Java APIs
+              Generated chat, embedding, reranking, and tool demos execute the same in-process Java APIs
               applications use.
             </p>
           </div>
@@ -209,6 +209,9 @@ jbang qwen3-0-6b-chat-demo.java
 
 modeljars demo embeddinggemma "Public transit schedule"
 jbang ggml-org-embeddinggemma-300m-embedding-demo.java
+
+modeljars demo minilm-reranker "How many people live in Berlin?"
+jbang cstr-ms-marco-minilm-l6-v2-reranking-demo.java
 
 # Generated demos use the same public Java APIs as your application
 modeljars info

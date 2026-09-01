@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-01T15:31:50Z",
+  "policyVersion": "reranking-oracle-and-latency-v1",
+  "modelsRevision": "31183ecb9bd78460f88415b3e2f7625f6bb5b096",
+  "qualifiedModels": 1,
+  "rejectedModels": 0,
+  "entries": [
+    {
+      "modelId": "cstr_ms_marco_minilm_l6_v2_gguf_q4_k_imatrix_g7c_f7",
+      "model": "MS MARCO MiniLM L6 v2 reranker corrected Q4_K imatrix",
+      "backend": "pure-java",
+      "backendVersion": "models-0.3.23",
+      "workload": "reranking-oracle-and-latency-v1",
+      "artifactSha256": "0752a92bc33289f3fe230d1a33cce471f1a7fe1c8d5a491ca7fff6b068b0fc83",
+      "artifactSizeBytes": 19986112,
+      "report": "benchmark-results/reranking/ms-marco-minilm-l6-v2-q4-k-imatrix/performance-intel-mac.json",
+      "reportSha256": "114f393304830f279b89dfc7f04e3e6ea7055692b517f58956a39bc8f13c0a4f",
+      "qualified": true,
+      "pairs": 6,
+      "oracleBackends": {
+        "unquantized": "ONNX Runtime",
+        "sameArtifact": "CrispEmbed e4cfd3dd5353c4a4e9d48c3e6657491d38e797d3"
+      },
+      "maximumOnnxLogitDelta": 0.101034,
+      "maximumSameArtifactOracleLogitDelta": 0.036392,
+      "topKOrderExact": true,
+      "topKOriginalIndexes": [0, 2],
+      "medianColdLoadMillis": 221.346,
+      "maximumPairP95Millis": 174.357,
+      "maximumBatchP95Millis": 930.176,
+      "medianBatchDocumentsPerSecond": 7.875,
+      "environment": {
+        "hostname": "Brians-MacBook-Pro.local",
+        "osName": "Mac OS X",
+        "osVersion": "26.6.2",
+        "architecture": "x86_64",
+        "cpuModel": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+        "processors": 12,
+        "physicalMemoryBytes": 34359738368,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM",
+        "vectorBits": 256
+      }
+    }
+  ]
+}

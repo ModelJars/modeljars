@@ -27,10 +27,12 @@ final class DemoScriptGenerator {
       Set.of("embedding", "embeddings", "text-embedding");
   private static final Set<String> CHAT_CAPABILITIES =
       Set.of("chat", "generation", "text-generation");
+  private static final Set<String> RERANKING_CAPABILITIES = Set.of("reranking", "text-ranking");
 
   enum Type {
     CHAT,
     EMBEDDING,
+    RERANKING,
     TOOLS
   }
 
@@ -68,6 +70,7 @@ final class DemoScriptGenerator {
         switch (type) {
           case CHAT -> chatSource(descriptor, input);
           case EMBEDDING -> embeddingSource(descriptor, input);
+          case RERANKING -> rerankingSource(descriptor, input);
           case TOOLS -> toolSource(descriptor, input);
         };
     return new GeneratedDemo(
@@ -82,19 +85,23 @@ final class DemoScriptGenerator {
     if (capabilities.stream().anyMatch(EMBEDDING_CAPABILITIES::contains)) {
       return Type.EMBEDDING;
     }
+    if (capabilities.stream().anyMatch(RERANKING_CAPABILITIES::contains)) {
+      return Type.RERANKING;
+    }
     if (capabilities.stream().anyMatch(CHAT_CAPABILITIES::contains)) {
       return Type.CHAT;
     }
     throw new IllegalArgumentException(
         "Model "
             + descriptor.alias()
-            + " does not have a supported chat, embedding, or Needle tool-calling demo");
+            + " does not have a supported chat, embedding, reranking, or Needle tool-calling demo");
   }
 
   private static String input(Type type) {
     return switch (type) {
       case CHAT -> "What is the capital of France? Reply with only the city name.";
       case EMBEDDING -> "Public transit connects people and cities.";
+      case RERANKING -> "How many people live in Berlin?";
       case TOOLS -> "Dim the bedroom lights to 20 percent and lock the front door.";
     };
   }
@@ -103,6 +110,7 @@ final class DemoScriptGenerator {
     return switch (type) {
       case CHAT -> "chat";
       case EMBEDDING -> "embedding";
+      case RERANKING -> "reranking";
       case TOOLS -> "tools";
     };
   }
@@ -213,6 +221,50 @@ final class DemoScriptGenerator {
               System.out.printf("Dimensions: %%,d%%n", vector.length);
               System.out.printf("Load:       %%,d ms%%n", (loaded - loadStarted) / 1_000_000);
               System.out.printf("Execution:   %%,d ms%%n", (completed - loaded) / 1_000_000);
+            }
+          }
+
+          private static void quietLibraries() {
+            Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+            Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+          }
+        }
+        """
+            .formatted(descriptor.markerCoordinate(), javaString(defaultInput));
+  }
+
+  private String rerankingSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import java.util.List;
+        import java.util.logging.Level;
+        import java.util.logging.Logger;
+        import org.modeljars.ModelJars;
+
+        class ModelJarsDemo {
+          private static final String MODEL = "%s";
+
+          public static void main(String... args) {
+            quietLibraries();
+            var query = args.length == 0 ? "%s" : String.join(" ", args);
+            var documents = List.of(
+                "Berlin has a population of 3,520,031 registered inhabitants.",
+                "Paris is the capital and most populous city of France.",
+                "Berlin is well known for its museums and metropolitan area.");
+            long loadStarted = System.nanoTime();
+            try (var model = ModelJars.openReranker(MODEL)) {
+              long loaded = System.nanoTime();
+              var ranked = model.rerank(query, documents);
+              long completed = System.nanoTime();
+
+              System.out.println("Query: " + query);
+              System.out.println("Rank  Score       Document");
+              for (int rank = 0; rank < ranked.size(); rank++) {
+                var result = ranked.get(rank);
+                System.out.printf("%%4d  %%10.6f  %%s%%n", rank + 1, result.score(), result.document());
+              }
+              System.out.printf("%%nLoad:      %%,d ms%%n", (loaded - loadStarted) / 1_000_000);
+              System.out.printf("Execution: %%,d ms%%n", (completed - loaded) / 1_000_000);
             }
           }
 

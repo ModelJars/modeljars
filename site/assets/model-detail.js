@@ -58,6 +58,26 @@ try (var embeddings = ModelJars.openEmbedding(MODEL)) {
 }`;
 }
 
+export function rerankingJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
+    throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  }
+  const reference = referenceClassName(modelId);
+  return `import static org.modeljars.catalog.${reference}.MODEL;
+
+import java.util.List;
+import org.modeljars.ModelJars;
+
+var query = "How many people live in Berlin?";
+var documents = List.of(
+    "Berlin has a population of 3,520,031 registered inhabitants.",
+    "Paris is the capital and most populous city of France.");
+
+try (var reranker = ModelJars.openReranker(MODEL)) {
+  var ranked = reranker.rerank(query, documents);
+}`;
+}
+
 function formatPercent(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
@@ -70,6 +90,11 @@ export function isEmbeddingEvidence(qualification) {
 /** True for tool-calling conformance evidence rather than RAG or embedding evidence. */
 export function isToolEvidence(qualification) {
   return Boolean(qualification) && qualification.structuredOutputRate !== undefined;
+}
+
+/** True for cross-encoder score, ordering, and latency evidence. */
+export function isRerankingEvidence(qualification) {
+  return Boolean(qualification) && qualification.maximumSameArtifactOracleLogitDelta !== undefined;
 }
 
 export function qualificationSummary(qualification) {
@@ -129,6 +154,25 @@ export function qualificationSummary(qualification) {
       rawQuality: null,
       finalQuality: null,
       fallbackRate: null,
+    };
+  }
+  if (isRerankingEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      pairs: qualification.pairs,
+      maximumOnnxLogitDelta: qualification.maximumOnnxLogitDelta,
+      maximumSameArtifactOracleLogitDelta:
+        qualification.maximumSameArtifactOracleLogitDelta,
+      topKOrderExact: qualification.topKOrderExact,
+      coldLoad: formatDuration(qualification.medianColdLoadMillis),
+      pairP95: formatDuration(qualification.maximumPairP95Millis),
+      batchP95: formatDuration(qualification.maximumBatchP95Millis),
+      throughput: `${Number(qualification.medianBatchDocumentsPerSecond).toFixed(3)} docs/s`,
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
     };
   }
   return {
@@ -201,9 +245,11 @@ function isGenerationModel(model) {
 }
 
 export function resourceMemoryNote(model) {
-  return isGenerationModel(model)
-    ? "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional."
-    : "Memory baseline covers the complete artifact bytes. Embedding working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
+  if (isGenerationModel(model)) {
+    return "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
+  }
+  const purpose = (model.capabilities || []).includes("reranking") ? "Reranking" : "Embedding";
+  return `Memory baseline covers the complete artifact bytes. ${purpose} working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.`;
 }
 
 function dimensionRows(model, memory, downloadBytes, generationModel) {
@@ -345,11 +391,42 @@ function renderToolQualification(summary) {
     </section>`;
 }
 
+function renderRerankingQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="reranking-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="reranking-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.pairs))} pairs</span>
+      </div>
+      <p>
+        The exact artifact reproduced the reference logits and ranking on
+        ${escapeHtml(summary.backend)}, then passed a controlled second-stage latency envelope.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>ONNX max delta</dt><dd>${escapeHtml(summary.maximumOnnxLogitDelta.toFixed(6))}</dd></div>
+        <div><dt>Same-artifact max delta</dt><dd>${escapeHtml(summary.maximumSameArtifactOracleLogitDelta.toFixed(6))}</dd></div>
+        <div><dt>Top-k order</dt><dd>${summary.topKOrderExact ? "exact" : "different"}</dd></div>
+        <div><dt>Cold load median</dt><dd>${escapeHtml(summary.coldLoad)}</dd></div>
+        <div><dt>Pair p95</dt><dd>${escapeHtml(summary.pairP95)}</dd></div>
+        <div><dt>Six-document p95</dt><dd>${escapeHtml(summary.batchP95)}</dd></div>
+        <div><dt>Batch throughput</dt><dd>${escapeHtml(summary.throughput)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw qualification JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
+  if (isRerankingEvidence(qualification)) return renderRerankingQualification(summary);
   return `
     <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="rag-evidence-title">
       <div class="verification-heading">
@@ -496,7 +573,9 @@ function renderModel(model, catalog) {
             "Java",
             isEmbeddingEvidence(qualification)
               ? embeddingJavaSnippet(model.id)
-              : javaSnippet(model.id),
+              : isRerankingEvidence(qualification)
+                ? rerankingJavaSnippet(model.id)
+                : javaSnippet(model.id),
             "language-java",
           )}
         </section>

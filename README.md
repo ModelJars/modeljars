@@ -72,6 +72,7 @@ modeljars show gemma-26b
 modeljars pull qwen-0.6b
 modeljars demo qwen-0.6b "What is the capital of France? Reply with only the city name."
 modeljars demo embeddinggemma "Public transit schedule"
+modeljars demo minilm-reranker "How many people live in Berlin?"
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -127,7 +128,8 @@ qualified capability. Embedding demos print the input, full vector, dimensions, 
 times. Chat demos render the qualified template and report runtime-owned tokenization, prompt
 preparation, prefill, TTFT, decode, and token-count measurements. Tool-calling models generate a
 complete in-memory smart-home example that declares tools, constrains decoding, parses calls, and
-executes them. Run the printed `jbang <file>` command; inference then follows the same public
+executes them. Reranking demos score a document set, preserve original positions, and print the
+ordering plus load and execution time. Run the printed `jbang <file>` command; inference then follows the same public
 ModelJars and Models APIs used by an application, with no external model server. `script`, `run`,
 `chat`, `embed`, and `embedding` are aliases for `demo`.
 
@@ -339,6 +341,22 @@ Use `ModelJars.openEmbeddingRuntime(MODEL)` when the application also needs the 
 and `ModelEmbeddingQualificationRegistry.Entry` selected for the loaded model. Applications never
 construct a cache path or choose pooling themselves.
 
+Qualified cross-encoder rerankers use the same path-free contract:
+
+```java
+import static org.modeljars.catalog.Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7.MODEL;
+import java.util.List;
+import org.modeljars.ModelJars;
+
+var documents = List.of("Berlin has 3.5 million residents.", "Paris is in France.");
+try (var reranker = ModelJars.openReranker(MODEL)) {
+    var ranked = reranker.rerank("How many people live in Berlin?", documents);
+}
+```
+
+`ModelJars.openRerankingRuntime(MODEL)` also exposes the exact artifact-bound numerical, ordering,
+and latency evidence that authorized publication.
+
 Local inference must start Java 25 or newer with the Vector module resolved:
 
 ```text
@@ -533,6 +551,11 @@ llama.cpp, for a pinned probe set over the same bytes. Agreement is gated at 0.9
 correct run measures 0.99950 and wrong pooling measures 0.66156. Cosine is scale-invariant, so
 vector length is gated separately at 1e-3. Evidence is recorded as `ModelEmbeddingQualification`,
 whose tier is `SEMANTIC_SEARCH` or `UNQUALIFIED`.
+
+Reranking artifacts pass a separate cross-encoder policy. The exact quantized bytes must stay
+within the recorded logit delta of both the unquantized reference and an independent implementation
+of the same artifact, reproduce the expected top-k order, and meet controlled pair and batch
+latency ceilings. A successful load or plausible ordering alone is not qualification.
 
 The [qualification and submission guide](https://modeljars.org/contribute/) lists candidate
 submission, maintainer host prerequisites, harness commands, acceptance thresholds, evidence files,

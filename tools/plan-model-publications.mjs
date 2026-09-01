@@ -26,6 +26,8 @@ function parseArguments(argumentsList) {
         "--previous-embedding-qualifications",
         "--tool-qualifications",
         "--previous-tool-qualifications",
+        "--reranking-qualifications",
+        "--previous-reranking-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -39,6 +41,7 @@ function parseArguments(argumentsList) {
           "[--embedding-qualifications FILE " +
           "--previous-embedding-qualifications FILE] " +
           "[--tool-qualifications FILE --previous-tool-qualifications FILE] " +
+          "[--reranking-qualifications FILE --previous-reranking-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -55,6 +58,23 @@ function parseArguments(argumentsList) {
   ) {
     throw new Error(
       "--previous-profiles and --current-profiles must be provided together",
+    );
+  }
+  if (
+    values.has("--previous-reranking-qualifications") &&
+    (!values.has("--previous") || !values.has("--reranking-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-reranking-qualifications requires --previous and --reranking-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--reranking-qualifications") &&
+    !values.has("--previous-reranking-qualifications")
+  ) {
+    throw new Error(
+      "--previous-reranking-qualifications is required for a reranking-qualification-aware delta",
     );
   }
   if (
@@ -103,6 +123,7 @@ function qualifiedCatalog(
   qualificationManifest,
   embeddingManifest,
   toolManifest,
+  rerankingManifest,
 ) {
   filterQualifiedPublications(
     { publications: [], removed: [] },
@@ -110,6 +131,7 @@ function qualifiedCatalog(
     qualificationManifest,
     embeddingManifest,
     toolManifest,
+    rerankingManifest,
   );
   const qualifiedIds = new Set(
     [
@@ -121,6 +143,9 @@ function qualifiedCatalog(
       ),
       ...(toolManifest?.entries ?? []).filter(
         (entry) => entry.summary?.qualified === true,
+      ),
+      ...(rerankingManifest?.entries ?? []).filter(
+        (entry) => entry.qualified === true,
       ),
     ]
       .map((entry) => entry.modelId),
@@ -174,6 +199,13 @@ async function main() {
     toolQualificationPath === undefined
       ? undefined
       : await readCatalog(toolQualificationPath);
+  const rerankingQualificationPath = argumentsMap.get(
+    "--reranking-qualifications",
+  );
+  const currentRerankingQualifications =
+    rerankingQualificationPath === undefined
+      ? undefined
+      : await readCatalog(rerankingQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -197,6 +229,9 @@ async function main() {
       const previousToolPath = argumentsMap.get(
         "--previous-tool-qualifications",
       );
+      const previousRerankingPath = argumentsMap.get(
+        "--previous-reranking-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
@@ -206,12 +241,16 @@ async function main() {
         previousToolPath === undefined
           ? undefined
           : await readCatalog(previousToolPath),
+        previousRerankingPath === undefined
+          ? undefined
+          : await readCatalog(previousRerankingPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
         currentQualifications,
         currentEmbeddingQualifications,
         currentToolQualifications,
+        currentRerankingQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -239,6 +278,7 @@ async function main() {
           currentQualifications,
           currentEmbeddingQualifications,
           currentToolQualifications,
+          currentRerankingQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

@@ -16,7 +16,6 @@
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -93,12 +92,22 @@ class DemoScriptGeneratorTest {
   }
 
   @Test
-  void rejectsModelsWithoutAnExecutableCapability() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> generator.generate(descriptor(Set.of("reranking")), Optional.empty()));
-    assertTrue(failure.getMessage().contains("supported chat, embedding, or Needle tool-calling"));
+  void generatesARerankingDemoThroughThePublicModelJarsApi() {
+    DemoScriptGenerator.GeneratedDemo demo =
+        generator.generate(
+            descriptor(Set.of("reranking", "text-ranking")),
+            Optional.of("How many people live in Berlin?"));
+
+    assertEquals(DemoScriptGenerator.Type.RERANKING, demo.type());
+    assertEquals("example-reranking-demo.java", demo.fileName());
+    assertContains(
+        demo.source(),
+        "ModelJars.openReranker(MODEL)",
+        "How many people live in Berlin?",
+        "model.rerank(query, documents)",
+        "Score",
+        "Load:",
+        "Execution:");
   }
 
   private static void assertContains(String source, String... fragments) {

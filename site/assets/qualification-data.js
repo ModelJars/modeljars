@@ -186,8 +186,11 @@ export function primaryQualification(model) {
   const embedding = Array.isArray(model?.embeddingQualifications)
     ? model.embeddingQualifications
     : [];
+  const reranking = Array.isArray(model?.rerankingQualifications)
+    ? model.rerankingQualifications
+    : [];
   // Prefer workload evidence over equivalence evidence when an artifact carries both.
-  const entries = [...rag, ...tool, ...embedding];
+  const entries = [...rag, ...tool, ...reranking, ...embedding];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
@@ -196,6 +199,7 @@ export function qualificationLabel(qualification) {
   if (qualification.useCaseTier === "GENERATIVE_RAG") return "Generative RAG";
   if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
   if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";
+  if (qualification.useCaseTier === "SECOND_STAGE_RERANKING") return "Second-stage reranking";
   return "Guarded RAG";
 }
 

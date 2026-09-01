@@ -180,6 +180,23 @@ test("selects and labels tool-calling conformance evidence", () => {
   assert.equal(qualificationLabel(selected), "Tool calling");
 });
 
+test("selects and labels reranking evidence", () => {
+  const model = {
+    rerankingQualifications: [
+      {
+        qualified: true,
+        useCaseTier: "SECOND_STAGE_RERANKING",
+        maximumSameArtifactOracleLogitDelta: 0.036392,
+      },
+    ],
+  };
+
+  const selected = primaryQualification(model);
+
+  assert.equal(selected.useCaseTier, "SECOND_STAGE_RERANKING");
+  assert.equal(qualificationLabel(selected), "Second-stage reranking");
+});
+
 test("normalizes the published nested tool-calling evidence shape", () => {
   const toolModel = {
     id: "cactus_compute_needle2_cact_cq2_mixed",

@@ -10,6 +10,7 @@ import {
   mavenSnippet,
   modelIdFromPath,
   qualificationSummary,
+  rerankingJavaSnippet,
   resourceMemoryNote,
 } from "./model-detail.js";
 
@@ -32,6 +33,14 @@ test("renders build-tool snippets from marker coordinates", () => {
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars\.huggingface<\/groupId>/);
   assert.match(mavenSnippet(coordinate), /<artifactId>qwen\.qwen3\.q4_k_m<\/artifactId>/);
   assert.match(mavenSnippet(coordinate), /<version>3\.0\.0-q4_k_m\.1<\/version>/);
+});
+
+test("renders a reranking snippet through the public ModelJars API", () => {
+  const source = rerankingJavaSnippet("cstr_ms_marco_minilm_l6_v2");
+
+  assert.match(source, /ModelJars\.openReranker\(MODEL\)/);
+  assert.match(source, /rerank\(query, documents\)/);
+  assert.match(source, /List\.of/);
 });
 
 test("renders path-free Java loading from the generated catalog reference", () => {
@@ -85,6 +94,7 @@ test("does not claim embedding-only models allocate a generation KV cache", () =
   assert.match(resourceMemoryNote({ capabilities: ["text-generation"] }), /KV cache/);
   assert.doesNotMatch(resourceMemoryNote({ capabilities: ["semantic-search"] }), /KV cache/);
   assert.match(resourceMemoryNote({ capabilities: ["semantic-search"] }), /embedding working buffers/i);
+  assert.match(resourceMemoryNote({ capabilities: ["reranking"] }), /reranking working buffers/i);
 });
 
 test("summarizes exact RAG qualification evidence without hiding fallbacks", () => {
@@ -183,4 +193,30 @@ test("summarizes tool conformance without inventing RAG metrics", () => {
   assert.equal(summary.endToEnd, "53.20 s");
   assert.equal(summary.rawQuality, null);
   assert.equal(summary.evidenceSha256, "e".repeat(64));
+});
+
+test("summarizes reranking correctness and latency evidence", () => {
+  const summary = qualificationSummary({
+    qualified: true,
+    useCaseTier: "SECOND_STAGE_RERANKING",
+    backend: "pure-java",
+    backendVersion: "models-0.3.23",
+    workload: "reranking-oracle-and-latency-v1",
+    pairs: 6,
+    maximumOnnxLogitDelta: 0.101034,
+    maximumSameArtifactOracleLogitDelta: 0.036392,
+    topKOrderExact: true,
+    medianColdLoadMillis: 221.346,
+    maximumPairP95Millis: 174.357,
+    maximumBatchP95Millis: 930.176,
+    medianBatchDocumentsPerSecond: 7.875,
+    reportUri: "https://github.com/integrallis/models/blob/revision/report.json",
+    reportSha256: "f".repeat(64),
+  });
+
+  assert.equal(summary.label, "Second-stage reranking");
+  assert.equal(summary.pairs, 6);
+  assert.equal(summary.pairP95, "174 ms");
+  assert.equal(summary.batchP95, "930 ms");
+  assert.equal(summary.throughput, "7.875 docs/s");
 });

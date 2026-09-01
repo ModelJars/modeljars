@@ -341,6 +341,26 @@ data class CatalogEmbeddingQualifications(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogRerankingQualification(
+    val modelId: String,
+    val qualified: Boolean,
+    val backend: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val reportPath: String,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogRerankingQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val qualifiedModels: Int,
+    val rejectedModels: Int,
+    val entries: List<CatalogRerankingQualification>,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -631,6 +651,74 @@ fun CatalogEmbeddingQualification.siteMetadata(
         ("modelsRevision" to qualifications.modelsRevision) +
         ("policyVersion" to qualifications.policyVersion) +
         ("useCaseTier" to if (qualified) "SEMANTIC_SEARCH" else "UNQUALIFIED")
+
+fun CatalogRerankingQualification.registryProperties(): String =
+    buildString {
+        val prefix = "rerankingQualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(raw.requiredString("model"))}")
+        appendLine("${prefix}backend=${propertyValue(backend)}")
+        appendLine(
+            "${prefix}backendVersion=${propertyValue(raw.requiredString("backendVersion"))}",
+        )
+        appendLine("${prefix}workload=${propertyValue(raw.requiredString("workload"))}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
+        appendLine("${prefix}report=${propertyValue(reportPath)}")
+        appendLine(
+            "${prefix}reportSha256=${raw.requiredString("reportSha256")}",
+        )
+        appendLine("${prefix}qualified=$qualified")
+        appendLine("${prefix}pairs=${(raw["pairs"] as Number).toInt()}")
+        appendLine(
+            "${prefix}maximumOnnxLogitDelta=" +
+                (raw["maximumOnnxLogitDelta"] as Number).toDouble(),
+        )
+        appendLine(
+            "${prefix}maximumSameArtifactOracleLogitDelta=" +
+                (raw["maximumSameArtifactOracleLogitDelta"] as Number).toDouble(),
+        )
+        appendLine("${prefix}topKOrderExact=${raw["topKOrderExact"] as Boolean}")
+        appendLine(
+            "${prefix}medianColdLoadMillis=" +
+                (raw["medianColdLoadMillis"] as Number).toDouble(),
+        )
+        appendLine(
+            "${prefix}maximumPairP95Millis=" +
+                (raw["maximumPairP95Millis"] as Number).toDouble(),
+        )
+        appendLine(
+            "${prefix}maximumBatchP95Millis=" +
+                (raw["maximumBatchP95Millis"] as Number).toDouble(),
+        )
+        appendLine(
+            "${prefix}medianBatchDocumentsPerSecond=" +
+                (raw["medianBatchDocumentsPerSecond"] as Number).toDouble(),
+        )
+    }
+
+fun CatalogRerankingQualifications.registryProperties(
+    entries: List<CatalogRerankingQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.rerankingQualifications.schemaVersion=1")
+        appendLine("modeljars.rerankingQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.rerankingQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.rerankingQualifications.modelsRevision=$modelsRevision")
+        entries.forEach { append(it.registryProperties()) }
+    }
+
+fun CatalogRerankingQualification.siteMetadata(
+    qualifications: CatalogRerankingQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("policyVersion" to qualifications.policyVersion) +
+        ("useCaseTier" to if (qualified) "SECOND_STAGE_RERANKING" else "UNQUALIFIED")
 
 fun CatalogRagQualifications.registryProperties(
     entries: List<CatalogRagQualification> = this.entries,
@@ -1278,17 +1366,78 @@ val embeddingQualifications =
         null
     }
 
+val rerankingQualificationCatalogFile = file("catalog/reranking-qualifications.json")
+val rerankingQualifications =
+    if (rerankingQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(rerankingQualificationCatalogFile)
+                .stringKeyMap("catalog/reranking-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/reranking-qualifications.json must use schemaVersion 1"
+        }
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Reranking qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every reranking qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    CatalogRerankingQualification(
+                        modelId = modelId,
+                        qualified =
+                            raw["qualified"] as? Boolean
+                                ?: error("reranking qualification $modelId.qualified must be a boolean"),
+                        backend = raw.requiredString("backend"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes =
+                            (raw["artifactSizeBytes"] as? Number)?.toLong()
+                                ?: error("reranking qualification $modelId.artifactSizeBytes must be an integer"),
+                        reportPath = raw.requiredString("report"),
+                        raw = raw,
+                    )
+                }
+        require(entries.map(CatalogRerankingQualification::modelId).distinct().size == entries.size) {
+            "Reranking qualification model IDs must be unique"
+        }
+        val qualifiedModels =
+            (document["qualifiedModels"] as? Number)?.toInt()
+                ?: error("Reranking qualification manifest must contain qualifiedModels")
+        val rejectedModels =
+            (document["rejectedModels"] as? Number)?.toInt()
+                ?: error("Reranking qualification manifest must contain rejectedModels")
+        require(qualifiedModels == entries.count(CatalogRerankingQualification::qualified)) {
+            "Reranking qualification qualifiedModels count does not match entries"
+        }
+        require(rejectedModels == entries.count { !it.qualified }) {
+            "Reranking qualification rejectedModels count does not match entries"
+        }
+        CatalogRerankingQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            qualifiedModels = qualifiedModels,
+            rejectedModels = rejectedModels,
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 val publicQualifications =
     requireNotNull(ragQualifications) {
         "Production qualification metadata is required to generate the public site"
     }.entries.filter(CatalogRagQualification::qualified)
 val publicEmbeddingQualifications =
     embeddingQualifications?.entries?.filter(CatalogEmbeddingQualification::qualified).orEmpty()
+val publicRerankingQualifications =
+    rerankingQualifications?.entries?.filter(CatalogRerankingQualification::qualified).orEmpty()
 val publicToolQualifications =
     toolQualifications?.entries?.filter(CatalogToolQualification::qualified).orEmpty()
 val publicModelIds =
     publicQualifications.map(CatalogRagQualification::modelId).toSet() +
         publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet() +
+        publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet()
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
@@ -1309,6 +1458,23 @@ publicEmbeddingQualifications.forEach { qualification ->
     }
     require(entry.sizeBytes == qualification.artifactSizeBytes) {
         "Embedding qualification size does not match catalog model ${qualification.modelId}"
+    }
+}
+publicRerankingQualifications.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error("Reranking qualification references unknown catalog model: ${qualification.modelId}")
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Reranking qualification SHA-256 does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Reranking qualification size does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.backends[qualification.backend] == true) {
+        "Reranking qualification backend is not advertised by ${qualification.modelId}"
+    }
+    require("reranking" in entry.capabilities) {
+        "Reranking-qualified model must advertise the reranking capability: ${qualification.modelId}"
     }
 }
 publicToolQualifications.forEach { qualification ->
@@ -1567,6 +1733,76 @@ toolQualifications?.let { qualifications ->
         }
         require(qualification.environment.maxHeapBytes > 0) {
             "Tool qualification heap must be positive for ${qualification.modelId}"
+        }
+    }
+}
+
+rerankingQualifications?.let { qualifications ->
+    Instant.parse(qualifications.generatedAt)
+    require(qualifications.policyVersion == "reranking-oracle-and-latency-v1") {
+        "Reranking qualifications must use reranking-oracle-and-latency-v1"
+    }
+    require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Reranking qualification modelsRevision must be a 40-character Git commit"
+    }
+    qualifications.entries.forEach { qualification ->
+        val model =
+            catalogEntries.singleOrNull { it.id == qualification.modelId }
+                ?: error("Unknown modelId in reranking qualification: ${qualification.modelId}")
+        val raw = qualification.raw
+        require(qualification.artifactSha256 == model.sha256) {
+            "Reranking qualification SHA-256 does not match ${qualification.modelId}"
+        }
+        require(qualification.artifactSizeBytes == model.sizeBytes) {
+            "Reranking qualification size does not match ${qualification.modelId}"
+        }
+        require(model.backends[qualification.backend] == true) {
+            "Reranking qualification backend is not supported by ${qualification.modelId}"
+        }
+        require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Reranking qualification artifact SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(raw.requiredString("reportSha256").matches(Regex("[0-9a-f]{64}"))) {
+            "Reranking qualification report SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(isNormalizedRepositoryRelativePath(qualification.reportPath)) {
+            "Reranking qualification report path is invalid for ${qualification.modelId}"
+        }
+        require((raw["pairs"] as? Number)?.toInt()?.let { it > 0 } == true) {
+            "Reranking qualification pairs must be positive for ${qualification.modelId}"
+        }
+        val maximumOnnxDelta = (raw["maximumOnnxLogitDelta"] as? Number)?.toDouble()
+        val maximumArtifactDelta =
+            (raw["maximumSameArtifactOracleLogitDelta"] as? Number)?.toDouble()
+        val medianColdLoad = (raw["medianColdLoadMillis"] as? Number)?.toDouble()
+        val maximumPairP95 = (raw["maximumPairP95Millis"] as? Number)?.toDouble()
+        val maximumBatchP95 = (raw["maximumBatchP95Millis"] as? Number)?.toDouble()
+        val throughput = (raw["medianBatchDocumentsPerSecond"] as? Number)?.toDouble()
+        listOf(
+            maximumOnnxDelta,
+            maximumArtifactDelta,
+            medianColdLoad,
+            maximumPairP95,
+            maximumBatchP95,
+            throughput,
+        ).forEach { metric ->
+            require(metric?.let { it.isFinite() && it >= 0.0 } == true) {
+                "Reranking metrics must be finite and non-negative for ${qualification.modelId}"
+            }
+        }
+        if (qualification.qualified) {
+            require(maximumOnnxDelta!! <= 0.15) {
+                "Qualified reranker exceeds the ONNX logit-delta gate: ${qualification.modelId}"
+            }
+            require(maximumArtifactDelta!! <= 0.05) {
+                "Qualified reranker exceeds the same-artifact logit-delta gate: ${qualification.modelId}"
+            }
+            require(raw["topKOrderExact"] == true) {
+                "Qualified reranker must preserve exact top-k order: ${qualification.modelId}"
+            }
+            require(medianColdLoad!! <= 1_000.0 && maximumPairP95!! <= 250.0 && maximumBatchP95!! <= 1_200.0) {
+                "Qualified reranker exceeds its controlled latency envelope: ${qualification.modelId}"
+            }
         }
     }
 }
@@ -2183,6 +2419,14 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
         }
+    val candidateTestEmbeddingQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
+        }
+    val candidateTestRerankingQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
+        }
     val candidateTestPayloadTasks =
         catalogEntries
             .filter { it.packaging == "classpath" }
@@ -2205,6 +2449,12 @@ project(":modeljars-core") {
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
             inputs.file(rootProject.file("catalog/benchmarks.json"))
             inputs.file(qualificationCatalogFile)
+            if (embeddingQualificationCatalogFile.isFile) {
+                inputs.file(embeddingQualificationCatalogFile)
+            }
+            if (rerankingQualificationCatalogFile.isFile) {
+                inputs.file(rerankingQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -2217,6 +2467,8 @@ project(":modeljars-core") {
                 candidateTestQualificationRegistry,
                 candidateTestQualificationMetadata,
                 candidateTestToolQualificationRegistry,
+                candidateTestEmbeddingQualificationRegistry,
+                candidateTestRerankingQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -2241,6 +2493,16 @@ project(":modeljars-core") {
                                         qualifications.entries
                                             .filter { it.modelId == entry.id }
                                             .map { it.siteMetadata(qualifications) }) +
+                                    ("embeddingQualifications" to
+                                        embeddingQualifications?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map { it.siteMetadata(embeddingQualifications) }
+                                            .orEmpty()) +
+                                    ("rerankingQualifications" to
+                                        rerankingQualifications?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map { it.siteMetadata(rerankingQualifications) }
+                                            .orEmpty()) +
                                     ("toolQualifications" to
                                         toolQualifications?.entries
                                             ?.filter { it.modelId == entry.id }
@@ -2282,6 +2544,16 @@ project(":modeljars-core") {
                 candidateTestToolQualificationRegistry.get().asFile.writeText(
                     toolQualifications?.registryProperties()
                         ?: emptyToolQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestEmbeddingQualificationRegistry.get().asFile.writeText(
+                    embeddingQualifications?.registryProperties()
+                        ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestRerankingQualificationRegistry.get().asFile.writeText(
+                    rerankingQualifications?.registryProperties()
+                        ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
             }
@@ -2392,6 +2664,10 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
         }
+    val runtimeRerankingQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
+        }
     val runtimeToolQualificationRegistry =
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -2402,6 +2678,9 @@ project(":modeljars") {
             if (embeddingQualificationCatalogFile.isFile) {
                 inputs.file(embeddingQualificationCatalogFile)
             }
+            if (rerankingQualificationCatalogFile.isFile) {
+                inputs.file(rerankingQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -2409,6 +2688,7 @@ project(":modeljars") {
                 runtimeRagQualificationRegistry,
                 runtimeRagQualificationMetadata,
                 runtimeEmbeddingQualificationRegistry,
+                runtimeRerankingQualificationRegistry,
                 runtimeToolQualificationRegistry,
             )
             doLast {
@@ -2426,6 +2706,11 @@ project(":modeljars") {
                 runtimeEmbeddingQualificationRegistry.get().asFile.writeText(
                     embeddingQualifications?.registryProperties()
                         ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeRerankingQualificationRegistry.get().asFile.writeText(
+                    rerankingQualifications?.registryProperties()
+                        ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 runtimeToolQualificationRegistry.get().asFile.writeText(
@@ -2491,6 +2776,21 @@ project(":modeljars") {
         jvmArgs("--add-modules", "jdk.incubator.vector")
         providers.gradleProperty("needle2CactArtifact").orNull?.let {
             systemProperty("modeljars.fixtures.needle2Cact", it)
+        }
+        outputs.upToDateWhen { false }
+    }
+
+    tasks.register<Test>("msMarcoRerankerIntegrationTest") {
+        description = "Runs the pinned MS MARCO MiniLM artifact through ModelJars reranking."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching("org.modeljars.MsMarcoRerankerIntegrationTest")
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        providers.gradleProperty("msMarcoRerankerArtifact").orNull?.let {
+            systemProperty("modeljars.fixtures.msMarcoReranker", it)
         }
         outputs.upToDateWhen { false }
     }
@@ -2691,6 +2991,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
         }
+    val aggregateRerankingQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
+        }
     val aggregateToolQualificationRegistry =
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -2706,6 +3010,9 @@ project(":modeljars-catalog") {
             if (embeddingQualificationCatalogFile.isFile) {
                 inputs.file(embeddingQualificationCatalogFile)
             }
+            if (rerankingQualificationCatalogFile.isFile) {
+                inputs.file(rerankingQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -2718,6 +3025,7 @@ project(":modeljars-catalog") {
                 aggregateQualificationRegistry,
                 aggregateQualificationMetadata,
                 aggregateEmbeddingQualificationRegistry,
+                aggregateRerankingQualificationRegistry,
                 aggregateToolQualificationRegistry,
             )
             doLast {
@@ -2752,6 +3060,14 @@ project(":modeljars-catalog") {
                                                     requireNotNull(embeddingQualifications),
                                                 )
                                             }) +
+                                    ("rerankingQualifications" to
+                                        publicRerankingQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(
+                                                    requireNotNull(rerankingQualifications),
+                                                )
+                                            }) +
                                     ("toolQualifications" to
                                         publicToolQualifications
                                             .filter { it.modelId == entry.id }
@@ -2768,6 +3084,12 @@ project(":modeljars-catalog") {
                     embeddingQualifications
                         ?.registryProperties(publicEmbeddingQualifications)
                         ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateRerankingQualificationRegistry.get().asFile.writeText(
+                    rerankingQualifications
+                        ?.registryProperties(publicRerankingQualifications)
+                        ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateToolQualificationRegistry.get().asFile.writeText(
@@ -2900,6 +3222,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/embedding-qualifications-v1.properties")
             }
+        val markerRerankingQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
+            }
         val markerToolQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -2910,8 +3236,14 @@ project(":modeljars-catalog") {
                 inputs.file(rootProject.file("catalog/models.json"))
                 inputs.file(rootProject.file("catalog/performance-profiles.json"))
                 inputs.file(qualificationCatalogFile)
+                if (embeddingQualificationCatalogFile.isFile) {
+                    inputs.file(embeddingQualificationCatalogFile)
+                }
                 if (toolQualificationCatalogFile.isFile) {
                     inputs.file(toolQualificationCatalogFile)
+                }
+                if (rerankingQualificationCatalogFile.isFile) {
+                    inputs.file(rerankingQualificationCatalogFile)
                 }
                 outputs.files(
                     markerRegistry,
@@ -2921,6 +3253,7 @@ project(":modeljars-catalog") {
                     markerQualificationRegistry,
                     markerQualificationMetadata,
                     markerEmbeddingQualificationRegistry,
+                    markerRerankingQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerDocs,
                 )
@@ -2932,6 +3265,8 @@ project(":modeljars-catalog") {
                         }
                     val modelToolQualifications =
                         toolQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
+                    val modelRerankingQualifications =
+                        rerankingQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
@@ -2942,6 +3277,10 @@ project(":modeljars-catalog") {
                                     ("ragQualifications" to
                                         modelQualifications.map {
                                             it.siteMetadata(requireNotNull(ragQualifications))
+                                        }) +
+                                    ("rerankingQualifications" to
+                                        modelRerankingQualifications.map {
+                                            it.siteMetadata(requireNotNull(rerankingQualifications))
                                         }) +
                                     ("toolQualifications" to
                                         modelToolQualifications.map {
@@ -2997,6 +3336,11 @@ project(":modeljars-catalog") {
                         ) ?: "modeljars.embeddingQualifications.schemaVersion=1\n",
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerRerankingQualificationRegistry.get().asFile.writeText(
+                        rerankingQualifications?.registryProperties(modelRerankingQualifications)
+                            ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerToolQualificationRegistry.get().asFile.writeText(
                         toolQualifications?.registryProperties(modelToolQualifications)
                             ?: emptyToolQualificationRegistryProperties(),
@@ -3030,6 +3374,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/performance-v1.json",
                         "META-INF/modeljars/qualifications-v1.properties",
                         "META-INF/modeljars/embedding-qualifications-v1.properties",
+                        "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )

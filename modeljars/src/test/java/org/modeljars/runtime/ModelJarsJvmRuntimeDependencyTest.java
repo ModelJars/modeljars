@@ -28,6 +28,7 @@ import org.modeljars.ModelEmbeddingQualificationRegistry;
 import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
 import org.modeljars.ModelRagQualificationRegistry;
+import org.modeljars.ModelRerankingQualificationRegistry;
 import org.modeljars.ModelToolQualification;
 import org.modeljars.ModelToolQualificationRegistry;
 import org.modeljars.ModelVersion;
@@ -45,6 +46,7 @@ class ModelJarsJvmRuntimeDependencyTest {
     var qualifications = ModelRagQualificationRegistry.fromClasspath();
     var embeddingQualifications = ModelEmbeddingQualificationRegistry.fromClasspath();
     var toolQualifications = ModelToolQualificationRegistry.fromClasspath();
+    var rerankingQualifications = ModelRerankingQualificationRegistry.fromClasspath();
 
     // A generator qualifies through RAG or tool conformance, and an embedder through reference
     // equivalence. Any one is sufficient to publish, so the catalog is the union of all three.
@@ -60,9 +62,14 @@ class ModelJarsJvmRuntimeDependencyTest {
         toolQualifications.qualified().stream()
             .map(ModelToolQualification::modelId)
             .collect(Collectors.toSet());
+    var rerankingQualified =
+        rerankingQualifications.qualified().stream()
+            .map(ModelRerankingQualificationRegistry.Entry::modelId)
+            .collect(Collectors.toSet());
     var allQualified = new java.util.HashSet<>(ragQualified);
     allQualified.addAll(embeddingQualified);
     allQualified.addAll(toolQualified);
+    allQualified.addAll(rerankingQualified);
 
     assertEquals(allQualified.size(), descriptors.size());
     assertEquals(
@@ -74,6 +81,10 @@ class ModelJarsJvmRuntimeDependencyTest {
                 descriptor ->
                     !qualifications.qualificationsFor(descriptor).isEmpty()
                         || !toolQualifications.qualificationsFor(descriptor).isEmpty()
+                        || descriptor
+                            .sha256()
+                            .flatMap(rerankingQualifications::qualificationFor)
+                            .isPresent()
                         || descriptor
                             .sha256()
                             .flatMap(embeddingQualifications::qualificationFor)

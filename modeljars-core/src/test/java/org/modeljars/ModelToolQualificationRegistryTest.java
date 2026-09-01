@@ -35,7 +35,7 @@ class ModelToolQualificationRegistryTest {
     ModelToolQualificationRegistry registry =
         ModelToolQualificationRegistry.fromProperties(properties());
 
-    assertEquals("needle2-tool-conformance-v1", registry.policyVersion());
+    assertEquals("needle2-tool-conformance-v2", registry.policyVersion());
     assertEquals("1".repeat(40), registry.modelsRevision());
     assertEquals(1, registry.qualifiedModels());
     assertEquals(0, registry.rejectedModels());
@@ -46,9 +46,9 @@ class ModelToolQualificationRegistryTest {
     assertEquals("pure-java", qualification.backend());
     assertEquals("needle2", qualification.promptTemplate());
     assertEquals("needle2-upstream-playground-v1", qualification.workload());
-    assertEquals(13, qualification.attempts());
-    assertEquals(11, qualification.passed());
-    assertEquals(0.9166666666666666, qualification.expectedArgumentAccuracy());
+    assertEquals(14, qualification.attempts());
+    assertEquals(12, qualification.passed());
+    assertEquals(0.918918918918919, qualification.expectedArgumentAccuracy());
     assertEquals(
         URI.create("https://github.com/integrallis/models/blob/" + "2".repeat(40) + "/report.json"),
         qualification.reportUri());
@@ -73,7 +73,7 @@ class ModelToolQualificationRegistryTest {
     properties.setProperty("modeljars.toolQualifications.schemaVersion", "1");
     properties.setProperty("modeljars.toolQualifications.generatedAt", "2026-08-27T18:45:45Z");
     properties.setProperty(
-        "modeljars.toolQualifications.policyVersion", "needle2-tool-conformance-v1");
+        "modeljars.toolQualifications.policyVersion", "needle2-tool-conformance-v2");
     properties.setProperty("modeljars.toolQualifications.modelsRevision", "1".repeat(40));
     properties.setProperty("modeljars.toolQualifications.qualifiedModels", "1");
     properties.setProperty("modeljars.toolQualifications.rejectedModels", "0");
@@ -92,13 +92,13 @@ class ModelToolQualificationRegistryTest {
     properties.setProperty(prefix + "reportSha256", "3".repeat(64));
     properties.setProperty(prefix + "verdict", "PASS");
     properties.setProperty(prefix + "qualified", "true");
-    properties.setProperty(prefix + "attempts", "13");
-    properties.setProperty(prefix + "passed", "11");
+    properties.setProperty(prefix + "attempts", "14");
+    properties.setProperty(prefix + "passed", "12");
     properties.setProperty(prefix + "structuredOutputRate", "1.0");
     properties.setProperty(prefix + "toolSelectionExactRate", "1.0");
     properties.setProperty(prefix + "schemaValidityRate", "1.0");
     properties.setProperty(prefix + "declaredArgumentsOnlyRate", "1.0");
-    properties.setProperty(prefix + "expectedArgumentAccuracy", "0.9166666666666666");
+    properties.setProperty(prefix + "expectedArgumentAccuracy", "0.918918918918919");
     properties.setProperty(prefix + "refusalAccuracy", "1.0");
     properties.setProperty(prefix + "p95EndToEndMillis", "53195.0");
     properties.setProperty(prefix + "suiteSha256", "4".repeat(64));

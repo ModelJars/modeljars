@@ -24,7 +24,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.27")\n' +
+    'implementation("org.modeljars:modeljars:0.1.28")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -163,13 +163,13 @@ test("summarizes tool conformance without inventing RAG metrics", () => {
     backendVersion: "models@" + "c".repeat(40),
     workload: "needle2-upstream-playground-v1",
     promptTemplate: "needle2",
-    attempts: 13,
-    passed: 11,
+    attempts: 14,
+    passed: 12,
     structuredOutputRate: 1,
     toolSelectionExactRate: 1,
     schemaValidityRate: 1,
     declaredArgumentsOnlyRate: 1,
-    expectedArgumentAccuracy: 0.9166666667,
+    expectedArgumentAccuracy: 0.9189189189,
     refusalAccuracy: 1,
     p95EndToEndMillis: 53195,
     reportUri: "https://github.com/integrallis/models/blob/" + "d".repeat(40) + "/report.json",
@@ -177,9 +177,9 @@ test("summarizes tool conformance without inventing RAG metrics", () => {
   });
 
   assert.equal(summary.label, "Tool calling");
-  assert.equal(summary.passed, 11);
+  assert.equal(summary.passed, 12);
   assert.equal(summary.selection, "100.0%");
-  assert.equal(summary.arguments, "91.7%");
+  assert.equal(summary.arguments, "91.9%");
   assert.equal(summary.endToEnd, "53.20 s");
   assert.equal(summary.rawQuality, null);
   assert.equal(summary.evidenceSha256, "e".repeat(64));

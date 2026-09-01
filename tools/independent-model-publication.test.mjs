@@ -71,7 +71,9 @@ test("reuses an identical immutable GitHub Package without hiding collisions", a
 
   assert.match(workflow, /id: existing_package/);
   assert.match(workflow, /maven\.pkg\.github\.com\/modeljars\/modeljars/);
-  assert.match(workflow, /cmp --silent/);
+  assert.match(workflow, /jar --extract --file/);
+  assert.match(workflow, /diff --recursive --brief/);
+  assert.doesNotMatch(workflow, /cmp --silent/);
   assert.match(workflow, /Existing immutable package does not match/);
   assert.match(
     workflow,

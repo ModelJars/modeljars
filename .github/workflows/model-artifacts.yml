@@ -268,13 +268,25 @@ jobs:
 
           case "${status}" in
             200)
-              if ! cmp --silent "${LOCAL_JAR}" "${existing_jar}"; then
+              local_jar="$(realpath "${LOCAL_JAR}")"
+              local_entries="${RUNNER_TEMP}/local-marker-entries"
+              existing_entries="${RUNNER_TEMP}/existing-marker-entries"
+              mkdir -p "${local_entries}" "${existing_entries}"
+              (
+                cd "${local_entries}"
+                jar --extract --file "${local_jar}"
+              )
+              (
+                cd "${existing_entries}"
+                jar --extract --file "${existing_jar}"
+              )
+              if ! diff --recursive --brief "${local_entries}" "${existing_entries}"; then
                 echo "::error::Existing immutable package does not match ${COORDINATE}"
                 sha256sum "${LOCAL_JAR}" "${existing_jar}"
                 exit 1
               fi
               echo "exists=true" >> "${GITHUB_OUTPUT}"
-              echo "Reusing byte-identical GitHub Package ${COORDINATE}." >> "${GITHUB_STEP_SUMMARY}"
+              echo "Reusing content-identical GitHub Package ${COORDINATE}." >> "${GITHUB_STEP_SUMMARY}"
               ;;
             404)
               echo "exists=false" >> "${GITHUB_OUTPUT}"

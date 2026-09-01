@@ -4767,7 +4767,7 @@
       "sourceUri": "https://huggingface.co/bartowski/granite-embedding-107m-multilingual-GGUF",
       "downloadUri": "https://huggingface.co/bartowski/granite-embedding-107m-multilingual-GGUF/resolve/52fed1c818636b7cb8c4e4e3ae73189efeb78081/granite-embedding-107m-multilingual-Q4_K_M.gguf",
       "revision": "52fed1c818636b7cb8c4e4e3ae73189efeb78081",
-      "markerCoordinate": "org.modeljars.huggingface:bartowski.granite-embedding-107m-multilingual-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:bartowski.granite-embedding-107m-multilingual-gguf.q4_k_m:1.0.0-q4_k_m.2",
       "modelVersion": "1.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

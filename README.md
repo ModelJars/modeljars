@@ -583,6 +583,7 @@ well-known metadata resources. A richer scanner and public catalog service can c
 ## Reports
 
 - [ModelJars.org operations and local model candidates](docs/modeljars-operations-and-model-candidates.md)
+- [Qualification and publication evolution](docs/qualification-evolution.md)
 - [100+ model launch catalog and metadata contract](docs/launch-catalog-100.md)
 - [Performance profile schema and safety contract](docs/performance-profiles.md)
 - [Native CLI distribution and release channels](docs/cli-distribution.md)

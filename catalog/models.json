@@ -4776,6 +4776,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q4_K_M.gguf",
       "sha256": "4a0115de29aeeedc73175f14c6e2eee9da1d4b586cbe4c1e95b68b7e36aff36a",
       "sizeBytes": 117011136,
+      "catalogPublishedAt": "2026-09-01T02:09:04Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -4788,7 +4789,7 @@
         "community-conversion"
       ],
       "backends": {
-        "pure-java": false,
+        "pure-java": true,
         "llama.cpp": true
       },
       "domains": [

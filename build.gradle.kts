@@ -40,6 +40,7 @@ plugins {
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
 val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v5"
+val PRODUCTION_TOOL_POLICY_VERSION = "needle2-tool-conformance-v2"
 
 fun isNormalizedRepositoryRelativePath(path: String): Boolean {
     if (
@@ -1505,6 +1506,9 @@ ragQualifications?.let { qualifications ->
 
 toolQualifications?.let { qualifications ->
     Instant.parse(qualifications.generatedAt)
+    require(qualifications.policyVersion == PRODUCTION_TOOL_POLICY_VERSION) {
+        "Tool qualifications must use $PRODUCTION_TOOL_POLICY_VERSION"
+    }
     require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
         "Tool qualification modelsRevision must be a 40-character Git commit"
     }
@@ -1960,7 +1964,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.27-SNAPSHOT")
+            .orElse("0.1.28-SNAPSHOT")
             .get()
 }
 

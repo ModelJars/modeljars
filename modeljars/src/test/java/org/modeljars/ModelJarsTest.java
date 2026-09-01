@@ -127,7 +127,7 @@ class ModelJarsTest {
       assertEquals("needle2", descriptor.architecture());
       assertEquals("pure-java", selectedBackend.get());
       assertEquals("needle2-upstream-playground-v1", qualification.workload());
-      assertEquals(0.9166666666666666, qualification.expectedArgumentAccuracy());
+      assertEquals(0.918918918918919, qualification.expectedArgumentAccuracy());
       assertTrue(qualification.productionUsable());
       assertSame(qualification, runtime.executionQualification());
       assertTrue(runtime.ragQualification().isEmpty());

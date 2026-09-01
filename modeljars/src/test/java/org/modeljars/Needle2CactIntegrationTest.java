@@ -30,6 +30,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
@@ -119,14 +120,18 @@ class Needle2CactIntegrationTest {
             Map::of,
             List::of);
     WeatherTools weatherTools = new WeatherTools();
-    var defaults = SamplingOptions.builder().build();
+    var defaults = SamplingOptions.builder().maxTokens(128).build();
 
     try (var runtime =
         modelJars.loadRuntime(
             MODEL, ModelLoadOptions.builder().backend(ModelBackend.JAVA).offline(true).build())) {
       var model =
           new ModelsSpringAiChatModel(
-              runtime.model(), runtime.descriptor().alias(), runtime.chatTemplate(), defaults);
+              runtime.model(),
+              runtime.descriptor().alias(),
+              runtime.chatTemplate(),
+              defaults,
+              runtime.descriptor().capabilities());
       var chatClient =
           ChatClient.builder(model)
               .defaultTools(weatherTools)
@@ -136,20 +141,23 @@ class Needle2CactIntegrationTest {
       var answer = chatClient.prompt().user("What is the weather for 88252?").call().content();
 
       assertEquals(1, weatherTools.invocations.get());
-      assertTrue(answer.contains("88252"), answer);
-      assertTrue(answer.toLowerCase().contains("raining"), answer);
-      assertTrue(answer.contains("78"), answer);
+      assertEquals("88252", weatherTools.lastZipcode.get());
+      assertEquals(
+          "{\"zipcode\":\"88252\",\"conditions\":\"Raining cats and dogs\",\"temperature\":78}",
+          answer);
     }
   }
 
   @Service
   static final class WeatherTools {
     private final AtomicInteger invocations = new AtomicInteger();
+    private final AtomicReference<String> lastZipcode = new AtomicReference<>();
 
     @Tool(name = "get-weather-for-zipcode", description = "Gets weather for a given zipcode")
     Weather getWeatherForZipcode(
         @ToolParam(description = "The zipcode to get weather for") String zipcode) {
       invocations.incrementAndGet();
+      lastZipcode.set(zipcode);
       return new Weather(zipcode, "Raining cats and dogs", 78);
     }
   }

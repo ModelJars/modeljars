@@ -169,7 +169,7 @@ test("selects and labels tool-calling conformance evidence", () => {
       {
         qualified: true,
         useCaseTier: "TOOL_CALLING",
-        expectedArgumentAccuracy: 0.9166666667,
+        expectedArgumentAccuracy: 0.9189189189,
       },
     ],
   };
@@ -191,11 +191,11 @@ test("normalizes the published nested tool-calling evidence shape", () => {
         summary: {
           qualified: true,
           verdict: "PASS",
-          attempts: 13,
-          passed: 11,
+          attempts: 14,
+          passed: 12,
           structuredOutputRate: 1,
           toolSelectionExactRate: 1,
-          expectedArgumentAccuracy: 0.9166666667,
+          expectedArgumentAccuracy: 0.9189189189,
         },
         useCaseTier: "TOOL_CALLING",
       },
@@ -208,7 +208,7 @@ test("normalizes the published nested tool-calling evidence shape", () => {
   assert.equal(selected.workload, "needle2-upstream-playground-v1");
   assert.equal(selected.promptTemplate, "needle2");
   assert.equal(selected.structuredOutputRate, 1);
-  assert.equal(selected.expectedArgumentAccuracy, 0.9166666667);
+  assert.equal(selected.expectedArgumentAccuracy, 0.9189189189);
   assert.equal(qualificationLabel(selected), "Tool calling");
 });
 

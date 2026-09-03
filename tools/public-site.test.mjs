@@ -45,9 +45,19 @@ test("keeps every local link and asset on every static page resolvable", async (
 });
 
 test("publishes only artifacts that passed production qualification", async () => {
-  const [catalog, qualifications, build] = await Promise.all([
+  const [
+    catalog,
+    qualifications,
+    embeddingQualifications,
+    rerankingQualifications,
+    toolQualifications,
+    build,
+  ] = await Promise.all([
     read("catalog/models.json").then(JSON.parse),
     read("catalog/qualifications.json").then(JSON.parse),
+    read("catalog/embedding-qualifications.json").then(JSON.parse),
+    read("catalog/reranking-qualifications.json").then(JSON.parse),
+    read("catalog/tool-qualifications.json").then(JSON.parse),
     read("build.gradle.kts"),
   ]);
 
@@ -63,9 +73,30 @@ test("publishes only artifacts that passed production qualification", async () =
     assert.equal(entry.artifactSha256, model.sha256);
     assert.equal(entry.artifactSizeBytes, model.sizeBytes);
   }
+
+  const publicModelIds = new Set(
+    [qualifications, embeddingQualifications, rerankingQualifications, toolQualifications]
+      .flatMap((manifest) => manifest.entries)
+      .filter((entry) => entry.qualified ?? entry.summary?.qualified)
+      .map((entry) => entry.modelId),
+  );
+  const toolQualifiedIds = new Set(
+    toolQualifications.entries
+      .filter((entry) => entry.summary.qualified)
+      .map((entry) => entry.modelId),
+  );
+  for (const model of catalog.models.filter((candidate) => publicModelIds.has(candidate.id))) {
+    assert.equal(
+      model.capabilities.includes("tool-calling"),
+      toolQualifiedIds.has(model.id),
+      `${model.id} tool-calling capability and qualification must agree`,
+    );
+  }
+
   assert.match(build, /publicCatalogEntries/);
   assert.match(build, /publicCatalogEntries\.forEach/);
   assert.match(build, /Public site catalog must contain only qualified artifacts/);
+  assert.match(build, /tool-calling capability and qualification must agree/);
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {

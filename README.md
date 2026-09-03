@@ -247,12 +247,21 @@ the pure-Java MobileMoE backend.
 The first qualified CACT artifact is Needle 2, a compact tool-calling model:
 
 ```text
-org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1
+org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.2
 ```
 
 `modeljars pull needle` installs the pinned
 `needle2.cact` bytes. Models parses the embedded tokenizer and mixed CQ2/CQ4 graph and executes
 generation, constrained tool syntax, retrieval, and auxiliary heads in Java.
+
+Qwen3 1.7B Q8_0 is also qualified for tool calling. Unlike Needle's focused
+action-selection contract, Qwen completes the generative loop: the retained
+Spring AI and LangChain4j tests invoke a typed Java weather tool and verify that
+the model turns its structured result into a grounded natural-language answer.
+
+```text
+org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.2
+```
 
 ```java
 import static org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed.MODEL;

@@ -1443,6 +1443,13 @@ val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
 }
+val publicToolQualifiedIds =
+    publicToolQualifications.map(CatalogToolQualification::modelId).toSet()
+publicCatalogEntries.forEach { entry ->
+    require(("tool-calling" in entry.capabilities) == (entry.id in publicToolQualifiedIds)) {
+        "Public model ${entry.id} tool-calling capability and qualification must agree"
+    }
+}
 val publicModelsMissingPublicationTime =
     publicCatalogEntries.filter { it.catalogPublishedAt == null }.map(CatalogEntry::id)
 require(publicModelsMissingPublicationTime.isEmpty()) {
@@ -1489,6 +1496,9 @@ publicToolQualifications.forEach { qualification ->
     }
     require(entry.backends[qualification.backend] == true) {
         "Tool qualification backend is not advertised by ${qualification.modelId}"
+    }
+    require("tool-calling" in entry.capabilities) {
+        "Tool-qualified model must advertise the tool-calling capability: ${qualification.modelId}"
     }
 }
 val publicPerformanceProfiles = performanceProfiles.filter { it.modelId in publicModelIds }
@@ -1691,7 +1701,7 @@ toolQualifications?.let { qualifications ->
         require(qualification.artifactSizeBytes == model.sizeBytes) {
             "Tool qualification size does not match ${qualification.modelId}"
         }
-        require(model.backends[qualification.backend] == true) {
+        require(!qualification.qualified || model.backends[qualification.backend] == true) {
             "Tool qualification backend is not supported by ${qualification.modelId}"
         }
         require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {

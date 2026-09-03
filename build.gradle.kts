@@ -39,7 +39,7 @@ plugins {
 
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
-val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v5"
+val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v6"
 val PRODUCTION_TOOL_POLICY_VERSION = "needle2-tool-conformance-v2"
 
 fun isNormalizedRepositoryRelativePath(path: String): Boolean {
@@ -2065,6 +2065,7 @@ fun fetchHuggingFaceRevision(repository: String, revision: String): Map<String, 
             connection.readTimeout = 60_000
             connection.setRequestProperty("Accept", "application/json")
             connection.setRequestProperty("User-Agent", "ModelJars-Catalog-Verifier/0.1")
+            authorizeHuggingFace(connection, endpoint)
             try {
                 val status = connection.responseCode
                 if (status != HttpURLConnection.HTTP_OK) {
@@ -2105,6 +2106,7 @@ fun fetchPinnedSha256(uri: URI, expectedSize: Long): String {
     connection.readTimeout = 60_000
     connection.setRequestProperty("Accept-Encoding", "identity")
     connection.setRequestProperty("User-Agent", "ModelJars-Catalog-Verifier/0.1")
+    authorizeHuggingFace(connection, uri)
     try {
         require(connection.responseCode == HttpURLConnection.HTTP_OK) {
             "Hugging Face returned HTTP ${connection.responseCode} for $uri"
@@ -2127,6 +2129,21 @@ fun fetchPinnedSha256(uri: URI, expectedSize: Long): String {
     } finally {
         connection.disconnect()
     }
+}
+
+fun authorizeHuggingFace(connection: HttpURLConnection, uri: URI) {
+    if (!uri.scheme.equals("https", ignoreCase = true) ||
+        !uri.host.equals("huggingface.co", ignoreCase = true)
+    ) {
+        return
+    }
+    val token =
+        sequenceOf(System.getenv("HF_TOKEN"), System.getenv("HUGGING_FACE_HUB_TOKEN"))
+            .firstOrNull { !it.isNullOrBlank() }
+            ?.trim()
+            ?: return
+    if ('\r' in token || '\n' in token) return
+    connection.setRequestProperty("Authorization", "Bearer $token")
 }
 
 fun verifyHuggingFaceRevision(entries: List<CatalogEntry>) {

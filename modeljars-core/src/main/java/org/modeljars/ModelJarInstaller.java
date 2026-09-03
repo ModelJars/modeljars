@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +49,7 @@ public final class ModelJarInstaller {
   private final ModelJarRegistry registry;
   private final RetryDelay retryDelay;
   private final ProgressReporter progressReporter;
+  private final RequestAuthorization requestAuthorization;
 
   /**
    * Creates an installer backed by a model registry.
@@ -58,7 +60,8 @@ public final class ModelJarInstaller {
     this(
         registry,
         ModelJarInstaller::pauseBeforeRetry,
-        legacyProgressReporter(ModelJarInstaller::reportProgress));
+        legacyProgressReporter(ModelJarInstaller::reportProgress),
+        ModelJarInstaller::huggingFaceAuthorization);
   }
 
   /**
@@ -73,7 +76,8 @@ public final class ModelJarInstaller {
     return new ModelJarInstaller(
         registry,
         ModelJarInstaller::pauseBeforeRetry,
-        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")));
+        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")),
+        ModelJarInstaller::huggingFaceAuthorization);
   }
 
   /**
@@ -88,11 +92,16 @@ public final class ModelJarInstaller {
     return new ModelJarInstaller(
         registry,
         ModelJarInstaller::pauseBeforeRetry,
-        Objects.requireNonNull(progressReporter, "progressReporter")::accept);
+        Objects.requireNonNull(progressReporter, "progressReporter")::accept,
+        ModelJarInstaller::huggingFaceAuthorization);
   }
 
   ModelJarInstaller(ModelJarRegistry registry, RetryDelay retryDelay) {
-    this(registry, retryDelay, legacyProgressReporter(ModelJarInstaller::reportProgress));
+    this(
+        registry,
+        retryDelay,
+        legacyProgressReporter(ModelJarInstaller::reportProgress),
+        ModelJarInstaller::huggingFaceAuthorization);
   }
 
   ModelJarInstaller(
@@ -100,14 +109,32 @@ public final class ModelJarInstaller {
     this(
         registry,
         retryDelay,
-        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")));
+        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")),
+        ModelJarInstaller::huggingFaceAuthorization);
+  }
+
+  ModelJarInstaller(
+      ModelJarRegistry registry,
+      RetryDelay retryDelay,
+      Consumer<String> progressReporter,
+      RequestAuthorization requestAuthorization) {
+    this(
+        registry,
+        retryDelay,
+        legacyProgressReporter(Objects.requireNonNull(progressReporter, "progressReporter")),
+        requestAuthorization);
   }
 
   private ModelJarInstaller(
-      ModelJarRegistry registry, RetryDelay retryDelay, ProgressReporter progressReporter) {
+      ModelJarRegistry registry,
+      RetryDelay retryDelay,
+      ProgressReporter progressReporter,
+      RequestAuthorization requestAuthorization) {
     this.registry = Objects.requireNonNull(registry, "registry");
     this.retryDelay = Objects.requireNonNull(retryDelay, "retryDelay");
     this.progressReporter = Objects.requireNonNull(progressReporter, "progressReporter");
+    this.requestAuthorization =
+        Objects.requireNonNull(requestAuthorization, "requestAuthorization");
   }
 
   /**
@@ -520,6 +547,9 @@ public final class ModelJarInstaller {
     connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
     connection.setReadTimeout(READ_TIMEOUT_MILLIS);
     connection.setRequestProperty("Accept-Encoding", "identity");
+    requestAuthorization
+        .forSource(source)
+        .ifPresent(value -> connection.setRequestProperty("Authorization", value));
 
     HttpURLConnection http =
         connection instanceof HttpURLConnection httpConnection ? httpConnection : null;
@@ -534,6 +564,14 @@ public final class ModelJarInstaller {
         if (offset > 0 && status == HttpURLConnection.HTTP_PARTIAL) {
           verifyContentRange(http.getHeaderField("Content-Range"), offset, expectedSize);
           append = true;
+        } else if (status == HttpURLConnection.HTTP_UNAUTHORIZED
+            || status == HttpURLConnection.HTTP_FORBIDDEN) {
+          throw new ModelJarException(
+              "Access denied while downloading "
+                  + alias
+                  + ". For a gated Hugging Face model, accept the model license on its "
+                  + "Hugging Face page, then set HF_TOKEN (or HUGGING_FACE_HUB_TOKEN) to a read "
+                  + "token with gated-repository access.");
         } else if (status != HttpURLConnection.HTTP_OK) {
           throw new IOException("Model download returned HTTP " + status + " for " + alias);
         }
@@ -597,6 +635,30 @@ public final class ModelJarInstaller {
   @FunctionalInterface
   interface RetryDelay {
     void pause(int failedAttempt) throws IOException;
+  }
+
+  @FunctionalInterface
+  interface RequestAuthorization {
+    Optional<String> forSource(URI source);
+  }
+
+  private static Optional<String> huggingFaceAuthorization(URI source) {
+    if (!"https".equalsIgnoreCase(source.getScheme())
+        || !"huggingface.co".equalsIgnoreCase(source.getHost())) {
+      return Optional.empty();
+    }
+    String token = System.getenv("HF_TOKEN");
+    if (token == null || token.isBlank()) {
+      token = System.getenv("HUGGING_FACE_HUB_TOKEN");
+    }
+    if (token == null || token.isBlank()) {
+      return Optional.empty();
+    }
+    token = token.trim();
+    if (token.indexOf('\r') >= 0 || token.indexOf('\n') >= 0) {
+      return Optional.empty();
+    }
+    return Optional.of("Bearer " + token);
   }
 
   private String sha256(Path artifact, String alias, long totalBytes) throws IOException {

@@ -229,6 +229,21 @@ Its marker pins `config.json`, `model.safetensors`, `tokenizer.json`, and
 `tokenizer_config.json`. `modeljars pull qwen_qwen2_5_0_5b_instruct_bf16`
 installs and verifies the complete directory required by Models.
 
+Gated Hugging Face artifacts use the same path. Accept the model's license on its Hugging Face
+page, create a read token that can access gated repositories, and expose it to the CLI or Java
+process:
+
+```bash
+export HF_TOKEN=hf_...
+modeljars pull mobilemoe
+```
+
+`HUGGING_FACE_HUB_TOKEN` is also recognized. The token is attached only to requests whose source
+host is `huggingface.co`; it is not forwarded to redirected artifact hosts. The qualified
+MobileMoE-S marker installs its configuration, packed group-32 INT4 Safetensors weights, tokenizer,
+and tokenizer configuration as one verified bundle. Models executes that bundle in-process through
+the pure-Java MobileMoE backend.
+
 The first qualified CACT artifact is Needle 2, a compact tool-calling model:
 
 ```text

@@ -5938,6 +5938,98 @@
       ]
     },
     {
+      "id": "facebook_mobilemoe_s_qat_int4_g32",
+      "name": "Meta MobileMoE-S QAT INT4 G32",
+      "description": "Meta's 1.26B-parameter, 272M-active on-device mixture-of-experts model, executed directly from its packed group-32 INT4 Safetensors checkpoint by the pure-Java Models backend.",
+      "sourceId": "hf://facebook/MobileMoE-S-QAT",
+      "sourceUri": "https://huggingface.co/facebook/MobileMoE-S-QAT",
+      "downloadUri": "https://huggingface.co/facebook/MobileMoE-S-QAT/resolve/afda132cad380ac47da5ef055f186884d1c12f65/model.safetensors",
+      "revision": "afda132cad380ac47da5ef055f186884d1c12f65",
+      "markerCoordinate": "org.modeljars.huggingface:facebook.mobilemoe-s-qat.int4_g32:1.0.0-int4_g32.1",
+      "modelVersion": "1.0.0",
+      "variant": "int4_g32",
+      "format": "safetensors",
+      "architecture": "mobilemoe",
+      "quantization": "INT4_G32",
+      "localPath": "${user.home}/.modeljars/models/MobileMoE-S-QAT/model.safetensors",
+      "sha256": "1a54d8eb2adf19c296a1c129f9cd7d7395c21f5facfc6d13d2945e002d55e37d",
+      "sizeBytes": 713916240,
+      "catalogPublishedAt": "2026-09-03T02:21:33Z",
+      "license": "fair-noncommercial-research-license",
+      "licenseUri": "https://huggingface.co/facebook/MobileMoE-S-QAT/blob/afda132cad380ac47da5ef055f186884d1c12f65/LICENSE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pure-java",
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "huggingface-tokenizer",
+        "chat-template",
+        "gated-upstream",
+        "noncommercial-research-license",
+        "direct-packed-int4",
+        "prepared-q8-runtime",
+        "batched-prefill",
+        "mixture-of-experts",
+        "quantization-aware-training",
+        "shared-expert",
+        "llama3-rope",
+        "qk-norm"
+      ],
+      "files": [
+        {
+          "path": "config.json",
+          "role": "model-configuration",
+          "sha256": "0eb5d6e97360bf2480a4c45ed263f8d85e361b65db73ced1d25494caf4c3015d",
+          "sizeBytes": 2785
+        },
+        {
+          "path": "model.safetensors",
+          "role": "model-weights",
+          "sha256": "1a54d8eb2adf19c296a1c129f9cd7d7395c21f5facfc6d13d2945e002d55e37d",
+          "sizeBytes": 713916240
+        },
+        {
+          "path": "tokenizer.json",
+          "role": "tokenizer",
+          "sha256": "1261a6668b155911c829652178dc1a110555532f38cc556ef8b7a792549c924f",
+          "sizeBytes": 4247371
+        },
+        {
+          "path": "tokenizer_config.json",
+          "role": "tokenizer-configuration",
+          "sha256": "de054d7327c7bffeab572182575b81f9790cf268244068bb7c4d88aeb6ddab62",
+          "sizeBytes": 886
+        }
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": false
+      },
+      "domains": [
+        "general",
+        "reasoning",
+        "on-device"
+      ],
+      "dimensions": {
+        "parameterCount": 1263374256,
+        "contextLength": 8192,
+        "embeddingLength": 768,
+        "blockCount": 20,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 4,
+        "keyLength": 64,
+        "valueLength": 64,
+        "feedForwardLength": 384,
+        "expertCount": 60,
+        "expertUsedCount": 4,
+        "attentionBlockCount": 20
+      }
+    },
+    {
       "id": "wordtour_glove_6b_300d_optimal",
       "name": "WordTour GloVe 6B 300d Optimal",
       "description": "Proven-optimal cyclic semantic ordering of the 40,000-word GloVe 6B 300d vocabulary for compact pure-Java neighbor lookup and blurred bag-of-words.",

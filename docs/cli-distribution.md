@@ -43,6 +43,12 @@ configuration, tokenizer, and one or more weight files. `list` contains complete
 `available`, `models`, `ls`, `inspect`, `rm`, `delete`, `script`, `run`, `chat`, `embed`, `embedding`,
 `coordinates`, `coords`, `dependency`, `deps`, `system`, and `env`.
 
+For a gated Hugging Face artifact, accept the upstream license first and provide a read token with
+access to that repository as `HF_TOKEN` or `HUGGING_FACE_HUB_TOKEN`. The installer authenticates
+only the request to `https://huggingface.co`; redirected artifact hosts do not receive the token.
+An HTTP 401 or 403 stops immediately with the license-and-token remediation instead of retrying the
+same unauthorized request.
+
 Every active catalog snapshot generates one short command name per model. The generator uses the
 family name by itself when possible and adds purpose, parameter size, model series, quantization,
 or format only as needed for uniqueness. Because generation happens after the remote catalog is

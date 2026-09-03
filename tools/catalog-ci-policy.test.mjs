@@ -23,9 +23,15 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
   const remoteCondition = /if:\s*steps\.remote-catalog\.outputs\.required == 'true'/g;
   assert.equal(validateWorkflow.match(remoteCondition)?.length, 2);
   assert.match(validateWorkflow, /verifyRemoteCatalogMetadata/);
+  assert.match(validateWorkflow, /HF_TOKEN:\s*\$\{\{ secrets\.HF_TOKEN \}\}/);
   assert.match(validateWorkflow, /npm run catalog:enrich/);
 
   assert.match(publishWorkflow, /verifyRemoteCatalogMetadata/);
+  assert.equal(
+    publishWorkflow.match(/HF_TOKEN:\s*\$\{\{ secrets\.HF_TOKEN \}\}/g)?.length,
+    2,
+    "both release verification passes must authenticate gated Hugging Face metadata",
+  );
   assert.doesNotMatch(publishWorkflow, /steps\.remote-catalog/);
   assert.equal(
     publishWorkflow.match(/npm run catalog:enrich/g)?.length,

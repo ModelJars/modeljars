@@ -265,6 +265,17 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(highlighter, /registerLanguage\("kotlin"/);
 });
 
+test("highlights every code block on the Apple guide", async () => {
+  const apple = await read("site/apple/index.html");
+
+  assert.match(apple, /<script src="\/assets\/highlight\.js"><\/script>/);
+  assert.equal(
+    (apple.match(/<code class="language-(?:groovy|java) hljs" data-lang="(?:groovy|java)">/g) ?? [])
+      .length,
+    2,
+  );
+});
+
 test("highlights code blocks rendered on catalog detail pages", async () => {
   const [model, detail, highlighter] = await Promise.all([
     read("site/model.html"),

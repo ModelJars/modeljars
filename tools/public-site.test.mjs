@@ -45,9 +45,19 @@ test("keeps every local link and asset on every static page resolvable", async (
 });
 
 test("publishes only artifacts that passed production qualification", async () => {
-  const [catalog, qualifications, build] = await Promise.all([
+  const [
+    catalog,
+    qualifications,
+    embeddingQualifications,
+    rerankingQualifications,
+    toolQualifications,
+    build,
+  ] = await Promise.all([
     read("catalog/models.json").then(JSON.parse),
     read("catalog/qualifications.json").then(JSON.parse),
+    read("catalog/embedding-qualifications.json").then(JSON.parse),
+    read("catalog/reranking-qualifications.json").then(JSON.parse),
+    read("catalog/tool-qualifications.json").then(JSON.parse),
     read("build.gradle.kts"),
   ]);
 
@@ -63,9 +73,30 @@ test("publishes only artifacts that passed production qualification", async () =
     assert.equal(entry.artifactSha256, model.sha256);
     assert.equal(entry.artifactSizeBytes, model.sizeBytes);
   }
+
+  const publicModelIds = new Set(
+    [qualifications, embeddingQualifications, rerankingQualifications, toolQualifications]
+      .flatMap((manifest) => manifest.entries)
+      .filter((entry) => entry.qualified ?? entry.summary?.qualified)
+      .map((entry) => entry.modelId),
+  );
+  const toolQualifiedIds = new Set(
+    toolQualifications.entries
+      .filter((entry) => entry.summary.qualified)
+      .map((entry) => entry.modelId),
+  );
+  for (const model of catalog.models.filter((candidate) => publicModelIds.has(candidate.id))) {
+    assert.equal(
+      model.capabilities.includes("tool-calling"),
+      toolQualifiedIds.has(model.id),
+      `${model.id} tool-calling capability and qualification must agree`,
+    );
+  }
+
   assert.match(build, /publicCatalogEntries/);
   assert.match(build, /publicCatalogEntries\.forEach/);
   assert.match(build, /Public site catalog must contain only qualified artifacts/);
+  assert.match(build, /tool-calling capability and qualification must agree/);
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {
@@ -135,14 +166,14 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(apple, /Apple Foundation Models from Java/);
   assert.match(apple, /not a downloadable ModelJAR/);
   assert.match(apple, /LangChain4J and Spring AI/);
-  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.25/);
+  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.26/);
   assert.match(apple, /AppleFoundationModels\.create/);
   assert.match(apple, /client\.availability/);
   assert.match(
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.30/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.31/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);
@@ -263,6 +294,17 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(styles, /\.guide-steps code\s*\{[^}]*white-space:\s*pre/s);
   assert.match(highlighter, /registerLanguage\("java"/);
   assert.match(highlighter, /registerLanguage\("kotlin"/);
+});
+
+test("highlights every code block on the Apple guide", async () => {
+  const apple = await read("site/apple/index.html");
+
+  assert.match(apple, /<script src="\/assets\/highlight\.js"><\/script>/);
+  assert.equal(
+    (apple.match(/<code class="language-(?:groovy|java) hljs" data-lang="(?:groovy|java)">/g) ?? [])
+      .length,
+    2,
+  );
 });
 
 test("highlights code blocks rendered on catalog detail pages", async () => {

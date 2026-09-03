@@ -968,7 +968,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1028,7 +1028,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_mixed_k",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1090,7 +1090,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_q6_two_query",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1172,7 +1172,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_graal_session_q6_two_query",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "pure-java",
       "selector": {
@@ -1332,7 +1332,7 @@
     {
       "id": "qwen3_1_7b_q8_0_epyc_milan_jdk25_rust_ffm",
       "modelId": "qwen3_1_7b_q8_0",
-      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.1",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.2",
       "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
       "backend": "rust-ffm",
       "selector": {
@@ -2417,7 +2417,7 @@
     {
       "id": "minicpm5_1b_q4_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "minicpm5_1b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
       "backend": "rust-ffm",
       "selector": {
@@ -3167,7 +3167,7 @@
     {
       "id": "smollm3_3b_q4_k_m_epyc_milan_jdk25_rust_ffm",
       "modelId": "smollm3_3b_q4_k_m",
-      "markerCoordinate": "org.modeljars.huggingface:ggml-org.smollm3-3b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.smollm3-3b-gguf.q4_k_m:3.0.0-q4_k_m.2",
       "artifactSha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
       "backend": "rust-ffm",
       "selector": {

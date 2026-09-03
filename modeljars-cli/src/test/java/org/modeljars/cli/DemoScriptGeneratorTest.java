@@ -30,7 +30,7 @@ import org.modeljars.ModelVersion;
 
 class DemoScriptGeneratorTest {
 
-  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.30");
+  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.31");
 
   @Test
   void generatesAChatDemoUsingThePublicRuntimeAndRuntimeOwnedMetrics() {
@@ -41,7 +41,7 @@ class DemoScriptGeneratorTest {
     assertEquals("example-chat-demo.java", demo.fileName());
     assertContains(
         demo.source(),
-        "//DEPS org.modeljars:modeljars:0.1.30",
+        "//DEPS org.modeljars:modeljars:0.1.31",
         "//DEPS " + descriptor(Set.of()).markerCoordinate(),
         "ModelJars.openRuntime(MODEL)",
         "runtime.chatTemplate().render",

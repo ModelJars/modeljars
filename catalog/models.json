@@ -47,12 +47,12 @@
     {
       "id": "qwen3_1_7b_q8_0",
       "name": "Qwen3 1.7B GGUF Q8_0",
-      "description": "Apache-2.0 Qwen3 text-generation model for the second pure-Java validation tier.",
+      "description": "Apache-2.0 Qwen3 model qualified for pure-Java chat and generative tool calling, including complete Spring AI and LangChain4j tool loops.",
       "sourceId": "hf://Qwen/Qwen3-1.7B-GGUF",
       "sourceUri": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF",
       "downloadUri": "https://huggingface.co/Qwen/Qwen3-1.7B-GGUF/resolve/90862c4b9d2787eaed51d12237eafdfe7c5f6077/Qwen3-1.7B-Q8_0.gguf",
       "revision": "90862c4b9d2787eaed51d12237eafdfe7c5f6077",
-      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.1",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.2",
       "modelVersion": "3.0.0",
       "variant": "q8_0",
       "format": "gguf",
@@ -65,7 +65,8 @@
       "license": "Apache-2.0",
       "capabilities": [
         "text-generation",
-        "chat"
+        "chat",
+        "tool-calling"
       ],
       "backends": {
         "pure-java": true,
@@ -877,12 +878,12 @@
     {
       "id": "minicpm5_1b_q4_k_m",
       "name": "MiniCPM5 1B GGUF Q4_K_M",
-      "description": "Official Apache-2.0 OpenBMB on-device model with Llama-family weights, long context, hybrid reasoning, and tool-calling support.",
+      "description": "Official Apache-2.0 OpenBMB on-device model with Llama-family weights, long context, and hybrid reasoning.",
       "sourceId": "hf://openbmb/MiniCPM5-1B-GGUF",
       "sourceUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF",
       "downloadUri": "https://huggingface.co/openbmb/MiniCPM5-1B-GGUF/resolve/87007042419d30c1d8f38ef065424ee33870831e/MiniCPM5-1B-Q4_K_M.gguf",
       "revision": "87007042419d30c1d8f38ef065424ee33870831e",
-      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-1b-gguf.q4_k_m:5.0.0-q4_k_m.4",
       "modelVersion": "5.0.0",
       "variant": "q4_k_m",
       "format": "gguf",
@@ -897,8 +898,7 @@
       "capabilities": [
         "text-generation",
         "chat",
-        "code-completion",
-        "tool-calling"
+        "code-completion"
       ],
       "features": [
         "mixed-quantization",
@@ -1043,7 +1043,7 @@
       "sourceUri": "https://huggingface.co/ggml-org/SmolLM3-3B-GGUF",
       "downloadUri": "https://huggingface.co/ggml-org/SmolLM3-3B-GGUF/resolve/4965cb60b150737b68a0408c36aeefb65078f894/SmolLM3-Q4_K_M.gguf",
       "revision": "4965cb60b150737b68a0408c36aeefb65078f894",
-      "markerCoordinate": "org.modeljars.huggingface:ggml-org.smollm3-3b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.smollm3-3b-gguf.q4_k_m:3.0.0-q4_k_m.2",
       "modelVersion": "3.0.0",
       "variant": "q4_k_m",
       "format": "gguf",
@@ -1058,8 +1058,7 @@
       "capabilities": [
         "text-generation",
         "chat",
-        "reasoning",
-        "tool-calling"
+        "reasoning"
       ],
       "features": [
         "mixed-quantization",
@@ -6091,7 +6090,7 @@
       "sourceUri": "https://huggingface.co/Cactus-Compute/needle2",
       "downloadUri": "https://huggingface.co/Cactus-Compute/needle2/resolve/98fbd955b0347e78059be0c253cc1ffa09b87bc7/needle2.cact",
       "revision": "98fbd955b0347e78059be0c253cc1ffa09b87bc7",
-      "markerCoordinate": "org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.1",
+      "markerCoordinate": "org.modeljars.huggingface:cactus-compute.needle2-cact.cq2_mixed:2.0.0-cq2_mixed.2",
       "modelVersion": "2.0.0",
       "variant": "cq2_mixed",
       "format": "cact",

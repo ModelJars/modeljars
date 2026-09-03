@@ -37,6 +37,7 @@ order: Vectors, Models, then ModelJars.
 | 2026-08-31 to 2026-09-01 | Can a compact multilingual embedding model clear a complete independent oracle? | Granite 107M produced a 384-dimensional vector with minimum cosine `0.9997466487182669` against the pinned llama.cpp reference; the artifact is `117011136` bytes with SHA-256 `4a0115de29aeeedc73175f14c6e2eee9da1d4b586cbe4c1e95b68b7e36aff36a`. | Publish `org.modeljars.huggingface:bartowski.granite-embedding-107m-multilingual-gguf.q4_k_m:1.0.0-q4_k_m.2` and expose it through the refreshed remote catalog. |
 | 2026-09-01 | Can a 20 MiB cross-encoder become a first-class Java reranker rather than an embedding workaround? | The corrected MS MARCO MiniLM artifact reproduced six ONNX logits within `0.101034`, the same Q4_K artifact within `0.036392`, and exact top-two order. Three fresh JVMs measured pair p95 at no more than `174.357 ms` and six-document batch p95 at no more than `930.176 ms` on the controlled Intel Mac. | Publish a dedicated reranking marker and API. Keep external implementations as pinned oracles only; runtime execution remains pure Java. Record the missing scalar/vector `erf` as a JVM request with this workload as its acceptance test. |
 | 2026-09-02 to 2026-09-03 | Can the JVM execute MobileMoE's original QAT checkpoint without converting it or importing another inference engine? | Models loaded the gated four-file Safetensors bundle, prepared its packed group-32 INT4 experts for Java execution, and passed 27 of 27 controlled RAG attempts plus a separate default-configuration smoke. The controlled host measured 957.97 ms p95 TTFT and 21.83 decode tokens/s. | Publish the immutable MobileMoE-S QAT bundle with the pure-Java backend. Require explicit upstream license acceptance and a Hugging Face read token; keep credentials out of marker metadata and redirected download requests. |
+| 2026-09-03 | Which published small models actually deserve a tool-calling claim? | One checksum-pinned 14-case suite tested six artifacts through pure Java, including typed arguments, crowded tools, refusal, and framework continuation. Qwen3 1.7B and Needle 2 passed; Qwen3 0.6B, MiniCPM5 1B, SmolLM3 3B, and Llama 3.2 3B failed the unchanged behavior floors. | Add Qwen3 1.7B as the first qualified generative tool model, retain Needle as a qualified action selector, remove unsupported claims from MiniCPM5 and SmolLM3, and publish the negative evidence with the passes. |
 
 ## Current public boundary
 
@@ -44,10 +45,10 @@ The public catalog contains 39 distinct qualified models:
 
 - 32 controlled generation/RAG qualifications;
 - 5 reference-equivalent embedding qualifications;
-- 1 tool-calling qualification; and
+- 2 tool-calling qualifications, one of which is also in the RAG set; and
 - 1 numerical, ordering, and latency-qualified reranker.
 
-The larger metadata registry is a candidate queue. It is not a claim that every recorded candidate
+The category counts overlap; the catalog still contains 39 distinct models. The larger metadata registry is a candidate queue. It is not a claim that every recorded candidate
 can execute or that every marker may be published.
 
 ## Release-engineering findings

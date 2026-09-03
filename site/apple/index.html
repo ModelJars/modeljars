@@ -100,14 +100,14 @@
           <article>
             <span class="step-number">01</span>
             <h3>Add the Apple backend</h3>
-            <pre><code>dependencies {
-  implementation("com.integrallis:backend-apple:0.3.25")
+            <pre><code class="language-groovy hljs" data-lang="groovy">dependencies {
+  implementation("com.integrallis:backend-apple:0.3.26")
 }</code></pre>
           </article>
           <article>
             <span class="step-number">02</span>
             <h3>Check availability and generate</h3>
-            <pre><code>import com.integrallis.models.backend.apple.AppleFoundationModels;
+            <pre><code class="language-java hljs" data-lang="java">import com.integrallis.models.backend.apple.AppleFoundationModels;
 
 try (var client = AppleFoundationModels.create()) {
   var status = client.availability();
@@ -172,5 +172,6 @@ try (var client = AppleFoundationModels.create()) {
         </div>
       </div>
     </footer>
+    <script src="/assets/highlight.js"></script>
   </body>
 </html>

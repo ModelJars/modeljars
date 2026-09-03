@@ -68,6 +68,19 @@ class ModelToolQualificationRegistryTest {
         () -> ModelToolQualificationRegistry.fromProperties(properties));
   }
 
+  @Test
+  void acceptsPublishedChatTemplateSlugs() {
+    Properties properties = properties();
+    properties.setProperty(
+        "toolQualification.cactus_compute_needle2_cact_cq2_mixed.promptTemplate",
+        "chatml-no-think");
+
+    ModelToolQualification qualification =
+        ModelToolQualificationRegistry.fromProperties(properties).qualified().getFirst();
+
+    assertEquals("chatml-no-think", qualification.promptTemplate());
+  }
+
   private static Properties properties() {
     Properties properties = new Properties();
     properties.setProperty("modeljars.toolQualifications.schemaVersion", "1");

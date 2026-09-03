@@ -1,21 +1,117 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-01T00:06:07.909713Z",
+  "generatedAt": "2026-09-03T14:01:34.051545984Z",
   "policyVersion": "needle2-tool-conformance-v2",
-  "modelsRevision": "547b1385625e8ec000a480f15fc2aae561b5f54c",
-  "reportRevision": "e6a4c45ad3d2b16282e55ea95564f90e67d22cb4",
-  "qualifiedModels": 1,
-  "rejectedModels": 0,
+  "modelsRevision": "cff14f65b2c36530e54c2812efa4576416ed3b11",
+  "reportRevision": "60e5fa40d855553ca960017baf58d646fc03c8d8",
+  "qualifiedModels": 2,
+  "rejectedModels": 4,
   "entries": [
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_m",
+      "model": "Llama 3.2 3B Instruct GGUF Q4_K_M",
+      "backend": "pure-java",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
+      "artifactSha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+      "artifactSizeBytes": 2019377696,
+      "report": "benchmark-results/tool-calling-20260903/llama3.2-3b-linux-x86_64.json",
+      "reportSha256": "55669a4f9969b209e410faffd411c8579967ebf2d38acd45d3baf56cd00eaff8",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "llama3"
+      },
+      "summary": {
+        "attempts": 9,
+        "passed": 3,
+        "structuredOutputRate": 1.0,
+        "toolSelectionExactRate": 0.8888888888888888,
+        "schemaValidityRate": 0.4444444444444444,
+        "declaredArgumentsOnlyRate": 1.0,
+        "expectedArgumentAccuracy": 0.6666666666666666,
+        "refusalAccuracy": 0.0,
+        "p95EndToEndMillis": 110544.0,
+        "qualified": false,
+        "verdict": "FAIL"
+      },
+      "environment": {
+        "host": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "processors": 8,
+        "physicalMemoryBytes": 32857444352,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "minicpm5_1b_q4_k_m",
+      "model": "MiniCPM5 1B GGUF Q4_K_M",
+      "backend": "pure-java",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
+      "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+      "artifactSizeBytes": 688065920,
+      "report": "benchmark-results/tool-calling-20260903/minicpm5-1b-macos-x86_64.json",
+      "reportSha256": "f40eecfb5dc94da49e19256e451e4f221b6a9646663266e835c82e10b450ded6",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "minicpm5-no-think"
+      },
+      "summary": {
+        "attempts": 14,
+        "passed": 5,
+        "structuredOutputRate": 0.7142857142857143,
+        "toolSelectionExactRate": 0.7142857142857143,
+        "schemaValidityRate": 0.7142857142857143,
+        "declaredArgumentsOnlyRate": 0.7142857142857143,
+        "expectedArgumentAccuracy": 0.4864864864864865,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 97413.0,
+        "qualified": false,
+        "verdict": "FAIL"
+      },
+      "environment": {
+        "host": "Brians-MacBook-Pro.local",
+        "osName": "Mac OS X",
+        "osVersion": "26.6.2",
+        "architecture": "x86_64",
+        "cpuModel": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+        "processors": 12,
+        "physicalMemoryBytes": 34359738368,
+        "maxHeapBytes": 8589934592,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
     {
       "modelId": "cactus_compute_needle2_cact_cq2_mixed",
       "model": "Cactus Compute Needle 2 CACT CQ2 Mixed",
       "backend": "pure-java",
-      "backendVersion": "models@547b1385625e8ec000a480f15fc2aae561b5f54c",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
       "artifactSha256": "b43aabfcaf1a6db6acf488076eab71d823c08697c7af4521fc1d174b60ede5ba",
       "artifactSizeBytes": 13737807,
-      "report": "models-bench/benchmark-results/certified-20260827/tool-calling/needle2-cact-pure-java.json",
-      "reportSha256": "a4ff43038a28250a2c4498e40d225b58d7cec8417215e9c3375a1de925cc6c9c",
+      "report": "benchmark-results/tool-calling-20260903/needle2-linux-x86_64.json",
+      "reportSha256": "e39c981fb7192ec11ccd2e7167022f6693563b0cf792abfce117076148bc472e",
       "suite": {
         "id": "needle2-upstream-playground-v1",
         "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
@@ -37,19 +133,163 @@
         "declaredArgumentsOnlyRate": 1.0,
         "expectedArgumentAccuracy": 0.918918918918919,
         "refusalAccuracy": 1.0,
-        "p95EndToEndMillis": 50217.0,
+        "p95EndToEndMillis": 21336.0,
         "qualified": true,
         "verdict": "PASS"
       },
       "environment": {
-        "host": "Brians-MacBook-Pro.local",
-        "osName": "Mac OS X",
-        "osVersion": "26.6.2",
-        "architecture": "x86_64",
-        "cpuModel": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
-        "processors": 12,
-        "physicalMemoryBytes": 34359738368,
-        "maxHeapBytes": 8589934592,
+        "host": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "processors": 8,
+        "physicalMemoryBytes": 32857444352,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "qwen3_0_6b_q4_0",
+      "model": "Qwen3 0.6B GGUF Q4_0",
+      "backend": "pure-java",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
+      "artifactSha256": "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4",
+      "artifactSizeBytes": 428970080,
+      "report": "benchmark-results/tool-calling-20260903/qwen3-0.6b-linux-x86_64.json",
+      "reportSha256": "9acf63fc6fb628a824b9883171d5819b9adffea3e803a768ba836041f0306b3a",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "chatml-no-think"
+      },
+      "summary": {
+        "attempts": 14,
+        "passed": 8,
+        "structuredOutputRate": 0.8571428571428571,
+        "toolSelectionExactRate": 0.8571428571428571,
+        "schemaValidityRate": 0.7857142857142857,
+        "declaredArgumentsOnlyRate": 0.8571428571428571,
+        "expectedArgumentAccuracy": 0.7567567567567568,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 17182.0,
+        "qualified": false,
+        "verdict": "FAIL"
+      },
+      "environment": {
+        "host": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "processors": 8,
+        "physicalMemoryBytes": 32857444352,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "qwen3_1_7b_q8_0",
+      "model": "Qwen3 1.7B GGUF Q8_0",
+      "backend": "pure-java",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
+      "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+      "artifactSizeBytes": 1834426016,
+      "report": "benchmark-results/tool-calling-20260903/qwen3-1.7b-linux-x86_64.json",
+      "reportSha256": "12840c31e4ff7f22af4c4409f120eb3d2e8db038aa5d8858ddb72e7c6cc7f8d3",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "chatml-no-think"
+      },
+      "summary": {
+        "attempts": 14,
+        "passed": 12,
+        "structuredOutputRate": 1.0,
+        "toolSelectionExactRate": 1.0,
+        "schemaValidityRate": 1.0,
+        "declaredArgumentsOnlyRate": 1.0,
+        "expectedArgumentAccuracy": 0.918918918918919,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 34899.0,
+        "qualified": true,
+        "verdict": "PASS"
+      },
+      "environment": {
+        "host": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "processors": 8,
+        "physicalMemoryBytes": 32857444352,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "smollm3_3b_q4_k_m",
+      "model": "SmolLM3 3B GGUF Q4_K_M",
+      "backend": "pure-java",
+      "backendVersion": "models@cff14f65b2c36530e54c2812efa4576416ed3b11",
+      "artifactSha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
+      "artifactSizeBytes": 1915305312,
+      "report": "benchmark-results/tool-calling-20260903/smollm3-3b-linux-x86_64.json",
+      "reportSha256": "7bf7b46a2c8e6bdf3bd00fda0d21ba573b0b62b9d70431185ab8768bb3ce0e08",
+      "suite": {
+        "id": "needle2-upstream-playground-v1",
+        "sha256": "c5f0f5a8e5e1f4ffbfd04caeef31ab8abd5e672c157dad980260e793d0c5ace5",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "smollm3-no-think"
+      },
+      "summary": {
+        "attempts": 14,
+        "passed": 11,
+        "structuredOutputRate": 0.9285714285714286,
+        "toolSelectionExactRate": 0.9285714285714286,
+        "schemaValidityRate": 0.8571428571428571,
+        "declaredArgumentsOnlyRate": 0.9285714285714286,
+        "expectedArgumentAccuracy": 0.8648648648648649,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 116555.0,
+        "qualified": false,
+        "verdict": "FAIL"
+      },
+      "environment": {
+        "host": "vectors-bench",
+        "osName": "Linux",
+        "osVersion": "6.8.0-124-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "processors": 8,
+        "physicalMemoryBytes": 32857444352,
+        "maxHeapBytes": 8216641536,
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"

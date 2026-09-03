@@ -91,7 +91,7 @@ public record ModelToolQualification(
     backend = requireText(backend, "backend").toLowerCase(Locale.ROOT);
     backendVersion = requireText(backendVersion, "backendVersion");
     workload = requireSlug(workload, "workload");
-    promptTemplate = requireIdentifier(promptTemplate, "promptTemplate");
+    promptTemplate = requireSlug(promptTemplate, "promptTemplate");
     artifactSha256 = requireSha256(artifactSha256, "artifactSha256");
     if (artifactSizeBytes < 1) {
       throw new IllegalArgumentException("artifactSizeBytes must be positive");

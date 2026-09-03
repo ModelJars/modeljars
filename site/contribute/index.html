@@ -211,15 +211,18 @@ scripts/run-controlled-rag-qualification.sh \
           contains the exact commands for both runs.
         </p>
         <p>
-          For Needle 2 CACT, the Models tool-conformance command loads the checksum-pinned artifact
-          directly into the Java backend. It does not install or run the upstream Needle engine.
+          For tool-calling candidates, the Models conformance command loads the checksum-pinned
+          artifact directly into the Java backend. It does not install or run an upstream inference
+          engine. The candidate key selects the reviewed artifact identity and its exact chat/tool
+          protocol.
         </p>
         <div class="code-block">
-          <div><span>Needle 2 CACT qualification</span></div>
-          <pre><code>./gradlew :models-bench:run --args='needle2-tool-qualification \
-  --model /absolute/path/to/needle2.cact \
+          <div><span>Small-model tool qualification</span></div>
+          <pre><code>./gradlew :models-bench:run --args='tool-qualification \
+  --candidate qwen3-1.7b \
+  --model /absolute/path/to/Qwen3-1.7B-Q8_0.gguf \
   --models-revision 0123456789abcdef0123456789abcdef01234567 \
-  --report /absolute/path/to/models/models-bench/benchmark-results/needle2-cact-pure-java.json \
+  --report /absolute/path/to/models/benchmark-results/qwen3-1.7b-tool-calling.json \
   --max-tokens 256'</code></pre>
         </div>
         <p class="callout">

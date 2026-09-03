@@ -61,7 +61,7 @@ Qualification requires:
   compatible GGUF artifacts or the pinned Transformers reference for formats Ollama and llama.cpp
   cannot ingest; llama.cpp remains supporting GGUF evidence;
 - raw report files, artifact and report SHA-256 values, environment identity, and a passing
-  `production-rag-model-contribution-v5` verdict.
+  `production-rag-model-contribution-v6` verdict.
 
 New or changed qualified entries must include `defaultConfigurationSmoke`
 metadata pointing to the immutable Models report. CI fetches that report from

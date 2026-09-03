@@ -119,6 +119,8 @@ jobs:
         run: npm run catalog:enrich -- --concurrency=6
 
       - name: Build and verify
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: >
           ./gradlew --no-daemon
           spotlessCheck
@@ -269,6 +271,7 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           MODELJARS_VERSION: ${{ needs.resolve-version.outputs.value }}
         run: >
           ./gradlew --no-daemon

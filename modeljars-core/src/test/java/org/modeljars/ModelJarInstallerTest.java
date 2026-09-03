@@ -33,6 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -256,6 +257,145 @@ class ModelJarInstallerTest {
       assertArrayEquals(modelBytes, Files.readAllBytes(installed));
     } finally {
       server.stop(0);
+    }
+  }
+
+  @Test
+  void authenticatesARestrictedArtifactWithoutExposingTheToken() throws IOException {
+    byte[] modelBytes = "restricted model".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    AtomicReference<String> authorization = new AtomicReference<>();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/restricted/model.gguf",
+        exchange -> {
+          authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
+          exchange.sendResponseHeaders(200, modelBytes.length);
+          exchange.getResponseBody().write(modelBytes);
+          exchange.close();
+        });
+    server.start();
+    try {
+      URI source =
+          URI.create(
+              "http://"
+                  + InetAddress.getLoopbackAddress().getHostAddress()
+                  + ":"
+                  + server.getAddress().getPort()
+                  + "/restricted/model.gguf");
+      Path destination = tempDir.resolve("restricted/model.gguf");
+      ModelJarDescriptor descriptor =
+          descriptor(source, destination, modelBytes.length, sha256(modelBytes));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(
+              new InMemoryModelJarRegistry(List.of(descriptor)),
+              ignored -> {},
+              ignored -> {},
+              ignored -> Optional.of("Bearer private-test-token"));
+
+      installer.install(descriptor, destination);
+
+      assertEquals("Bearer private-test-token", authorization.get());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void explainsHowToUnlockAGatedHuggingFaceArtifactWithoutRetrying() throws IOException {
+    AtomicInteger requests = new AtomicInteger();
+    HttpServer server =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/gated/model.safetensors",
+        exchange -> {
+          requests.incrementAndGet();
+          exchange.sendResponseHeaders(403, -1);
+          exchange.close();
+        });
+    server.start();
+    try {
+      URI source =
+          URI.create(
+              "http://"
+                  + InetAddress.getLoopbackAddress().getHostAddress()
+                  + ":"
+                  + server.getAddress().getPort()
+                  + "/gated/model.safetensors");
+      Path destination = tempDir.resolve("gated/model.safetensors");
+      ModelJarDescriptor descriptor = descriptor(source, destination, 16, "0".repeat(64));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(
+              new InMemoryModelJarRegistry(List.of(descriptor)),
+              ignored -> {},
+              ignored -> {},
+              ignored -> Optional.of("Bearer private-test-token"));
+
+      ModelJarException failure =
+          assertThrows(ModelJarException.class, () -> installer.install(descriptor, destination));
+
+      assertTrue(failure.getMessage().contains("Access denied"), failure.getMessage());
+      assertTrue(failure.getMessage().contains("HF_TOKEN"), failure.getMessage());
+      assertTrue(failure.getMessage().contains("accept the model license"), failure.getMessage());
+      assertFalse(failure.getMessage().contains("private-test-token"), failure.getMessage());
+      assertEquals(1, requests.get());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void doesNotForwardTheHuggingFaceTokenToADownloadRedirectHost() throws IOException {
+    byte[] modelBytes =
+        "redirected restricted model".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    AtomicReference<String> redirectedAuthorization = new AtomicReference<>();
+    HttpServer payload =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    payload.createContext(
+        "/payload",
+        exchange -> {
+          redirectedAuthorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
+          exchange.sendResponseHeaders(200, modelBytes.length);
+          exchange.getResponseBody().write(modelBytes);
+          exchange.close();
+        });
+    payload.start();
+    HttpServer origin =
+        HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    origin.createContext(
+        "/resolve/model",
+        exchange -> {
+          exchange
+              .getResponseHeaders()
+              .set("Location", "http://localhost:" + payload.getAddress().getPort() + "/payload");
+          exchange.sendResponseHeaders(302, -1);
+          exchange.close();
+        });
+    origin.start();
+    try {
+      URI source =
+          URI.create(
+              "http://"
+                  + InetAddress.getLoopbackAddress().getHostAddress()
+                  + ":"
+                  + origin.getAddress().getPort()
+                  + "/resolve/model");
+      Path destination = tempDir.resolve("redirect/model.safetensors");
+      ModelJarDescriptor descriptor =
+          descriptor(source, destination, modelBytes.length, sha256(modelBytes));
+      ModelJarInstaller installer =
+          new ModelJarInstaller(
+              new InMemoryModelJarRegistry(List.of(descriptor)),
+              ignored -> {},
+              ignored -> {},
+              ignored -> Optional.of("Bearer private-test-token"));
+
+      installer.install(descriptor, destination);
+
+      assertEquals(null, redirectedAuthorization.get());
+    } finally {
+      origin.stop(0);
+      payload.stop(0);
     }
   }
 

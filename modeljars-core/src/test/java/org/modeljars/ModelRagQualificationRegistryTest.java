@@ -33,9 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 31;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 32;
   private static final String AGGREGATE_MODELS_REVISION =
-      "f44c45a5ea2ad0b2327ba273aeb66d87ff11574a";
+      "4c3e2690144414b9b93e8c85166385f8a4f0821c";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -951,7 +951,7 @@ class ModelRagQualificationRegistryTest {
             .findFirst()
             .orElseThrow();
 
-    assertEquals("production-rag-model-contribution-v5", registry.policyVersion());
+    assertEquals("production-rag-model-contribution-v6", registry.policyVersion());
     assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
     assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
     assertEquals(1, registry.rejectedModels());
@@ -1002,6 +1002,34 @@ class ModelRagQualificationRegistryTest {
         "9599f542dae1f161bc9bd02e36e6c9c5f2e53f3a954538d1ad191a6443ce6174", qwen35.reportSha256());
     assertTrue(qwen25.productionUsable());
     assertTrue(qwen35.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedMobileMoeEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("facebook_mobilemoe_s_qat_int4_g32"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals("pure-java", qualification.backend());
+    assertEquals("mobilemoe", qualification.promptTemplate());
+    assertEquals("PRODUCTION_READY", qualification.performanceTier());
+    assertEquals("QUALIFIED", qualification.verdict());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(1.0 / 3.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(21.834571524790327, qualification.p50DecodeTokensPerSecond());
+    assertEquals(
+        "2e0857a7b8def3b4d0999493f85039eac561e5fb3abd3d85eabdf56698776b85",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
   }
 
   @Test

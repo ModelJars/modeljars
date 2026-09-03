@@ -94,6 +94,8 @@ jobs:
 
       - name: Verify pinned Hugging Face metadata
         if: steps.remote-catalog.outputs.required == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: ./gradlew --no-daemon verifyRemoteCatalogMetadata
 
       - name: Verify exact GGUF dimensions

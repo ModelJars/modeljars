@@ -51,6 +51,7 @@ test("publishes only artifacts that passed production qualification", async () =
     embeddingQualifications,
     rerankingQualifications,
     toolQualifications,
+    speechQualifications,
     build,
   ] = await Promise.all([
     read("catalog/models.json").then(JSON.parse),
@@ -58,6 +59,7 @@ test("publishes only artifacts that passed production qualification", async () =
     read("catalog/embedding-qualifications.json").then(JSON.parse),
     read("catalog/reranking-qualifications.json").then(JSON.parse),
     read("catalog/tool-qualifications.json").then(JSON.parse),
+    read("catalog/speech-qualifications.json").then(JSON.parse),
     read("build.gradle.kts"),
   ]);
 
@@ -75,7 +77,13 @@ test("publishes only artifacts that passed production qualification", async () =
   }
 
   const publicModelIds = new Set(
-    [qualifications, embeddingQualifications, rerankingQualifications, toolQualifications]
+    [
+      qualifications,
+      embeddingQualifications,
+      rerankingQualifications,
+      toolQualifications,
+      speechQualifications,
+    ]
       .flatMap((manifest) => manifest.entries)
       .filter((entry) => entry.qualified ?? entry.summary?.qualified)
       .map((entry) => entry.modelId),
@@ -85,11 +93,21 @@ test("publishes only artifacts that passed production qualification", async () =
       .filter((entry) => entry.summary.qualified)
       .map((entry) => entry.modelId),
   );
+  const speechQualifiedIds = new Set(
+    speechQualifications.entries
+      .filter((entry) => entry.qualified)
+      .map((entry) => entry.modelId),
+  );
   for (const model of catalog.models.filter((candidate) => publicModelIds.has(candidate.id))) {
     assert.equal(
       model.capabilities.includes("tool-calling"),
       toolQualifiedIds.has(model.id),
       `${model.id} tool-calling capability and qualification must agree`,
+    );
+    assert.equal(
+      model.capabilities.includes("text-to-speech"),
+      speechQualifiedIds.has(model.id),
+      `${model.id} text-to-speech capability and qualification must agree`,
     );
   }
 
@@ -97,6 +115,7 @@ test("publishes only artifacts that passed production qualification", async () =
   assert.match(build, /publicCatalogEntries\.forEach/);
   assert.match(build, /Public site catalog must contain only qualified artifacts/);
   assert.match(build, /tool-calling capability and qualification must agree/);
+  assert.match(build, /Speech-qualified model must advertise text-to-speech/);
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {
@@ -173,7 +192,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.31/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.32/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);

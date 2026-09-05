@@ -361,6 +361,43 @@ data class CatalogRerankingQualifications(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogSpeechQualification(
+    val modelId: String,
+    val model: String,
+    val backend: String,
+    val backendVersion: String,
+    val workload: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val reportPath: String,
+    val reportSha256: String,
+    val qualified: Boolean,
+    val oracleBackend: String,
+    val oracleVersion: String,
+    val probes: Int,
+    val minimumPcmCosine: Double,
+    val minimumSignalToDifferenceDb: Double,
+    val sampleRate: Int,
+    val channels: Int,
+    val streaming: Boolean,
+    val firstAudioBeforeCompletion: Boolean,
+    val trials: Int,
+    val p95RealTimeFactor: Double,
+    val p95TimeToFirstAudioMillis: Double,
+    val peakRssBytes: Long,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogSpeechQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val qualifiedModels: Int,
+    val rejectedModels: Int,
+    val entries: List<CatalogSpeechQualification>,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -414,6 +451,14 @@ fun emptyToolQualificationRegistryProperties(): String =
     modeljars.toolQualifications.modelsRevision=0000000000000000000000000000000000000000
     modeljars.toolQualifications.qualifiedModels=0
     modeljars.toolQualifications.rejectedModels=0
+    """.trimIndent() + "\n"
+
+fun emptySpeechQualificationRegistryProperties(): String =
+    """
+    modeljars.speechQualifications.schemaVersion=1
+    modeljars.speechQualifications.generatedAt=1970-01-01T00:00:00Z
+    modeljars.speechQualifications.policyVersion=none
+    modeljars.speechQualifications.modelsRevision=0000000000000000000000000000000000000000
     """.trimIndent() + "\n"
 
 fun CatalogPerformanceProfile.registryProperties(): String =
@@ -719,6 +764,57 @@ fun CatalogRerankingQualification.siteMetadata(
         ("modelsRevision" to qualifications.modelsRevision) +
         ("policyVersion" to qualifications.policyVersion) +
         ("useCaseTier" to if (qualified) "SECOND_STAGE_RERANKING" else "UNQUALIFIED")
+
+fun CatalogSpeechQualification.registryProperties(): String =
+    buildString {
+        val prefix = "speechQualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(model)}")
+        appendLine("${prefix}backend=${propertyValue(backend)}")
+        appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
+        appendLine("${prefix}workload=${propertyValue(workload)}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
+        appendLine("${prefix}report=${propertyValue(reportPath)}")
+        appendLine("${prefix}reportSha256=$reportSha256")
+        appendLine("${prefix}qualified=$qualified")
+        appendLine("${prefix}oracleBackend=${propertyValue(oracleBackend)}")
+        appendLine("${prefix}oracleVersion=${propertyValue(oracleVersion)}")
+        appendLine("${prefix}probes=$probes")
+        appendLine("${prefix}minimumPcmCosine=$minimumPcmCosine")
+        appendLine("${prefix}minimumSignalToDifferenceDb=$minimumSignalToDifferenceDb")
+        appendLine("${prefix}sampleRate=$sampleRate")
+        appendLine("${prefix}channels=$channels")
+        appendLine("${prefix}streaming=$streaming")
+        appendLine("${prefix}firstAudioBeforeCompletion=$firstAudioBeforeCompletion")
+        appendLine("${prefix}trials=$trials")
+        appendLine("${prefix}p95RealTimeFactor=$p95RealTimeFactor")
+        appendLine("${prefix}p95TimeToFirstAudioMillis=$p95TimeToFirstAudioMillis")
+        appendLine("${prefix}peakRssBytes=$peakRssBytes")
+    }
+
+fun CatalogSpeechQualifications.registryProperties(
+    entries: List<CatalogSpeechQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.speechQualifications.schemaVersion=1")
+        appendLine("modeljars.speechQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.speechQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.speechQualifications.modelsRevision=$modelsRevision")
+        entries.forEach { append(it.registryProperties()) }
+    }
+
+fun CatalogSpeechQualification.siteMetadata(
+    qualifications: CatalogSpeechQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("policyVersion" to qualifications.policyVersion) +
+        ("useCaseTier" to if (qualified) "TEXT_TO_SPEECH" else "UNQUALIFIED")
 
 fun CatalogRagQualifications.registryProperties(
     entries: List<CatalogRagQualification> = this.entries,
@@ -1424,6 +1520,101 @@ val rerankingQualifications =
         null
     }
 
+val speechQualificationCatalogFile = file("catalog/speech-qualifications.json")
+val speechQualifications =
+    if (speechQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(speechQualificationCatalogFile)
+                .stringKeyMap("catalog/speech-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/speech-qualifications.json must use schemaVersion 1"
+        }
+
+        fun integer(values: Map<String, Any?>, name: String, context: String): Int =
+            (values[name] as? Number)?.toInt()
+                ?: error("$context.$name must be an integer")
+
+        fun longValue(values: Map<String, Any?>, name: String, context: String): Long =
+            (values[name] as? Number)?.toLong()
+                ?: error("$context.$name must be an integer")
+
+        fun decimal(values: Map<String, Any?>, name: String, context: String): Double =
+            (values[name] as? Number)?.toDouble()
+                ?: error("$context.$name must be a number")
+
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Speech qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every speech qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    val context = "speech qualification $modelId"
+                    CatalogSpeechQualification(
+                        modelId = modelId,
+                        model = raw.requiredString("model"),
+                        backend = raw.requiredString("backend"),
+                        backendVersion = raw.requiredString("backendVersion"),
+                        workload = raw.requiredString("workload"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes = longValue(raw, "artifactSizeBytes", context),
+                        reportPath = raw.requiredString("report"),
+                        reportSha256 = raw.requiredString("reportSha256"),
+                        qualified =
+                            raw["qualified"] as? Boolean
+                                ?: error("$context.qualified must be a boolean"),
+                        oracleBackend = raw.requiredString("oracleBackend"),
+                        oracleVersion = raw.requiredString("oracleVersion"),
+                        probes = integer(raw, "probes", context),
+                        minimumPcmCosine = decimal(raw, "minimumPcmCosine", context),
+                        minimumSignalToDifferenceDb =
+                            decimal(raw, "minimumSignalToDifferenceDb", context),
+                        sampleRate = integer(raw, "sampleRate", context),
+                        channels = integer(raw, "channels", context),
+                        streaming =
+                            raw["streaming"] as? Boolean
+                                ?: error("$context.streaming must be a boolean"),
+                        firstAudioBeforeCompletion =
+                            raw["firstAudioBeforeCompletion"] as? Boolean
+                                ?: error(
+                                    "$context.firstAudioBeforeCompletion must be a boolean",
+                                ),
+                        trials = integer(raw, "trials", context),
+                        p95RealTimeFactor = decimal(raw, "p95RealTimeFactor", context),
+                        p95TimeToFirstAudioMillis =
+                            decimal(raw, "p95TimeToFirstAudioMillis", context),
+                        peakRssBytes = longValue(raw, "peakRssBytes", context),
+                        raw = raw,
+                    )
+                }
+        val qualifiedModels =
+            (document["qualifiedModels"] as? Number)?.toInt()
+                ?: error("Speech qualification manifest must contain qualifiedModels")
+        val rejectedModels =
+            (document["rejectedModels"] as? Number)?.toInt()
+                ?: error("Speech qualification manifest must contain rejectedModels")
+        require(entries.map(CatalogSpeechQualification::modelId).distinct().size == entries.size) {
+            "Speech qualification model IDs must be unique"
+        }
+        require(qualifiedModels == entries.count(CatalogSpeechQualification::qualified)) {
+            "Speech qualification qualifiedModels count does not match entries"
+        }
+        require(rejectedModels == entries.count { !it.qualified }) {
+            "Speech qualification rejectedModels count does not match entries"
+        }
+        CatalogSpeechQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            qualifiedModels = qualifiedModels,
+            rejectedModels = rejectedModels,
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 val publicQualifications =
     requireNotNull(ragQualifications) {
         "Production qualification metadata is required to generate the public site"
@@ -1434,11 +1625,14 @@ val publicRerankingQualifications =
     rerankingQualifications?.entries?.filter(CatalogRerankingQualification::qualified).orEmpty()
 val publicToolQualifications =
     toolQualifications?.entries?.filter(CatalogToolQualification::qualified).orEmpty()
+val publicSpeechQualifications =
+    speechQualifications?.entries?.filter(CatalogSpeechQualification::qualified).orEmpty()
 val publicModelIds =
     publicQualifications.map(CatalogRagQualification::modelId).toSet() +
         publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet() +
         publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
-        publicToolQualifications.map(CatalogToolQualification::modelId).toSet()
+        publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
+        publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet()
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
@@ -1499,6 +1693,23 @@ publicToolQualifications.forEach { qualification ->
     }
     require("tool-calling" in entry.capabilities) {
         "Tool-qualified model must advertise the tool-calling capability: ${qualification.modelId}"
+    }
+}
+publicSpeechQualifications.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error("Speech qualification references unknown catalog model: ${qualification.modelId}")
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Speech qualification SHA-256 does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Speech qualification size does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.backends[qualification.backend] == true) {
+        "Speech qualification backend is not advertised by ${qualification.modelId}"
+    }
+    require("text-to-speech" in entry.capabilities) {
+        "Speech-qualified model must advertise text-to-speech: ${qualification.modelId}"
     }
 }
 val publicPerformanceProfiles = performanceProfiles.filter { it.modelId in publicModelIds }
@@ -1812,6 +2023,79 @@ rerankingQualifications?.let { qualifications ->
             }
             require(medianColdLoad!! <= 1_000.0 && maximumPairP95!! <= 250.0 && maximumBatchP95!! <= 1_200.0) {
                 "Qualified reranker exceeds its controlled latency envelope: ${qualification.modelId}"
+            }
+        }
+    }
+}
+
+speechQualifications?.let { qualifications ->
+    Instant.parse(qualifications.generatedAt)
+    require(qualifications.policyVersion == "speech-oracle-streaming-latency-v1") {
+        "Speech qualifications must use speech-oracle-streaming-latency-v1"
+    }
+    require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Speech qualification modelsRevision must be a 40-character Git commit"
+    }
+    qualifications.entries.forEach { qualification ->
+        val model =
+            catalogEntries.singleOrNull { it.id == qualification.modelId }
+                ?: error("Unknown modelId in speech qualification: ${qualification.modelId}")
+        require(qualification.artifactSha256 == model.sha256) {
+            "Speech qualification SHA-256 does not match ${qualification.modelId}"
+        }
+        require(qualification.artifactSizeBytes == model.sizeBytes) {
+            "Speech qualification size does not match ${qualification.modelId}"
+        }
+        require(!qualification.qualified || model.backends[qualification.backend] == true) {
+            "Speech qualification backend is not supported by ${qualification.modelId}"
+        }
+        require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Speech qualification artifact SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Speech qualification report SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(isNormalizedRepositoryRelativePath(qualification.reportPath)) {
+            "Speech qualification report path is invalid for ${qualification.modelId}"
+        }
+        require(qualification.probes > 0 && qualification.trials >= 3) {
+            "Speech qualification evidence counts are invalid for ${qualification.modelId}"
+        }
+        require(qualification.minimumPcmCosine in 0.0..1.0) {
+            "Speech qualification PCM cosine is invalid for ${qualification.modelId}"
+        }
+        require(qualification.minimumSignalToDifferenceDb.isFinite()) {
+            "Speech qualification signal-to-difference ratio is invalid for ${qualification.modelId}"
+        }
+        require(qualification.sampleRate >= 8_000 && qualification.channels > 0) {
+            "Speech qualification audio shape is invalid for ${qualification.modelId}"
+        }
+        require(
+            qualification.p95RealTimeFactor.isFinite() &&
+                qualification.p95RealTimeFactor >= 0.0 &&
+                qualification.p95TimeToFirstAudioMillis.isFinite() &&
+                qualification.p95TimeToFirstAudioMillis >= 0.0,
+        ) {
+            "Speech qualification latency is invalid for ${qualification.modelId}"
+        }
+        require(qualification.peakRssBytes > 0) {
+            "Speech qualification peakRssBytes must be positive for ${qualification.modelId}"
+        }
+        if (qualification.qualified) {
+            require(qualification.minimumPcmCosine >= 0.995) {
+                "Qualified speech model misses the PCM cosine gate: ${qualification.modelId}"
+            }
+            require(qualification.minimumSignalToDifferenceDb >= 20.0) {
+                "Qualified speech model misses the SDR gate: ${qualification.modelId}"
+            }
+            require(qualification.p95RealTimeFactor <= 2.0) {
+                "Qualified speech model misses the real-time-factor gate: ${qualification.modelId}"
+            }
+            require(qualification.p95TimeToFirstAudioMillis <= 2_000.0) {
+                "Qualified speech model misses the time-to-first-audio gate: ${qualification.modelId}"
+            }
+            require(qualification.streaming && qualification.firstAudioBeforeCompletion) {
+                "Qualified speech model must stream audio before completion: ${qualification.modelId}"
             }
         }
     }
@@ -2227,7 +2511,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.31-SNAPSHOT")
+            .orElse("0.1.32-SNAPSHOT")
             .get()
 }
 
@@ -2454,6 +2738,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
         }
+    val candidateTestSpeechQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/speech-qualifications-v1.properties")
+        }
     val candidateTestPayloadTasks =
         catalogEntries
             .filter { it.packaging == "classpath" }
@@ -2485,6 +2773,9 @@ project(":modeljars-core") {
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
+            if (speechQualificationCatalogFile.isFile) {
+                inputs.file(speechQualificationCatalogFile)
+            }
             outputs.files(
                 candidateTestRegistry,
                 candidateTestMetadata,
@@ -2496,6 +2787,7 @@ project(":modeljars-core") {
                 candidateTestToolQualificationRegistry,
                 candidateTestEmbeddingQualificationRegistry,
                 candidateTestRerankingQualificationRegistry,
+                candidateTestSpeechQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -2534,6 +2826,11 @@ project(":modeljars-core") {
                                         toolQualifications?.entries
                                             ?.filter { it.modelId == entry.id }
                                             ?.map { it.siteMetadata(toolQualifications) }
+                                            .orEmpty()) +
+                                    ("speechQualifications" to
+                                        speechQualifications?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map { it.siteMetadata(speechQualifications) }
                                             .orEmpty())
                             },
                         ),
@@ -2581,6 +2878,11 @@ project(":modeljars-core") {
                 candidateTestRerankingQualificationRegistry.get().asFile.writeText(
                     rerankingQualifications?.registryProperties()
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestSpeechQualificationRegistry.get().asFile.writeText(
+                    speechQualifications?.registryProperties()
+                        ?: emptySpeechQualificationRegistryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
             }
@@ -2699,6 +3001,10 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
         }
+    val runtimeSpeechQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/speech-qualifications-v1.properties")
+        }
     val generateRuntimeQualificationResources =
         tasks.register("generateRuntimeQualificationResources") {
             inputs.file(qualificationCatalogFile)
@@ -2711,12 +3017,16 @@ project(":modeljars") {
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
+            if (speechQualificationCatalogFile.isFile) {
+                inputs.file(speechQualificationCatalogFile)
+            }
             outputs.files(
                 runtimeRagQualificationRegistry,
                 runtimeRagQualificationMetadata,
                 runtimeEmbeddingQualificationRegistry,
                 runtimeRerankingQualificationRegistry,
                 runtimeToolQualificationRegistry,
+                runtimeSpeechQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -2745,6 +3055,11 @@ project(":modeljars") {
                         ?: emptyToolQualificationRegistryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
+                runtimeSpeechQualificationRegistry.get().asFile.writeText(
+                    speechQualifications?.registryProperties()
+                        ?: emptySpeechQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
             }
         }
 
@@ -2759,6 +3074,7 @@ project(":modeljars") {
         api("com.integrallis:models:$modelsVersion")
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
+        api("com.integrallis:models-audio:$modelsVersion")
         testImplementation(project(":modeljars-catalog"))
         testImplementation("com.integrallis:backend-tornado:$modelsVersion")
         testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
@@ -2858,8 +3174,8 @@ val verifyJvmRuntimePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 4) {
-                "JVM Runtime must publish ModelJars Core, Models, and both execution backends"
+            require(dependencies.length == 5) {
+                "JVM Runtime must publish ModelJars Core, Models, both execution backends, and audio support"
             }
 
             fun dependency(artifactId: String): Element =
@@ -2909,6 +3225,17 @@ val verifyJvmRuntimePublication =
             }
             require(nativeBackendDependency.childText("scope") == "compile") {
                 "JVM Runtime must expose the native backend in Maven compile scope"
+            }
+
+            val audioDependency = dependency("models-audio")
+            require(audioDependency.childText("groupId") == "com.integrallis") {
+                "JVM Runtime audio support must come from the Models project"
+            }
+            require(audioDependency.childText("version") == modelsVersion) {
+                "JVM Runtime audio support and Models versions must match"
+            }
+            require(audioDependency.childText("scope") == "compile") {
+                "JVM Runtime must expose audio support in Maven compile scope"
             }
         }
     }
@@ -3026,6 +3353,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
         }
+    val aggregateSpeechQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/speech-qualifications-v1.properties")
+        }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
@@ -3043,6 +3374,9 @@ project(":modeljars-catalog") {
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
+            if (speechQualificationCatalogFile.isFile) {
+                inputs.file(speechQualificationCatalogFile)
+            }
             outputs.files(
                 aggregateRegistry,
                 aggregateMetadata,
@@ -3054,6 +3388,7 @@ project(":modeljars-catalog") {
                 aggregateEmbeddingQualificationRegistry,
                 aggregateRerankingQualificationRegistry,
                 aggregateToolQualificationRegistry,
+                aggregateSpeechQualificationRegistry,
             )
             doLast {
                 val registry = aggregateRegistry.get().asFile
@@ -3100,6 +3435,12 @@ project(":modeljars-catalog") {
                                             .filter { it.modelId == entry.id }
                                             .map {
                                                 it.siteMetadata(requireNotNull(toolQualifications))
+                                            }) +
+                                    ("speechQualifications" to
+                                        publicSpeechQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(requireNotNull(speechQualifications))
                                             })
                             },
                         ),
@@ -3122,6 +3463,11 @@ project(":modeljars-catalog") {
                 aggregateToolQualificationRegistry.get().asFile.writeText(
                     toolQualifications?.registryProperties(publicToolQualifications)
                         ?: emptyToolQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateSpeechQualificationRegistry.get().asFile.writeText(
+                    speechQualifications?.registryProperties(publicSpeechQualifications)
+                        ?: emptySpeechQualificationRegistryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregatePerformanceRegistry.get().asFile.writeText(
@@ -3257,6 +3603,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/tool-qualifications-v1.properties")
             }
+        val markerSpeechQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/speech-qualifications-v1.properties")
+            }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
@@ -3272,6 +3622,9 @@ project(":modeljars-catalog") {
                 if (rerankingQualificationCatalogFile.isFile) {
                     inputs.file(rerankingQualificationCatalogFile)
                 }
+                if (speechQualificationCatalogFile.isFile) {
+                    inputs.file(speechQualificationCatalogFile)
+                }
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
@@ -3282,6 +3635,7 @@ project(":modeljars-catalog") {
                     markerEmbeddingQualificationRegistry,
                     markerRerankingQualificationRegistry,
                     markerToolQualificationRegistry,
+                    markerSpeechQualificationRegistry,
                     markerDocs,
                 )
                 doLast {
@@ -3294,6 +3648,8 @@ project(":modeljars-catalog") {
                         toolQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val modelRerankingQualifications =
                         rerankingQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
+                    val modelSpeechQualifications =
+                        speechQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
@@ -3312,6 +3668,10 @@ project(":modeljars-catalog") {
                                     ("toolQualifications" to
                                         modelToolQualifications.map {
                                             it.siteMetadata(requireNotNull(toolQualifications))
+                                        }) +
+                                    ("speechQualifications" to
+                                        modelSpeechQualifications.map {
+                                            it.siteMetadata(requireNotNull(speechQualifications))
                                         }),
                             ),
                         ) + "\n",
@@ -3373,6 +3733,11 @@ project(":modeljars-catalog") {
                             ?: emptyToolQualificationRegistryProperties(),
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerSpeechQualificationRegistry.get().asFile.writeText(
+                        speechQualifications?.registryProperties(modelSpeechQualifications)
+                            ?: emptySpeechQualificationRegistryProperties(),
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -3403,6 +3768,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/embedding-qualifications-v1.properties",
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
+                        "META-INF/modeljars/speech-qualifications-v1.properties",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
                 }

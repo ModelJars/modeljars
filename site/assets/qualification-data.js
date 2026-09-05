@@ -189,8 +189,11 @@ export function primaryQualification(model) {
   const reranking = Array.isArray(model?.rerankingQualifications)
     ? model.rerankingQualifications
     : [];
+  const speech = Array.isArray(model?.speechQualifications)
+    ? model.speechQualifications
+    : [];
   // Prefer workload evidence over equivalence evidence when an artifact carries both.
-  const entries = [...rag, ...tool, ...reranking, ...embedding];
+  const entries = [...rag, ...tool, ...reranking, ...speech, ...embedding];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
@@ -200,6 +203,7 @@ export function qualificationLabel(qualification) {
   if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
   if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";
   if (qualification.useCaseTier === "SECOND_STAGE_RERANKING") return "Second-stage reranking";
+  if (qualification.useCaseTier === "TEXT_TO_SPEECH") return "Text-to-speech";
   return "Guarded RAG";
 }
 

@@ -19,6 +19,7 @@ META-INF/modeljars/performance-v1.json
 META-INF/modeljars/qualifications-v1.properties
 META-INF/modeljars/qualifications-v1.json
 META-INF/modeljars/tool-qualifications-v1.properties
+META-INF/modeljars/speech-qualifications-v1.properties
 ```
 
 Descriptors point to upstream model locations or bundled resources, checksums, licenses, formats,
@@ -32,10 +33,10 @@ classpath candidate catalog and one marker build per entry. The aggregate JAR em
 `META-INF/modeljars/catalog.json`, so adding a candidate does not require a new Gradle module or
 source folder.
 
-The public site and publication plan use `catalog/qualifications.json` as a separate release
-boundary. They include only the qualified subset whose artifact SHA-256 and byte size exactly match
-the candidate catalog. Recording candidate metadata does not create a public model page or authorize
-publication.
+The public site and publication plan use the RAG, embedding, reranking, tool, and speech
+qualification manifests as a separate release boundary. They include only the qualified subset
+whose artifact SHA-256 and byte size exactly match the candidate catalog. Recording candidate
+metadata does not create a public model page or authorize publication.
 
 ## Install the CLI
 
@@ -73,6 +74,7 @@ modeljars pull qwen-0.6b
 modeljars demo qwen-0.6b "What is the capital of France? Reply with only the city name."
 modeljars demo embeddinggemma "Public transit schedule"
 modeljars demo minilm-reranker "How many people live in Berlin?"
+modeljars demo soprano-q8 "The JVM can speak for itself."
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -125,7 +127,8 @@ cannot replace a generated short name or qualified catalog ID.
 
 `modeljars demo <model> [input]` writes a small, editable Java 25 JBang program for the model's
 qualified capability. Embedding demos print the input, full vector, dimensions, and load/execution
-times. Chat demos render the qualified template and report runtime-owned tokenization, prompt
+times. Speech demos synthesize through `ModelJars.openSpeech`, write a PCM16 WAVE file, and report
+duration, synthesis time, and real-time factor. Chat demos render the qualified template and report runtime-owned tokenization, prompt
 preparation, prefill, TTFT, decode, and token-count measurements. Tool-calling models generate a
 complete in-memory smart-home example that declares tools, constrains decoding, parses calls, and
 executes them. Reranking demos score a document set, preserve original positions, and print the
@@ -344,8 +347,8 @@ For a Java-qualified artifact, the runtime also consults optional in-process acc
 This does not weaken catalog qualification: unsupported formats and unqualified hardware remain on
 the artifact's normal Models backend.
 
-Production inference always runs in process through Models. ModelJars never delegates generation or
-embedding to Ollama, llama.cpp, Python, Needle, or a hosted service. Those systems may be used as
+Production inference always runs in process through Models. ModelJars never delegates generation,
+embedding, reranking, or speech synthesis to Ollama, llama.cpp, Python, Needle, or a hosted service. Those systems may be used as
 isolated correctness or performance comparators during qualification; the optional Models
 Rust/FFM backend contains project-owned math kernels while Java retains the model graph.
 
@@ -380,6 +383,26 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 
 `ModelJars.openRerankingRuntime(MODEL)` also exposes the exact artifact-bound numerical, ordering,
 and latency evidence that authorized publication.
+
+Qualified text-to-speech markers use the same path-free contract. ModelJars selects the backend
+whose exact artifact passed waveform, true-streaming, and controlled latency gates:
+
+```java
+import static org.modeljars.catalog.Walkingcat_Soprano_1_1_80m_Gguf_Q8_0.MODEL;
+
+import com.integrallis.models.api.WavEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.modeljars.ModelJars;
+
+try (var speech = ModelJars.openSpeech(MODEL)) {
+    var audio = speech.synthesize("The JVM can speak for itself.");
+    Files.write(Path.of("speech.wav"), WavEncoder.pcm16(audio));
+}
+```
+
+Use `ModelJars.openSpeechRuntime(MODEL)` when the application also needs the immutable descriptor
+and `ModelSpeechQualificationRegistry.Entry` that authorized the selected backend.
 
 Local inference must start Java 25 or newer with the Vector module resolved:
 

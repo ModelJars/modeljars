@@ -6139,6 +6139,121 @@
         "general",
         "tool-use"
       ]
+    },
+    {
+      "id": "walkingcat_soprano_1_1_80m_gguf_q8_0",
+      "name": "WalkingCat Soprano 1.1 80M GGUF Q8_0",
+      "description": "Compact English text-to-speech model with a Java-owned language-model, vocoder, and streaming PCM pipeline plus a narrow Models-owned Q8 projection kernel through FFM.",
+      "sourceId": "hf://WalkingCat/Soprano-1.1-80M-GGUF",
+      "sourceUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF",
+      "downloadUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/resolve/36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2/Soprano-1.1-80M-GGUF/soprano-1.1-80m-q8_0.gguf",
+      "revision": "36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2",
+      "markerCoordinate": "org.modeljars.huggingface:walkingcat.soprano-1.1-80m-gguf.q8_0:1.1.0-q8_0.1",
+      "modelVersion": "1.1.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "soprano",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.modeljars/models/soprano-1.1-80m-q8_0.gguf",
+      "sha256": "4758ad908395dc73a1b973d9a29ce96941f4328594d1c6c1223e7b7710a6a131",
+      "sizeBytes": 123162336,
+      "catalogPublishedAt": "2026-09-05T16:12:02Z",
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/blob/36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2/README.md",
+      "capabilities": [
+        "text-to-speech",
+        "audio-generation",
+        "streaming"
+      ],
+      "features": [
+        "java-native",
+        "pinned-revision",
+        "verified-sha256",
+        "embedded-tokenizer",
+        "embedded-model-config",
+        "incremental-pcm",
+        "english",
+        "fixed-voice",
+        "models-owned-rust-q8-kernel"
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": true
+      },
+      "dimensions": {
+        "parameterCount": 80000000,
+        "contextLength": 1024,
+        "embeddingLength": 512,
+        "blockCount": 17,
+        "attentionHeadCount": 4,
+        "keyValueHeadCount": 1,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 2304,
+        "attentionBlockCount": 17
+      },
+      "domains": [
+        "speech",
+        "audio",
+        "text-to-speech"
+      ]
+    },
+    {
+      "id": "walkingcat_soprano_1_1_80m_gguf_bf16",
+      "name": "WalkingCat Soprano 1.1 80M GGUF BF16",
+      "description": "Higher-precision English text-to-speech artifact executed entirely in Java with incremental 32 kHz mono PCM output.",
+      "sourceId": "hf://WalkingCat/Soprano-1.1-80M-GGUF",
+      "sourceUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF",
+      "downloadUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/resolve/36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2/Soprano-1.1-80M-GGUF/soprano-1.1-80m-bf16.gguf",
+      "revision": "36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2",
+      "markerCoordinate": "org.modeljars.huggingface:walkingcat.soprano-1.1-80m-gguf.bf16:1.1.0-bf16.1",
+      "modelVersion": "1.1.0",
+      "variant": "bf16",
+      "format": "gguf",
+      "architecture": "soprano",
+      "quantization": "BF16",
+      "localPath": "${user.home}/.modeljars/models/soprano-1.1-80m-bf16.gguf",
+      "sha256": "46c60cdf5b8e5a3b26bfd185c0870826c05b533979ea7c1d399a9ffb76a50a54",
+      "sizeBytes": 221809792,
+      "catalogPublishedAt": "2026-09-05T16:12:02Z",
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/blob/36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2/README.md",
+      "capabilities": [
+        "text-to-speech",
+        "audio-generation",
+        "streaming"
+      ],
+      "features": [
+        "pure-java",
+        "pinned-revision",
+        "verified-sha256",
+        "embedded-tokenizer",
+        "embedded-model-config",
+        "incremental-pcm",
+        "english",
+        "fixed-voice"
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": false
+      },
+      "dimensions": {
+        "parameterCount": 80000000,
+        "contextLength": 1024,
+        "embeddingLength": 512,
+        "blockCount": 17,
+        "attentionHeadCount": 4,
+        "keyValueHeadCount": 1,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 2304,
+        "attentionBlockCount": 17
+      },
+      "domains": [
+        "speech",
+        "audio",
+        "text-to-speech"
+      ]
     }
   ]
 }

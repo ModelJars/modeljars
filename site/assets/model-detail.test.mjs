@@ -12,6 +12,7 @@ import {
   qualificationSummary,
   rerankingJavaSnippet,
   resourceMemoryNote,
+  speechJavaSnippet,
 } from "./model-detail.js";
 
 const coordinate = "org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1";
@@ -25,7 +26,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.31")\n' +
+    'implementation("org.modeljars:modeljars:0.1.32")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -67,6 +68,15 @@ test("renders qualified embedding loading without paths or pooling guesses", () 
   assert.match(snippet, /ModelJars\.openEmbedding\(MODEL\)/);
   assert.match(snippet, /embeddings\.embed/);
   assert.doesNotMatch(snippet, /Path|Pooling|PureJavaBackend/);
+});
+
+test("renders qualified speech loading and WAV output without exposing paths", () => {
+  const snippet = speechJavaSnippet("walkingcat_soprano_1_1_80m_gguf_q8_0");
+
+  assert.match(snippet, /ModelJars\.openSpeech\(MODEL\)/);
+  assert.match(snippet, /model\.synthesize/);
+  assert.match(snippet, /WavEncoder\.pcm16/);
+  assert.doesNotMatch(snippet, /modelPath|PureJavaBackend/);
 });
 
 test("describes the complete artifact manifest rather than only the primary weight", () => {
@@ -219,4 +229,36 @@ test("summarizes reranking correctness and latency evidence", () => {
   assert.equal(summary.pairP95, "174 ms");
   assert.equal(summary.batchP95, "930 ms");
   assert.equal(summary.throughput, "7.875 docs/s");
+});
+
+test("summarizes speech correctness, streaming, and latency evidence", () => {
+  const summary = qualificationSummary({
+    qualified: true,
+    useCaseTier: "TEXT_TO_SPEECH",
+    backend: "rust-ffm",
+    backendVersion: "models-0.3.29",
+    workload: "speech-oracle-streaming-latency-v1",
+    probes: 3,
+    minimumPcmCosine: 0.998389246,
+    minimumSignalToDifferenceDb: 24.923,
+    sampleRate: 32000,
+    channels: 1,
+    streaming: true,
+    firstAudioBeforeCompletion: true,
+    trials: 5,
+    p95RealTimeFactor: 0.8,
+    p95TimeToFirstAudioMillis: 900,
+    peakRssBytes: 700000000,
+    oracleBackend: "official-soprano-pytorch",
+    oracleVersion: "12fac06",
+    reportUri: "https://github.com/integrallis/models/blob/revision/report.json",
+    reportSha256: "a".repeat(64),
+  });
+
+  assert.equal(summary.label, "Text-to-speech");
+  assert.equal(summary.pcmCosine, "0.9983892");
+  assert.equal(summary.sdr, "24.923 dB");
+  assert.equal(summary.realTimeFactor, "0.800x");
+  assert.equal(summary.ttfa, "900 ms");
+  assert.equal(summary.streaming, true);
 });

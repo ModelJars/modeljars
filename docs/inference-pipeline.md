@@ -100,5 +100,27 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 Use `openRerankingRuntime` to retain the descriptor and exact qualification evidence beside the
 owned `RerankingModel`.
 
+## Qualified text-to-speech access
+
+Speech markers bind exact model bytes to independent waveform agreement, incremental streaming,
+and controlled real-time latency. Applications provide text and receive immutable normalized PCM:
+
+```java
+import static org.modeljars.catalog.Walkingcat_Soprano_1_1_80m_Gguf_Q8_0.MODEL;
+
+import com.integrallis.models.api.WavEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+try (var speech = ModelJars.openSpeech(MODEL)) {
+  var audio = speech.synthesize("The JVM can speak for itself.");
+  Files.write(Path.of("speech.wav"), WavEncoder.pcm16(audio));
+}
+```
+
+`openSpeechRuntime` keeps the exact descriptor and speech-qualification record beside the owned
+`TextToSpeechModel`. Streaming calls emit PCM chunks before the full utterance is complete; the
+qualification gate verifies that concatenating those chunks reproduces blocking synthesis.
+
 The Models documentation describes the complete contract in
 [Inference Pipeline](https://integrallis.github.io/models/docs/models/current/inference-pipeline.html).

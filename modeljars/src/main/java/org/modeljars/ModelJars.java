@@ -23,12 +23,15 @@ import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.Pooling;
 import com.integrallis.models.api.RerankingModel;
 import com.integrallis.models.api.TextGenerationModel;
+import com.integrallis.models.api.TextToSpeechModel;
+import com.integrallis.models.audio.SopranoTextToSpeechModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.InferencePipeline;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -54,11 +57,13 @@ public final class ModelJars {
   private final ModelToolQualificationRegistry toolQualifications;
   private final ModelEmbeddingQualificationRegistry embeddingQualifications;
   private final ModelRerankingQualificationRegistry rerankingQualifications;
+  private final ModelSpeechQualificationRegistry speechQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
   private final EmbeddingBackendLoader embeddingBackendLoader;
   private final RerankingModelLoader rerankingModelLoader;
+  private final SpeechModelLoader speechModelLoader;
   private final Supplier<Map<String, String>> runtimeEnvironment;
   private final Supplier<List<String>> jvmArguments;
 
@@ -139,6 +144,38 @@ public final class ModelJars {
       RerankingModelLoader rerankingModelLoader,
       Supplier<Map<String, String>> runtimeEnvironment,
       Supplier<List<String>> jvmArguments) {
+    this(
+        models,
+        qualifications,
+        toolQualifications,
+        embeddingQualifications,
+        rerankingQualifications,
+        ModelSpeechQualificationRegistry.fromClasspath(),
+        profiles,
+        installer,
+        backendLoader,
+        embeddingBackendLoader,
+        rerankingModelLoader,
+        ModelJars::loadSpeechModel,
+        runtimeEnvironment,
+        jvmArguments);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelToolQualificationRegistry toolQualifications,
+      ModelEmbeddingQualificationRegistry embeddingQualifications,
+      ModelRerankingQualificationRegistry rerankingQualifications,
+      ModelSpeechQualificationRegistry speechQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      EmbeddingBackendLoader embeddingBackendLoader,
+      RerankingModelLoader rerankingModelLoader,
+      SpeechModelLoader speechModelLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this.models = Objects.requireNonNull(models, "models");
     this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
     this.toolQualifications = Objects.requireNonNull(toolQualifications, "toolQualifications");
@@ -146,6 +183,8 @@ public final class ModelJars {
         Objects.requireNonNull(embeddingQualifications, "embeddingQualifications");
     this.rerankingQualifications =
         Objects.requireNonNull(rerankingQualifications, "rerankingQualifications");
+    this.speechQualifications =
+        Objects.requireNonNull(speechQualifications, "speechQualifications");
     this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
@@ -153,6 +192,7 @@ public final class ModelJars {
         Objects.requireNonNull(embeddingBackendLoader, "embeddingBackendLoader");
     this.rerankingModelLoader =
         Objects.requireNonNull(rerankingModelLoader, "rerankingModelLoader");
+    this.speechModelLoader = Objects.requireNonNull(speechModelLoader, "speechModelLoader");
     this.runtimeEnvironment = Objects.requireNonNull(runtimeEnvironment, "runtimeEnvironment");
     this.jvmArguments = Objects.requireNonNull(jvmArguments, "jvmArguments");
   }
@@ -374,6 +414,69 @@ public final class ModelJars {
     return openRerankingRuntime(ModelJar.of(markerCoordinate));
   }
 
+  /**
+   * Opens a qualified text-to-speech model.
+   *
+   * @param model marker coordinate to resolve
+   * @return ready-to-use speech model
+   */
+  public static TextToSpeechModel openSpeech(ModelJar model) {
+    return openSpeechRuntime(model).model();
+  }
+
+  /**
+   * Opens a qualified text-to-speech model with explicit cache, network, and backend controls.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return ready-to-use speech model
+   */
+  public static TextToSpeechModel openSpeech(ModelJar model, ModelLoadOptions options) {
+    return openSpeechRuntime(model, options).model();
+  }
+
+  /**
+   * Opens a qualified speech model and exposes the exact admission evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @return loaded speech runtime
+   */
+  public static ModelJarSpeechRuntime openSpeechRuntime(ModelJar model) {
+    return openSpeechRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified speech model and exposes the exact admission evidence.
+   *
+   * @param model marker coordinate to resolve
+   * @param options cache, network, and backend controls
+   * @return loaded speech runtime
+   */
+  public static ModelJarSpeechRuntime openSpeechRuntime(ModelJar model, ModelLoadOptions options) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadSpeechRuntime(model, options);
+  }
+
+  /**
+   * Opens an exact qualified speech marker coordinate.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return ready-to-use speech model
+   */
+  public static TextToSpeechModel openSpeech(String markerCoordinate) {
+    return openSpeech(ModelJar.of(markerCoordinate));
+  }
+
+  /**
+   * Opens an exact qualified speech marker coordinate and exposes its evidence.
+   *
+   * @param markerCoordinate complete marker coordinate
+   * @return loaded speech runtime
+   */
+  public static ModelJarSpeechRuntime openSpeechRuntime(String markerCoordinate) {
+    return openSpeechRuntime(ModelJar.of(markerCoordinate));
+  }
+
   TextGenerationModel load(ModelJar model, ModelLoadOptions options) {
     return loadRuntime(model, options).model();
   }
@@ -437,6 +540,25 @@ public final class ModelJars {
     Path artifact = installer.install(descriptor, options);
     RerankingModel reranker = rerankingModelLoader.load(artifact, qualification);
     return new ModelJarRerankingRuntime(reranker, descriptor, qualification);
+  }
+
+  TextToSpeechModel loadSpeech(ModelJar model, ModelLoadOptions options) {
+    return loadSpeechRuntime(model, options).model();
+  }
+
+  ModelJarSpeechRuntime loadSpeechRuntime(ModelJar model, ModelLoadOptions options) {
+    Objects.requireNonNull(model, "model");
+    Objects.requireNonNull(options, "options");
+    ModelJarDescriptor descriptor =
+        models
+            .resolve(model)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    ModelSpeechQualificationRegistry.Entry qualification =
+        selectSpeechQualification(descriptor, options.backend());
+    requireNativeAccess(qualification.backend(), List.copyOf(jvmArguments.get()));
+    Path artifact = installer.install(descriptor, options);
+    TextToSpeechModel speech = speechModelLoader.load(artifact, descriptor, qualification);
+    return new ModelJarSpeechRuntime(speech, descriptor, qualification);
   }
 
   static void requireVectorModule(boolean available) {
@@ -558,6 +680,38 @@ public final class ModelJars {
                         + (requestedBackend == ModelBackend.AUTO
                             ? "reranking execution"
                             : requestedBackend.backendId() + " reranking execution")));
+  }
+
+  private ModelSpeechQualificationRegistry.Entry selectSpeechQualification(
+      ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
+    String artifactSha256 =
+        descriptor
+            .sha256()
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "Speech ModelJar "
+                            + descriptor.markerCoordinate()
+                            + " has no pinned artifact digest"));
+    return speechQualifications.qualified().stream()
+        .filter(candidate -> candidate.modelId().equals(descriptor.alias()))
+        .filter(candidate -> candidate.artifactSha256().equalsIgnoreCase(artifactSha256))
+        .filter(
+            candidate ->
+                requestedBackend == ModelBackend.AUTO
+                    || candidate.backend().equals(requestedBackend.backendId()))
+        .min(
+            Comparator.comparingDouble(ModelSpeechQualificationRegistry.Entry::p95RealTimeFactor)
+                .thenComparing(ModelSpeechQualificationRegistry.Entry::backend))
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " has no qualified "
+                        + (requestedBackend == ModelBackend.AUTO
+                            ? "speech execution"
+                            : requestedBackend.backendId() + " speech execution")));
   }
 
   private BackendConfiguration configuration(
@@ -761,6 +915,27 @@ public final class ModelJars {
     return GgufRerankingModel.load(artifact);
   }
 
+  private static TextToSpeechModel loadSpeechModel(
+      Path artifact,
+      ModelJarDescriptor descriptor,
+      ModelSpeechQualificationRegistry.Entry qualification) {
+    if (!"soprano".equals(descriptor.architecture())) {
+      throw new ModelJarException(
+          "Unsupported Models speech architecture: " + descriptor.architecture());
+    }
+    try {
+      return switch (qualification.backend()) {
+        case JAVA_BACKEND -> SopranoTextToSpeechModel.load(artifact);
+        case NATIVE_BACKEND -> SopranoTextToSpeechModel.loadNative(artifact);
+        default ->
+            throw new ModelJarException(
+                "Unsupported Models speech backend: " + qualification.backend());
+      };
+    } catch (IOException failure) {
+      throw new ModelJarException("Cannot open qualified speech artifact " + artifact, failure);
+    }
+  }
+
   @FunctionalInterface
   interface ArtifactInstaller {
     Path install(ModelJarDescriptor descriptor, ModelLoadOptions options);
@@ -782,5 +957,13 @@ public final class ModelJars {
   @FunctionalInterface
   interface RerankingModelLoader {
     RerankingModel load(Path artifact, ModelRerankingQualificationRegistry.Entry qualification);
+  }
+
+  @FunctionalInterface
+  interface SpeechModelLoader {
+    TextToSpeechModel load(
+        Path artifact,
+        ModelJarDescriptor descriptor,
+        ModelSpeechQualificationRegistry.Entry qualification);
   }
 }

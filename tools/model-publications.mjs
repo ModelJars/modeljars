@@ -283,9 +283,11 @@ function collectQualifiedIds(
  * Keeps only publications whose exact artifact passed a qualification policy.
  *
  * A generator qualifies through the RAG workload, an embedder through the
- * embedding equivalence gate, and a tool model through conformance. Any one is
- * sufficient; a reranker qualifies through numerical, ordering, and latency gates. Every policy binds evidence to the catalog SHA-256 and byte
- * size so stale evidence cannot publish.
+ * embedding equivalence gate, a tool model through conformance, and a speech
+ * model through waveform, streaming, and latency gates. Any one is sufficient;
+ * a reranker qualifies through numerical, ordering, and latency gates. Every
+ * policy binds evidence to the catalog SHA-256 and byte size so stale evidence
+ * cannot publish.
  */
 export function filterQualifiedPublications(
   delta,
@@ -294,6 +296,7 @@ export function filterQualifiedPublications(
   embeddingQualifications = { schemaVersion: 1, entries: [] },
   toolQualifications = { schemaVersion: 1, entries: [] },
   rerankingQualifications = { schemaVersion: 1, entries: [] },
+  speechQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -310,6 +313,9 @@ export function filterQualifiedPublications(
     qualifiedIds.add(id);
   }
   for (const id of collectQualifiedIds(rerankingQualifications, modelsById)) {
+    qualifiedIds.add(id);
+  }
+  for (const id of collectQualifiedIds(speechQualifications, modelsById)) {
     qualifiedIds.add(id);
   }
 

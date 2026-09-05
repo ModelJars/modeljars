@@ -30,7 +30,7 @@ import org.modeljars.ModelVersion;
 
 class DemoScriptGeneratorTest {
 
-  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.31");
+  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.32");
 
   @Test
   void generatesAChatDemoUsingThePublicRuntimeAndRuntimeOwnedMetrics() {
@@ -41,7 +41,7 @@ class DemoScriptGeneratorTest {
     assertEquals("example-chat-demo.java", demo.fileName());
     assertContains(
         demo.source(),
-        "//DEPS org.modeljars:modeljars:0.1.31",
+        "//DEPS org.modeljars:modeljars:0.1.32",
         "//DEPS " + descriptor(Set.of()).markerCoordinate(),
         "ModelJars.openRuntime(MODEL)",
         "runtime.chatTemplate().render",
@@ -108,6 +108,25 @@ class DemoScriptGeneratorTest {
         "Score",
         "Load:",
         "Execution:");
+  }
+
+  @Test
+  void generatesATextToSpeechDemoThatWritesWaveAudioAndReportsRealTimeFactor() {
+    DemoScriptGenerator.GeneratedDemo demo =
+        generator.generate(
+            descriptor(Set.of("text-to-speech", "audio-generation", "streaming"), "soprano"),
+            Optional.of("The JVM can speak for itself."));
+
+    assertEquals(DemoScriptGenerator.Type.SPEECH, demo.type());
+    assertEquals("example-speech-demo.java", demo.fileName());
+    assertContains(
+        demo.source(),
+        "ModelJars.openSpeech(MODEL)",
+        "The JVM can speak for itself.",
+        "WavEncoder.pcm16(audio)",
+        "speech.wav",
+        "Audio:",
+        "RTF:");
   }
 
   private static void assertContains(String source, String... fragments) {

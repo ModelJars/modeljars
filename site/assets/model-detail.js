@@ -78,13 +78,36 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 }`;
 }
 
+export function speechJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
+    throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  }
+  const reference = referenceClassName(modelId);
+  return `import static org.modeljars.catalog.${reference}.MODEL;
+
+import com.integrallis.models.api.WavEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.modeljars.ModelJars;
+
+try (var model = ModelJars.openSpeech(MODEL)) {
+  var audio = model.synthesize("The JVM can speak for itself.");
+  Files.write(Path.of("speech.wav"), WavEncoder.pcm16(audio));
+}`;
+}
+
 function formatPercent(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
 
 /** True for embedding evidence, which records agreement rather than latency and answer rates. */
 export function isEmbeddingEvidence(qualification) {
-  return Boolean(qualification) && qualification.probes !== undefined;
+  return Boolean(qualification) && qualification.embeddingDimension !== undefined;
+}
+
+/** True for waveform equivalence, streaming, and synthesis latency evidence. */
+export function isSpeechEvidence(qualification) {
+  return Boolean(qualification) && qualification.p95RealTimeFactor !== undefined;
 }
 
 /** True for tool-calling conformance evidence rather than RAG or embedding evidence. */
@@ -99,6 +122,28 @@ export function isRerankingEvidence(qualification) {
 
 export function qualificationSummary(qualification) {
   if (!qualification) return null;
+  if (isSpeechEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      probes: qualification.probes,
+      trials: qualification.trials,
+      pcmCosine: Number(qualification.minimumPcmCosine).toFixed(7),
+      sdr: `${Number(qualification.minimumSignalToDifferenceDb).toFixed(3)} dB`,
+      sampleRate: `${Number(qualification.sampleRate).toLocaleString("en-US")} Hz`,
+      channels: qualification.channels,
+      streaming: qualification.streaming,
+      firstAudioBeforeCompletion: qualification.firstAudioBeforeCompletion,
+      realTimeFactor: `${Number(qualification.p95RealTimeFactor).toFixed(3)}x`,
+      ttfa: formatDuration(qualification.p95TimeToFirstAudioMillis),
+      peakRss: formatBytes(qualification.peakRssBytes),
+      oracle: `${qualification.oracleBackend} ${qualification.oracleVersion}`,
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
+    };
+  }
   if (isEmbeddingEvidence(qualification)) {
     return {
       label: qualificationLabel(qualification),
@@ -248,7 +293,11 @@ export function resourceMemoryNote(model) {
   if (isGenerationModel(model)) {
     return "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
   }
-  const purpose = (model.capabilities || []).includes("reranking") ? "Reranking" : "Embedding";
+  const purpose = (model.capabilities || []).includes("reranking")
+    ? "Reranking"
+    : (model.capabilities || []).includes("text-to-speech")
+      ? "Speech synthesis"
+      : "Embedding";
   return `Memory baseline covers the complete artifact bytes. ${purpose} working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.`;
 }
 
@@ -421,9 +470,41 @@ function renderRerankingQualification(summary) {
     </section>`;
 }
 
+function renderSpeechQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="speech-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="speech-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.trials))} timing trials</span>
+      </div>
+      <p>
+        The exact artifact reproduced ${escapeHtml(summary.oracle)} waveform evidence, emitted
+        audio before synthesis completed, and met the controlled real-time latency envelope on
+        ${escapeHtml(summary.backend)}.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>PCM agreement</dt><dd>${escapeHtml(summary.pcmCosine)}</dd></div>
+        <div><dt>Signal/difference</dt><dd>${escapeHtml(summary.sdr)}</dd></div>
+        <div><dt>Real-time factor p95</dt><dd>${escapeHtml(summary.realTimeFactor)}</dd></div>
+        <div><dt>First audio p95</dt><dd>${escapeHtml(summary.ttfa)}</dd></div>
+        <div><dt>Audio</dt><dd>${escapeHtml(summary.sampleRate)}, ${escapeHtml(String(summary.channels))} channel</dd></div>
+        <div><dt>Streaming</dt><dd>${summary.streaming && summary.firstAudioBeforeCompletion ? "incremental" : "buffered"}</dd></div>
+        <div><dt>Peak RSS</dt><dd>${escapeHtml(summary.peakRss)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw qualification JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
+  if (isSpeechEvidence(qualification)) return renderSpeechQualification(summary);
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
   if (isRerankingEvidence(qualification)) return renderRerankingQualification(summary);
@@ -575,7 +656,9 @@ function renderModel(model, catalog) {
               ? embeddingJavaSnippet(model.id)
               : isRerankingEvidence(qualification)
                 ? rerankingJavaSnippet(model.id)
-                : javaSnippet(model.id),
+                : isSpeechEvidence(qualification)
+                  ? speechJavaSnippet(model.id)
+                  : javaSnippet(model.id),
             "language-java",
           )}
         </section>

@@ -3,13 +3,16 @@ import { readFile, writeFile } from "node:fs/promises";
 import process from "node:process";
 import { promisify } from "node:util";
 
-import { gguf } from "@huggingface/gguf";
-
 import {
   changedGgufModelIds,
   createRetryingFetch,
 } from "./catalog-enrichment.mjs";
-import { extractGgufDimensions } from "./gguf-metadata.mjs";
+import { inspectGguf } from "./gguf-inspector.mjs";
+import {
+  assertGgufIdentity,
+  AUDIOCPP_EMBEDDED_METADATA_KEYS,
+  extractGgufDimensions,
+} from "./gguf-metadata.mjs";
 
 const catalogPath = new URL("../catalog/models.json", import.meta.url);
 const write = process.argv.includes("--write");
@@ -45,17 +48,13 @@ let nextIndex = 0;
 const retryingFetch = createRetryingFetch();
 
 async function inspect(model) {
-  const parsed = await gguf(model.downloadUri, {
-    computeParametersCount: true,
+  const parsed = await inspectGguf(model.downloadUri, {
     fetch: retryingFetch,
     additionalFetchHeaders: { "User-Agent": "ModelJars-Catalog-Enricher/0.1" },
+    retainMetadataArrays:
+      model.ggufArchitecture === "audiocpp" ? AUDIOCPP_EMBEDDED_METADATA_KEYS : [],
   });
-  const remoteArchitecture = parsed.metadata["general.architecture"];
-  if (remoteArchitecture !== model.architecture) {
-    throw new Error(
-      `architecture mismatch: catalog=${model.architecture}, GGUF=${remoteArchitecture}`,
-    );
-  }
+  assertGgufIdentity(model, parsed.metadata);
   return extractGgufDimensions(parsed.metadata, parsed.parameterCount, parsed.tensorInfos);
 }
 

@@ -28,6 +28,8 @@ function parseArguments(argumentsList) {
         "--previous-tool-qualifications",
         "--reranking-qualifications",
         "--previous-reranking-qualifications",
+        "--speech-qualifications",
+        "--previous-speech-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -42,6 +44,7 @@ function parseArguments(argumentsList) {
           "--previous-embedding-qualifications FILE] " +
           "[--tool-qualifications FILE --previous-tool-qualifications FILE] " +
           "[--reranking-qualifications FILE --previous-reranking-qualifications FILE] " +
+          "[--speech-qualifications FILE --previous-speech-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -52,6 +55,23 @@ function parseArguments(argumentsList) {
   }
   if (values.has("--previous") === values.has("--ids")) {
     throw new Error("Exactly one of --previous or --ids is required");
+  }
+  if (
+    values.has("--previous-speech-qualifications") &&
+    (!values.has("--previous") || !values.has("--speech-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-speech-qualifications requires --previous and --speech-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--speech-qualifications") &&
+    !values.has("--previous-speech-qualifications")
+  ) {
+    throw new Error(
+      "--previous-speech-qualifications is required for a speech-qualification-aware delta",
+    );
   }
   if (
     values.has("--previous-profiles") !== values.has("--current-profiles")
@@ -124,6 +144,7 @@ function qualifiedCatalog(
   embeddingManifest,
   toolManifest,
   rerankingManifest,
+  speechManifest,
 ) {
   filterQualifiedPublications(
     { publications: [], removed: [] },
@@ -132,6 +153,7 @@ function qualifiedCatalog(
     embeddingManifest,
     toolManifest,
     rerankingManifest,
+    speechManifest,
   );
   const qualifiedIds = new Set(
     [
@@ -145,6 +167,9 @@ function qualifiedCatalog(
         (entry) => entry.summary?.qualified === true,
       ),
       ...(rerankingManifest?.entries ?? []).filter(
+        (entry) => entry.qualified === true,
+      ),
+      ...(speechManifest?.entries ?? []).filter(
         (entry) => entry.qualified === true,
       ),
     ]
@@ -206,6 +231,13 @@ async function main() {
     rerankingQualificationPath === undefined
       ? undefined
       : await readCatalog(rerankingQualificationPath);
+  const speechQualificationPath = argumentsMap.get(
+    "--speech-qualifications",
+  );
+  const currentSpeechQualifications =
+    speechQualificationPath === undefined
+      ? undefined
+      : await readCatalog(speechQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -232,6 +264,9 @@ async function main() {
       const previousRerankingPath = argumentsMap.get(
         "--previous-reranking-qualifications",
       );
+      const previousSpeechPath = argumentsMap.get(
+        "--previous-speech-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
@@ -244,6 +279,9 @@ async function main() {
         previousRerankingPath === undefined
           ? undefined
           : await readCatalog(previousRerankingPath),
+        previousSpeechPath === undefined
+          ? undefined
+          : await readCatalog(previousSpeechPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
@@ -251,6 +289,7 @@ async function main() {
         currentEmbeddingQualifications,
         currentToolQualifications,
         currentRerankingQualifications,
+        currentSpeechQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -279,6 +318,7 @@ async function main() {
           currentEmbeddingQualifications,
           currentToolQualifications,
           currentRerankingQualifications,
+          currentSpeechQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

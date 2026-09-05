@@ -795,6 +795,39 @@ test("publishes an artifact qualified only by reranking evidence", () => {
   );
 });
 
+test("publishes an artifact qualified only by speech evidence", () => {
+  const speechModel = model({
+    id: "soprano_q8",
+    markerCoordinate:
+      "org.modeljars.huggingface:walkingcat.soprano-1.1-80m-gguf.q8_0:1.1.0-q8_0.1",
+    sha256: "d".repeat(64),
+    capabilities: ["text-to-speech", "audio-generation", "streaming"],
+  });
+  const delta = selectCatalogPublications(catalog([speechModel]), ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    catalog([speechModel]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([
+      {
+        modelId: speechModel.id,
+        artifactSha256: speechModel.sha256,
+        artifactSizeBytes: speechModel.sizeBytes,
+        qualified: true,
+      },
+    ]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [speechModel.id],
+  );
+});
+
 test("withholds an embedding artifact whose evidence did not qualify", () => {
   const embedder = model({
     id: "embedding_model",

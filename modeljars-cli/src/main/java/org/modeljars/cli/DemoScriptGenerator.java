@@ -28,11 +28,14 @@ final class DemoScriptGenerator {
   private static final Set<String> CHAT_CAPABILITIES =
       Set.of("chat", "generation", "text-generation");
   private static final Set<String> RERANKING_CAPABILITIES = Set.of("reranking", "text-ranking");
+  private static final Set<String> SPEECH_CAPABILITIES =
+      Set.of("text-to-speech", "audio-generation");
 
   enum Type {
     CHAT,
     EMBEDDING,
     RERANKING,
+    SPEECH,
     TOOLS
   }
 
@@ -71,6 +74,7 @@ final class DemoScriptGenerator {
           case CHAT -> chatSource(descriptor, input);
           case EMBEDDING -> embeddingSource(descriptor, input);
           case RERANKING -> rerankingSource(descriptor, input);
+          case SPEECH -> speechSource(descriptor, input);
           case TOOLS -> toolSource(descriptor, input);
         };
     return new GeneratedDemo(
@@ -88,13 +92,16 @@ final class DemoScriptGenerator {
     if (capabilities.stream().anyMatch(RERANKING_CAPABILITIES::contains)) {
       return Type.RERANKING;
     }
+    if (capabilities.stream().anyMatch(SPEECH_CAPABILITIES::contains)) {
+      return Type.SPEECH;
+    }
     if (capabilities.stream().anyMatch(CHAT_CAPABILITIES::contains)) {
       return Type.CHAT;
     }
     throw new IllegalArgumentException(
         "Model "
             + descriptor.alias()
-            + " does not have a supported chat, embedding, reranking, or Needle tool-calling demo");
+            + " does not have a supported chat, embedding, reranking, speech, or Needle tool-calling demo");
   }
 
   private static String input(Type type) {
@@ -102,6 +109,7 @@ final class DemoScriptGenerator {
       case CHAT -> "What is the capital of France? Reply with only the city name.";
       case EMBEDDING -> "Public transit connects people and cities.";
       case RERANKING -> "How many people live in Berlin?";
+      case SPEECH -> "The JVM can speak for itself.";
       case TOOLS -> "Dim the bedroom lights to 20 percent and lock the front door.";
     };
   }
@@ -111,6 +119,7 @@ final class DemoScriptGenerator {
       case CHAT -> "chat";
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
+      case SPEECH -> "speech";
       case TOOLS -> "tools";
     };
   }
@@ -265,6 +274,52 @@ final class DemoScriptGenerator {
               }
               System.out.printf("%%nLoad:      %%,d ms%%n", (loaded - loadStarted) / 1_000_000);
               System.out.printf("Execution: %%,d ms%%n", (completed - loaded) / 1_000_000);
+            }
+          }
+
+          private static void quietLibraries() {
+            Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+            Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+          }
+        }
+        """
+            .formatted(descriptor.markerCoordinate(), javaString(defaultInput));
+  }
+
+  private String speechSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import com.integrallis.models.api.WavEncoder;
+        import java.nio.file.Files;
+        import java.nio.file.Path;
+        import java.util.logging.Level;
+        import java.util.logging.Logger;
+        import org.modeljars.ModelJars;
+
+        class ModelJarsDemo {
+          private static final String MODEL = "%s";
+
+          public static void main(String... args) throws Exception {
+            quietLibraries();
+            var input = args.length == 0 ? "%s" : String.join(" ", args);
+            var output = Path.of("speech.wav");
+            long loadStarted = System.nanoTime();
+            try (var model = ModelJars.openSpeech(MODEL)) {
+              long loaded = System.nanoTime();
+              var audio = model.synthesize(input);
+              long completed = System.nanoTime();
+              Files.write(output, WavEncoder.pcm16(audio));
+
+              double synthesisMillis = (completed - loaded) / 1_000_000.0;
+              System.out.println("Input: " + input);
+              System.out.println("Audio: " + output.toAbsolutePath());
+              System.out.printf("Duration: %%,.0f ms at %%,d Hz, %%d channel%%n",
+                  audio.duration().toNanos() / 1_000_000.0,
+                  audio.sampleRate(), audio.channels());
+              System.out.printf("Load: %%,d ms%%n", (loaded - loadStarted) / 1_000_000);
+              System.out.printf("Synthesis: %%,.0f ms%%n", synthesisMillis);
+              System.out.printf("RTF: %%.3f%%n",
+                  synthesisMillis / (audio.duration().toNanos() / 1_000_000.0));
             }
           }
 

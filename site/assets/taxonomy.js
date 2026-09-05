@@ -77,6 +77,12 @@ export function modelTerms(model) {
       qualification.workload,
       qualification.useCaseTier,
     ]),
+    ...(model.speechQualifications || []).flatMap((qualification) => [
+      qualification.backend,
+      qualification.oracleBackend,
+      qualification.workload,
+      qualification.useCaseTier,
+    ]),
     ...FACET_FIELDS.backends(model),
   ];
 
@@ -126,7 +132,9 @@ export function verificationProfile(model) {
 
   if (pinnedArtifact) checks.push("Pinned artifact");
   if (completeMetadata) checks.push("Complete metadata");
-  if (qualification?.probes) {
+  if (qualification?.p95RealTimeFactor !== undefined) {
+    checks.push(`${qualification.trials}-trial streaming speech qualification`);
+  } else if (qualification?.probes) {
     checks.push(
       `${qualification.probes}-probe equivalence with ${qualification.oracleBackend}`,
     );

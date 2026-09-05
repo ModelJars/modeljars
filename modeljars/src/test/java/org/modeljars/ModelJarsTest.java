@@ -29,14 +29,22 @@ import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.OptimizationStatus;
+import com.integrallis.models.api.PcmAudio;
 import com.integrallis.models.api.RerankingModel;
 import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.api.SpeechSynthesisOptions;
+import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
@@ -430,6 +438,109 @@ class ModelJarsTest {
     assertTrue(reranker.closed);
   }
 
+  @Test
+  void opensSpeechOnlyThroughArtifactBoundQualifiedEvidence() throws Exception {
+    String sha = "4758ad908395dc73a1b973d9a29ce96941f4328594d1c6c1223e7b7710a6a131";
+    ModelJarDescriptor descriptor = speechDescriptor(sha);
+    ModelJar model = ModelJar.of(descriptor.markerCoordinate().toString());
+    StubSpeechModel speech = new StubSpeechModel();
+    AtomicReference<ModelSpeechQualificationRegistry.Entry> selected = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(descriptor)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelToolQualificationRegistry.fromClasspath(),
+            ModelEmbeddingQualificationRegistry.fromClasspath(),
+            ModelRerankingQualificationRegistry.fromClasspath(),
+            speechQualifications(sha),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-soprano.gguf"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (path, qualification, configuration) -> new StubEmbeddingBackend(),
+            (path, qualification) -> new StubRerankingModel(),
+            (path, candidate, qualification) -> {
+              selected.set(qualification);
+              return speech;
+            },
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    try (var runtime = loader.loadSpeechRuntime(model, ModelLoadOptions.defaults())) {
+      assertSame(speech, runtime.model());
+      assertEquals(descriptor, runtime.descriptor());
+      assertEquals(sha, runtime.qualification().artifactSha256());
+      assertEquals("rust-ffm", selected.get().backend());
+      assertEquals(32_000, runtime.model().synthesize("hello").sampleRate());
+      assertFalse(speech.closed);
+    }
+    assertTrue(speech.closed);
+  }
+
+  private static ModelSpeechQualificationRegistry speechQualifications(String sha)
+      throws Exception {
+    String properties =
+        """
+        modeljars.speechQualifications.schemaVersion=1
+        speechQualification.soprano-q8.model=Soprano 1.1 80M Q8_0
+        speechQualification.soprano-q8.backend=rust-ffm
+        speechQualification.soprano-q8.backendVersion=models-0.3.29
+        speechQualification.soprano-q8.workload=speech-oracle-streaming-latency-v1
+        speechQualification.soprano-q8.artifactSha256=%s
+        speechQualification.soprano-q8.artifactSizeBytes=123162336
+        speechQualification.soprano-q8.report=benchmark-results/audio/soprano/report.json
+        speechQualification.soprano-q8.reportSha256=1111111111111111111111111111111111111111111111111111111111111111
+        speechQualification.soprano-q8.qualified=true
+        speechQualification.soprano-q8.oracleBackend=official-soprano-pytorch
+        speechQualification.soprano-q8.oracleVersion=12fac06eb8fa53bad8b3941d3cb11e9c869477c4
+        speechQualification.soprano-q8.probes=3
+        speechQualification.soprano-q8.minimumPcmCosine=0.998
+        speechQualification.soprano-q8.minimumSignalToDifferenceDb=24.9
+        speechQualification.soprano-q8.sampleRate=32000
+        speechQualification.soprano-q8.channels=1
+        speechQualification.soprano-q8.streaming=true
+        speechQualification.soprano-q8.firstAudioBeforeCompletion=true
+        speechQualification.soprano-q8.trials=5
+        speechQualification.soprano-q8.p95RealTimeFactor=1.5
+        speechQualification.soprano-q8.p95TimeToFirstAudioMillis=500
+        speechQualification.soprano-q8.peakRssBytes=536870912
+        """
+            .formatted(sha);
+    return ModelSpeechQualificationRegistry.parse(
+        new ByteArrayInputStream(properties.getBytes(StandardCharsets.ISO_8859_1)));
+  }
+
+  private static ModelJarDescriptor speechDescriptor(String sha) {
+    return new ModelJarDescriptor(
+        "soprano-q8",
+        "hf://WalkingCat/Soprano-1.1-80M-GGUF",
+        ModelJarCoordinate.parse(
+            "org.modeljars.huggingface:walkingcat.soprano-1.1-80m-gguf.q8_0:1.1.0-q8_0.1"),
+        ModelVersion.parse("1.1.0"),
+        "q8_0",
+        "gguf",
+        "soprano",
+        "Q8_0",
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(URI.create("https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF")),
+        Optional.of(
+            URI.create(
+                "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/resolve/revision/soprano-1.1-80m-q8_0.gguf")),
+        Optional.of("36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2"),
+        Optional.of(sha),
+        Optional.of(123_162_336L),
+        Optional.of("Apache-2.0"),
+        Set.of("text-to-speech"),
+        Set.of("streaming-audio"),
+        List.of(),
+        Map.of("rust-ffm", true, "pure-java", true),
+        Optional.of("Soprano 1.1 80M Q8_0"),
+        Optional.empty(),
+        Optional.empty(),
+        Set.of("audio"),
+        ModelDimensions.unknown());
+  }
+
   private static final class StubEmbeddingBackend implements EmbeddingBackend {
     private boolean closed;
 
@@ -455,6 +566,30 @@ class ModelJarsTest {
     @Override
     public double score(String query, String document) {
       return document.length() - query.length();
+    }
+
+    @Override
+    public void close() {
+      closed = true;
+    }
+  }
+
+  private static final class StubSpeechModel implements TextToSpeechModel {
+    private boolean closed;
+
+    @Override
+    public String modelName() {
+      return "soprano-fixture";
+    }
+
+    @Override
+    public BackendDiagnostics diagnostics() {
+      return BackendDiagnostics.unavailable("stub-speech");
+    }
+
+    @Override
+    public PcmAudio synthesize(String text, SpeechSynthesisOptions options) {
+      return new PcmAudio(32_000, 1, new float[] {0.1f, -0.1f});
     }
 
     @Override

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractGgufDimensions } from "./gguf-metadata.mjs";
+import {
+  assertGgufIdentity,
+  extractGgufDimensions,
+} from "./gguf-metadata.mjs";
 
 test("extracts architecture-specific dimensions from GGUF metadata", () => {
   const metadata = {
@@ -80,5 +83,63 @@ test("keeps MoE dimensions and omits unavailable values", () => {
     contextLength: 131_072,
     expertCount: 128,
     expertUsedCount: 8,
+  });
+});
+
+test("verifies a catalog family inside an audio.cpp GGUF package", () => {
+  const model = {
+    architecture: "soprano",
+    ggufArchitecture: "audiocpp",
+    ggufModelFamily: "soprano_tts",
+  };
+  const metadata = {
+    "general.architecture": "audiocpp",
+    "audiocpp.model_spec.family": "soprano_tts",
+  };
+
+  assert.doesNotThrow(() => assertGgufIdentity(model, metadata));
+  assert.throws(
+    () =>
+      assertGgufIdentity(model, {
+        ...metadata,
+        "audiocpp.model_spec.family": "different_model",
+      }),
+    /model family mismatch/,
+  );
+});
+
+test("extracts Soprano dimensions from the config embedded by audio.cpp", () => {
+  const config = Buffer.from(
+    JSON.stringify({
+      model_type: "qwen3",
+      hidden_size: 512,
+      intermediate_size: 2_304,
+      num_hidden_layers: 17,
+      num_attention_heads: 4,
+      num_key_value_heads: 1,
+      head_dim: 128,
+      vocab_size: 8_192,
+      max_position_embeddings: 1_024,
+    }),
+  );
+  const metadata = {
+    "general.architecture": "audiocpp",
+    "audiocpp.model_spec.family": "soprano_tts",
+    "audiocpp.embedded_files.names": ["config.json"],
+    "audiocpp.embedded_files.offsets": [0, config.length],
+    "audiocpp.embedded_files.data": new Uint8Array(config),
+  };
+
+  assert.deepEqual(extractGgufDimensions(metadata, 110_068_738, []), {
+    parameterCount: 110_068_738,
+    contextLength: 1_024,
+    embeddingLength: 512,
+    blockCount: 17,
+    attentionBlockCount: 17,
+    attentionHeadCount: 4,
+    keyValueHeadCount: 1,
+    keyLength: 128,
+    valueLength: 128,
+    feedForwardLength: 2_304,
   });
 });

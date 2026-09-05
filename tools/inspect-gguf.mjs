@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
-import { gguf } from "@huggingface/gguf";
+import { inspectGguf } from "./gguf-inspector.mjs";
+import { AUDIOCPP_EMBEDDED_METADATA_KEYS } from "./gguf-metadata.mjs";
 
 const id = process.argv[2];
 if (!id) {
@@ -15,7 +16,11 @@ if (!model) {
   throw new Error(`Unknown catalog ID: ${id}`);
 }
 
-const { metadata, tensorInfos } = await gguf(model.downloadUri);
+const { metadata, tensorInfos } = await inspectGguf(model.downloadUri, {
+  additionalFetchHeaders: { "User-Agent": "ModelJars-Catalog-Inspector/0.1" },
+  retainMetadataArrays:
+    model.ggufArchitecture === "audiocpp" ? AUDIOCPP_EMBEDDED_METADATA_KEYS : [],
+});
 const selected = Object.fromEntries(
   Object.entries(metadata).filter(
     ([key, value]) =>

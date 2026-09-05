@@ -69,11 +69,12 @@ Windows output.
   or activate that runtime. An Apple-silicon host is eligible for Apple Foundation Models; the Java
   `backend-apple` runtime remains responsible for checking Apple Intelligence and model availability.
 - Cache removal requires an exact alias, source ID, or coordinate and refuses symbolic links.
-- `demo` selects chat, embedding, reranking, or tool-calling source from catalog capabilities and pins the
+- `demo` selects chat, embedding, reranking, speech, or tool-calling source from catalog capabilities and pins the
   exact marker coordinate. Generated chat and tool programs render the qualified template and use
   the Models `InferencePipeline`; embedding programs call the qualified embedding runtime.
 - Runtime-owned chat metrics distinguish tokenization, prompt preparation, prefill, TTFT, decode,
   token counts, and decode throughput. Embedding examples report load and execution time, vector
-  width, and the complete vector. Reranking examples print query-relative scores, stable document
+  width, and the complete vector. Speech examples write PCM16 WAVE output and report synthesis
+  duration and real-time factor. Reranking examples print query-relative scores, stable document
   order, and load/execution time. Tool examples execute parsed calls against deterministic in-memory
   state.

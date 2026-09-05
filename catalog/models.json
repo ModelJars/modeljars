@@ -6153,6 +6153,8 @@
       "variant": "q8_0",
       "format": "gguf",
       "architecture": "soprano",
+      "ggufArchitecture": "audiocpp",
+      "ggufModelFamily": "soprano_tts",
       "quantization": "Q8_0",
       "localPath": "${user.home}/.modeljars/models/soprano-1.1-80m-q8_0.gguf",
       "sha256": "4758ad908395dc73a1b973d9a29ce96941f4328594d1c6c1223e7b7710a6a131",
@@ -6181,16 +6183,16 @@
         "rust-ffm": true
       },
       "dimensions": {
-        "parameterCount": 80000000,
+        "parameterCount": 110068738,
         "contextLength": 1024,
         "embeddingLength": 512,
         "blockCount": 17,
+        "attentionBlockCount": 17,
         "attentionHeadCount": 4,
         "keyValueHeadCount": 1,
         "keyLength": 128,
         "valueLength": 128,
-        "feedForwardLength": 2304,
-        "attentionBlockCount": 17
+        "feedForwardLength": 2304
       },
       "domains": [
         "speech",
@@ -6211,6 +6213,8 @@
       "variant": "bf16",
       "format": "gguf",
       "architecture": "soprano",
+      "ggufArchitecture": "audiocpp",
+      "ggufModelFamily": "soprano_tts",
       "quantization": "BF16",
       "localPath": "${user.home}/.modeljars/models/soprano-1.1-80m-bf16.gguf",
       "sha256": "46c60cdf5b8e5a3b26bfd185c0870826c05b533979ea7c1d399a9ffb76a50a54",
@@ -6238,16 +6242,16 @@
         "rust-ffm": false
       },
       "dimensions": {
-        "parameterCount": 80000000,
+        "parameterCount": 110068738,
         "contextLength": 1024,
         "embeddingLength": 512,
         "blockCount": 17,
+        "attentionBlockCount": 17,
         "attentionHeadCount": 4,
         "keyValueHeadCount": 1,
         "keyLength": 128,
         "valueLength": 128,
-        "feedForwardLength": 2304,
-        "attentionBlockCount": 17
+        "feedForwardLength": 2304
       },
       "domains": [
         "speech",

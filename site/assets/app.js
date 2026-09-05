@@ -1,4 +1,4 @@
-import { formatDuration } from "./benchmark-data.js";
+import { qualificationMetrics } from "./catalog-entry-metrics.js";
 import { renderDependencyCopyActions } from "./catalog-entry-actions.js";
 import { copyDependencySnippet } from "./dependency-snippets.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
@@ -72,16 +72,7 @@ function renderEntry(model) {
   ].slice(0, 4);
   const qualification = primaryQualification(model);
   const modelsBackend = qualification?.backend;
-  // Latency and decode rate exist only on RAG evidence; agreement and width only on embedding
-  // evidence. Reading one from the other throws inside the formatters and blanks the catalog.
-  const ragEvidence =
-    qualification?.qualified && qualification.p95TtftMillis !== undefined ? qualification : null;
-  const embeddingEvidence =
-    qualification?.qualified && qualification.probes !== undefined ? qualification : null;
-  const toolEvidence =
-    qualification?.qualified && qualification.structuredOutputRate !== undefined
-      ? qualification
-      : null;
+  const evidenceMetrics = qualificationMetrics(qualification);
 
   return `
     <article class="catalog-entry">
@@ -100,12 +91,7 @@ function renderEntry(model) {
         </div>
       </div>
       <div class="entry-facts" aria-label="Model properties">
-        ${ragEvidence ? metric("TTFT p95", formatDuration(ragEvidence.p95TtftMillis)) : ""}
-        ${ragEvidence ? metric("decode", `${ragEvidence.p50DecodeTokensPerSecond.toFixed(1)} tok/s`) : ""}
-        ${embeddingEvidence ? metric("agreement", embeddingEvidence.minimumOracleCosine.toFixed(5)) : ""}
-        ${embeddingEvidence ? metric("dimensions", String(embeddingEvidence.embeddingDimension)) : ""}
-        ${toolEvidence ? metric("tool selection", `${(toolEvidence.toolSelectionExactRate * 100).toFixed(1)}%`) : ""}
-        ${toolEvidence ? metric("arguments", `${(toolEvidence.expectedArgumentAccuracy * 100).toFixed(1)}%`) : ""}
+        ${evidenceMetrics.map(({ label, value }) => metric(label, value)).join("")}
         ${metric("parameters", formatParameters(dimensions.parameterCount))}
         ${metric("download", formatBytes(model.sizeBytes))}
         ${metric("", context)}
@@ -271,9 +257,6 @@ async function loadCatalog() {
     if (!response.ok) throw new Error(`Catalog request failed: ${response.status}`);
     const payload = await response.json();
     const models = Array.isArray(payload) ? payload : payload.models || [];
-    if (models.some((model) => !primaryQualification(model)?.qualified)) {
-      throw new Error("Public catalog contains an artifact without production qualification");
-    }
     catalog.push(...models);
     const facets = buildFacets(catalog);
 

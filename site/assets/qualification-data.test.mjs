@@ -197,6 +197,24 @@ test("selects and labels reranking evidence", () => {
   assert.equal(qualificationLabel(selected), "Second-stage reranking");
 });
 
+test("selects and labels speech qualification evidence", () => {
+  const speechModel = {
+    speechQualifications: [
+      {
+        qualified: true,
+        useCaseTier: "TEXT_TO_SPEECH",
+        probes: 2,
+        minimumPcmCosine: 0.998389315,
+      },
+    ],
+  };
+
+  const selected = primaryQualification(speechModel);
+
+  assert.equal(selected.useCaseTier, "TEXT_TO_SPEECH");
+  assert.equal(qualificationLabel(selected), "Text-to-speech");
+});
+
 test("normalizes the published nested tool-calling evidence shape", () => {
   const toolModel = {
     id: "cactus_compute_needle2_cact_cq2_mixed",

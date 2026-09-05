@@ -32,7 +32,7 @@ class Modeljars < Formula
 
   test do
     assert_match version.to_s, shell_output("#{bin}/modeljars version")
-    search = shell_output("#{bin}/modeljars search fintech --color never")
+    search = shell_output("#{bin}/modeljars search fintech --output json")
     assert_match "king3djbl_nexus_finance_gguf_q4_k_m", search
   end
 end

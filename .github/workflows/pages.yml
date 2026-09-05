@@ -40,8 +40,23 @@ jobs:
           java-version: 21
           cache: gradle
 
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Test browser source
+        run: npm ci && npm test
+
       - name: Generate searchable catalog
         run: ./gradlew --no-daemon generateSite
+
+      - name: Version browser assets atomically
+        run: node tools/site-asset-versioning.mjs build/site "$GITHUB_SHA"
+
+      - name: Smoke-test the rendered catalog
+        run: node tools/site-smoke.mjs build/site
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

@@ -4720,7 +4720,7 @@
       "sourceUri": "https://huggingface.co/cstr/ms-marco-MiniLM-L-6-v2-GGUF",
       "downloadUri": "https://huggingface.co/cstr/ms-marco-MiniLM-L-6-v2-GGUF/resolve/1a9ef5ce8cb08936338233731314f3ff61ce0930/ms-marco-MiniLM-L-6-v2-q4_k-imatrix-g7c-f7.gguf",
       "revision": "1a9ef5ce8cb08936338233731314f3ff61ce0930",
-      "markerCoordinate": "org.modeljars.huggingface:cstr.ms-marco-minilm-l-6-v2-gguf.q4_k_imatrix_g7c_f7:2.0.0-q4_k_imatrix_g7c_f7.1",
+      "markerCoordinate": "org.modeljars.huggingface:cstr.ms-marco-minilm-l-6-v2-gguf.q4_k_imatrix_g7c_f7:2.0.0-q4_k_imatrix_g7c_f7.2",
       "modelVersion": "2.0.0",
       "variant": "q4_k_imatrix_g7c_f7",
       "format": "gguf",
@@ -4763,6 +4763,81 @@
         "attentionHeadCount": 12,
         "feedForwardLength": 1536,
         "attentionBlockCount": 6
+      }
+    },
+    {
+      "id": "mixedbread_ai_mxbai_rerank_xsmall_v1_f16",
+      "name": "mxbai-rerank-xsmall-v1 F16",
+      "description": "Official DeBERTa-v2 Safetensors cross-encoder qualified against the pinned Transformers logits and through the Models plain Java, LangChain4j, and Spring AI APIs.",
+      "sourceId": "hf://mixedbread-ai/mxbai-rerank-xsmall-v1",
+      "sourceUri": "https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1",
+      "downloadUri": "https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1/resolve/b5c6e9da73abc3711f593f705371cdbe9e0fe422/model.safetensors",
+      "revision": "b5c6e9da73abc3711f593f705371cdbe9e0fe422",
+      "markerCoordinate": "org.modeljars.huggingface:mixedbread-ai.mxbai-rerank-xsmall-v1.f16:1.0.0-f16.1",
+      "modelVersion": "1.0.0",
+      "variant": "f16",
+      "catalogPublishedAt": "2026-09-06T19:42:51Z",
+      "format": "safetensors",
+      "architecture": "deberta-v2",
+      "quantization": "F16",
+      "localPath": "${user.home}/.modeljars/models/mxbai-rerank-xsmall-v1/model.safetensors",
+      "sha256": "a29bc212faf59c136ad0fd5712ecd2346e7b32c44a25b690625bc9ecebb14b8f",
+      "sizeBytes": 141685186,
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/mixedbread-ai/mxbai-rerank-xsmall-v1/blob/b5c6e9da73abc3711f593f705371cdbe9e0fe422/LICENSE",
+      "capabilities": [
+        "reranking",
+        "text-ranking"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "huggingface-tokenizer",
+        "unigram",
+        "sentence-pair",
+        "bidirectional-attention",
+        "relative-attention",
+        "classifier-pooler",
+        "float16"
+      ],
+      "files": [
+        {
+          "path": "config.json",
+          "role": "model-configuration",
+          "sha256": "470a53befc79da411cc04e466770d9f219f3c14adb276bfa0a58df28774ceade",
+          "sizeBytes": 968
+        },
+        {
+          "path": "model.safetensors",
+          "role": "model-weights",
+          "sha256": "a29bc212faf59c136ad0fd5712ecd2346e7b32c44a25b690625bc9ecebb14b8f",
+          "sizeBytes": 141685186
+        },
+        {
+          "path": "tokenizer.json",
+          "role": "tokenizer",
+          "sha256": "305674b4d785287feecfb5f73f24aa75e9b57c87c579cfe24fbd207987d4b4c4",
+          "sizeBytes": 8649139
+        }
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "domains": [
+        "retrieval",
+        "rag",
+        "reranking",
+        "search"
+      ],
+      "dimensions": {
+        "parameterCount": 70830337,
+        "contextLength": 512,
+        "embeddingLength": 384,
+        "blockCount": 12,
+        "attentionHeadCount": 6,
+        "feedForwardLength": 1536,
+        "attentionBlockCount": 12
       }
     },
     {

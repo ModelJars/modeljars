@@ -140,7 +140,10 @@ export function verificationProfile(model) {
     );
   } else if (qualification?.structuredOutputRate !== undefined) {
     checks.push(`${qualification.attempts}-case tool-calling qualification`);
-  } else if (qualification?.maximumSameArtifactOracleLogitDelta !== undefined) {
+  } else if (
+    qualification?.maximumSameArtifactReferenceLogitDelta !== undefined ||
+    qualification?.maximumSameArtifactOracleLogitDelta !== undefined
+  ) {
     checks.push(`${qualification.pairs}-pair reranking qualification`);
   } else if (qualification) {
     checks.push(`${qualification.attempts}-request RAG qualification`);

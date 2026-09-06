@@ -652,7 +652,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     values.put("format", descriptor.format());
     values.put("architecture", descriptor.architecture());
     values.put("quantization", descriptor.quantization());
-    values.put("sizeBytes", descriptor.sizeBytes().orElse(null));
+    values.put("sizeBytes", declaredSize(descriptor));
     values.put("sha256", descriptor.sha256().orElse(null));
     values.put("license", descriptor.license().orElse(null));
     values.put("capabilities", sorted(descriptor.capabilities()));
@@ -826,8 +826,7 @@ public final class ModelJarsCli implements Callable<Integer> {
             case ALIAS -> Comparator.comparing(parent::shortName);
             case SIZE ->
                 Comparator.comparingLong(
-                        (ModelJarDescriptor descriptor) ->
-                            descriptor.sizeBytes().orElse(Long.MAX_VALUE))
+                        (ModelJarDescriptor descriptor) -> declaredSize(descriptor))
                     .thenComparing(ModelJarDescriptor::alias);
             case PARAMETERS ->
                 Comparator.comparingLong(
@@ -847,13 +846,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                       backend == null
                           || descriptor.supportsBackend(backend.toLowerCase(Locale.ROOT)))
               .filter(descriptor -> !installed || parent.cached(descriptor))
-              .filter(
-                  descriptor ->
-                      !fitsMemory
-                          || descriptor
-                              .sizeBytes()
-                              .map(size -> size <= availableMemory)
-                              .orElse(false))
+              .filter(descriptor -> !fitsMemory || declaredSize(descriptor) <= availableMemory)
               .sorted(comparator)
               .toList();
       List<ModelJarDescriptor> matches =
@@ -893,7 +886,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                         capabilities(descriptor),
                         descriptor.architecture(),
                         descriptor.quantization(),
-                        descriptor.sizeBytes().map(String::valueOf).orElse(""),
+                        String.valueOf(declaredSize(descriptor)),
                         parent.cached(descriptor) ? "cached" : "available",
                         descriptor.markerCoordinate().toString())));
         return;
@@ -926,13 +919,7 @@ public final class ModelJarsCli implements Callable<Integer> {
           Math.max(
               "SIZE".length(),
               matches.stream()
-                  .mapToInt(
-                      descriptor ->
-                          descriptor
-                              .sizeBytes()
-                              .map(CliOutput::humanBytes)
-                              .orElse("unknown")
-                              .length())
+                  .mapToInt(descriptor -> CliOutput.humanBytes(declaredSize(descriptor)).length())
                   .max()
                   .orElse(0));
       List<CliOutput.Column> columns = new ArrayList<>();
@@ -956,9 +943,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                     row.add(new CliOutput.Cell(recent ? "NEW" : "", CliOutput.Tone.WARNING));
                     row.add(CliOutput.Cell.text(descriptor.architecture()));
                     row.add(CliOutput.Cell.text(descriptor.quantization()));
-                    row.add(
-                        CliOutput.Cell.text(
-                            descriptor.sizeBytes().map(CliOutput::humanBytes).orElse("unknown")));
+                    row.add(CliOutput.Cell.text(CliOutput.humanBytes(declaredSize(descriptor))));
                     boolean cached = parent.cached(descriptor);
                     row.add(
                         new CliOutput.Cell(
@@ -1057,7 +1042,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                         "\t",
                         parent.shortName(model.descriptor()),
                         model.descriptor().alias(),
-                        model.descriptor().sizeBytes().map(String::valueOf).orElse(""),
+                        String.valueOf(declaredSize(model.descriptor())),
                         modified(model.path()).toString(),
                         model.path().toString(),
                         model.descriptor().markerCoordinate().toString())));
@@ -1076,14 +1061,7 @@ public final class ModelJarsCli implements Callable<Integer> {
               .orElse("MODEL".length());
       int sizeWidth =
           models.stream()
-              .map(
-                  model ->
-                      model
-                          .descriptor()
-                          .sizeBytes()
-                          .map(CliOutput::humanBytes)
-                          .orElse("unknown")
-                          .length())
+              .map(model -> CliOutput.humanBytes(declaredSize(model.descriptor())).length())
               .max(Integer::compareTo)
               .orElse("SIZE".length());
       List<CliOutput.Column> columns = new ArrayList<>();
@@ -1098,11 +1076,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                     row.add(CliOutput.Cell.text(parent.shortName(model.descriptor())));
                     row.add(
                         CliOutput.Cell.text(
-                            model
-                                .descriptor()
-                                .sizeBytes()
-                                .map(CliOutput::humanBytes)
-                                .orElse("unknown")));
+                            CliOutput.humanBytes(declaredSize(model.descriptor()))));
                     row.add(CliOutput.Cell.text(MODIFIED_TIME.format(modified(model.path()))));
                     return List.copyOf(row);
                   })
@@ -1132,8 +1106,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       } else {
         out.table(columns, rows);
       }
-      long totalBytes =
-          models.stream().mapToLong(model -> model.descriptor().sizeBytes().orElse(0L)).sum();
+      long totalBytes = models.stream().mapToLong(model -> declaredSize(model.descriptor())).sum();
       out.hint(models.size() + " cached models · " + CliOutput.humanBytes(totalBytes));
     }
   }
@@ -1227,10 +1200,14 @@ public final class ModelJarsCli implements Callable<Integer> {
       descriptor
           .dimensions()
           .embeddingLength()
-          .ifPresent(value -> identity.put("Embedding", value + " dimensions"));
-      descriptor
-          .sizeBytes()
-          .ifPresent(value -> identity.put("Download", CliOutput.humanBytes(value)));
+          .ifPresent(
+              value ->
+                  identity.put(
+                      descriptor.capabilities().contains("text-embedding")
+                          ? "Embedding"
+                          : "Hidden width",
+                      value + " dimensions"));
+      identity.put("Download", CliOutput.humanBytes(declaredSize(descriptor)));
       if (details) {
         identity.put("Capabilities", capabilities(descriptor));
         identity.put("Backends", backends(descriptor));
@@ -1311,7 +1288,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                 "cached", progress.completionSource() == ModelInstallProgress.Source.CACHE,
                 "elapsedSeconds", progress.elapsedSeconds(),
                 "sha256", descriptor.sha256().orElse(""),
-                "sizeBytes", descriptor.sizeBytes().orElse(-1L),
+                "sizeBytes", declaredSize(descriptor),
                 "path", artifact.toString()));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("coordinate=" + descriptor.markerCoordinate());
@@ -1324,10 +1301,7 @@ public final class ModelJarsCli implements Callable<Integer> {
             cached
                 ? descriptor.alias() + " already cached and verified in " + elapsed
                 : descriptor.alias() + " ready in " + elapsed);
-        out.hint(
-            "  "
-                + descriptor.sizeBytes().map(CliOutput::humanBytes).orElse("unknown size")
-                + " · SHA-256 verified");
+        out.hint("  " + CliOutput.humanBytes(declaredSize(descriptor)) + " · SHA-256 verified");
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("Path", displayPath(artifact));
         details.put("Coordinate", descriptor.markerCoordinate());

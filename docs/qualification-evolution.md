@@ -38,17 +38,19 @@ order: Vectors, Models, then ModelJars.
 | 2026-09-01 | Can a 20 MiB cross-encoder become a first-class Java reranker rather than an embedding workaround? | The corrected MS MARCO MiniLM artifact reproduced six ONNX logits within `0.101034`, the same Q4_K artifact within `0.036392`, and exact top-two order. Three fresh JVMs measured pair p95 at no more than `174.357 ms` and six-document batch p95 at no more than `930.176 ms` on the controlled Intel Mac. | Publish a dedicated reranking marker and API. Keep external implementations as pinned oracles only; runtime execution remains pure Java. Record the missing scalar/vector `erf` as a JVM request with this workload as its acceptance test. |
 | 2026-09-02 to 2026-09-03 | Can the JVM execute MobileMoE's original QAT checkpoint without converting it or importing another inference engine? | Models loaded the gated four-file Safetensors bundle, prepared its packed group-32 INT4 experts for Java execution, and passed 27 of 27 controlled RAG attempts plus a separate default-configuration smoke. The controlled host measured 957.97 ms p95 TTFT and 21.83 decode tokens/s. | Publish the immutable MobileMoE-S QAT bundle with the pure-Java backend. Require explicit upstream license acceptance and a Hugging Face read token; keep credentials out of marker metadata and redirected download requests. |
 | 2026-09-03 | Which published small models actually deserve a tool-calling claim? | One checksum-pinned 14-case suite tested six artifacts through pure Java, including typed arguments, crowded tools, refusal, and framework continuation. Qwen3 1.7B and Needle 2 passed; Qwen3 0.6B, MiniCPM5 1B, SmolLM3 3B, and Llama 3.2 3B failed the unchanged behavior floors. | Add Qwen3 1.7B as the first qualified generative tool model, retain Needle as a qualified action selector, remove unsupported claims from MiniCPM5 and SmolLM3, and publish the negative evidence with the passes. |
+| 2026-09-06 | Can a standard Safetensors cross-encoder become a path-free ModelJar without importing its reference runtime? | Models reproduced all six pinned Transformers 4.38.1 logits for `mxbai-rerank-xsmall-v1` within `0.000003100`, preserved the complete ranking, and passed plain Java, LangChain4j, Spring AI, and ModelJars integration. Three fresh JVMs measured `58.660 ms` pair p50 and `17.114` documents/s with ten workers. | Publish the four-file F16 bundle as the second qualified reranker. Keep Transformers as a qualification oracle only; runtime parsing, tokenization, attention, pooling, and scoring remain pure Java. |
 
 ## Current public boundary
 
-The public catalog contains 39 distinct qualified models:
+The public catalog contains 42 distinct qualified models:
 
 - 32 controlled generation/RAG qualifications;
 - 5 reference-equivalent embedding qualifications;
 - 2 tool-calling qualifications, one of which is also in the RAG set; and
-- 1 numerical, ordering, and latency-qualified reranker.
+- 2 numerical, ordering, and latency-qualified rerankers; and
+- 2 waveform- and latency-qualified speech models.
 
-The category counts overlap; the catalog still contains 39 distinct models. The larger metadata registry is a candidate queue. It is not a claim that every recorded candidate
+The category counts overlap; the catalog still contains 42 distinct models. The larger metadata registry is a candidate queue. It is not a claim that every recorded candidate
 can execute or that every marker may be published.
 
 ## Release-engineering findings

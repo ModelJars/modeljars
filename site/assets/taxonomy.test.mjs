@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -188,6 +189,30 @@ test("facets a reranker under its measured use-case tier", () => {
   );
   assert.ok(modelTerms(reranker).includes("reranking-oracle-and-latency-v1"));
   assert.equal(verificationProfile(reranker).label, "Second-stage reranking");
+});
+
+test("offers the emitted reranking evidence tier in the production evidence filter", async () => {
+  const facets = buildFacets([
+    {
+      ...embeddingModel,
+      embeddingQualifications: [],
+      rerankingQualifications: [
+        {
+          qualified: true,
+          useCaseTier: "SECOND_STAGE_RERANKING",
+          backend: "pure-java",
+        },
+      ],
+    },
+  ]);
+  const [tier] = facets.qualifications;
+  const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
+
+  assert.equal(tier.value, "second-stage-reranking");
+  assert.match(
+    index,
+    new RegExp(`<option value="${tier.value}">Second-stage reranking</option>`),
+  );
 });
 
 test("describes embedding evidence without borrowing RAG wording", () => {

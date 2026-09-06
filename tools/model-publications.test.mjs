@@ -111,6 +111,34 @@ test("requires a new coordinate when a model performance profile changes", () =>
   );
 });
 
+test("requires a new coordinate when immutable reranking evidence changes", () => {
+  const before = model();
+  const beforeEvidence = qualifications([
+    {
+      modelId: before.id,
+      artifactSha256: before.sha256,
+      artifactSizeBytes: before.sizeBytes,
+      qualified: true,
+      reportSha256: "c".repeat(64),
+    },
+  ]);
+  const afterEvidence = qualifications([
+    {
+      ...beforeEvidence.entries[0],
+      reportSha256: "d".repeat(64),
+    },
+  ]);
+
+  assert.throws(
+    () =>
+      catalogPublicationDelta(catalog([before]), catalog([before]), {
+        previousQualificationManifests: [beforeEvidence],
+        currentQualificationManifests: [afterEvidence],
+      }),
+    /changed without a new markerCoordinate/,
+  );
+});
+
 test("publishes a new model version with its updated performance profile", () => {
   const before = model();
   const after = model({
@@ -340,6 +368,54 @@ test("rejects stale qualification evidence for changed artifact bytes", () => {
         ]),
       ),
     /qualification SHA-256 does not match/i,
+  );
+});
+
+test("requires multi-file qualification evidence to bind the complete runtime bundle", () => {
+  const entry = model({
+    files: [
+      {
+        path: "config.json",
+        role: "model-configuration",
+        sha256: "c".repeat(64),
+        sizeBytes: 968,
+      },
+      {
+        path: "model.safetensors",
+        role: "model-weights",
+        sha256: "b".repeat(64),
+        sizeBytes: 428970080,
+      },
+      {
+        path: "tokenizer.json",
+        role: "tokenizer",
+        sha256: "d".repeat(64),
+        sizeBytes: 1024,
+      },
+    ],
+  });
+  const delta = selectCatalogPublications(catalog([entry]), ["all"]);
+
+  assert.throws(
+    () =>
+      filterQualifiedPublications(
+        delta,
+        catalog([entry]),
+        qualifications([]),
+        qualifications([]),
+        qualifications([]),
+        qualifications([
+          {
+            modelId: entry.id,
+            artifactSha256: entry.sha256,
+            artifactSizeBytes: entry.sizeBytes,
+            artifactFiles: [entry.files[1]],
+            artifactBundleSha256: "e".repeat(64),
+            qualified: true,
+          },
+        ]),
+      ),
+    /complete runtime file list/i,
   );
 });
 

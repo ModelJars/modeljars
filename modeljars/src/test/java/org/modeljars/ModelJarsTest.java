@@ -440,6 +440,7 @@ class ModelJarsTest {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(MINILM_RERANKER).orElseThrow();
     StubRerankingModel reranker = new StubRerankingModel();
+    AtomicReference<ModelJarDescriptor> selectedDescriptor = new AtomicReference<>();
     AtomicReference<ModelRerankingQualificationRegistry.Entry> selectedQualification =
         new AtomicReference<>();
     ModelJars loader =
@@ -453,7 +454,8 @@ class ModelJarsTest {
             (candidate, options) -> Path.of("verified-reranker.gguf"),
             (backendName, path, configuration) -> new StubBackend(),
             (path, qualification, configuration) -> new StubEmbeddingBackend(),
-            (path, qualification) -> {
+            (path, candidate, qualification) -> {
+              selectedDescriptor.set(candidate);
               selectedQualification.set(qualification);
               return reranker;
             },
@@ -463,6 +465,7 @@ class ModelJarsTest {
     try (var runtime = loader.loadRerankingRuntime(MINILM_RERANKER, ModelLoadOptions.defaults())) {
       assertSame(reranker, runtime.model());
       assertEquals(descriptor, runtime.descriptor());
+      assertEquals(descriptor, selectedDescriptor.get());
       assertEquals(descriptor.alias(), runtime.qualification().modelId());
       assertEquals(descriptor.sha256().orElseThrow(), selectedQualification.get().artifactSha256());
       assertEquals(1.0, runtime.model().score("query", "longer"));
@@ -490,7 +493,7 @@ class ModelJarsTest {
             (candidate, options) -> Path.of("verified-soprano.gguf"),
             (backendName, path, configuration) -> new StubBackend(),
             (path, qualification, configuration) -> new StubEmbeddingBackend(),
-            (path, qualification) -> new StubRerankingModel(),
+            (path, candidate, qualification) -> new StubRerankingModel(),
             (path, candidate, qualification) -> {
               selected.set(qualification);
               return speech;

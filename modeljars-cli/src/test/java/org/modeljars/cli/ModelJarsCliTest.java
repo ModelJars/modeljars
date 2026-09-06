@@ -189,6 +189,32 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void labelsAGenerativeModelsTransformerWidthWithoutCallingItAnEmbeddingOutput() {
+    Result shown = run(cli(descriptor()), "show", "example");
+
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains("Hidden width"));
+    assertFalse(shown.output().contains("Embedding     4096 dimensions"));
+  }
+
+  @Test
+  void labelsAnEmbeddingModelsOutputWidthAsEmbeddingDimensions() {
+    ModelJarDescriptor embedding =
+        descriptor(
+            "example_embedding_q8_0",
+            "Q8_0",
+            Set.of("retrieval"),
+            Optional.empty(),
+            Set.of("text-embedding", "semantic-search"));
+
+    Result shown = run(cli(embedding), "show", "example");
+
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains("Embedding"));
+    assertFalse(shown.output().contains("Hidden width"));
+  }
+
+  @Test
   void generatedCatalogNamesTakePrecedenceOverLegacyCustomAliases() {
     ModelJarDescriptor descriptor = descriptor();
     ModelAliasStore aliases = new ModelAliasStore(temporaryDirectory.resolve("aliases.properties"));
@@ -481,6 +507,53 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void reportsTheCompleteDeclaredMultiFileBundleSizeAcrossCatalogShowListAndPull()
+      throws IOException {
+    ModelJarDescriptor descriptor = multiFileDescriptor();
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(descriptor)),
+            (selected, destination, progress) -> {
+              progress.accept(
+                  new ModelInstallProgress.Completed(
+                      selected.alias(),
+                      destination.getParent(),
+                      6,
+                      ModelInstallProgress.Source.DOWNLOAD));
+              return destination.getParent();
+            });
+
+    Result searchTable = run(cli, "search");
+    Result searchPlain = run(cli, "search", "--output", "plain");
+    Result searchJson = run(cli, "search", "--output", "json");
+    Result showHuman = run(cli, "show", descriptor.alias());
+    Result showJson = run(cli, "show", descriptor.alias(), "--output", "json");
+    Result pullHuman = run(cli, "pull", descriptor.alias());
+    Result pullJson = run(cli, "pull", descriptor.alias(), "--output", "json");
+
+    Path primary = ModelJarCache.artifactPath(descriptor, temporaryDirectory);
+    Files.createDirectories(primary.getParent());
+    Files.write(primary, new byte[] {1, 2, 3, 4});
+    Files.writeString(primary.getParent().resolve("config.json"), "{}");
+    Result listTable = run(cli, "list", "--cache", temporaryDirectory.toString());
+    Result listPlain =
+        run(cli, "list", "--cache", temporaryDirectory.toString(), "--output", "plain");
+    Result listJson =
+        run(cli, "list", "--cache", temporaryDirectory.toString(), "--output", "json");
+
+    assertTrue(searchTable.output().contains("6 B"), searchTable.output());
+    assertTrue(searchPlain.output().contains("\t6\t"), searchPlain.output());
+    assertTrue(searchJson.output().contains("\"sizeBytes\": 6"), searchJson.output());
+    assertTrue(showHuman.output().contains("Download") && showHuman.output().contains("6 B"));
+    assertTrue(showJson.output().contains("\"sizeBytes\": 6"), showJson.output());
+    assertTrue(pullHuman.output().contains("6 B"), pullHuman.output());
+    assertTrue(pullJson.output().contains("\"sizeBytes\": 6"), pullJson.output());
+    assertTrue(listTable.output().contains("6 B"), listTable.output());
+    assertTrue(listPlain.output().contains("\t6\t"), listPlain.output());
+    assertTrue(listJson.output().contains("\"sizeBytes\": 6"), listJson.output());
+  }
+
+  @Test
   void keepsLongListCoordinatesAndAliasesIntactAtNormalTerminalWidth() throws IOException {
     ModelJarDescriptor descriptor =
         descriptor("second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m", "Q4_K_M");
@@ -715,6 +788,15 @@ class ModelJarsCliTest {
       String quantization,
       Set<String> domains,
       Optional<Instant> catalogPublishedAt) {
+    return descriptor(alias, quantization, domains, catalogPublishedAt, Set.of("text-generation"));
+  }
+
+  private static ModelJarDescriptor descriptor(
+      String alias,
+      String quantization,
+      Set<String> domains,
+      Optional<Instant> catalogPublishedAt,
+      Set<String> capabilities) {
     String variant = quantization.toLowerCase(java.util.Locale.ROOT);
     return new ModelJarDescriptor(
         alias,
@@ -734,7 +816,7 @@ class ModelJarsCliTest {
         Optional.of("a".repeat(64)),
         Optional.of(4L * 1024L * 1024L * 1024L),
         Optional.of("Apache-2.0"),
-        Set.of("text-generation"),
+        capabilities,
         Set.of("chat-template"),
         java.util.List.of(),
         Map.of("java", true, "native", true),

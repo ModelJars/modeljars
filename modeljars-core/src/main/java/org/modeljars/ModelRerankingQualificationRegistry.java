@@ -18,17 +18,22 @@ package org.modeljars;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Properties;
 import java.util.TreeSet;
 
@@ -44,6 +49,53 @@ public final class ModelRerankingQualificationRegistry {
   private static final String ENTRY_PREFIX = "rerankingQualification.";
 
   /**
+   * One exact runtime file bound by multi-file qualification evidence.
+   *
+   * @param path normalized path inside the installed bundle
+   * @param role runtime purpose of the file
+   * @param sha256 SHA-256 digest of the file bytes
+   * @param sizeBytes exact file size
+   */
+  public record ArtifactFile(String path, String role, String sha256, long sizeBytes) {
+    /** Validates immutable file identity. */
+    public ArtifactFile {
+      path = requireTextValue(path, "artifact file path");
+      role = requireTextValue(role, "artifact file role");
+      sha256 = requireDigest(sha256, "artifact file sha256");
+      if (sizeBytes < 1) {
+        throw new IllegalArgumentException("artifact file sizeBytes must be positive");
+      }
+    }
+  }
+
+  /**
+   * Deterministic identity of every file consumed by a multi-file runtime.
+   *
+   * @param sha256 SHA-256 of the canonical file manifest
+   * @param sizeBytes sum of every bound file size
+   * @param files complete immutable runtime file list
+   */
+  public record ArtifactBundle(String sha256, long sizeBytes, List<ArtifactFile> files) {
+    /** Validates the declared size and canonical manifest digest. */
+    public ArtifactBundle {
+      sha256 = requireDigest(sha256, "artifact bundle sha256");
+      files = List.copyOf(files);
+      if (files.isEmpty()) {
+        throw new IllegalArgumentException("artifact bundle files must not be empty");
+      }
+      if (files.stream().map(ArtifactFile::path).distinct().count() != files.size()) {
+        throw new IllegalArgumentException("artifact bundle file paths must be unique");
+      }
+      if (sizeBytes != files.stream().mapToLong(ArtifactFile::sizeBytes).sum()) {
+        throw new IllegalArgumentException("artifact bundle size does not match its files");
+      }
+      if (!sha256.equals(bundleDigest(files))) {
+        throw new IllegalArgumentException("artifact bundle SHA-256 does not match its files");
+      }
+    }
+  }
+
+  /**
    * Runtime fields needed to select exact qualified reranker bytes.
    *
    * @param modelId stable ModelJars catalog identifier
@@ -57,9 +109,11 @@ public final class ModelRerankingQualificationRegistry {
    * @param reportSha256 SHA-256 digest of the qualification report
    * @param qualified whether the artifact passed every admission gate
    * @param pairs number of query-document pairs in the correctness workload
-   * @param maximumOnnxLogitDelta largest absolute logit delta from the unquantized ONNX reference
-   * @param maximumSameArtifactOracleLogitDelta largest absolute logit delta from the independent
-   *     same-artifact oracle
+   * @param maximumOnnxLogitDelta largest absolute logit delta from the primary reference; the
+   *     component retains its original name for binary compatibility
+   * @param maximumSameArtifactOracleLogitDelta largest absolute logit delta from an optional second
+   *     reference implementation, or {@link Double#NaN} when absent; the component retains its
+   *     original name for binary compatibility
    * @param topKOrderExact whether the retained top-k ordering exactly matched the reference
    * @param medianColdLoadMillis median cold-load time on the controlled host
    * @param maximumPairP95Millis largest pair-scoring p95 across controlled processes
@@ -117,7 +171,7 @@ public final class ModelRerankingQualificationRegistry {
         throw new IllegalArgumentException("reranking pairs must be positive");
       }
       if (!validMetric(maximumOnnxLogitDelta)
-          || !validMetric(maximumSameArtifactOracleLogitDelta)
+          || !validOptionalMetric(maximumSameArtifactOracleLogitDelta)
           || !validMetric(medianColdLoadMillis)
           || !validMetric(maximumPairP95Millis)
           || !validMetric(maximumBatchP95Millis)
@@ -126,8 +180,9 @@ public final class ModelRerankingQualificationRegistry {
       }
       if (qualified
           && (maximumOnnxLogitDelta > ModelRerankingQualification.MAXIMUM_ONNX_LOGIT_DELTA
-              || maximumSameArtifactOracleLogitDelta
-                  > ModelRerankingQualification.MAXIMUM_SAME_ARTIFACT_ORACLE_LOGIT_DELTA
+              || (Double.isFinite(maximumSameArtifactOracleLogitDelta)
+                  && maximumSameArtifactOracleLogitDelta
+                      > ModelRerankingQualification.MAXIMUM_SAME_ARTIFACT_ORACLE_LOGIT_DELTA)
               || !topKOrderExact
               || medianColdLoadMillis > ModelRerankingQualification.MAXIMUM_COLD_LOAD_MILLIS
               || maximumPairP95Millis > ModelRerankingQualification.MAXIMUM_PAIR_P95_MILLIS
@@ -140,19 +195,60 @@ public final class ModelRerankingQualificationRegistry {
     private static boolean validMetric(double value) {
       return Double.isFinite(value) && value >= 0.0;
     }
+
+    private static boolean validOptionalMetric(double value) {
+      return Double.isNaN(value) || validMetric(value);
+    }
+
+    /**
+     * Returns the largest absolute logit delta from the qualification's primary reference runtime.
+     *
+     * @return largest primary-reference logit delta
+     */
+    public double maximumReferenceLogitDelta() {
+      return maximumOnnxLogitDelta;
+    }
+
+    /**
+     * Returns the largest absolute logit delta from an optional second reference implementation.
+     *
+     * <p>The value is {@link Double#NaN} when no second reference was recorded.
+     *
+     * @return largest exact-artifact logit delta
+     */
+    public double maximumSameArtifactReferenceLogitDelta() {
+      return maximumSameArtifactOracleLogitDelta;
+    }
+
+    /**
+     * Returns the optional second-reference comparison without a sentinel value.
+     *
+     * @return the second-reference delta, or empty when none was recorded
+     */
+    public OptionalDouble sameArtifactReferenceLogitDelta() {
+      return Double.isFinite(maximumSameArtifactOracleLogitDelta)
+          ? OptionalDouble.of(maximumSameArtifactOracleLogitDelta)
+          : OptionalDouble.empty();
+    }
   }
 
   private final String generatedAt;
   private final String policyVersion;
   private final String modelsRevision;
   private final List<Entry> entries;
+  private final Map<String, ArtifactBundle> artifactBundles;
 
   private ModelRerankingQualificationRegistry(
-      String generatedAt, String policyVersion, String modelsRevision, List<Entry> entries) {
+      String generatedAt,
+      String policyVersion,
+      String modelsRevision,
+      List<Entry> entries,
+      Map<String, ArtifactBundle> artifactBundles) {
     this.generatedAt = generatedAt;
     this.policyVersion = policyVersion;
     this.modelsRevision = modelsRevision;
     this.entries = List.copyOf(entries);
+    this.artifactBundles = Map.copyOf(artifactBundles);
   }
 
   /**
@@ -192,7 +288,7 @@ public final class ModelRerankingQualificationRegistry {
           for (Entry entry : registry.entries) {
             merged.merge(
                 entry.modelId(),
-                new SourcedEntry(generatedAt, entry),
+                new SourcedEntry(generatedAt, entry, registry.artifactBundles.get(entry.modelId())),
                 ModelRerankingQualificationRegistry::newestEntry);
           }
         }
@@ -205,10 +301,21 @@ public final class ModelRerankingQualificationRegistry {
             .map(SourcedEntry::entry)
             .sorted(Comparator.comparing(Entry::modelId))
             .toList();
+    Map<String, ArtifactBundle> artifactBundles = new LinkedHashMap<>();
+    merged.forEach(
+        (modelId, sourced) -> {
+          if (sourced.artifactBundle() != null) {
+            artifactBundles.put(modelId, sourced.artifactBundle());
+          }
+        });
     return metadata == null
-        ? new ModelRerankingQualificationRegistry("", "", "", entries)
+        ? new ModelRerankingQualificationRegistry("", "", "", entries, artifactBundles)
         : new ModelRerankingQualificationRegistry(
-            metadata.generatedAt, metadata.policyVersion, metadata.modelsRevision, entries);
+            metadata.generatedAt,
+            metadata.policyVersion,
+            metadata.modelsRevision,
+            entries,
+            artifactBundles);
   }
 
   /**
@@ -236,8 +343,28 @@ public final class ModelRerankingQualificationRegistry {
       }
     }
     List<Entry> entries = new ArrayList<>(modelIds.size());
+    Map<String, ArtifactBundle> artifactBundles = new LinkedHashMap<>();
     for (String modelId : modelIds) {
       String prefix = ENTRY_PREFIX + modelId + ".";
+      int artifactFileCount = optionalInteger(properties, prefix + "artifactFile.count").orElse(0);
+      if (artifactFileCount > 0) {
+        List<ArtifactFile> files = new ArrayList<>(artifactFileCount);
+        for (int index = 0; index < artifactFileCount; index++) {
+          String filePrefix = prefix + "artifactFile." + "%03d".formatted(index) + ".";
+          files.add(
+              new ArtifactFile(
+                  text(properties, filePrefix + "path"),
+                  text(properties, filePrefix + "role"),
+                  text(properties, filePrefix + "sha256"),
+                  longInteger(properties, filePrefix + "sizeBytes")));
+        }
+        artifactBundles.put(
+            modelId,
+            new ArtifactBundle(
+                text(properties, prefix + "artifactBundleSha256"),
+                longInteger(properties, prefix + "artifactBundleSizeBytes"),
+                files));
+      }
       entries.add(
           new Entry(
               modelId,
@@ -251,8 +378,14 @@ public final class ModelRerankingQualificationRegistry {
               text(properties, prefix + "reportSha256").toLowerCase(Locale.ROOT),
               Boolean.parseBoolean(properties.getProperty(prefix + "qualified", "false")),
               integer(properties, prefix + "pairs"),
-              decimal(properties, prefix + "maximumOnnxLogitDelta"),
-              decimal(properties, prefix + "maximumSameArtifactOracleLogitDelta"),
+              decimal(
+                  properties,
+                  prefix + "maximumReferenceLogitDelta",
+                  prefix + "maximumOnnxLogitDelta"),
+              optionalDecimal(
+                  properties,
+                  prefix + "maximumSameArtifactReferenceLogitDelta",
+                  prefix + "maximumSameArtifactOracleLogitDelta"),
               Boolean.parseBoolean(properties.getProperty(prefix + "topKOrderExact", "false")),
               decimal(properties, prefix + "medianColdLoadMillis"),
               decimal(properties, prefix + "maximumPairP95Millis"),
@@ -263,7 +396,8 @@ public final class ModelRerankingQualificationRegistry {
         properties.getProperty(ROOT_PREFIX + "generatedAt", ""),
         properties.getProperty(ROOT_PREFIX + "policyVersion", ""),
         properties.getProperty(ROOT_PREFIX + "modelsRevision", ""),
-        entries);
+        entries,
+        artifactBundles);
   }
 
   /**
@@ -301,6 +435,16 @@ public final class ModelRerankingQualificationRegistry {
   }
 
   /**
+   * Returns the deterministic multi-file bundle identity recorded for a model.
+   *
+   * @param modelId stable ModelJars catalog identifier
+   * @return exact runtime bundle metadata, or empty for a single-file artifact
+   */
+  public Optional<ArtifactBundle> artifactBundleFor(String modelId) {
+    return Optional.ofNullable(artifactBundles.get(modelId));
+  }
+
+  /**
    * Returns the ISO-8601 generation time, or empty when no resource was present.
    *
    * @return resource generation time
@@ -328,7 +472,8 @@ public final class ModelRerankingQualificationRegistry {
   }
 
   private static SourcedEntry newestEntry(SourcedEntry first, SourcedEntry other) {
-    if (first.entry().equals(other.entry())) {
+    if (first.entry().equals(other.entry())
+        && Objects.equals(first.artifactBundle(), other.artifactBundle())) {
       return first.generatedAt().isBefore(other.generatedAt()) ? other : first;
     }
     int recency = first.generatedAt().compareTo(other.generatedAt());
@@ -379,6 +524,22 @@ public final class ModelRerankingQualificationRegistry {
     }
   }
 
+  private static Optional<Integer> optionalInteger(Properties properties, String name) {
+    String value = properties.getProperty(name, "");
+    if (value.isBlank()) {
+      return Optional.empty();
+    }
+    try {
+      int parsed = Integer.parseInt(value);
+      if (parsed < 0) {
+        throw new ModelJarException(name + " must not be negative");
+      }
+      return Optional.of(parsed);
+    } catch (NumberFormatException malformed) {
+      throw new ModelJarException(name + " must be an integer", malformed);
+    }
+  }
+
   private static double decimal(Properties properties, String name) {
     try {
       return Double.parseDouble(text(properties, name));
@@ -387,5 +548,56 @@ public final class ModelRerankingQualificationRegistry {
     }
   }
 
-  private record SourcedEntry(Instant generatedAt, Entry entry) {}
+  private static double decimal(Properties properties, String name, String legacyName) {
+    String selected = properties.getProperty(name, "").isBlank() ? legacyName : name;
+    return decimal(properties, selected);
+  }
+
+  private static double optionalDecimal(Properties properties, String name, String legacyName) {
+    if (properties.getProperty(name, "").isBlank()
+        && properties.getProperty(legacyName, "").isBlank()) {
+      return Double.NaN;
+    }
+    return decimal(properties, name, legacyName);
+  }
+
+  private static String bundleDigest(List<ArtifactFile> files) {
+    StringBuilder identity = new StringBuilder();
+    files.stream()
+        .sorted(Comparator.comparing(ArtifactFile::path))
+        .forEach(
+            file ->
+                identity
+                    .append(file.path())
+                    .append('\t')
+                    .append(file.sizeBytes())
+                    .append('\t')
+                    .append(file.sha256())
+                    .append('\n'));
+    try {
+      return HexFormat.of()
+          .formatHex(
+              MessageDigest.getInstance("SHA-256")
+                  .digest(identity.toString().getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException impossible) {
+      throw new IllegalStateException("SHA-256 is unavailable", impossible);
+    }
+  }
+
+  private static String requireTextValue(String value, String field) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException(field + " must not be blank");
+    }
+    return value;
+  }
+
+  private static String requireDigest(String value, String field) {
+    String digest = requireTextValue(value, field).toLowerCase(Locale.ROOT);
+    if (!digest.matches("[0-9a-f]{64}")) {
+      throw new IllegalArgumentException(field + " must be a SHA-256 digest");
+    }
+    return digest;
+  }
+
+  private record SourcedEntry(Instant generatedAt, Entry entry, ArtifactBundle artifactBundle) {}
 }

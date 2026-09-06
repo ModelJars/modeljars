@@ -119,6 +119,7 @@
                 <option value="generative-rag">Generative RAG</option>
                 <option value="guarded-rag">Guarded RAG</option>
                 <option value="semantic-search">Semantic search</option>
+                <option value="second-stage-reranking">Second-stage reranking</option>
                 <option value="tool-calling">Tool calling</option>
                 <option value="text-to-speech">Text-to-speech</option>
               </select>
@@ -254,7 +255,7 @@ modeljars search gemma --output json</code></pre>
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.33")
+  implementation("org.modeljars:modeljars:0.1.34")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>

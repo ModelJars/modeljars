@@ -117,7 +117,11 @@ export function isToolEvidence(qualification) {
 
 /** True for cross-encoder score, ordering, and latency evidence. */
 export function isRerankingEvidence(qualification) {
-  return Boolean(qualification) && qualification.maximumSameArtifactOracleLogitDelta !== undefined;
+  return (
+    Boolean(qualification) &&
+    (qualification.maximumSameArtifactReferenceLogitDelta !== undefined ||
+      qualification.maximumSameArtifactOracleLogitDelta !== undefined)
+  );
 }
 
 export function qualificationSummary(qualification) {
@@ -207,8 +211,10 @@ export function qualificationSummary(qualification) {
       backend: `${qualification.backend} ${qualification.backendVersion}`,
       workload: qualification.workload,
       pairs: qualification.pairs,
-      maximumOnnxLogitDelta: qualification.maximumOnnxLogitDelta,
-      maximumSameArtifactOracleLogitDelta:
+      maximumReferenceLogitDelta:
+        qualification.maximumReferenceLogitDelta ?? qualification.maximumOnnxLogitDelta,
+      maximumSameArtifactReferenceLogitDelta:
+        qualification.maximumSameArtifactReferenceLogitDelta ??
         qualification.maximumSameArtifactOracleLogitDelta,
       topKOrderExact: qualification.topKOrderExact,
       coldLoad: formatDuration(qualification.medianColdLoadMillis),
@@ -455,8 +461,8 @@ function renderRerankingQualification(summary) {
         ${escapeHtml(summary.backend)}, then passed a controlled second-stage latency envelope.
       </p>
       <dl class="dimension-grid qualification-metrics">
-        <div><dt>ONNX max delta</dt><dd>${escapeHtml(summary.maximumOnnxLogitDelta.toFixed(6))}</dd></div>
-        <div><dt>Same-artifact max delta</dt><dd>${escapeHtml(summary.maximumSameArtifactOracleLogitDelta.toFixed(6))}</dd></div>
+        <div><dt>Reference max delta</dt><dd>${escapeHtml(summary.maximumReferenceLogitDelta.toFixed(6))}</dd></div>
+        <div><dt>Same-artifact max delta</dt><dd>${escapeHtml(summary.maximumSameArtifactReferenceLogitDelta.toFixed(6))}</dd></div>
         <div><dt>Top-k order</dt><dd>${summary.topKOrderExact ? "exact" : "different"}</dd></div>
         <div><dt>Cold load median</dt><dd>${escapeHtml(summary.coldLoad)}</dd></div>
         <div><dt>Pair p95</dt><dd>${escapeHtml(summary.pairP95)}</dd></div>

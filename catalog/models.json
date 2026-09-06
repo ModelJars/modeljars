@@ -4673,7 +4673,7 @@
       "sourceUri": "https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF",
       "downloadUri": "https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF/resolve/544f204f2eaa2d71361ffc74d6df7170285b286a/all-MiniLM-L6-v2-Q4_K_M.gguf",
       "revision": "544f204f2eaa2d71361ffc74d6df7170285b286a",
-      "markerCoordinate": "org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.2",
       "modelVersion": "2.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

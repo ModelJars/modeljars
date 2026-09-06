@@ -237,16 +237,38 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
 });
 
 test("CI builds only the current public Pages task", async () => {
-  const [workflow, publicationWorkflow] = await Promise.all([
+  const [workflow, publicationWorkflow, pagesWorkflow] = await Promise.all([
     read(".github/workflows/validate.yml"),
     read(".github/workflows/model-artifacts.yml"),
+    read(".github/workflows/pages.yml"),
   ]);
 
   assert.match(workflow, /generateSite/);
+  const generation = pagesWorkflow.indexOf("generateSite");
+  const centralGate = pagesWorkflow.indexOf("verify-central-catalog.mjs");
+  const deployment = pagesWorkflow.indexOf("actions/deploy-pages");
+  assert.ok(centralGate > generation, "Central availability is checked after site generation");
+  assert.ok(deployment > centralGate, "Central availability is checked before Pages deployment");
   assert.doesNotMatch(workflow, /generatePublicSite/);
   assert.match(
     publicationWorkflow,
     /--qualifications catalog\/qualifications\.json/g,
+  );
+});
+
+test("published marker coordinate revisions are immutable", async () => {
+  const catalog = await read("catalog/models.json").then(JSON.parse);
+  const models = new Map(catalog.models.map((model) => [model.id, model]));
+
+  assert.equal(
+    models.get("second_state_all_minilm_l6_v2_embedding_gguf_q4_k_m")
+      .markerCoordinate,
+    "org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.2",
+  );
+  assert.equal(
+    models.get("bartowski_granite_embedding_107m_multilingual_gguf_q4_k_m")
+      .markerCoordinate,
+    "org.modeljars.huggingface:bartowski.granite-embedding-107m-multilingual-gguf.q4_k_m:1.0.0-q4_k_m.2",
   );
 });
 

@@ -334,6 +334,21 @@ including structured tokenization, metadata, active context capacity and positio
 forward-pass logits, reset, checkpoint, and rewind. `runtime.model()` remains the high-level
 `TextGenerationModel` view and delegates structured prompts to that pipeline.
 
+For multiple conversations over one loaded model, open one generation session per conversation:
+
+```java
+try (var runtime = ModelJars.openRuntime(MODEL);
+     var alice = runtime.openGenerationSession();
+     var bob = runtime.openGenerationSession()) {
+    String first = alice.generate(alicePrompt, options);
+    String second = bob.generate(bobPrompt, options);
+}
+```
+
+The sessions share loaded weights but keep independent prompt-prefix and KV-cache state. Calls are
+serialized while the selected backend uses shared inference scratch. Closing a session releases
+only its conversation state; closing the runtime closes any sessions still open.
+
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,
 downloads missing weights, verifies their size and SHA-256 digest, and applies every non-conflicting

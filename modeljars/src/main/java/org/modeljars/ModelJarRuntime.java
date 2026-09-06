@@ -20,6 +20,7 @@ import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.runtime.InferencePipeline;
+import com.integrallis.models.runtime.TextGenerationSession;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,6 +80,20 @@ public final class ModelJarRuntime implements AutoCloseable {
    */
   public InferencePipeline pipeline() {
     return pipeline;
+  }
+
+  /**
+   * Opens independent conversation state while sharing this runtime's loaded model weights.
+   *
+   * <p>Use one session per conversation. Each session owns its prompt-prefix and KV-cache lineage;
+   * closing it does not close this runtime or another session. The runtime closes any sessions that
+   * remain open when it is closed.
+   *
+   * @return a new conversation-scoped generation session
+   * @throws UnsupportedOperationException when the selected backend cannot isolate sessions
+   */
+  public TextGenerationSession openGenerationSession() {
+    return pipeline.openGenerationSession();
   }
 
   /**

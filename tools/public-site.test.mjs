@@ -245,7 +245,9 @@ test("CI builds only the current public Pages task", async () => {
 
   assert.match(workflow, /generateSite/);
   const generation = pagesWorkflow.indexOf("generateSite");
-  const centralGate = pagesWorkflow.indexOf("verify-central-catalog.mjs");
+  const centralGate = pagesWorkflow.indexOf(
+    "run: node tools/verify-central-catalog.mjs",
+  );
   const deployment = pagesWorkflow.indexOf("actions/deploy-pages");
   assert.ok(centralGate > generation, "Central availability is checked after site generation");
   assert.ok(deployment > centralGate, "Central availability is checked before Pages deployment");

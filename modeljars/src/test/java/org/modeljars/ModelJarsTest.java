@@ -24,8 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.BackendDiagnostics;
+import com.integrallis.models.api.BatchInferenceBackend;
 import com.integrallis.models.api.EmbeddingBackend;
-import com.integrallis.models.api.InferenceBackend;
+import com.integrallis.models.api.InferenceSession;
+import com.integrallis.models.api.LogitBatch;
 import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.ModelPrompt;
 import com.integrallis.models.api.OptimizationStatus;
@@ -365,6 +367,37 @@ class ModelJarsTest {
   }
 
   @Test
+  void exposesConversationScopedGenerationSessionsFromTheQualifiedRuntime() {
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of);
+
+    try (var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults())) {
+      var first = runtime.openGenerationSession();
+      try (var second = runtime.openGenerationSession()) {
+        assertFalse(first.isClosed());
+        assertFalse(second.isClosed());
+        assertEquals(0, first.contextWindow().position().orElseThrow());
+        assertEquals(0, second.contextWindow().position().orElseThrow());
+
+        first.close();
+
+        assertTrue(first.isClosed());
+        assertFalse(second.isClosed());
+        assertFalse(backend.closed());
+      }
+    }
+
+    assertTrue(backend.closed());
+  }
+
+  @Test
   void opensAnEmbeddingFromMarkerOwnedQualificationSettings() {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(QWEN_EMBEDDING).orElseThrow();
@@ -598,7 +631,7 @@ class ModelJarsTest {
     }
   }
 
-  private static final class StubBackend implements InferenceBackend {
+  private static final class StubBackend implements BatchInferenceBackend {
     private int plainEncodes;
     private int structuredEncodes;
     private final Tokenizer tokenizer =
@@ -669,6 +702,43 @@ class ModelJarsTest {
     }
 
     @Override
+    public int maxBatchSize() {
+      return 4;
+    }
+
+    @Override
+    public InferenceSession openSession() {
+      return new StubSession();
+    }
+
+    @Override
+    public float[] forward(InferenceSession session, int token, int position) {
+      StubSession state = requireStubSession(session);
+      state.position = position + 1;
+      return forward(token, position);
+    }
+
+    @Override
+    public LogitBatch forwardBatch(InferenceSession[] sessions, int[] tokens) {
+      float[] logits = new float[sessions.length * 2];
+      for (int index = 0; index < sessions.length; index++) {
+        float[] row = forward(sessions[index], tokens[index], sessions[index].checkpoint());
+        System.arraycopy(row, 0, logits, index * 2, row.length);
+      }
+      return new LogitBatch(sessions.length, 2, logits);
+    }
+
+    @Override
+    public void rewind(InferenceSession session, int checkpoint) {
+      requireStubSession(session).position = checkpoint;
+    }
+
+    @Override
+    public void reset(InferenceSession session) {
+      requireStubSession(session).position = 0;
+    }
+
+    @Override
     public void close() {
       closeCount++;
     }
@@ -679,6 +749,33 @@ class ModelJarsTest {
 
     int closeCount() {
       return closeCount;
+    }
+
+    private static StubSession requireStubSession(InferenceSession session) {
+      if (!(session instanceof StubSession state)) {
+        throw new IllegalArgumentException("foreign session");
+      }
+      return state;
+    }
+  }
+
+  private static final class StubSession implements InferenceSession {
+    private int position;
+    private boolean closed;
+
+    @Override
+    public int checkpoint() {
+      return position;
+    }
+
+    @Override
+    public boolean isClosed() {
+      return closed;
+    }
+
+    @Override
+    public void close() {
+      closed = true;
     }
   }
 }

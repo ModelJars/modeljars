@@ -44,9 +44,27 @@ The accessors have distinct roles:
 - `runtime.contextWindow()` reports the active backend capacity and, for a
   rewindable backend, its next token position.
 - `runtime.pipeline()` supports structured tokenization, high-level generation,
-  prefill, forward-pass logits, reset, checkpoint, and rewind.
+  conversation sessions, prefill, forward-pass logits, reset, checkpoint, and
+  rewind.
 - `runtime.model()` is the compatible `TextGenerationModel` view of the same
   pipeline.
+
+For multiple conversations over one loaded model, open one session for each
+conversation:
+
+```java
+try (var runtime = ModelJars.openRuntime(MODEL);
+     var alice = runtime.openGenerationSession();
+     var bob = runtime.openGenerationSession()) {
+  String aliceAnswer = alice.generate(alicePrompt, options);
+  String bobAnswer = bob.generate(bobPrompt, options);
+}
+```
+
+Sessions share immutable model weights while retaining separate prompt-prefix
+and KV-cache lineages, context positions, metrics, reset, and close lifecycle.
+Execution across sessions is serialized because the loaded backend may reuse
+transient scratch. Closing the runtime closes any sessions still open.
 
 `ModelPrompt` must remain structured through tokenization. Template-owned
 control segments are recognized as special tokens, while user text that merely

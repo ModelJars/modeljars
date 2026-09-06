@@ -92,6 +92,12 @@ jobs:
           ./gradlew --no-daemon
           spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication generateSite
 
+      - name: Exercise the qualified mxbai bundle through ModelJars
+        run: >
+          ./gradlew --no-daemon
+          -PmxbaiRerankerLive=true
+          :modeljars:mxbaiRerankerIntegrationTest
+
       - name: Verify pinned Hugging Face metadata
         if: steps.remote-catalog.outputs.required == 'true'
         env:

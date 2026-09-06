@@ -40,6 +40,13 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
   );
 });
 
+test("runs the qualified mxbai Safetensors bundle through the public API in CI", async () => {
+  const validateWorkflow = await read(".github/workflows/validate.yml");
+
+  assert.match(validateWorkflow, /mxbaiRerankerIntegrationTest/);
+  assert.match(validateWorkflow, /-PmxbaiRerankerLive=true/);
+});
+
 function read(relativePath) {
   return readFile(path.join(repositoryRoot, relativePath), "utf8");
 }

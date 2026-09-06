@@ -399,6 +399,10 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 `ModelJars.openRerankingRuntime(MODEL)` also exposes the exact artifact-bound numerical, ordering,
 and latency evidence that authorized publication.
 
+The qualified `mxbai-rerank-xsmall-v1` alternative uses this identical API with a four-file
+Safetensors bundle. ModelJars verifies the weights, configuration, tokenizer, and tokenizer
+configuration together before Models opens the DeBERTa-v2 graph in-process.
+
 Qualified text-to-speech markers use the same path-free contract. ModelJars selects the backend
 whose exact artifact passed waveform, true-streaming, and controlled latency gates:
 

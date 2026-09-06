@@ -29,6 +29,7 @@ import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
+import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.InferencePipeline;
 import java.io.IOException;
@@ -538,7 +539,7 @@ public final class ModelJars {
     ModelRerankingQualificationRegistry.Entry qualification =
         selectRerankingQualification(descriptor, options.backend());
     Path artifact = installer.install(descriptor, options);
-    RerankingModel reranker = rerankingModelLoader.load(artifact, qualification);
+    RerankingModel reranker = rerankingModelLoader.load(artifact, descriptor, qualification);
     return new ModelJarRerankingRuntime(reranker, descriptor, qualification);
   }
 
@@ -907,12 +908,25 @@ public final class ModelJars {
   }
 
   private static RerankingModel loadRerankingModel(
-      Path artifact, ModelRerankingQualificationRegistry.Entry qualification) {
+      Path artifact,
+      ModelJarDescriptor descriptor,
+      ModelRerankingQualificationRegistry.Entry qualification) {
     if (!JAVA_BACKEND.equals(qualification.backend())) {
       throw new ModelJarException(
           "Unsupported Models reranking backend: " + qualification.backend());
     }
-    return GgufRerankingModel.load(artifact);
+    if ("gguf".equals(descriptor.format())) {
+      return GgufRerankingModel.load(artifact);
+    }
+    if ("safetensors".equals(descriptor.format())
+        && "deberta-v2".equals(descriptor.architecture())) {
+      return SafetensorsRerankingModel.load(artifact.toAbsolutePath().normalize());
+    }
+    throw new ModelJarException(
+        "Unsupported Models reranking format or architecture: "
+            + descriptor.format()
+            + "/"
+            + descriptor.architecture());
   }
 
   private static TextToSpeechModel loadSpeechModel(
@@ -956,7 +970,10 @@ public final class ModelJars {
 
   @FunctionalInterface
   interface RerankingModelLoader {
-    RerankingModel load(Path artifact, ModelRerankingQualificationRegistry.Entry qualification);
+    RerankingModel load(
+        Path artifact,
+        ModelJarDescriptor descriptor,
+        ModelRerankingQualificationRegistry.Entry qualification);
   }
 
   @FunctionalInterface

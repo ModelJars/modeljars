@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 function assertCatalog(document, label) {
   if (
     document === null ||
@@ -106,7 +108,26 @@ function assertProfiles(document, catalog, label) {
   }
 }
 
-function markerSnapshot(model, profileCatalog) {
+function qualificationSnapshot(modelId, manifests) {
+  return manifests.flatMap((manifest) => {
+    if (manifest === undefined) {
+      return [];
+    }
+    const entries = (manifest.entries ?? []).filter(
+      (entry) => entry.modelId === modelId,
+    );
+    if (entries.length === 0) {
+      return [];
+    }
+    const metadata = { ...manifest };
+    delete metadata.entries;
+    delete metadata.qualifiedModels;
+    delete metadata.rejectedModels;
+    return [{ metadata, entries }];
+  });
+}
+
+function markerSnapshot(model, profileCatalog, qualificationManifests) {
   const markerModel = { ...model };
   delete markerModel.catalogPublishedAt;
   return {
@@ -114,7 +135,19 @@ function markerSnapshot(model, profileCatalog) {
     profiles: profileCatalog.profiles
       .filter((profile) => profile.modelId === model.id)
       .sort((left, right) => left.id.localeCompare(right.id)),
+    qualifications: qualificationSnapshot(model.id, qualificationManifests),
   };
+}
+
+function artifactBundleSha256(files) {
+  const identity = [...files]
+    .sort((left, right) => left.path.localeCompare(right.path))
+    .map(
+      (file) =>
+        `${file.path}\t${file.sizeBytes}\t${file.sha256}\n`,
+    )
+    .join("");
+  return createHash("sha256").update(identity, "utf8").digest("hex");
 }
 
 export function publicationTaskName(id) {
@@ -143,6 +176,8 @@ export function catalogPublicationDelta(
   {
     previousProfiles = { schemaVersion: 1, profiles: [] },
     currentProfiles = { schemaVersion: 1, profiles: [] },
+    previousQualificationManifests = [],
+    currentQualificationManifests = [],
   } = {},
 ) {
   assertCatalog(previousCatalog, "Previous catalog");
@@ -175,8 +210,16 @@ export function catalogPublicationDelta(
     }
 
     if (
-      canonicalJson(markerSnapshot(previous, previousProfiles)) ===
-      canonicalJson(markerSnapshot(current, currentProfiles))
+      canonicalJson(
+        markerSnapshot(
+          previous,
+          previousProfiles,
+          previousQualificationManifests,
+        ),
+      ) ===
+      canonicalJson(
+        markerSnapshot(current, currentProfiles, currentQualificationManifests),
+      )
     ) {
       continue;
     }
@@ -244,6 +287,7 @@ function collectQualifiedIds(
   qualifications,
   modelsById,
   isQualified = (qualification) => qualification.qualified === true,
+  requireArtifactBundle = false,
 ) {
   if (
     qualifications === null ||
@@ -271,6 +315,44 @@ function collectQualifiedIds(
     }
     if (qualification.artifactSizeBytes !== model.sizeBytes) {
       throw new Error(`Qualification size does not match catalog model ${id}`);
+    }
+    if (
+      requireArtifactBundle &&
+      Array.isArray(model.files) &&
+      model.files.length > 0
+    ) {
+      if (
+        !Array.isArray(qualification.artifactFiles) ||
+        canonicalJson(
+          [...qualification.artifactFiles].sort((left, right) =>
+            left.path.localeCompare(right.path),
+          ),
+        ) !==
+          canonicalJson(
+            [...model.files].sort((left, right) =>
+              left.path.localeCompare(right.path),
+            ),
+          )
+      ) {
+        throw new Error(
+          `Qualification must bind the complete runtime file list for catalog model ${id}`,
+        );
+      }
+      const bundleSha256 = artifactBundleSha256(model.files);
+      const bundleSizeBytes = model.files.reduce(
+        (total, file) => total + file.sizeBytes,
+        0,
+      );
+      if (qualification.artifactBundleSizeBytes !== bundleSizeBytes) {
+        throw new Error(
+          `Qualification bundle size does not match catalog model ${id}`,
+        );
+      }
+      if (qualification.artifactBundleSha256 !== bundleSha256) {
+        throw new Error(
+          `Qualification bundle SHA-256 does not match catalog model ${id}`,
+        );
+      }
     }
     if (isQualified(qualification)) {
       qualifiedIds.add(id);
@@ -312,7 +394,12 @@ export function filterQualifiedPublications(
   )) {
     qualifiedIds.add(id);
   }
-  for (const id of collectQualifiedIds(rerankingQualifications, modelsById)) {
+  for (const id of collectQualifiedIds(
+    rerankingQualifications,
+    modelsById,
+    (qualification) => qualification.qualified === true,
+    true,
+  )) {
     qualifiedIds.add(id);
   }
   for (const id of collectQualifiedIds(speechQualifications, modelsById)) {

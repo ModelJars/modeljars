@@ -118,6 +118,10 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 Use `openRerankingRuntime` to retain the descriptor and exact qualification evidence beside the
 owned `RerankingModel`.
 
+The same API loads the qualified `mxbai-rerank-xsmall-v1` DeBERTa-v2 checkpoint from its verified
+multi-file Safetensors bundle. ModelJars supplies the installation directory to Models; application
+code does not manage weight or tokenizer paths.
+
 ## Qualified text-to-speech access
 
 Speech markers bind exact model bytes to independent waveform agreement, incremental streaming,

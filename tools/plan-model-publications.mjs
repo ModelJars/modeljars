@@ -251,6 +251,7 @@ async function main() {
   } else {
     let previous = await readCatalog(previousPath);
     let currentForDelta = current;
+    let qualificationOptions = {};
     const previousQualificationsPath = argumentsMap.get(
       "--previous-qualifications",
     );
@@ -293,6 +294,38 @@ async function main() {
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
+      qualificationOptions = {
+        previousQualificationManifests: [
+          await readCatalog(previousQualificationsPath),
+          ...(previousEmbeddingPath === undefined
+            ? []
+            : [await readCatalog(previousEmbeddingPath)]),
+          ...(previousToolPath === undefined
+            ? []
+            : [await readCatalog(previousToolPath)]),
+          ...(previousRerankingPath === undefined
+            ? []
+            : [await readCatalog(previousRerankingPath)]),
+          ...(previousSpeechPath === undefined
+            ? []
+            : [await readCatalog(previousSpeechPath)]),
+        ],
+        currentQualificationManifests: [
+          currentQualifications,
+          ...(currentEmbeddingQualifications === undefined
+            ? []
+            : [currentEmbeddingQualifications]),
+          ...(currentToolQualifications === undefined
+            ? []
+            : [currentToolQualifications]),
+          ...(currentRerankingQualifications === undefined
+            ? []
+            : [currentRerankingQualifications]),
+          ...(currentSpeechQualifications === undefined
+            ? []
+            : [currentSpeechQualifications]),
+        ],
+      };
       if (previousProfilesPath !== undefined) {
         profileOptions = {
           previousProfiles: qualifiedProfiles(
@@ -306,7 +339,10 @@ async function main() {
         };
       }
     }
-    planned = catalogPublicationDelta(previous, currentForDelta, profileOptions);
+    planned = catalogPublicationDelta(previous, currentForDelta, {
+      ...profileOptions,
+      ...qualificationOptions,
+    });
   }
   const delta =
     qualificationPath === undefined

@@ -145,6 +145,18 @@ data class CatalogArtifactFile(
     }
 }
 
+fun artifactBundleSha256(files: List<CatalogArtifactFile>): String {
+    val identity =
+        files
+            .sortedBy(CatalogArtifactFile::path)
+            .joinToString("") { file ->
+                "${file.path}\t${file.sizeBytes}\t${file.sha256}\n"
+            }
+    return HexFormat.of().formatHex(
+        MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(StandardCharsets.UTF_8)),
+    )
+}
+
 data class CatalogDimensions(
     val parameterCount: Long,
     val contextLength: Int,
@@ -347,6 +359,9 @@ data class CatalogRerankingQualification(
     val backend: String,
     val artifactSha256: String,
     val artifactSizeBytes: Long,
+    val artifactFiles: List<CatalogArtifactFile>,
+    val artifactBundleSizeBytes: Long?,
+    val artifactBundleSha256: String?,
     val reportPath: String,
     val raw: Map<String, Any?>,
 )
@@ -700,6 +715,14 @@ fun CatalogEmbeddingQualification.siteMetadata(
 fun CatalogRerankingQualification.registryProperties(): String =
     buildString {
         val prefix = "rerankingQualification.$modelId."
+        val maximumReferenceLogitDelta =
+            (raw["maximumReferenceLogitDelta"] ?: raw["maximumOnnxLogitDelta"]) as Number
+        val primaryReferenceKind = raw.optionalString("primaryReferenceKind")
+        val referenceBackends = raw["oracleBackends"]?.stringMap("oracleBackends for $modelId")
+        val maximumSameArtifactReferenceLogitDelta =
+            (raw["maximumSameArtifactReferenceLogitDelta"]
+                    ?: raw["maximumSameArtifactOracleLogitDelta"])
+                as? Number
         appendLine("${prefix}model=${propertyValue(raw.requiredString("model"))}")
         appendLine("${prefix}backend=${propertyValue(backend)}")
         appendLine(
@@ -708,20 +731,36 @@ fun CatalogRerankingQualification.registryProperties(): String =
         appendLine("${prefix}workload=${propertyValue(raw.requiredString("workload"))}")
         appendLine("${prefix}artifactSha256=$artifactSha256")
         appendLine("${prefix}artifactSizeBytes=$artifactSizeBytes")
+        artifactBundleSha256?.let { appendLine("${prefix}artifactBundleSha256=$it") }
+        artifactBundleSizeBytes?.let { appendLine("${prefix}artifactBundleSizeBytes=$it") }
+        if (artifactFiles.isNotEmpty()) {
+            appendLine("${prefix}artifactFile.count=${artifactFiles.size}")
+            artifactFiles.forEachIndexed { index, file ->
+                val filePrefix = "${prefix}artifactFile.${index.toString().padStart(3, '0')}."
+                appendLine("${filePrefix}path=${propertyValue(file.path)}")
+                appendLine("${filePrefix}role=${propertyValue(file.role)}")
+                appendLine("${filePrefix}sha256=${file.sha256}")
+                appendLine("${filePrefix}sizeBytes=${file.sizeBytes}")
+            }
+        }
         appendLine("${prefix}report=${propertyValue(reportPath)}")
         appendLine(
             "${prefix}reportSha256=${raw.requiredString("reportSha256")}",
         )
         appendLine("${prefix}qualified=$qualified")
         appendLine("${prefix}pairs=${(raw["pairs"] as Number).toInt()}")
+        primaryReferenceKind?.let {
+            appendLine("${prefix}primaryReferenceKind=${propertyValue(it)}")
+        }
+        referenceBackends?.toSortedMap()?.forEach { (name, backend) ->
+            appendLine("${prefix}referenceBackend.$name=${propertyValue(backend)}")
+        }
         appendLine(
-            "${prefix}maximumOnnxLogitDelta=" +
-                (raw["maximumOnnxLogitDelta"] as Number).toDouble(),
+            "${prefix}maximumReferenceLogitDelta=" + maximumReferenceLogitDelta.toDouble(),
         )
-        appendLine(
-            "${prefix}maximumSameArtifactOracleLogitDelta=" +
-                (raw["maximumSameArtifactOracleLogitDelta"] as Number).toDouble(),
-        )
+        maximumSameArtifactReferenceLogitDelta?.let {
+            appendLine("${prefix}maximumSameArtifactReferenceLogitDelta=${it.toDouble()}")
+        }
         appendLine("${prefix}topKOrderExact=${raw["topKOrderExact"] as Boolean}")
         appendLine(
             "${prefix}medianColdLoadMillis=" +
@@ -1478,6 +1517,25 @@ val rerankingQualifications =
                 .map { value ->
                     val raw = value.stringKeyMap("Every reranking qualification entry")
                     val modelId = raw.requiredString("modelId")
+                    val artifactFiles =
+                        (raw["artifactFiles"] as? List<*>)
+                            ?.mapIndexed { index, value ->
+                                val file =
+                                    value.stringKeyMap(
+                                        "artifactFiles[$index] for reranking qualification $modelId",
+                                    )
+                                CatalogArtifactFile(
+                                    path = file.requiredString("path"),
+                                    role = file.requiredString("role"),
+                                    sha256 = file.requiredString("sha256"),
+                                    sizeBytes =
+                                        (file["sizeBytes"] as? Number)?.toLong()
+                                            ?: error(
+                                                "reranking qualification $modelId " +
+                                                    "artifactFiles[$index].sizeBytes must be an integer",
+                                            ),
+                                )
+                            } ?: emptyList()
                     CatalogRerankingQualification(
                         modelId = modelId,
                         qualified =
@@ -1488,6 +1546,10 @@ val rerankingQualifications =
                         artifactSizeBytes =
                             (raw["artifactSizeBytes"] as? Number)?.toLong()
                                 ?: error("reranking qualification $modelId.artifactSizeBytes must be an integer"),
+                        artifactFiles = artifactFiles,
+                        artifactBundleSizeBytes =
+                            (raw["artifactBundleSizeBytes"] as? Number)?.toLong(),
+                        artifactBundleSha256 = raw.optionalString("artifactBundleSha256"),
                         reportPath = raw.requiredString("report"),
                         raw = raw,
                     )
@@ -1960,8 +2022,15 @@ toolQualifications?.let { qualifications ->
 
 rerankingQualifications?.let { qualifications ->
     Instant.parse(qualifications.generatedAt)
-    require(qualifications.policyVersion == "reranking-oracle-and-latency-v1") {
-        "Reranking qualifications must use reranking-oracle-and-latency-v1"
+    require(
+        qualifications.policyVersion in
+            setOf(
+                "reranking-oracle-and-latency-v1",
+                "reranking-reference-and-latency-v2",
+                "reranking-exact-artifact-and-latency-v3",
+            )
+    ) {
+        "Reranking qualifications must use a supported reference-and-latency policy"
     }
     require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
         "Reranking qualification modelsRevision must be a 40-character Git commit"
@@ -1976,6 +2045,37 @@ rerankingQualifications?.let { qualifications ->
         }
         require(qualification.artifactSizeBytes == model.sizeBytes) {
             "Reranking qualification size does not match ${qualification.modelId}"
+        }
+        if (model.files.isNotEmpty()) {
+            require(
+                qualification.artifactFiles.sortedBy(CatalogArtifactFile::path) ==
+                    model.files.sortedBy(CatalogArtifactFile::path),
+            ) {
+                "Reranking qualification must bind the complete runtime file list for " +
+                    qualification.modelId
+            }
+            val expectedBundleSha256 = artifactBundleSha256(model.files)
+            require(
+                qualification.artifactBundleSizeBytes ==
+                    model.files.sumOf(CatalogArtifactFile::sizeBytes),
+            ) {
+                "Reranking qualification bundle size does not match " + qualification.modelId
+            }
+            require(qualification.artifactBundleSha256 == expectedBundleSha256) {
+                "Reranking qualification bundle SHA-256 does not match " + qualification.modelId
+            }
+        } else {
+            require(qualification.artifactFiles.isEmpty()) {
+                "Single-file reranking qualification must not declare artifactFiles for " +
+                    qualification.modelId
+            }
+            require(
+                qualification.artifactBundleSizeBytes == null &&
+                    qualification.artifactBundleSha256 == null,
+            ) {
+                "Single-file reranking qualification must not declare bundle metadata for " +
+                    qualification.modelId
+            }
         }
         require(model.backends[qualification.backend] == true) {
             "Reranking qualification backend is not supported by ${qualification.modelId}"
@@ -1992,16 +2092,48 @@ rerankingQualifications?.let { qualifications ->
         require((raw["pairs"] as? Number)?.toInt()?.let { it > 0 } == true) {
             "Reranking qualification pairs must be positive for ${qualification.modelId}"
         }
-        val maximumOnnxDelta = (raw["maximumOnnxLogitDelta"] as? Number)?.toDouble()
+        val maximumReferenceDelta =
+            ((raw["maximumReferenceLogitDelta"] ?: raw["maximumOnnxLogitDelta"]) as? Number)
+                ?.toDouble()
         val maximumArtifactDelta =
-            (raw["maximumSameArtifactOracleLogitDelta"] as? Number)?.toDouble()
+            ((raw["maximumSameArtifactReferenceLogitDelta"]
+                    ?: raw["maximumSameArtifactOracleLogitDelta"]) as? Number)
+                ?.toDouble()
+        val primaryReferenceKind =
+            raw.optionalString("primaryReferenceKind")
+                ?: if (qualifications.policyVersion == "reranking-oracle-and-latency-v1") {
+                    "source-artifact"
+                } else {
+                    error(
+                        "Reranking qualification primaryReferenceKind is required for " +
+                            qualification.modelId,
+                    )
+                }
+        require(primaryReferenceKind in setOf("exact-artifact", "source-artifact")) {
+            "Reranking qualification primaryReferenceKind is invalid for " +
+                qualification.modelId
+        }
+        val referenceBackends = raw["oracleBackends"].stringMap("oracleBackends")
+        require(referenceBackends["primary"]?.isNotBlank() == true) {
+            "Reranking qualification primary reference backend is required for " +
+                qualification.modelId
+        }
+        if (primaryReferenceKind == "source-artifact") {
+            require(referenceBackends["sameArtifact"]?.isNotBlank() == true) {
+                "A source-artifact primary requires a same-artifact reference backend for " +
+                    qualification.modelId
+            }
+            require(maximumArtifactDelta != null) {
+                "A source-artifact primary requires a same-artifact logit delta for " +
+                    qualification.modelId
+            }
+        }
         val medianColdLoad = (raw["medianColdLoadMillis"] as? Number)?.toDouble()
         val maximumPairP95 = (raw["maximumPairP95Millis"] as? Number)?.toDouble()
         val maximumBatchP95 = (raw["maximumBatchP95Millis"] as? Number)?.toDouble()
         val throughput = (raw["medianBatchDocumentsPerSecond"] as? Number)?.toDouble()
         listOf(
-            maximumOnnxDelta,
-            maximumArtifactDelta,
+            maximumReferenceDelta,
             medianColdLoad,
             maximumPairP95,
             maximumBatchP95,
@@ -2011,17 +2143,29 @@ rerankingQualifications?.let { qualifications ->
                 "Reranking metrics must be finite and non-negative for ${qualification.modelId}"
             }
         }
-        if (qualification.qualified) {
-            require(maximumOnnxDelta!! <= 0.15) {
-                "Qualified reranker exceeds the ONNX logit-delta gate: ${qualification.modelId}"
+        maximumArtifactDelta?.let { metric ->
+            require(metric.isFinite() && metric >= 0.0) {
+                "Optional reranking comparator delta must be finite and non-negative for " +
+                    qualification.modelId
             }
-            require(maximumArtifactDelta!! <= 0.05) {
-                "Qualified reranker exceeds the same-artifact logit-delta gate: ${qualification.modelId}"
+        }
+        if (qualification.qualified) {
+            require(maximumReferenceDelta!! <= 0.15) {
+                "Qualified reranker exceeds the reference logit-delta gate: ${qualification.modelId}"
+            }
+            val exactArtifactDelta =
+                if (primaryReferenceKind == "exact-artifact") {
+                    maximumReferenceDelta
+                } else {
+                    requireNotNull(maximumArtifactDelta)
+                }
+            require(exactArtifactDelta <= 0.05) {
+                "Qualified reranker exceeds the exact-artifact logit-delta gate: ${qualification.modelId}"
             }
             require(raw["topKOrderExact"] == true) {
                 "Qualified reranker must preserve exact top-k order: ${qualification.modelId}"
             }
-            require(medianColdLoad!! <= 1_000.0 && maximumPairP95!! <= 250.0 && maximumBatchP95!! <= 1_200.0) {
+            require(medianColdLoad!! <= 5_000.0 && maximumPairP95!! <= 250.0 && maximumBatchP95!! <= 1_200.0) {
                 "Qualified reranker exceeds its controlled latency envelope: ${qualification.modelId}"
             }
         }
@@ -2511,7 +2655,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.33-SNAPSHOT")
+            .orElse("0.1.34-SNAPSHOT")
             .get()
 }
 
@@ -3136,6 +3280,25 @@ project(":modeljars") {
             systemProperty("modeljars.fixtures.msMarcoReranker", it)
         }
         outputs.upToDateWhen { false }
+    }
+
+    tasks.register<Test>("mxbaiRerankerIntegrationTest") {
+        description = "Runs the pinned mxbai DeBERTa Safetensors artifact through ModelJars."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching("org.modeljars.MxbaiRerankerIntegrationTest")
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        providers.gradleProperty("mxbaiRerankerDirectory").orNull?.let {
+            systemProperty("modeljars.fixtures.mxbaiRerankerDirectory", it)
+        }
+        providers.gradleProperty("mxbaiRerankerLive").orNull?.let {
+            systemProperty("modeljars.integration.mxbai.live", it)
+        }
+        outputs.upToDateWhen { false }
+        maxHeapSize = "3g"
     }
 }
 

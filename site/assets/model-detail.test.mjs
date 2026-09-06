@@ -26,7 +26,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.33")\n' +
+    'implementation("org.modeljars:modeljars:0.1.34")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -229,6 +229,30 @@ test("summarizes reranking correctness and latency evidence", () => {
   assert.equal(summary.pairP95, "174 ms");
   assert.equal(summary.batchP95, "930 ms");
   assert.equal(summary.throughput, "7.875 docs/s");
+});
+
+test("summarizes reranking evidence from a non-ONNX reference", () => {
+  const summary = qualificationSummary({
+    qualified: true,
+    useCaseTier: "SECOND_STAGE_RERANKING",
+    backend: "pure-java",
+    backendVersion: "models-0.3.31",
+    workload: "reranking-reference-and-latency-v2",
+    pairs: 6,
+    maximumReferenceLogitDelta: 0.0000030994415283203125,
+    maximumSameArtifactReferenceLogitDelta: 0.0000030994415283203125,
+    topKOrderExact: true,
+    medianColdLoadMillis: 2556.399,
+    maximumPairP95Millis: 156.3,
+    maximumBatchP95Millis: 560.781,
+    medianBatchDocumentsPerSecond: 17.114,
+    reportUri: "https://github.com/integrallis/models/blob/revision/report.json",
+    reportSha256: "a".repeat(64),
+  });
+
+  assert.equal(summary.maximumReferenceLogitDelta, 0.0000030994415283203125);
+  assert.equal(summary.maximumSameArtifactReferenceLogitDelta, 0.0000030994415283203125);
+  assert.equal(summary.coldLoad, "2.56 s");
 });
 
 test("summarizes speech correctness, streaming, and latency evidence", () => {

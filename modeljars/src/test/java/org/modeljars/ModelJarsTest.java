@@ -44,10 +44,12 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
@@ -414,14 +416,25 @@ class ModelJarsTest {
             },
             Map::of,
             () -> List.of("--enable-native-access=ALL-UNNAMED"));
-    var batching = ContinuousBatchingOptions.builder().maximumBatchSize(2).build();
+    var batching =
+        ContinuousBatchingOptions.builder()
+            .maximumBatchSize(2)
+            .batchPrefillAcrossSessions(true)
+            .batchFormationDelay(Duration.ofMillis(25))
+            .build();
 
     try (var runtime = loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults(), batching);
-        var session = runtime.openGenerationSession()) {
+        var first = runtime.openGenerationSession();
+        var second = runtime.openGenerationSession()) {
       assertEquals("rust-ffm", selectedBackend.get());
       assertTrue(runtime.continuousBatchingMetrics().isPresent());
-      assertEquals("", session.generate("prompt", SamplingOptions.builder().maxTokens(1).build()));
-      assertEquals(1, runtime.continuousBatchingMetrics().orElseThrow().completedRequests());
+      var options = SamplingOptions.builder().maxTokens(1).build();
+      var firstResult = CompletableFuture.supplyAsync(() -> first.generate("first", options));
+      var secondResult = CompletableFuture.supplyAsync(() -> second.generate("second", options));
+      assertEquals("", firstResult.join());
+      assertEquals("", secondResult.join());
+      assertEquals(2, runtime.continuousBatchingMetrics().orElseThrow().completedRequests());
+      assertEquals(1, backend.raggedPrefillCalls);
     }
 
     assertTrue(backend.closed());
@@ -727,6 +740,7 @@ class ModelJarsTest {
         };
 
     private int closeCount;
+    private int raggedPrefillCalls;
 
     @Override
     public String name() {
@@ -761,6 +775,17 @@ class ModelJarsTest {
     @Override
     public InferenceSession openSession() {
       return new StubSession();
+    }
+
+    @Override
+    public boolean supportsRaggedPrefillBatch() {
+      return true;
+    }
+
+    @Override
+    public LogitBatch prefillBatch(InferenceSession[] sessions, int[][] tokenBatches) {
+      raggedPrefillCalls++;
+      return BatchInferenceBackend.super.prefillBatch(sessions, tokenBatches);
     }
 
     @Override

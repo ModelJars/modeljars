@@ -76,6 +76,20 @@ jobs:
               '[.deployments[] | select(.deploymentName | contains($filter))]'
           }
 
+          report_failed_deployments() {
+            local deployments_json="$1"
+            while IFS= read -r deployment_id; do
+              curl --fail-with-body --silent --show-error \
+                --request POST \
+                --header "Authorization: Bearer ${authorization}" \
+                "${api}/status?id=${deployment_id}" |
+                jq -r '"Failed deployment: \(.deploymentName) [\(.deploymentId)]\nValidation errors: \((.errors // {}) | tojson)"'
+            done < <(
+              jq -r '.[] | select(.deploymentState == "FAILED") | .deploymentId' \
+                <<< "${deployments_json}"
+            )
+          }
+
           validation_deadline=$((SECONDS + 3600))
           while true; do
             deployments="$(list_deployments | matching_deployments)"
@@ -85,8 +99,7 @@ jobs:
               exit 1
             fi
             if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
-              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
-                <<< "${deployments}" >&2
+              report_failed_deployments "${deployments}" >&2
               exit 1
             fi
             incomplete="$(
@@ -123,8 +136,7 @@ jobs:
             count="$(jq 'length' <<< "${deployments}")"
             published="$(jq '[.[] | select(.deploymentState == "PUBLISHED")] | length' <<< "${deployments}")"
             if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
-              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
-                <<< "${deployments}" >&2
+              report_failed_deployments "${deployments}" >&2
               exit 1
             fi
             if (( count == EXPECTED_COUNT && published == EXPECTED_COUNT )); then

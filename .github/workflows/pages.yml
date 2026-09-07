@@ -8,6 +8,7 @@ on:
       - site/**
       - catalog/**
       - media/icons/**
+      - tools/verify-central-catalog.mjs
       - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -51,6 +52,12 @@ jobs:
 
       - name: Generate searchable catalog
         run: ./gradlew --no-daemon generateSite
+
+      - name: Verify public markers are available from Maven Central
+        env:
+          MODELJARS_CENTRAL_ATTEMPTS: "30"
+          MODELJARS_CENTRAL_RETRY_DELAY_MS: "10000"
+        run: node tools/verify-central-catalog.mjs build/site/catalog.json
 
       - name: Version browser assets atomically
         run: node tools/site-asset-versioning.mjs build/site "$GITHUB_SHA"

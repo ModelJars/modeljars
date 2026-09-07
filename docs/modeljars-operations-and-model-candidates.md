@@ -41,6 +41,15 @@ site.
 The GitHub Pages workflow is `.github/workflows/pages.yml`. GitHub Actions runs
 `./gradlew generateSite` and uploads `build/site`. The deployed artifact contains the searchable
 catalog, model detail routes, benchmark evidence, documentation links, `CNAME`, and brand icons.
+Before Pages uploads that artifact, it verifies that both the POM and JAR for every public marker
+coordinate resolve from Maven Central. The check fails closed on missing artifacts or network
+errors, so a qualified catalog entry cannot become public before its immutable marker does.
+
+For a change that adds or revises a marker, publish from the reviewed branch first: dispatch the
+model-artifacts workflow to Maven Central, finalize its user-managed deployment, and verify the
+marker is available. Merge the catalog change only after that step. The post-merge Pages workflow
+then validates Central again before deployment. Candidate-only changes do not require marker
+publication because they are excluded from the generated public catalog.
 
 Official references:
 

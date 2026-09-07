@@ -349,6 +349,28 @@ The sessions share loaded weights but keep independent prompt-prefix and KV-cach
 serialized while the selected backend uses shared inference scratch. Closing a session releases
 only its conversation state; closing the runtime closes any sessions still open.
 
+Servers with several concurrent conversations can explicitly enable the Models continuous
+scheduler when opening the qualified runtime:
+
+```java
+import com.integrallis.models.runtime.ContinuousBatchingOptions;
+
+var batching = ContinuousBatchingOptions.builder()
+    .maximumBatchSize(4)
+    .maximumQueuedRequests(64)
+    .build();
+
+try (var runtime = ModelJars.openRuntime(MODEL, batching)) {
+    // Concurrent calls on separate runtime sessions may share one physical model step.
+}
+```
+
+Each session still owns its KV and prompt-prefix state. The scheduler batches only requests using
+this exact loaded model, replaces completed rows, bounds queued work, and reports utilization
+through `runtime.continuousBatchingMetrics()`. Batch size is required and the feature is opt-in:
+Models' controlled profiles show a strong MiniCPM throughput win and a Qwen counterexample on the
+same host, so deployment performance must be qualified for the model and machine.
+
 To present several ModelJars as one capability-aware conversation, give Models a session factory
 and the qualified chat template from each loaded runtime:
 

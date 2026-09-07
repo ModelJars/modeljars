@@ -66,6 +66,38 @@ and KV-cache lineages, context positions, metrics, reset, and close lifecycle.
 Execution across sessions is serialized because the loaded backend may reuse
 transient scratch. Closing the runtime closes any sessions still open.
 
+For a server with concurrent conversations, enable the Models runtime scheduler
+explicitly when opening the qualified artifact:
+
+```java
+import com.integrallis.models.runtime.ContinuousBatchingOptions;
+
+var batching = ContinuousBatchingOptions.builder()
+    .maximumBatchSize(4)
+    .maximumQueuedRequests(64)
+    .maximumPrefillChunkTokens(128)
+    .build();
+
+try (var runtime = ModelJars.openRuntime(MODEL, batching);
+     var alice = runtime.openGenerationSession();
+     var bob = runtime.openGenerationSession()) {
+  // Run calls on separate sessions concurrently, for example with virtual threads.
+}
+```
+
+The scheduler dynamically replaces completed rows and advances compatible
+decode-ready sessions in one physical-model call. It does not merge histories:
+every request retains its own KV cache, context position, sampler, constraints,
+stream, and prompt-prefix accounting. Requests for different loaded models use
+different schedulers. The queue and prompt scheduling turns are bounded, and
+`runtime.continuousBatchingMetrics()` reports observed utilization.
+
+`maximumBatchSize` is required because backend capacity is not a throughput
+claim. The retained Models profile improved MiniCPM5 1B aggregate throughput by
+62.83% at batch four on one Intel/Temurin 25 host, while Qwen3 0.6B regressed at
+batch two on that same host. Keep batching disabled until the exact model,
+quantization, JDK, concurrency, and machine have been measured.
+
 `ModelPrompt` must remain structured through tokenization. Template-owned
 control segments are recognized as special tokens, while user text that merely
 spells a control token remains ordinary text. ModelJars 0.1.6 fixes the previous

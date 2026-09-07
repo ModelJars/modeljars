@@ -349,6 +349,40 @@ The sessions share loaded weights but keep independent prompt-prefix and KV-cach
 serialized while the selected backend uses shared inference scratch. Closing a session releases
 only its conversation state; closing the runtime closes any sessions still open.
 
+To present several ModelJars as one capability-aware conversation, give Models a session factory
+and the qualified chat template from each loaded runtime:
+
+```java
+import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.runtime.chat.ChatMessage;
+import com.integrallis.models.runtime.chat.VirtualChatModel;
+import java.util.List;
+import java.util.Set;
+import org.modeljars.ModelJars;
+
+var options = SamplingOptions.builder().temperature(0).maxTokens(64).build();
+
+try (var chat = ModelJars.openRuntime(org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL);
+     var tools = ModelJars.openRuntime(org.modeljars.catalog.Qwen3_1_7b_Q8_0.MODEL)) {
+    var virtual = VirtualChatModel.builder()
+        .member("chat", Set.of("chat"), chat.chatTemplate(), chat::openGenerationSession)
+        .member("tools", Set.of("tool-use"), tools.chatTemplate(), tools::openGenerationSession)
+        .build();
+
+    try (var conversation = virtual.openSession(
+            List.of(ChatMessage.system("Answer directly; use declared tools when needed.")))) {
+        var response = conversation.generate(
+            "chat", ChatMessage.user("Say hello."), List.of(), options);
+        System.out.println(response.content());
+    }
+}
+```
+
+`VirtualChatModel` retains one canonical message history while each member renders that history
+with its own template and owns its own exact prompt/KV cache. `VirtualChatRouter` in
+`com.integrallis:models-router` can select the capability automatically and records the physical
+model boundary, cache behavior, and measured runtime outcome.
+
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,
 downloads missing weights, verifies their size and SHA-256 digest, and applies every non-conflicting

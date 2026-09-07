@@ -401,18 +401,24 @@ class ModelJarsTest {
   @Test
   void configuresContinuousBatchingWhenOpeningAQualifiedTextRuntime() {
     StubBackend backend = new StubBackend();
+    AtomicReference<String> selectedBackend = new AtomicReference<>();
     ModelJars loader =
         new ModelJars(
             ModelJarRegistry.fromClasspath(),
             ModelRagQualificationRegistry.fromClasspath(),
             ModelPerformanceProfileRegistry.fromClasspath(),
             (descriptor, options) -> Path.of("verified-model.gguf"),
-            (backendName, path, configuration) -> backend,
-            Map::of);
+            (backendName, path, configuration) -> {
+              selectedBackend.set(backendName);
+              return backend;
+            },
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
     var batching = ContinuousBatchingOptions.builder().maximumBatchSize(2).build();
 
-    try (var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults(), batching);
+    try (var runtime = loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults(), batching);
         var session = runtime.openGenerationSession()) {
+      assertEquals("rust-ffm", selectedBackend.get());
       assertTrue(runtime.continuousBatchingMetrics().isPresent());
       assertEquals("", session.generate("prompt", SamplingOptions.builder().maxTokens(1).build()));
       assertEquals(1, runtime.continuousBatchingMetrics().orElseThrow().completedRequests());

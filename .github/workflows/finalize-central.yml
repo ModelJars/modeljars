@@ -85,7 +85,8 @@ jobs:
               exit 1
             fi
             if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
-              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
+              jq -r '.[] | select(.deploymentState == "FAILED") |
+                "Failed deployment: \(.deploymentName) [\(.deploymentId)]\nValidation errors: \((.errors // {}) | tojson)"' \
                 <<< "${deployments}" >&2
               exit 1
             fi
@@ -123,7 +124,8 @@ jobs:
             count="$(jq 'length' <<< "${deployments}")"
             published="$(jq '[.[] | select(.deploymentState == "PUBLISHED")] | length' <<< "${deployments}")"
             if jq -e 'any(.deploymentState == "FAILED")' <<< "${deployments}" >/dev/null; then
-              jq -r '.[] | select(.deploymentState == "FAILED") | "Failed deployment: \(.deploymentName)"' \
+              jq -r '.[] | select(.deploymentState == "FAILED") |
+                "Failed deployment: \(.deploymentName) [\(.deploymentId)]\nValidation errors: \((.errors // {}) | tojson)"' \
                 <<< "${deployments}" >&2
               exit 1
             fi

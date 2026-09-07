@@ -19,6 +19,7 @@ import com.integrallis.models.api.InferenceContextWindow;
 import com.integrallis.models.api.ModelMetadata;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.ContinuousBatchingMetrics;
 import com.integrallis.models.runtime.InferencePipeline;
 import com.integrallis.models.runtime.TextGenerationSession;
 import com.integrallis.models.runtime.chat.ChatTemplate;
@@ -94,6 +95,15 @@ public final class ModelJarRuntime implements AutoCloseable {
    */
   public TextGenerationSession openGenerationSession() {
     return pipeline.openGenerationSession();
+  }
+
+  /**
+   * Returns scheduler measurements when this runtime was opened with continuous batching.
+   *
+   * @return current scheduler measurements, or empty for an ordinary runtime
+   */
+  public Optional<ContinuousBatchingMetrics> continuousBatchingMetrics() {
+    return pipeline.continuousBatchingMetrics();
   }
 
   /**

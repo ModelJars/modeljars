@@ -31,6 +31,7 @@ import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
+import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.InferencePipeline;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -268,6 +269,32 @@ public final class ModelJars {
   }
 
   /**
+   * Opens a qualified model whose independent generation sessions share a continuous scheduler.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @param batchingOptions explicit scheduler capacity and latency controls
+   * @return loaded model runtime with continuous batching enabled for generation sessions
+   */
+  public static ModelJarRuntime openRuntime(
+      ModelJar model, ContinuousBatchingOptions batchingOptions) {
+    return openRuntime(model, ModelLoadOptions.defaults(), batchingOptions);
+  }
+
+  /**
+   * Opens a qualified model with explicit loading and continuous-batching controls.
+   *
+   * @param model immutable model selector or generated catalog reference
+   * @param loadOptions backend, cache, and network controls
+   * @param batchingOptions explicit scheduler capacity and latency controls
+   * @return loaded model runtime with continuous batching enabled for generation sessions
+   */
+  public static ModelJarRuntime openRuntime(
+      ModelJar model, ModelLoadOptions loadOptions, ContinuousBatchingOptions batchingOptions) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadRuntime(model, loadOptions, batchingOptions);
+  }
+
+  /**
    * Opens an exact ModelJars marker coordinate using automatic loading controls.
    *
    * @param markerCoordinate complete marker coordinate
@@ -483,6 +510,21 @@ public final class ModelJars {
   }
 
   ModelJarRuntime loadRuntime(ModelJar model, ModelLoadOptions options) {
+    return loadRuntimeConfigured(model, options, null);
+  }
+
+  ModelJarRuntime loadRuntime(
+      ModelJar model,
+      ModelLoadOptions options,
+      ContinuousBatchingOptions continuousBatchingOptions) {
+    Objects.requireNonNull(continuousBatchingOptions, "continuousBatchingOptions");
+    return loadRuntimeConfigured(model, options, continuousBatchingOptions);
+  }
+
+  private ModelJarRuntime loadRuntimeConfigured(
+      ModelJar model,
+      ModelLoadOptions options,
+      ContinuousBatchingOptions continuousBatchingOptions) {
     Objects.requireNonNull(model, "model");
     Objects.requireNonNull(options, "options");
     ModelJarDescriptor descriptor =
@@ -498,7 +540,21 @@ public final class ModelJars {
     BackendConfiguration configuration =
         configuration(descriptor, qualification, runtime, activeJvmArguments);
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
-    return new ModelJarRuntime(new InferencePipeline(loadedBackend), descriptor, qualification);
+    InferencePipeline pipeline;
+    try {
+      pipeline =
+          continuousBatchingOptions == null
+              ? new InferencePipeline(loadedBackend)
+              : new InferencePipeline(loadedBackend, continuousBatchingOptions);
+    } catch (RuntimeException | Error failure) {
+      try {
+        loadedBackend.close();
+      } catch (RuntimeException | Error closeFailure) {
+        failure.addSuppressed(closeFailure);
+      }
+      throw failure;
+    }
+    return new ModelJarRuntime(pipeline, descriptor, qualification);
   }
 
   EmbeddingBackend loadEmbedding(ModelJar model, ModelLoadOptions options) {

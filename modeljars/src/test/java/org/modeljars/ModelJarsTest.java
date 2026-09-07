@@ -37,6 +37,7 @@ import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.SpeechSynthesisOptions;
 import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.io.ByteArrayInputStream;
@@ -394,6 +395,48 @@ class ModelJarsTest {
       }
     }
 
+    assertTrue(backend.closed());
+  }
+
+  @Test
+  void configuresContinuousBatchingWhenOpeningAQualifiedTextRuntime() {
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of);
+    var batching = ContinuousBatchingOptions.builder().maximumBatchSize(2).build();
+
+    try (var runtime = loader.loadRuntime(QWEN, ModelLoadOptions.defaults(), batching);
+        var session = runtime.openGenerationSession()) {
+      assertTrue(runtime.continuousBatchingMetrics().isPresent());
+      assertEquals("", session.generate("prompt", SamplingOptions.builder().maxTokens(1).build()));
+      assertEquals(1, runtime.continuousBatchingMetrics().orElseThrow().completedRequests());
+    }
+
+    assertTrue(backend.closed());
+  }
+
+  @Test
+  void closesTheLoadedBackendWhenBatchingConfigurationExceedsItsCapacity() {
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of);
+    var batching = ContinuousBatchingOptions.builder().maximumBatchSize(5).build();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> loader.loadRuntime(QWEN, ModelLoadOptions.defaults(), batching));
     assertTrue(backend.closed());
   }
 

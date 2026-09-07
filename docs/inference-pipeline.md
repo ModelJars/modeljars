@@ -98,6 +98,13 @@ claim. The retained Models profile improved MiniCPM5 1B aggregate throughput by
 batch two on that same host. Keep batching disabled until the exact model,
 quantization, JDK, concurrency, and machine have been measured.
 
+`batchPrefillAcrossSessions(true)` additionally groups unequal prompt chunks in
+the same-model scheduler. Models rejects the option when the selected backend
+does not implement physical ragged prefill. Even when supported, it remains a
+deployment decision: retained profiles show a MiniCPM gain, a Qwen regression,
+and a latency-versus-memory tradeoff in the complete runtime path. After
+qualification, add `batchPrefillAcrossSessions(true)` to the builder.
+
 `ModelPrompt` must remain structured through tokenization. Template-owned
 control segments are recognized as special tokens, while user text that merely
 spells a control token remains ordinary text. ModelJars 0.1.6 fixes the previous

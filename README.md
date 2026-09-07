@@ -369,7 +369,10 @@ Each session still owns its KV and prompt-prefix state. The scheduler batches on
 this exact loaded model, replaces completed rows, bounds queued work, and reports utilization
 through `runtime.continuousBatchingMetrics()`. Batch size is required and the feature is opt-in:
 Models' controlled profiles show a strong MiniCPM throughput win and a Qwen counterexample on the
-same host, so deployment performance must be qualified for the model and machine.
+same host, so deployment performance must be qualified for the model and machine. Ragged prompt
+batching is a separate explicit option: unsupported backends reject it, and supported models can
+still regress or use more memory on a particular deployment. After qualification, add
+`batchPrefillAcrossSessions(true)` to the builder.
 
 To present several ModelJars as one capability-aware conversation, give Models a session factory
 and the qualified chat template from each loaded runtime:

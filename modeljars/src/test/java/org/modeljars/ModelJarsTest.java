@@ -37,16 +37,19 @@ import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.api.SpeechSynthesisOptions;
 import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.api.Tokenizer;
+import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
@@ -398,6 +401,65 @@ class ModelJarsTest {
   }
 
   @Test
+  void configuresContinuousBatchingWhenOpeningAQualifiedTextRuntime() {
+    StubBackend backend = new StubBackend();
+    AtomicReference<String> selectedBackend = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> {
+              selectedBackend.set(backendName);
+              return backend;
+            },
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+    var batching =
+        ContinuousBatchingOptions.builder()
+            .maximumBatchSize(2)
+            .batchPrefillAcrossSessions(true)
+            .batchFormationDelay(Duration.ofMillis(25))
+            .build();
+
+    try (var runtime = loader.loadRuntime(SMOLLM, ModelLoadOptions.defaults(), batching);
+        var first = runtime.openGenerationSession();
+        var second = runtime.openGenerationSession()) {
+      assertEquals("rust-ffm", selectedBackend.get());
+      assertTrue(runtime.continuousBatchingMetrics().isPresent());
+      var options = SamplingOptions.builder().maxTokens(1).build();
+      var firstResult = CompletableFuture.supplyAsync(() -> first.generate("first", options));
+      var secondResult = CompletableFuture.supplyAsync(() -> second.generate("second", options));
+      assertEquals("", firstResult.join());
+      assertEquals("", secondResult.join());
+      assertEquals(2, runtime.continuousBatchingMetrics().orElseThrow().completedRequests());
+      assertEquals(1, backend.raggedPrefillCalls);
+    }
+
+    assertTrue(backend.closed());
+  }
+
+  @Test
+  void closesTheLoadedBackendWhenBatchingConfigurationExceedsItsCapacity() {
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of);
+    var batching = ContinuousBatchingOptions.builder().maximumBatchSize(5).build();
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> loader.loadRuntime(QWEN, ModelLoadOptions.defaults(), batching));
+    assertTrue(backend.closed());
+  }
+
+  @Test
   void opensAnEmbeddingFromMarkerOwnedQualificationSettings() {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(QWEN_EMBEDDING).orElseThrow();
@@ -678,6 +740,7 @@ class ModelJarsTest {
         };
 
     private int closeCount;
+    private int raggedPrefillCalls;
 
     @Override
     public String name() {
@@ -712,6 +775,17 @@ class ModelJarsTest {
     @Override
     public InferenceSession openSession() {
       return new StubSession();
+    }
+
+    @Override
+    public boolean supportsRaggedPrefillBatch() {
+      return true;
+    }
+
+    @Override
+    public LogitBatch prefillBatch(InferenceSession[] sessions, int[][] tokenBatches) {
+      raggedPrefillCalls++;
+      return BatchInferenceBackend.super.prefillBatch(sessions, tokenBatches);
     }
 
     @Override

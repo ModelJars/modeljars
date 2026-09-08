@@ -21,7 +21,7 @@ export function mavenDependencySnippet(coordinate) {
 }
 
 export function gradleSnippet(coordinate) {
-  return `implementation("org.modeljars:modeljars:0.1.35")
+  return `implementation("org.modeljars:modeljars:0.1.36")
 ${gradleDependencySnippet(coordinate)}`;
 }
 
@@ -29,7 +29,7 @@ export function mavenSnippet(coordinate) {
   return `<dependency>
   <groupId>org.modeljars</groupId>
   <artifactId>modeljars</artifactId>
-  <version>0.1.35</version>
+  <version>0.1.36</version>
 </dependency>
 ${mavenDependencySnippet(coordinate)}`;
 }

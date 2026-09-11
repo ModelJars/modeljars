@@ -38,12 +38,21 @@ public final class Qwen3ChatTools {
 
   private Qwen3ChatTools() {}
 
-  /** Downloads, verifies, and opens both members with the qualified context policy. */
+  /**
+   * Downloads, verifies, and opens both members with the qualified context policy.
+   *
+   * @return lifecycle-owning virtual runtime
+   */
   public static ModelJarVirtualRuntime open() {
     return ModelJars.openChatToolHybrid(CHAT, TOOLS);
   }
 
-  /** Opens both members and binds an application-supplied tool decoding constraint. */
+  /**
+   * Opens both members and binds an application-supplied tool decoding constraint.
+   *
+   * @param toolConstraintFactory per-turn constrained-decoding policy for the tool member
+   * @return lifecycle-owning virtual runtime
+   */
   public static ModelJarVirtualRuntime open(
       VirtualChatModel.ConstraintFactory toolConstraintFactory) {
     ModelLoadOptions javaOptions =
@@ -52,7 +61,16 @@ public final class Qwen3ChatTools {
         CHAT, TOOLS, javaOptions, javaOptions, toolConstraintFactory);
   }
 
-  /** Immutable clean-host measurements retained with the qualified recipe. */
+  /**
+   * Immutable clean-host measurements retained with the qualified recipe.
+   *
+   * @param modelsRevision exact Models source revision used for qualification
+   * @param freshProcessesPerArm number of fresh JVMs run for each benchmark arm
+   * @param controlMedianMillis median end-to-end latency for the control arm
+   * @param hybridMedianMillis median end-to-end latency for the hybrid arm
+   * @param controlMedianPeakRssKib median peak resident memory for the control arm
+   * @param hybridMedianPeakRssKib median peak resident memory for the hybrid arm
+   */
   public record Qualification(
       String modelsRevision,
       int freshProcessesPerArm,
@@ -61,12 +79,20 @@ public final class Qwen3ChatTools {
       long controlMedianPeakRssKib,
       long hybridMedianPeakRssKib) {
 
-    /** Returns the measured end-to-end latency improvement as a fraction. */
+    /**
+     * Returns the measured end-to-end latency improvement as a fraction.
+     *
+     * @return fractional latency improvement over the control arm
+     */
     public double improvement() {
       return (controlMedianMillis - hybridMedianMillis) / (double) controlMedianMillis;
     }
 
-    /** Returns the measured peak-RSS increase as a fraction. */
+    /**
+     * Returns the measured peak-RSS increase as a fraction.
+     *
+     * @return fractional peak resident-memory increase over the control arm
+     */
     public double peakRssIncrease() {
       return (hybridMedianPeakRssKib - controlMedianPeakRssKib) / (double) controlMedianPeakRssKib;
     }

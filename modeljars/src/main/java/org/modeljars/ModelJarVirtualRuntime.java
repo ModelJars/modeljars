@@ -34,31 +34,52 @@ public final class ModelJarVirtualRuntime implements AutoCloseable {
     this.model = Objects.requireNonNull(model, "model");
   }
 
-  /** Returns the composed semantic chat model. */
+  /**
+   * Returns the composed semantic chat model.
+   *
+   * @return composed virtual model
+   */
   public VirtualChatModel model() {
     requireOpen();
     return model;
   }
 
-  /** Opens independent conversation state for both physical members. */
+  /**
+   * Opens independent conversation state for both physical members.
+   *
+   * @return new virtual-model conversation
+   */
   public VirtualChatModel.Session openSession() {
     requireOpen();
     return model.openSession();
   }
 
-  /** Opens a conversation with model-independent initial history. */
+  /**
+   * Opens a conversation with model-independent initial history.
+   *
+   * @param initialHistory canonical messages available before the first turn
+   * @return new virtual-model conversation initialized with the supplied history
+   */
   public VirtualChatModel.Session openSession(List<ChatMessage> initialHistory) {
     requireOpen();
     return model.openSession(initialHistory);
   }
 
-  /** Returns the qualified runtime used for ordinary chat and tool-result narration. */
+  /**
+   * Returns the qualified runtime used for ordinary chat and tool-result narration.
+   *
+   * @return chat-member runtime
+   */
   public ModelJarRuntime chatRuntime() {
     requireOpen();
     return chatRuntime;
   }
 
-  /** Returns the qualified runtime used for tool selection and argument generation. */
+  /**
+   * Returns the qualified runtime used for tool selection and argument generation.
+   *
+   * @return tool-member runtime
+   */
   public ModelJarRuntime toolRuntime() {
     requireOpen();
     return toolRuntime;

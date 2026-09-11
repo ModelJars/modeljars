@@ -1,15 +1,16 @@
 # Invited GitHub Packages preview
 
-The invited ModelJars preview publishes three aggregate artifacts:
+The invited ModelJars preview publishes the aggregate artifacts plus qualified composite recipes:
 
 ```text
 org.modeljars:modeljars:<preview-version>
 org.modeljars:modeljars-core:<preview-version>
 org.modeljars:modeljars-catalog:<preview-version>
+org.modeljars.composite:qwen3-chat-tools:<preview-version>
 ```
 
 The JVM Runtime is the intended Java 25 application dependency. It brings in the core
-API, Models 0.3.36, and its native and Java execution paths. Add the independently
+API, Models 0.3.37, and its native and Java execution paths. Add the independently
 published marker for every model used by the application:
 
 ```kotlin

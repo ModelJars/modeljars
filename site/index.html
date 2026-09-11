@@ -255,7 +255,7 @@ modeljars search gemma --output json</code></pre>
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.37")
+  implementation("org.modeljars:modeljars:0.1.38")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>
@@ -286,6 +286,20 @@ try (var runtime = ModelJars.openRuntime(selected)) {
   String answer = pipeline.generate(prompt, options);
 }</code></pre>
               </article>
+              <article>
+                <div class="guide-step-heading">
+                  <span class="step-number">04</span>
+                  <h3>Compose specialized models</h3>
+                </div>
+                <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
+  implementation("org.modeljars.composite:qwen3-chat-tools:0.1.38")
+}</code></pre>
+                <pre><code class="language-java hljs" data-lang="java">try (var hybrid = Qwen3ChatTools.open();
+     var conversation = hybrid.openSession()) {
+  var answer = conversation.generate(
+      ChatMessage.user("Say hello."), List.of(), options);
+}</code></pre>
+              </article>
             </div>
             <p class="guide-runtime-note">
               Inference requires Java 25 or newer and
@@ -295,6 +309,14 @@ try (var runtime = ModelJars.openRuntime(selected)) {
               check <code>java -version</code>, <code>mvn -v</code>, and the Gradle JVM.
               For low-level inference, <code>runtime.pipeline()</code> exposes the tokenizer,
               metadata, active context, structured prefill, logits, reset, checkpoint, and rewind.
+            </p>
+            <p class="guide-runtime-note">
+              The qualified Qwen3 virtual recipe uses 0.6B for chat and 1.7B for tool selection.
+              It routes turns from their declared tools and sends tool results back to chat for
+              natural-language narration.
+              It passed every controlled turn and reduced median end-to-end latency by 33.88%
+              versus using the 1.7B model alone. Each member keeps independent prompt and KV state;
+              the measured tradeoff is 36.04% higher median peak memory while both are resident.
             </p>
           </div>
         </div>

@@ -2655,7 +2655,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.37-SNAPSHOT")
+            .orElse("0.1.38-SNAPSHOT")
             .get()
 }
 
@@ -3302,6 +3302,52 @@ project(":modeljars") {
     }
 }
 
+project(":modeljars-composite-qwen3-chat-tools") {
+    group = "org.modeljars.composite"
+    description = "Qualified Qwen3 chat and tool-selection virtual model"
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "qwen3-chat-tools"
+        }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    dependencies {
+        api(project(":modeljars"))
+        runtimeOnly(
+            "org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1",
+        )
+        runtimeOnly(
+            "org.modeljars.huggingface:qwen.qwen3-1.7b-gguf.q8_0:3.0.0-q8_0.2",
+        )
+    }
+
+    tasks.named<Test>("test") {
+        exclude("**/*IntegrationIT.class")
+    }
+
+    tasks.register<Test>("qualifiedIntegrationTest") {
+        description = "Runs the pinned Qwen chat/tools composition through ModelJars."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching(
+                "org.modeljars.composite.qwen3.Qwen3ChatToolsIntegrationIT",
+            )
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        maxHeapSize = "4g"
+        outputs.upToDateWhen { false }
+    }
+}
+
 val jvmRuntimePom =
     project(":modeljars").layout.buildDirectory.file("publications/maven/pom-default.xml")
 val jvmRuntimePublicationVersion = version.toString()
@@ -3403,16 +3449,75 @@ val verifyJvmRuntimePublication =
         }
     }
 
+val qwenChatToolsPom =
+    project(":modeljars-composite-qwen3-chat-tools")
+        .layout.buildDirectory.file("publications/maven/pom-default.xml")
+val verifyQwenChatToolsPublication =
+    tasks.register("verifyQwenChatToolsPublication") {
+        dependsOn(
+            ":modeljars-composite-qwen3-chat-tools:generatePomFileForMavenPublication",
+        )
+        inputs.file(qwenChatToolsPom)
+
+        doLast {
+            val factory = DocumentBuilderFactory.newInstance()
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            val document = factory.newDocumentBuilder().parse(qwenChatToolsPom.get().asFile)
+            val projectElement = document.documentElement
+            fun Element.childText(name: String): String =
+                getElementsByTagName(name).item(0)?.textContent
+                    ?: error("Composite POM is missing <$name>")
+            require(projectElement.childText("groupId") == "org.modeljars.composite") {
+                "Qwen chat/tools composite groupId must be org.modeljars.composite"
+            }
+            require(projectElement.childText("artifactId") == "qwen3-chat-tools") {
+                "Qwen chat/tools composite artifactId must be qwen3-chat-tools"
+            }
+            require(projectElement.childText("version") == project.version.toString()) {
+                "Qwen chat/tools composite version must match the ModelJars release"
+            }
+            val dependencies = document.getElementsByTagName("dependency")
+            val coordinates =
+                (0 until dependencies.length)
+                    .map { dependencies.item(it) as Element }
+                    .map { dependency ->
+                        fun text(name: String): String =
+                            dependency.getElementsByTagName(name).item(0)?.textContent
+                                ?: error("Composite dependency is missing <$name>")
+                        Triple(text("groupId"), text("artifactId"), text("version"))
+                    }.toSet()
+            require(
+                coordinates ==
+                    setOf(
+                        Triple("org.modeljars", "modeljars", project.version.toString()),
+                        Triple(
+                            "org.modeljars.huggingface",
+                            "ggml-org.qwen3-0.6b-gguf.q4_0",
+                            "3.0.0-q4_0.1",
+                        ),
+                        Triple(
+                            "org.modeljars.huggingface",
+                            "qwen.qwen3-1.7b-gguf.q8_0",
+                            "3.0.0-q8_0.2",
+                        ),
+                    ),
+            ) {
+                "Qwen chat/tools composite must depend on its runtime and exact qualified markers"
+            }
+        }
+    }
+
 val publishGitHubPackagesPreview =
     tasks.register("publishGitHubPackagesPreview") {
         group = "publishing"
         description =
-            "Publish the JVM Runtime, core, CLI, and aggregate catalog for invited GitHub Packages testing"
+            "Publish the JVM Runtime, core, CLI, catalog, and qualified composites for invited testing"
         dependsOn(
             ":modeljars-core:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-cli:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars:publishMavenPublicationToGitHubPackagesRepository",
+            ":modeljars-composite-qwen3-chat-tools:publishMavenPublicationToGitHubPackagesRepository",
         )
     }
 
@@ -4625,6 +4730,7 @@ val verifyInferenceArchitecture =
             listOf(
                 file("modeljars/src/main/java"),
                 file("modeljars-core/src/main/java"),
+                file("modeljars-composite-qwen3-chat-tools/src/main/java"),
             )
         inputs.files(runtimeSourceDirectories)
 
@@ -4666,6 +4772,7 @@ tasks.named("check") {
     dependsOn(verifyInferenceArchitecture)
     dependsOn(verifyReadmeVersions)
     dependsOn(verifyJvmRuntimePublication)
+    dependsOn(verifyQwenChatToolsPublication)
     dependsOn(verifyMarkerPublicationIndependence)
 }
 
@@ -4700,6 +4807,7 @@ val releasePublicationTasks =
         ":modeljars-catalog:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars-cli:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars:publishMavenPublicationToReleaseBundleRepository",
+        ":modeljars-composite-qwen3-chat-tools:publishMavenPublicationToReleaseBundleRepository",
     )
 val modeljarsMarkerIds =
     providers

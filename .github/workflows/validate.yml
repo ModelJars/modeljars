@@ -90,7 +90,8 @@ jobs:
       - name: Validate build
         run: >
           ./gradlew --no-daemon
-          spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication generateSite
+          spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication
+          verifyQwenChatToolsPublication generateSite
 
       - name: Exercise the qualified mxbai bundle through ModelJars
         run: >
@@ -123,6 +124,7 @@ jobs:
           :modeljars-catalog:publishMavenPublicationToMavenLocal
           :modeljars-catalog:publishMarkerQwen306bQ40PublicationToMavenLocal
           :modeljars:publishMavenPublicationToMavenLocal
+          :modeljars-composite-qwen3-chat-tools:publishMavenPublicationToMavenLocal
 
       - name: Consume JVM Runtime from Maven Local
         run: ./gradlew --no-daemon -p smoke-tests/jvm-runtime-consumer run

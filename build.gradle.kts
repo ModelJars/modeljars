@@ -2655,7 +2655,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.37-SNAPSHOT")
+            .orElse("0.1.38-SNAPSHOT")
             .get()
 }
 
@@ -3511,7 +3511,7 @@ val publishGitHubPackagesPreview =
     tasks.register("publishGitHubPackagesPreview") {
         group = "publishing"
         description =
-            "Publish the JVM Runtime, core, CLI, and aggregate catalog for invited GitHub Packages testing"
+            "Publish the JVM Runtime, core, CLI, catalog, and qualified composites for invited testing"
         dependsOn(
             ":modeljars-core:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",

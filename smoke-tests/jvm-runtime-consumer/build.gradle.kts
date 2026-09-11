@@ -3,7 +3,7 @@ plugins {
 }
 
 val modeljarsVersion =
-    providers.gradleProperty("modeljarsVersion").orElse("0.1.37-SNAPSHOT")
+    providers.gradleProperty("modeljarsVersion").orElse("0.1.38-SNAPSHOT")
 
 dependencies {
     implementation("org.modeljars:modeljars:${modeljarsVersion.get()}")

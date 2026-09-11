@@ -227,6 +227,7 @@ jobs:
             echo "### ModelJars invited preview"
             echo
             echo "\`org.modeljars:modeljars:${{ steps.version.outputs.value }}\`"
+            echo "\`org.modeljars.composite:qwen3-chat-tools:${{ steps.version.outputs.value }}\`"
             echo
             echo "Repository: \`https://maven.pkg.github.com/modeljars/modeljars\`"
           } >> "$GITHUB_STEP_SUMMARY"

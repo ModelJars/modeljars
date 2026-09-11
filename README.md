@@ -374,39 +374,46 @@ batching is a separate explicit option: unsupported backends reject it, and supp
 still regress or use more memory on a particular deployment. After qualification, add
 `batchPrefillAcrossSessions(true)` to the builder.
 
-To present several ModelJars as one capability-aware conversation, give Models a session factory
-and the qualified chat template from each loaded runtime:
+The first qualified virtual model is available as one dependency. It combines Qwen3 0.6B Q4_0 for
+chat and tool-result narration with Qwen3 1.7B Q8_0 for tool selection:
+
+```kotlin
+dependencies {
+    implementation("org.modeljars.composite:qwen3-chat-tools:$modeljarsVersion")
+}
+```
+
+That coordinate brings the ModelJars runtime and both exact model markers. The weights are still
+downloaded from their immutable, checksum-pinned sources on first use:
 
 ```java
 import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
-import com.integrallis.models.runtime.chat.VirtualChatModel;
 import java.util.List;
-import java.util.Set;
-import org.modeljars.ModelJars;
+import org.modeljars.composite.qwen3.Qwen3ChatTools;
 
 var options = SamplingOptions.builder().temperature(0).maxTokens(64).build();
 
-try (var chat = ModelJars.openRuntime(org.modeljars.catalog.Qwen3_0_6b_Q4_0.MODEL);
-     var tools = ModelJars.openRuntime(org.modeljars.catalog.Qwen3_1_7b_Q8_0.MODEL)) {
-    var virtual = VirtualChatModel.builder()
-        .member("chat", Set.of("chat"), chat.chatTemplate(), chat::openGenerationSession)
-        .member("tools", Set.of("tool-use"), tools.chatTemplate(), tools::openGenerationSession)
-        .build();
-
-    try (var conversation = virtual.openSession(
+try (var hybrid = Qwen3ChatTools.open();
+     var conversation = hybrid.openSession(
             List.of(ChatMessage.system("Answer directly; use declared tools when needed.")))) {
-        var response = conversation.generate(
-            "chat", ChatMessage.user("Say hello."), List.of(), options);
-        System.out.println(response.content());
-    }
+    var response = conversation.generate(
+        ChatMessage.user("Say hello."), List.of(), options);
+    System.out.println(response.content());
 }
 ```
 
-`VirtualChatModel` retains one canonical message history while each member renders that history
-with its own template and owns its own exact prompt/KV cache. `VirtualChatRouter` in
-`com.integrallis:models-router` can select the capability automatically and records the physical
-model boundary, cache behavior, and measured runtime outcome.
+Turns without declared tools go to the chat member. Turns with tools go to the tool specialist, and
+structured tool results return to the chat member for narration. Explicit `chat` and `tool-use` task
+names remain available when an application wants to override that routing. The chat member receives
+prose history with structured tool results translated into ordinary messages; the stateless tool
+member receives only the current selection turn. Each member owns its own exact prompt/KV cache.
+Nothing copies KV between models.
+
+On the controlled eight-vCPU qualification host, every turn passed in three fresh processes per
+arm. The virtual model's 35.151-second median improved on the Qwen3 1.7B control's 53.166 seconds by
+33.88%. Median peak RSS increased 36.04% because both models remain resident. The artifact records
+that latency benefit and memory cost in `Qwen3ChatTools.QUALIFICATION`.
 
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,

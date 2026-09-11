@@ -40,6 +40,7 @@ import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import com.integrallis.models.runtime.chat.ChatTemplate;
+import com.integrallis.models.runtime.chat.VirtualChatModel;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -55,11 +56,13 @@ import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
 import org.modeljars.catalog.Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
+import org.modeljars.catalog.Qwen3_1_7b_Q8_0;
 import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
 import org.modeljars.catalog.Smollm2_360m_Instruct_Q8_0;
 
 class ModelJarsTest {
   private static final ModelJar QWEN = Qwen3_0_6b_Q4_0.MODEL;
+  private static final ModelJar QWEN_TOOLS = Qwen3_1_7b_Q8_0.MODEL;
   private static final ModelJar NEEDLE2 = Cactus_Compute_Needle2_Cact_Cq2_Mixed.MODEL;
   private static final ModelJar QWEN_EMBEDDING = Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0.MODEL;
   private static final ModelJar MINILM_RERANKER =
@@ -116,6 +119,69 @@ class ModelJarsTest {
     assertFalse(backend.closed());
     runtime.close();
     assertTrue(backend.closed());
+  }
+
+  @Test
+  void opensAndOwnsBothMembersOfAChatToolHybrid() {
+    var loadedBackends = new java.util.ArrayList<StubBackend>();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of(descriptor.alias() + ".gguf"),
+            (backend, path, configuration) -> {
+              var loaded = new StubBackend();
+              loadedBackends.add(loaded);
+              return loaded;
+            },
+            Map::of);
+
+    try (var hybrid =
+        loader.loadChatToolHybrid(
+            QWEN,
+            QWEN_TOOLS,
+            ModelLoadOptions.builder().backend(ModelBackend.JAVA).build(),
+            ModelLoadOptions.builder().backend(ModelBackend.JAVA).build(),
+            VirtualChatModel.ConstraintFactory.none())) {
+      assertEquals("qwen3_0_6b_q4_0", hybrid.chatRuntime().descriptor().alias());
+      assertEquals("qwen3_1_7b_q8_0", hybrid.toolRuntime().descriptor().alias());
+      assertEquals(2, loadedBackends.size());
+      assertTrue(loadedBackends.stream().noneMatch(StubBackend::closed));
+    }
+
+    assertTrue(loadedBackends.stream().allMatch(StubBackend::closed));
+  }
+
+  @Test
+  void closesTheChatMemberWhenTheToolMemberCannotOpen() {
+    var chatBackend = new StubBackend();
+    var loads = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of(descriptor.alias() + ".gguf"),
+            (backend, path, configuration) -> {
+              if (loads.getAndIncrement() == 0) {
+                return chatBackend;
+              }
+              throw new IllegalStateException("tool load failed");
+            },
+            Map::of);
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            loader.loadChatToolHybrid(
+                QWEN,
+                QWEN_TOOLS,
+                ModelLoadOptions.builder().backend(ModelBackend.JAVA).build(),
+                ModelLoadOptions.builder().backend(ModelBackend.JAVA).build(),
+                VirtualChatModel.ConstraintFactory.none()));
+
+    assertTrue(chatBackend.closed());
   }
 
   @Test

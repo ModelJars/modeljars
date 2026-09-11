@@ -315,12 +315,15 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
     index.match(/<section class="guide-band" id="using-modeljars"[\s\S]*?<\/section>/)?.[0];
 
   assert.ok(guide, "landing page must contain the Java guide");
-  assert.equal((guide.match(/<article>/g) ?? []).length, 3);
+  assert.equal((guide.match(/<article>/g) ?? []).length, 4);
   assert.equal(
     (guide.match(/<code class="language-(?:java|kotlin) hljs" data-lang="(?:java|kotlin)">/g) ?? [])
       .length,
-    3,
+    5,
   );
+  assert.match(guide, /org\.modeljars\.composite:qwen3-chat-tools:0\.1\.38/);
+  assert.match(guide, /reduced median end-to-end latency by 33\.88%/);
+  assert.match(guide, /36\.04% higher median peak memory/);
   assert.match(index, /<script src="\/assets\/highlight\.js"><\/script>/);
   assert.match(
     styles,

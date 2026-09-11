@@ -33,6 +33,7 @@ import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
 import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.InferencePipeline;
+import com.integrallis.models.runtime.chat.VirtualChatModel;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
@@ -295,6 +296,44 @@ public final class ModelJars {
   }
 
   /**
+   * Opens a virtual model with one qualified chat member and one qualified tool member.
+   *
+   * <p>The chat member receives prose history with structured tool results represented as user
+   * messages. The stateless tool member receives only the current tool-selection turn. Each member
+   * retains its own exact prompt and KV state; no cache tensor crosses the model boundary.
+   *
+   * @param chatModel qualified chat model marker
+   * @param toolModel qualified tool-calling model marker
+   * @return lifecycle-owning virtual runtime
+   */
+  public static ModelJarVirtualRuntime openChatToolHybrid(ModelJar chatModel, ModelJar toolModel) {
+    ModelLoadOptions javaOptions = ModelLoadOptions.builder().backend(ModelBackend.JAVA).build();
+    return openChatToolHybrid(
+        chatModel, toolModel, javaOptions, javaOptions, VirtualChatModel.ConstraintFactory.none());
+  }
+
+  /**
+   * Opens a chat/tool virtual model with explicit member loading and tool-decoding policies.
+   *
+   * @param chatModel qualified chat model marker
+   * @param toolModel qualified tool-calling model marker
+   * @param chatOptions loading controls for the chat member
+   * @param toolOptions loading controls for the tool member
+   * @param toolConstraintFactory optional per-turn constrained-decoding policy for the tool member
+   * @return lifecycle-owning virtual runtime
+   */
+  public static ModelJarVirtualRuntime openChatToolHybrid(
+      ModelJar chatModel,
+      ModelJar toolModel,
+      ModelLoadOptions chatOptions,
+      ModelLoadOptions toolOptions,
+      VirtualChatModel.ConstraintFactory toolConstraintFactory) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader()
+        .loadChatToolHybrid(chatModel, toolModel, chatOptions, toolOptions, toolConstraintFactory);
+  }
+
+  /**
    * Opens an exact ModelJars marker coordinate using automatic loading controls.
    *
    * @param markerCoordinate complete marker coordinate
@@ -519,6 +558,71 @@ public final class ModelJars {
       ContinuousBatchingOptions continuousBatchingOptions) {
     Objects.requireNonNull(continuousBatchingOptions, "continuousBatchingOptions");
     return loadRuntimeConfigured(model, options, continuousBatchingOptions);
+  }
+
+  ModelJarVirtualRuntime loadChatToolHybrid(
+      ModelJar chatModel,
+      ModelJar toolModel,
+      ModelLoadOptions chatOptions,
+      ModelLoadOptions toolOptions,
+      VirtualChatModel.ConstraintFactory toolConstraintFactory) {
+    Objects.requireNonNull(chatModel, "chatModel");
+    Objects.requireNonNull(toolModel, "toolModel");
+    Objects.requireNonNull(chatOptions, "chatOptions");
+    Objects.requireNonNull(toolOptions, "toolOptions");
+    Objects.requireNonNull(toolConstraintFactory, "toolConstraintFactory");
+
+    ModelJarRuntime chatRuntime = loadRuntime(chatModel, chatOptions);
+    ModelJarRuntime toolRuntime = null;
+    try {
+      toolRuntime = loadRuntime(toolModel, toolOptions);
+      VirtualChatModel virtualModel =
+          VirtualChatModel.builder()
+              .selector(
+                  turn -> {
+                    if (!turn.taskType().isBlank()) {
+                      return VirtualChatModel.Selector.byCapability().select(turn);
+                    }
+                    if (turn.input().role() == com.integrallis.models.runtime.chat.ChatRole.TOOL) {
+                      return new VirtualChatModel.Selection(
+                          "chat", "tool result narration", "chat");
+                    }
+                    if (!turn.tools().isEmpty()) {
+                      return new VirtualChatModel.Selection(
+                          "tools", "declared tools available", "tool-use");
+                    }
+                    return new VirtualChatModel.Selection("chat", "ordinary conversation", "chat");
+                  })
+              .member(
+                  "chat",
+                  java.util.Set.of("chat"),
+                  chatRuntime.chatTemplate(),
+                  chatRuntime::openGenerationSession,
+                  VirtualChatModel.ContextProjection.toolResultsAsUser())
+              .member(
+                  "tools",
+                  java.util.Set.of("tool-use"),
+                  toolRuntime.chatTemplate(),
+                  toolRuntime::openGenerationSession,
+                  toolConstraintFactory,
+                  VirtualChatModel.ContextProjection.currentTurn())
+              .build();
+      return new ModelJarVirtualRuntime(chatRuntime, toolRuntime, virtualModel);
+    } catch (RuntimeException | Error failure) {
+      if (toolRuntime != null) {
+        try {
+          toolRuntime.close();
+        } catch (RuntimeException | Error closeFailure) {
+          failure.addSuppressed(closeFailure);
+        }
+      }
+      try {
+        chatRuntime.close();
+      } catch (RuntimeException | Error closeFailure) {
+        failure.addSuppressed(closeFailure);
+      }
+      throw failure;
+    }
   }
 
   private ModelJarRuntime loadRuntimeConfigured(

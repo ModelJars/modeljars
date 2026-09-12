@@ -18,6 +18,7 @@
         (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <script src="/assets/app.js" type="module"></script>
+    <script src="/assets/github-stars.js" type="module"></script>
     <script src="/assets/install-drawer.js" type="module"></script>
     <script src="/assets/video-drawer.js" type="module"></script>
   </head>
@@ -71,7 +72,9 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Star ModelJars on GitHub">
-                <span aria-hidden="true">&#9733;</span> Star on GitHub
+                <span class="github-star-icon" aria-hidden="true">&#9733;</span>
+                <span>Star on GitHub</span>
+                <span id="github-star-count" class="github-star-count" hidden></span>
               </a>
             </div>
           </div>

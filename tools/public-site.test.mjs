@@ -215,6 +215,8 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     /href="https:\/\/github\.com\/ModelJars\/modeljars"[^>]+class="github-star-button"/,
   );
   assert.match(index, /Star ModelJars on GitHub/);
+  assert.match(index, /id="github-star-count"/);
+  assert.match(index, /src="\/assets\/github-stars\.js" type="module"/);
   assert.ok(
     index.indexOf('class="discovery"') < index.indexOf('id="catalog-results"'),
     "catalog search must lead directly into the dynamic result set",

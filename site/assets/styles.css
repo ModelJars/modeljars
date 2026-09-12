@@ -347,10 +347,23 @@ pre {
   text-decoration: none;
 }
 
-.github-star-button span {
+.github-star-icon {
   color: #d29922;
   font-size: 1rem;
   line-height: 1;
+}
+
+.github-star-count {
+  min-width: 2ch;
+  border-left: 1px solid var(--line-strong);
+  margin-left: 2px;
+  padding-left: 9px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.github-star-button[aria-busy="true"] .github-star-count {
+  opacity: 0.65;
 }
 
 .github-star-button:hover {

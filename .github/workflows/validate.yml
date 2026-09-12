@@ -87,6 +87,9 @@ jobs:
       - name: Test catalog tooling and site modules
         run: npm test
 
+      - name: Verify qualified composition evidence
+        run: npm run catalog:verify-compositions
+
       - name: Validate build
         run: >
           ./gradlew --no-daemon

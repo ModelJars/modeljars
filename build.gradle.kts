@@ -1209,6 +1209,8 @@ val catalogCompositions =
                 raw = raw,
             )
         }
+val qwenChatToolsQualified =
+    catalogCompositions.any { it.id == "qwen3_chat_tools_composite" }
 
 val performanceDocument =
     JsonSlurper()
@@ -3475,7 +3477,11 @@ project(":modeljars") {
 
 project(":modeljars-composite-qwen3-chat-tools") {
     group = "org.modeljars.composite"
-    description = "Qualified Qwen3 chat and tool-selection virtual model"
+    description = "Experimental Qwen3 chat and tool-selection routing recipe"
+
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        onlyIf { qwenChatToolsQualified }
+    }
 
     publishing {
         publications.named<MavenPublication>("maven") {
@@ -3688,8 +3694,13 @@ val publishGitHubPackagesPreview =
             ":modeljars-catalog:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars-cli:publishMavenPublicationToGitHubPackagesRepository",
             ":modeljars:publishMavenPublicationToGitHubPackagesRepository",
-            ":modeljars-composite-qwen3-chat-tools:publishMavenPublicationToGitHubPackagesRepository",
         )
+        if (qwenChatToolsQualified) {
+            dependsOn(
+                ":modeljars-composite-qwen3-chat-tools:" +
+                    "publishMavenPublicationToGitHubPackagesRepository",
+            )
+        }
     }
 
 val markerJarTasks = mutableListOf<TaskProvider<Jar>>()
@@ -4985,8 +4996,15 @@ val releasePublicationTasks =
         ":modeljars-catalog:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars-cli:publishMavenPublicationToReleaseBundleRepository",
         ":modeljars:publishMavenPublicationToReleaseBundleRepository",
-        ":modeljars-composite-qwen3-chat-tools:publishMavenPublicationToReleaseBundleRepository",
-    )
+    ) +
+        if (qwenChatToolsQualified) {
+            listOf(
+                ":modeljars-composite-qwen3-chat-tools:" +
+                    "publishMavenPublicationToReleaseBundleRepository",
+            )
+        } else {
+            emptyList()
+        }
 val modeljarsMarkerIds =
     providers
         .gradleProperty("modeljarsMarkerIds")

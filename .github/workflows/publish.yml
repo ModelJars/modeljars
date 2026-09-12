@@ -116,6 +116,9 @@ jobs:
       - name: Install catalog tooling
         run: npm ci
 
+      - name: Verify qualified composition evidence
+        run: npm run catalog:verify-compositions
+
       - name: Verify exact GGUF dimensions
         run: npm run catalog:enrich -- --concurrency=6
 
@@ -176,7 +179,6 @@ jobs:
           :modeljars-core:assemble
           :modeljars-catalog:assemble
           :modeljars-cli:assemble
-          :modeljars-composite-qwen3-chat-tools:assemble
           "-PmodeljarsVersion=${{ steps.version.outputs.value }}"
 
       - name: Attest preview JARs
@@ -187,7 +189,6 @@ jobs:
             modeljars-core/build/libs/*.jar
             modeljars-catalog/build/libs/*.jar
             modeljars-cli/build/libs/*.jar
-            modeljars-composite-qwen3-chat-tools/build/libs/*.jar
 
       - name: Retain preview JARs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -200,7 +201,6 @@ jobs:
             modeljars-core/build/libs/*.jar
             modeljars-catalog/build/libs/*.jar
             modeljars-cli/build/libs/*.jar
-            modeljars-composite-qwen3-chat-tools/build/libs/*.jar
 
       - name: Publish aggregate preview
         env:
@@ -227,7 +227,6 @@ jobs:
             echo "### ModelJars invited preview"
             echo
             echo "\`org.modeljars:modeljars:${{ steps.version.outputs.value }}\`"
-            echo "\`org.modeljars.composite:qwen3-chat-tools:${{ steps.version.outputs.value }}\`"
             echo
             echo "Repository: \`https://maven.pkg.github.com/modeljars/modeljars\`"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -253,6 +252,18 @@ jobs:
           distribution: temurin
           java-version: 25
           cache: gradle
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install catalog tooling
+        run: npm ci
+
+      - name: Verify qualified composition evidence
+        run: npm run catalog:verify-compositions
 
       - name: Verify release credentials
         env:

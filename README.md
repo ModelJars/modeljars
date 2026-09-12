@@ -119,9 +119,10 @@ family and adds only the semantic details needed to remain unambiguous, such as 
 loaded, so newly published models receive names without a CLI release or local configuration. A
 name can become more specific when a new model would otherwise collide; the full catalog ID and
 marker coordinate remain stable selectors. `modeljars alias list` shows the complete mapping.
-Qualified virtual models appear in the same search results with `hybrid` architecture and
-`composite` format. Pulling one verifies each of its independently qualified member artifacts in
-the shared cache; it does not create a duplicate synthetic weight file.
+When a virtual model clears the complete composition gates, it will appear in the same search
+results with `hybrid` architecture and `composite` format. Pulling it will verify each member
+artifact in the shared cache rather than create a duplicate synthetic weight file. No virtual model
+is currently published in the qualified catalog.
 
 Tab completion includes generated short names, full catalog IDs, and optional user-defined aliases
 for every model-taking command. Create a persistent custom alias with
@@ -377,46 +378,12 @@ batching is a separate explicit option: unsupported backends reject it, and supp
 still regress or use more memory on a particular deployment. After qualification, add
 `batchPrefillAcrossSessions(true)` to the builder.
 
-The first qualified virtual model is available as one dependency. It combines Qwen3 0.6B Q4_0 for
-chat and tool-result narration with Qwen3 1.7B Q8_0 for tool selection:
-
-```kotlin
-dependencies {
-    implementation("org.modeljars.composite:qwen3-chat-tools:$modeljarsVersion")
-}
-```
-
-That coordinate brings the ModelJars runtime and both exact model markers. The weights are still
-downloaded from their immutable, checksum-pinned sources on first use:
-
-```java
-import com.integrallis.models.api.SamplingOptions;
-import com.integrallis.models.runtime.chat.ChatMessage;
-import java.util.List;
-import org.modeljars.composite.qwen3.Qwen3ChatTools;
-
-var options = SamplingOptions.builder().temperature(0).maxTokens(64).build();
-
-try (var hybrid = Qwen3ChatTools.open();
-     var conversation = hybrid.openSession(
-            List.of(ChatMessage.system("Answer directly; use declared tools when needed.")))) {
-    var response = conversation.generate(
-        ChatMessage.user("Say hello."), List.of(), options);
-    System.out.println(response.content());
-}
-```
-
-Turns without declared tools go to the chat member. Turns with tools go to the tool specialist, and
-structured tool results return to the chat member for narration. Explicit `chat` and `tool-use` task
-names remain available when an application wants to override that routing. The chat member receives
-prose history with structured tool results translated into ordinary messages; the stateless tool
-member receives only the current selection turn. Each member owns its own exact prompt/KV cache.
-Nothing copies KV between models.
-
-On the controlled eight-vCPU qualification host, every turn passed in three fresh processes per
-arm. The virtual model's 35.151-second median improved on the Qwen3 1.7B control's 53.166 seconds by
-33.88%. Median peak RSS increased 36.04% because both models remain resident. The artifact records
-that latency benefit and memory cost in `Qwen3ChatTools.QUALIFICATION`.
+Cross-model composition remains research, not a public capability. A Qwen3 0.6B/1.7B routing
+recipe improved one six-turn workload, but each model retained an independent cache and the
+original evidence URL was not immutable at the referenced commit. The entry was withdrawn rather
+than treating prompt routing as shared model state. A future composition must pass immutable
+evidence checks, exact long-context retrieval, task correctness, and a measured end-to-end
+crossover with the complete cache handoff cost included.
 
 `ModelJars.openRuntime` resolves the exact qualified descriptor, selects its qualified Models backend
 and chat template,

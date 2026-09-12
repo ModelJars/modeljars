@@ -24,6 +24,28 @@ function requireDocument(value) {
   }
 }
 
+function physicalModels(value) {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    value.schemaVersion !== 2 ||
+    !Array.isArray(value.models)
+  ) {
+    throw new Error("Physical models must use schemaVersion 2 and contain models");
+  }
+  const byId = new Map();
+  for (const model of value.models) {
+    if (typeof model.id !== "string" || byId.has(model.id)) {
+      throw new Error("Physical model ids must be nonempty and unique");
+    }
+    if (typeof model.markerCoordinate !== "string" || !SHA256.test(model.sha256 ?? "")) {
+      throw new Error(`${model.id} physical model identity is incomplete`);
+    }
+    byId.set(model.id, model);
+  }
+  return byId;
+}
+
 function requireCompleteEvidence(composition, qualification) {
   const label = `${composition.id}.compositionQualifications`;
   if (!Array.isArray(qualification.unresolvedRequiredWork)) {
@@ -59,7 +81,7 @@ function metricsMatch(qualification, report) {
   );
 }
 
-function requireProductionEvidence(composition, report) {
+function requireProductionEvidence(composition, report, modelsById) {
   if (report.schemaVersion !== 2) {
     throw new Error(`${composition.id} evidence report must use schemaVersion 2`);
   }
@@ -85,6 +107,10 @@ function requireProductionEvidence(composition, report) {
   if (!Array.isArray(artifacts) || artifacts.length !== composition.members?.length) {
     throw new Error(`${composition.id} must verify every published member artifact`);
   }
+  const expectedMembers = new Set(composition.members.map((member) => member.modelId));
+  if (expectedMembers.size !== composition.members.length) {
+    throw new Error(`${composition.id} member model ids must be unique`);
+  }
   const coordinates = new Set();
   for (const artifact of artifacts) {
     if (
@@ -99,9 +125,20 @@ function requireProductionEvidence(composition, report) {
         `${composition.id} published artifacts must be resolved from Central and run through the public API`,
       );
     }
+    const physical = modelsById.get(artifact.modelId);
+    if (
+      !expectedMembers.delete(artifact.modelId) ||
+      physical === undefined ||
+      artifact.coordinate !== physical.markerCoordinate ||
+      artifact.sha256 !== physical.sha256
+    ) {
+      throw new Error(
+        `${composition.id} member artifacts must match the physical model catalog`,
+      );
+    }
     coordinates.add(artifact.coordinate);
   }
-  if (coordinates.size !== artifacts.length) {
+  if (coordinates.size !== artifacts.length || expectedMembers.size !== 0) {
     throw new Error(`${composition.id} published artifact coordinates must be unique`);
   }
 
@@ -134,8 +171,9 @@ function requireProductionEvidence(composition, report) {
   }
 }
 
-export async function validateCompositionEvidence({ compositions, loadReport }) {
+export async function validateCompositionEvidence({ compositions, models, loadReport }) {
   requireDocument(compositions);
+  const modelsById = physicalModels(models);
   if (typeof loadReport !== "function") {
     throw new Error("A report loader is required; qualified composite evidence must be verified");
   }
@@ -158,7 +196,7 @@ export async function validateCompositionEvidence({ compositions, loadReport }) 
       if (report.evaluation?.qualified !== true || report.evaluation?.correctnessPassed !== true) {
         throw new Error(`${composition.id} evidence report must pass correctness and qualification`);
       }
-      requireProductionEvidence(composition, report);
+      requireProductionEvidence(composition, report, modelsById);
       if (!metricsMatch(qualification, report)) {
         throw new Error(`${composition.id} catalog metrics do not match its evidence report`);
       }
@@ -171,16 +209,23 @@ export async function validateCompositionEvidence({ compositions, loadReport }) 
 }
 
 function parseArguments(args) {
-  if (args.length !== 2 || args[0] !== "--compositions") {
-    throw new Error("Usage: composition-evidence-gate.mjs --compositions FILE");
+  if (
+    args.length !== 4 ||
+    args[0] !== "--compositions" ||
+    args[2] !== "--models"
+  ) {
+    throw new Error(
+      "Usage: composition-evidence-gate.mjs --compositions FILE --models FILE",
+    );
   }
-  return args[1];
+  return { compositions: args[1], models: args[3] };
 }
 
 async function main() {
-  const path = parseArguments(process.argv.slice(2));
+  const paths = parseArguments(process.argv.slice(2));
   const checked = await validateCompositionEvidence({
-    compositions: JSON.parse(await readFile(path, "utf8")),
+    compositions: JSON.parse(await readFile(paths.compositions, "utf8")),
+    models: JSON.parse(await readFile(paths.models, "utf8")),
     loadReport: async ({ qualification }) => {
       const response = await fetch(qualification.reportUri);
       if (!response.ok) {

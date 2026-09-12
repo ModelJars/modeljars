@@ -115,7 +115,7 @@ export async function smokeGeneratedSite(siteRoot) {
     if (entries !== catalog.length) {
       throw new Error(`rendered ${entries} catalog entries; expected ${catalog.length}`);
     }
-    const label = `${catalog.length} qualified artifact${catalog.length === 1 ? "" : "s"}`;
+    const label = `${catalog.length} qualified entr${catalog.length === 1 ? "y" : "ies"}`;
     if (!html.includes(label)) throw new Error(`rendered catalog is missing result label: ${label}`);
     console.log(`Rendered-site gate passed with ${entries} qualified catalog entries`);
   } finally {

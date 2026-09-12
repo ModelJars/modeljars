@@ -74,10 +74,23 @@ export function qualificationMetrics(qualification) {
           : null,
       );
       break;
+    case "HYBRID_COMPOSITION":
+      add(
+        "latency saved",
+        finite(qualification.latencyImprovement)
+          ? percent(qualification.latencyImprovement)
+          : null,
+      );
+      add(
+        "turns passed",
+        Number.isSafeInteger(qualification.passed) && Number.isSafeInteger(qualification.attempts)
+          ? `${qualification.passed}/${qualification.attempts}`
+          : null,
+      );
+      break;
     default:
       break;
   }
 
   return metrics;
 }
-

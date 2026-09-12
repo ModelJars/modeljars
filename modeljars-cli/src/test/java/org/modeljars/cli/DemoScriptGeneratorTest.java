@@ -30,7 +30,7 @@ import org.modeljars.ModelVersion;
 
 class DemoScriptGeneratorTest {
 
-  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.38");
+  private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.39");
 
   @Test
   void generatesAChatDemoUsingThePublicRuntimeAndRuntimeOwnedMetrics() {
@@ -41,7 +41,7 @@ class DemoScriptGeneratorTest {
     assertEquals("example-chat-demo.java", demo.fileName());
     assertContains(
         demo.source(),
-        "//DEPS org.modeljars:modeljars:0.1.38",
+        "//DEPS org.modeljars:modeljars:0.1.39",
         "//DEPS " + descriptor(Set.of()).markerCoordinate(),
         "ModelJars.openRuntime(MODEL)",
         "runtime.chatTemplate().render",
@@ -127,6 +127,48 @@ class DemoScriptGeneratorTest {
         "speech.wav",
         "Audio:",
         "RTF:");
+  }
+
+  @Test
+  void generatesAQualifiedHybridDemoThroughItsCompositionEntrypoint() {
+    ModelJarDescriptor source = descriptor(Set.of("chat", "text-generation", "tool-calling"));
+    ModelJarDescriptor hybrid =
+        new ModelJarDescriptor(
+            "qwen3_chat_tools_composite",
+            "modeljars://qwen3-chat-tools",
+            ModelJarCoordinate.parse("org.modeljars.composite:qwen3-chat-tools:0.1.38"),
+            ModelVersion.parse("0.1.38"),
+            "chat-tools",
+            "composite",
+            "hybrid",
+            "MIXED",
+            source.localPath(),
+            source.classpathResource(),
+            source.sourceUri(),
+            Optional.empty(),
+            source.revision(),
+            source.sha256(),
+            source.sizeBytes(),
+            source.license(),
+            source.capabilities(),
+            Set.of("virtual-model"),
+            source.files(),
+            source.backendSupport(),
+            Optional.of("Qwen3 chat + tools hybrid"),
+            source.description(),
+            source.licenseUri(),
+            source.domains(),
+            source.dimensions());
+
+    DemoScriptGenerator.GeneratedDemo demo = generator.generate(hybrid, Optional.empty());
+
+    assertEquals(DemoScriptGenerator.Type.COMPOSITE, demo.type());
+    assertContains(
+        demo.source(),
+        "//DEPS org.modeljars.composite:qwen3-chat-tools:0.1.38",
+        "Qwen3ChatTools.open()",
+        "hybrid.openSession()",
+        "conversation.generate(");
   }
 
   private static void assertContains(String source, String... fragments) {

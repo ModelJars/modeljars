@@ -192,8 +192,11 @@ export function primaryQualification(model) {
   const speech = Array.isArray(model?.speechQualifications)
     ? model.speechQualifications
     : [];
+  const composition = Array.isArray(model?.compositionQualifications)
+    ? model.compositionQualifications
+    : [];
   // Prefer workload evidence over equivalence evidence when an artifact carries both.
-  const entries = [...rag, ...tool, ...reranking, ...speech, ...embedding];
+  const entries = [...composition, ...rag, ...tool, ...reranking, ...speech, ...embedding];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
@@ -204,6 +207,7 @@ export function qualificationLabel(qualification) {
   if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";
   if (qualification.useCaseTier === "SECOND_STAGE_RERANKING") return "Second-stage reranking";
   if (qualification.useCaseTier === "TEXT_TO_SPEECH") return "Text-to-speech";
+  if (qualification.useCaseTier === "HYBRID_COMPOSITION") return "Qualified hybrid";
   return "Guarded RAG";
 }
 

@@ -46,6 +46,7 @@ function escapeHtml(value) {
 }
 
 function publisher(model) {
+  if (model.kind === "hybrid") return "ModelJars";
   return String(model.sourceId || "")
     .replace(/^hf:\/\//, "")
     .split("/")[0];
@@ -73,6 +74,7 @@ function renderEntry(model) {
   const qualification = primaryQualification(model);
   const modelsBackend = qualification?.backend;
   const evidenceMetrics = qualificationMetrics(qualification);
+  const downloadBytes = model.kind === "hybrid" ? model.requiredWeightBytes : model.sizeBytes;
 
   return `
     <article class="catalog-entry">
@@ -93,7 +95,7 @@ function renderEntry(model) {
       <div class="entry-facts" aria-label="Model properties">
         ${evidenceMetrics.map(({ label, value }) => metric(label, value)).join("")}
         ${metric("parameters", formatParameters(dimensions.parameterCount))}
-        ${metric("download", formatBytes(model.sizeBytes))}
+        ${metric(model.kind === "hybrid" ? "member weights" : "download", formatBytes(downloadBytes))}
         ${metric("", context)}
         ${metric("", model.quantization)}
       </div>
@@ -146,7 +148,7 @@ function render() {
   elements.results.innerHTML = filtered.map(renderEntry).join("");
   elements.results.setAttribute("aria-busy", "false");
   elements.resultCount.textContent =
-    `${numberFormat.format(filtered.length)} qualified artifact${filtered.length === 1 ? "" : "s"}`;
+    `${numberFormat.format(filtered.length)} qualified entr${filtered.length === 1 ? "y" : "ies"}`;
   elements.emptyState.hidden = filtered.length > 0;
 
   const count = activeFilterCount();
@@ -264,7 +266,12 @@ async function loadCatalog() {
     populateSelect(elements.architecture, facets.architectures);
     populateSelect(elements.size, facets.sizes, (value) => value.replace("-", " "));
 
-    document.querySelector("#model-total").textContent = numberFormat.format(catalog.length);
+    document.querySelector("#model-total").textContent = numberFormat.format(
+      catalog.filter((model) => model.kind !== "hybrid").length,
+    );
+    document.querySelector("#hybrid-total").textContent = numberFormat.format(
+      catalog.filter((model) => model.kind === "hybrid").length,
+    );
     document.querySelector("#identity-total").textContent = numberFormat.format(
       new Set(catalog.map((model) => model.sourceId)).size,
     );

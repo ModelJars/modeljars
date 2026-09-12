@@ -119,6 +119,9 @@ family and adds only the semantic details needed to remain unambiguous, such as 
 loaded, so newly published models receive names without a CLI release or local configuration. A
 name can become more specific when a new model would otherwise collide; the full catalog ID and
 marker coordinate remain stable selectors. `modeljars alias list` shows the complete mapping.
+Qualified virtual models appear in the same search results with `hybrid` architecture and
+`composite` format. Pulling one verifies each of its independently qualified member artifacts in
+the shared cache; it does not create a duplicate synthetic weight file.
 
 Tab completion includes generated short names, full catalog IDs, and optional user-defined aliases
 for every model-taking command. Create a persistent custom alias with

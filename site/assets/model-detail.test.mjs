@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   artifactDownloadBytes,
   artifactManifest,
+  compositionJavaSnippet,
   embeddingJavaSnippet,
   gradleSnippet,
   javaSnippet,
@@ -26,7 +27,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   assert.equal(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.38")\n' +
+    'implementation("org.modeljars:modeljars:0.1.39")\n' +
       'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
@@ -77,6 +78,14 @@ test("renders qualified speech loading and WAV output without exposing paths", (
   assert.match(snippet, /model\.synthesize/);
   assert.match(snippet, /WavEncoder\.pcm16/);
   assert.doesNotMatch(snippet, /modelPath|PureJavaBackend/);
+});
+
+test("renders a composition through its purpose-built public entry point", () => {
+  const snippet = compositionJavaSnippet();
+
+  assert.match(snippet, /Qwen3ChatTools\.open\(\)/);
+  assert.match(snippet, /hybrid\.openSession\(\)/);
+  assert.doesNotMatch(snippet, /org\.modeljars\.catalog/);
 });
 
 test("describes the complete artifact manifest rather than only the primary weight", () => {

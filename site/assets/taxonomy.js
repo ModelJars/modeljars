@@ -125,6 +125,19 @@ function hasCompleteMetadata(model) {
 }
 
 export function verificationProfile(model) {
+  if (model.kind === "hybrid") {
+    const qualification = primaryQualification(model);
+    const members = Array.isArray(model.members) ? model.members : [];
+    const checks = [];
+    if (members.length >= 2) checks.push("Qualified members");
+    if (qualification?.qualified) checks.push("Controlled composition");
+    if (model.backends?.["pure-java"] === true) checks.push("Pure Java executed");
+    return {
+      level: checks.length === 3 ? "qualified" : "cataloged",
+      label: checks.length === 3 ? "Qualified hybrid" : "Cataloged",
+      checks,
+    };
+  }
   const checks = [];
   const pinnedArtifact = Boolean(model.sha256 && model.revision);
   const completeMetadata = hasCompleteMetadata(model);

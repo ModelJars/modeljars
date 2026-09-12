@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "compositions": [
+    {
+      "id": "qwen3_chat_tools_composite",
+      "kind": "hybrid",
+      "name": "Qwen3 chat + tools hybrid",
+      "description": "A qualified virtual model that routes ordinary chat and tool-result narration to Qwen3 0.6B, and tool selection to Qwen3 1.7B.",
+      "sourceId": "modeljars://qwen3-chat-tools",
+      "sourceUri": "https://github.com/ModelJars/modeljars/tree/d977e330b959fb7a2d2f11b02f5bec3c7ead2fc6/modeljars-composite-qwen3-chat-tools",
+      "downloadUri": "https://repo1.maven.org/maven2/org/modeljars/composite/qwen3-chat-tools/0.1.38/qwen3-chat-tools-0.1.38.jar",
+      "revision": "d977e330b959fb7a2d2f11b02f5bec3c7ead2fc6",
+      "markerCoordinate": "org.modeljars.composite:qwen3-chat-tools:0.1.38",
+      "modelVersion": "0.1.38",
+      "variant": "chat-tools",
+      "format": "composite",
+      "architecture": "hybrid",
+      "quantization": "MIXED",
+      "sha256": "0c3051656811d6a28c0d57a4ae10054c8a5fb40f636e9564da2bad185af0686c",
+      "sizeBytes": 3184,
+      "compositionSha256": "22f6b30cb2b90d1e50a4b4e79c3c6b70637c84a09fdf7ce76b90c64f96e60d69",
+      "requiredWeightBytes": 2263396096,
+      "license": "Apache-2.0",
+      "licenseUri": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "catalogPublishedAt": "2026-09-11T22:04:33Z",
+      "domains": [
+        "general",
+        "tool-use"
+      ],
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ],
+      "features": [
+        "virtual-model",
+        "capability-routing",
+        "context-projection",
+        "independent-kv-cache"
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "dimensions": {
+        "parameterCount": 2472207360,
+        "contextLength": 40960
+      },
+      "members": [
+        {
+          "role": "chat",
+          "modelId": "qwen3_0_6b_q4_0"
+        },
+        {
+          "role": "tools",
+          "modelId": "qwen3_1_7b_q8_0"
+        }
+      ],
+      "compositionQualifications": [
+        {
+          "qualified": true,
+          "useCaseTier": "HYBRID_COMPOSITION",
+          "backend": "pure-java",
+          "backendVersion": "models-0.3.37",
+          "workload": "qwen3-chat-tools-six-turn-v1",
+          "attempts": 36,
+          "passed": 36,
+          "controlMedianMillis": 53166,
+          "compositeMedianMillis": 35151,
+          "latencyImprovement": 0.3388443742241282,
+          "controlPeakRssBytes": 2461728768,
+          "compositePeakRssBytes": 3348934656,
+          "memoryIncrease": 0.3604,
+          "reportUri": "https://github.com/integrallis/models/blob/e4d130dd8c5986e6cef6d7ff5cb7d3533a5ceb6b/benchmark-results/2026-09-11-projected-qwen-hybrid/comparison.json",
+          "reportSha256": "048ee6ae7338f658eb1f72fbe283e72359d6123811f447c55054e50ddd2e0811"
+        }
+      ]
+    }
+  ]
+}

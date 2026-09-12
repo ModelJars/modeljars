@@ -6,6 +6,6 @@
     "test": "node --test site/assets/*.test.mjs tools/*.test.mjs",
     "catalog:enrich": "node tools/enrich-catalog.mjs",
     "catalog:inspect": "node tools/inspect-gguf.mjs",
-    "catalog:verify-compositions": "node tools/composition-evidence-gate.mjs --compositions catalog/compositions.json"
+    "catalog:verify-compositions": "node tools/composition-evidence-gate.mjs --compositions catalog/compositions.json --models catalog/models.json"
   }
 }

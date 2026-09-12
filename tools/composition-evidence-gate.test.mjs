@@ -5,6 +5,21 @@ import test from "node:test";
 import { validateCompositionEvidence } from "./composition-evidence-gate.mjs";
 
 const revision = "a".repeat(40);
+const modelCatalog = {
+  schemaVersion: 2,
+  models: [
+    {
+      id: "source",
+      markerCoordinate: "org.modeljars.huggingface:source:1.0.0",
+      sha256: "b".repeat(64),
+    },
+    {
+      id: "target",
+      markerCoordinate: "org.modeljars.huggingface:target:1.0.0",
+      sha256: "c".repeat(64),
+    },
+  ],
+};
 
 function report(overrides = {}) {
   return {
@@ -24,12 +39,14 @@ function report(overrides = {}) {
       handoffCostIncluded: true,
       publishedArtifacts: [
         {
+          modelId: "source",
           coordinate: "org.modeljars.huggingface:source:1.0.0",
           sha256: "b".repeat(64),
           resolvedFromCentral: true,
           runViaPublicApi: true,
         },
         {
+          modelId: "target",
           coordinate: "org.modeljars.huggingface:target:1.0.0",
           sha256: "c".repeat(64),
           resolvedFromCentral: true,
@@ -84,6 +101,7 @@ test("accepts complete, immutable, reproducible composite evidence", async () =>
   const { bytes, document } = documentFor(report());
   const checked = await validateCompositionEvidence({
     compositions: document,
+    models: modelCatalog,
     loadReport: async () => bytes,
   });
   assert.deepEqual(checked, ["qwen3_chat_tools_composite"]);
@@ -94,7 +112,11 @@ test("rejects a qualified composition with unresolved required work", async () =
     unresolvedRequiredWork: ["Evaluate predictive cross-model KV transfer"],
   });
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /unresolved required work/,
   );
 });
@@ -105,7 +127,11 @@ test("rejects a mutable or human-facing evidence URL", async () => {
       "https://github.com/integrallis/models/blob/main/benchmark-results/qwen/comparison.json",
   });
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /immutable raw GitHub URL/,
   );
 });
@@ -115,6 +141,7 @@ test("rejects missing or changed evidence bytes", async () => {
   await assert.rejects(
     validateCompositionEvidence({
       compositions: document,
+      models: modelCatalog,
       loadReport: async () => Buffer.from("not the recorded report"),
     }),
     /SHA-256 does not match/,
@@ -124,7 +151,11 @@ test("rejects missing or changed evidence bytes", async () => {
 test("rejects catalog metrics that differ from the evidence report", async () => {
   const { bytes, document } = documentFor(report(), { compositeMedianMillis: 12_345 });
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /metrics do not match/,
   );
 });
@@ -139,7 +170,11 @@ test("rejects a report that did not pass correctness", async () => {
   });
   const { bytes, document } = documentFor(badReport);
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /must pass correctness/,
   );
 });
@@ -155,7 +190,11 @@ test("rejects semantic routing presented as state handoff", async () => {
   });
   const { bytes, document } = documentFor(badReport);
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /implemented cache-state handoff/,
   );
 });
@@ -177,7 +216,11 @@ test("rejects a report without exact long-context retention", async () => {
   });
   const { bytes, document } = documentFor(badReport);
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /longContextRetrieval gate must pass/,
   );
 });
@@ -198,7 +241,36 @@ test("rejects evidence that did not exercise Central artifacts through the publi
   });
   const { bytes, document } = documentFor(badReport);
   await assert.rejects(
-    validateCompositionEvidence({ compositions: document, loadReport: async () => bytes }),
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
     /published artifacts must be resolved from Central and run through the public API/,
+  );
+});
+
+test("rejects a member artifact that differs from the physical catalog", async () => {
+  const good = report();
+  const badReport = report({
+    evaluation: {
+      ...good.evaluation,
+      publishedArtifacts: [
+        {
+          ...good.evaluation.publishedArtifacts[0],
+          coordinate: "org.modeljars.huggingface:substitute:1.0.0",
+        },
+        good.evaluation.publishedArtifacts[1],
+      ],
+    },
+  });
+  const { bytes, document } = documentFor(badReport);
+  await assert.rejects(
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
+    /must match the physical model catalog/,
   );
 });

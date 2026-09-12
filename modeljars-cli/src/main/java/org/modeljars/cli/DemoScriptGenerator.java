@@ -33,6 +33,7 @@ final class DemoScriptGenerator {
 
   enum Type {
     CHAT,
+    COMPOSITE,
     EMBEDDING,
     RERANKING,
     SPEECH,
@@ -72,6 +73,7 @@ final class DemoScriptGenerator {
     String source =
         switch (type) {
           case CHAT -> chatSource(descriptor, input);
+          case COMPOSITE -> compositeSource(descriptor, input);
           case EMBEDDING -> embeddingSource(descriptor, input);
           case RERANKING -> rerankingSource(descriptor, input);
           case SPEECH -> speechSource(descriptor, input);
@@ -82,6 +84,10 @@ final class DemoScriptGenerator {
   }
 
   private static Type typeFor(ModelJarDescriptor descriptor) {
+    if (descriptor.format().equals("composite")
+        && descriptor.features().contains("virtual-model")) {
+      return Type.COMPOSITE;
+    }
     Set<String> capabilities = descriptor.capabilities();
     if (capabilities.contains("tool-calling") && descriptor.architecture().equals("needle2")) {
       return Type.TOOLS;
@@ -107,6 +113,7 @@ final class DemoScriptGenerator {
   private static String input(Type type) {
     return switch (type) {
       case CHAT -> "What is the capital of France? Reply with only the city name.";
+      case COMPOSITE -> "Name one JVM language.";
       case EMBEDDING -> "Public transit connects people and cities.";
       case RERANKING -> "How many people live in Berlin?";
       case SPEECH -> "The JVM can speak for itself.";
@@ -117,6 +124,7 @@ final class DemoScriptGenerator {
   private static String suffix(Type type) {
     return switch (type) {
       case CHAT -> "chat";
+      case COMPOSITE -> "hybrid";
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
       case SPEECH -> "speech";
@@ -139,12 +147,18 @@ final class DemoScriptGenerator {
             .append("//JAVA 25+\n")
             .append("//RUNTIME_OPTIONS --add-modules=jdk.incubator.vector\n")
             .append("//RUNTIME_OPTIONS --enable-native-access=ALL-UNNAMED\n")
-            .append("//DEPS org.modeljars:modeljars:")
-            .append(runtimeVersion)
-            .append('\n')
-            .append("//DEPS ")
-            .append(descriptor.markerCoordinate())
-            .append('\n');
+            .append("//DEPS ");
+    if (descriptor.format().equals("composite")) {
+      source.append(descriptor.markerCoordinate()).append('\n');
+    } else {
+      source
+          .append("org.modeljars:modeljars:")
+          .append(runtimeVersion)
+          .append('\n')
+          .append("//DEPS ")
+          .append(descriptor.markerCoordinate())
+          .append('\n');
+    }
     if (json) {
       source.append("//DEPS com.fasterxml.jackson.core:jackson-databind:2.22.2\n");
     }
@@ -203,6 +217,40 @@ final class DemoScriptGenerator {
         }
         """
             .formatted(descriptor.markerCoordinate(), javaString(defaultInput));
+  }
+
+  private String compositeSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import com.integrallis.models.api.SamplingOptions;
+        import com.integrallis.models.runtime.chat.ChatMessage;
+        import java.util.List;
+        import java.util.logging.Level;
+        import java.util.logging.Logger;
+        import org.modeljars.composite.qwen3.Qwen3ChatTools;
+
+        class ModelJarsDemo {
+          public static void main(String... args) {
+            quietLibraries();
+            var input = args.length == 0 ? "%s" : String.join(" ", args);
+            var options = SamplingOptions.builder().temperature(0).maxTokens(64).build();
+
+            System.out.println("Input:  " + input);
+            try (var hybrid = Qwen3ChatTools.open();
+                 var conversation = hybrid.openSession()) {
+              var answer = conversation.generate(ChatMessage.user(input), List.of(), options);
+              System.out.println("Route:  " + answer.taskType());
+              System.out.println("Output: " + answer.content());
+            }
+          }
+
+          private static void quietLibraries() {
+            Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+            Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+          }
+        }
+        """
+            .formatted(javaString(defaultInput));
   }
 
   private String embeddingSource(ModelJarDescriptor descriptor, String defaultInput) {

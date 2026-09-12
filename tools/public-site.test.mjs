@@ -118,6 +118,40 @@ test("publishes only artifacts that passed production qualification", async () =
   assert.match(build, /Speech-qualified model must advertise text-to-speech/);
 });
 
+test("publishes qualified hybrid compositions only when every member is qualified", async () => {
+  const [compositions, qualifications, embeddings, rerankers, tools, speech, build] =
+    await Promise.all([
+      read("catalog/compositions.json").then(JSON.parse),
+      read("catalog/qualifications.json").then(JSON.parse),
+      read("catalog/embedding-qualifications.json").then(JSON.parse),
+      read("catalog/reranking-qualifications.json").then(JSON.parse),
+      read("catalog/tool-qualifications.json").then(JSON.parse),
+      read("catalog/speech-qualifications.json").then(JSON.parse),
+      read("build.gradle.kts"),
+    ]);
+  const qualifiedIds = new Set(
+    [qualifications, embeddings, rerankers, tools, speech]
+      .flatMap((manifest) => manifest.entries)
+      .filter((entry) => entry.qualified ?? entry.summary?.qualified)
+      .map((entry) => entry.modelId),
+  );
+
+  assert.equal(compositions.schemaVersion, 1);
+  assert.ok(compositions.compositions.length > 0);
+  for (const composition of compositions.compositions) {
+    assert.equal(composition.kind, "hybrid");
+    assert.ok(
+      composition.compositionQualifications.some((entry) => entry.qualified),
+      `${composition.id} must carry qualification evidence`,
+    );
+    for (const member of composition.members) {
+      assert.ok(qualifiedIds.has(member.modelId), `${member.modelId} must be independently qualified`);
+    }
+  }
+  assert.match(build, /publicCatalogIds = publicModelIds \+ publicCompositionIds/);
+  assert.match(build, /requiredWeightBytes must equal its member artifacts/);
+});
+
 test("explains the product, evidence, and complete Java onboarding", async () => {
   const [index, model, benchmarks, apple, contribution, notFound, detailScript, readme, operations] =
     await Promise.all([
@@ -176,6 +210,11 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.doesNotMatch(index, /apple-runtime-notice|apple-runtime-band/);
   assert.match(index, /id="catalog-search"/);
   assert.match(index, /id="catalog-results"/);
+  assert.match(
+    index,
+    /href="https:\/\/github\.com\/ModelJars\/modeljars"[^>]+class="github-star-button"/,
+  );
+  assert.match(index, /Star ModelJars on GitHub/);
   assert.ok(
     index.indexOf('class="discovery"') < index.indexOf('id="catalog-results"'),
     "catalog search must lead directly into the dynamic result set",
@@ -192,7 +231,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.38/);
+  assert.match(index, /org\.modeljars:modeljars:0\.1\.39/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);

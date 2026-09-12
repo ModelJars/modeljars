@@ -96,6 +96,22 @@ try (var model = ModelJars.openSpeech(MODEL)) {
 }`;
 }
 
+export function compositionJavaSnippet() {
+  return `import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.runtime.chat.ChatMessage;
+import java.util.List;
+import org.modeljars.composite.qwen3.Qwen3ChatTools;
+
+var options = SamplingOptions.builder()
+    .temperature(0).maxTokens(128).build();
+
+try (var hybrid = Qwen3ChatTools.open();
+     var conversation = hybrid.openSession()) {
+  var answer = conversation.generate(
+      ChatMessage.user("Name one JVM language."), List.of(), options);
+}`;
+}
+
 function formatPercent(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
 }
@@ -124,8 +140,30 @@ export function isRerankingEvidence(qualification) {
   );
 }
 
+export function isCompositionEvidence(qualification) {
+  return qualification?.useCaseTier === "HYBRID_COMPOSITION";
+}
+
 export function qualificationSummary(qualification) {
   if (!qualification) return null;
+  if (isCompositionEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      attempts: qualification.attempts,
+      passed: qualification.passed,
+      control: formatDuration(qualification.controlMedianMillis),
+      composite: formatDuration(qualification.compositeMedianMillis),
+      improvement: formatPercent(qualification.latencyImprovement),
+      controlPeakRss: formatBytes(qualification.controlPeakRssBytes),
+      compositePeakRss: formatBytes(qualification.compositePeakRssBytes),
+      memoryIncrease: formatPercent(qualification.memoryIncrease),
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
+    };
+  }
   if (isSpeechEvidence(qualification)) {
     return {
       label: qualificationLabel(qualification),
@@ -296,6 +334,9 @@ function isGenerationModel(model) {
 }
 
 export function resourceMemoryNote(model) {
+  if (model.kind === "hybrid") {
+    return "The member weights remain independently mapped and each member keeps its own prompt and KV state. The measured peak-memory tradeoff is shown in the qualification evidence.";
+  }
   if (isGenerationModel(model)) {
     return "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
   }
@@ -350,6 +391,8 @@ function checkRows(profile) {
     ["Pinned artifact", "Revision and checksum identify immutable upstream bytes."],
     ["Complete metadata", "Runtime, architecture, dimensions, license, and location are declared."],
     ["Pure Java executed", "The catalog records successful execution through the pure-Java backend."],
+    ["Qualified members", "Every member is an independently qualified catalog artifact."],
+    ["Controlled composition", "The complete routing recipe passed a controlled comparison."],
   ]);
   return profile.checks
     .map(
@@ -507,9 +550,39 @@ function renderSpeechQualification(summary) {
     </section>`;
 }
 
+function renderCompositionQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel qualified" aria-labelledby="composition-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Composition evidence</p>
+          <h2 id="composition-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.passed))}/${escapeHtml(String(summary.attempts))} turns</span>
+      </div>
+      <p>
+        Three fresh control JVMs and three fresh hybrid JVMs ran the same six-turn chat and
+        tool-calling protocol through ${escapeHtml(summary.backend)}.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>Control median</dt><dd>${escapeHtml(summary.control)}</dd></div>
+        <div><dt>Hybrid median</dt><dd>${escapeHtml(summary.composite)}</dd></div>
+        <div><dt>Latency improvement</dt><dd>${escapeHtml(summary.improvement)}</dd></div>
+        <div><dt>Control peak RSS</dt><dd>${escapeHtml(summary.controlPeakRss)}</dd></div>
+        <div><dt>Hybrid peak RSS</dt><dd>${escapeHtml(summary.compositePeakRss)}</dd></div>
+        <div><dt>Memory increase</dt><dd>${escapeHtml(summary.memoryIncrease)}</dd></div>
+      </dl>
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw comparison JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
+  if (isCompositionEvidence(qualification)) return renderCompositionQualification(summary);
   if (isSpeechEvidence(qualification)) return renderSpeechQualification(summary);
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
@@ -556,6 +629,28 @@ function renderQualification(qualification) {
     </section>`;
 }
 
+function renderCompositionMembers(model, catalog) {
+  if (model.kind !== "hybrid") return "";
+  const byId = new Map(catalog.map((entry) => [entry.id, entry]));
+  return `
+    <section class="detail-section" aria-labelledby="members-title">
+      <p class="eyebrow">Specialists</p>
+      <h2 id="members-title">Composition members</h2>
+      <div class="related-list">
+        ${(model.members || [])
+          .map((member) => {
+            const entry = byId.get(member.modelId);
+            if (!entry) return "";
+            return `<a href="/models/${encodeURIComponent(entry.id)}/">
+              <span><strong>${escapeHtml(member.role)}</strong><small>${escapeHtml(entry.name)}</small></span>
+              <span>${escapeHtml(entry.quantization)} &#8594;</span>
+            </a>`;
+          })
+          .join("")}
+      </div>
+    </section>`;
+}
+
 function renderRelated(model, catalog) {
   const related = relatedModels(model, catalog, 4);
   if (!related.length) return "";
@@ -581,7 +676,9 @@ function renderModel(model, catalog) {
   const profile = verificationProfile(model);
   const planningContext = Math.min(4_096, model.dimensions?.contextLength || 4_096);
   const generationModel = isGenerationModel(model);
-  const downloadBytes = artifactDownloadBytes(model);
+  const downloadBytes = model.kind === "hybrid"
+    ? Number(model.requiredWeightBytes || 0)
+    : artifactDownloadBytes(model);
   const memory = generationModel
     ? estimateMemory(model, planningContext, 2)
     : { minimumBytes: downloadBytes };
@@ -634,15 +731,15 @@ function renderModel(model, catalog) {
 
         ${renderQualification(qualification)}
 
+        ${renderCompositionMembers(model, catalog)}
+
         <section class="detail-section" aria-labelledby="install-title">
           <p class="eyebrow">JVM dependency</p>
           <h2 id="install-title">Install this model</h2>
           <p>
-            Add the ModelJars JVM Runtime and this model to the application. The runtime brings
-            the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a>
-            and its execution backends. The model JAR provides the generated Java reference, pinned
-            model location, checksum, and qualification metadata; weights are downloaded to the
-            verified local cache when first opened.
+            ${model.kind === "hybrid"
+              ? `Add the qualified composition to the application. Its Maven dependency brings the ModelJars runtime and both exact member markers; member weights are downloaded and verified when first opened.`
+              : `Add the ModelJars JVM Runtime and this model to the application. The runtime brings the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a> and its execution backends. The model JAR provides the generated Java reference, pinned model location, checksum, and qualification metadata; weights are downloaded to the verified local cache when first opened.`}
           </p>
           ${copyBlock("Gradle", gradleSnippet(model.markerCoordinate), "language-kotlin")}
           ${copyBlock("Maven", mavenSnippet(model.markerCoordinate), "language-xml")}
@@ -652,13 +749,15 @@ function renderModel(model, catalog) {
           <p class="eyebrow">In-process inference</p>
           <h2 id="run-title">Open and run the model</h2>
           <p>
-            The generated catalog reference pins this exact artifact. ModelJars selects its
-            qualified backend, installs and verifies the weights in the content-addressed cache,
-            and applies a performance profile when the current JVM and hardware match one.
+            ${model.kind === "hybrid"
+              ? `The composition routes ordinary chat and tool-result narration to its chat member, and tool selection to its tool specialist. Each member retains independent prompt and KV state.`
+              : `The generated catalog reference pins this exact artifact. ModelJars selects its qualified backend, installs and verifies the weights in the content-addressed cache, and applies a performance profile when the current JVM and hardware match one.`}
           </p>
           ${copyBlock(
             "Java",
-            isEmbeddingEvidence(qualification)
+            model.kind === "hybrid"
+              ? compositionJavaSnippet()
+              : isEmbeddingEvidence(qualification)
               ? embeddingJavaSnippet(model.id)
               : isRerankingEvidence(qualification)
                 ? rerankingJavaSnippet(model.id)
@@ -680,7 +779,7 @@ function renderModel(model, catalog) {
 
         <section class="detail-section" aria-labelledby="integrity-title">
           <p class="eyebrow">Reproducibility</p>
-          <h2 id="integrity-title">Artifact integrity</h2>
+          <h2 id="integrity-title">${model.kind === "hybrid" ? "Composition JAR integrity" : "Artifact integrity"}</h2>
           <dl class="integrity-list">
             <div><dt>Source</dt><dd><a href="${safeExternalUrl(model.sourceUri)}">${escapeHtml(model.sourceId)}</a></dd></div>
             <div><dt>Revision</dt><dd><code>${escapeHtml(model.revision)}</code></dd></div>

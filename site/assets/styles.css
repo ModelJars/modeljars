@@ -333,6 +333,32 @@ pre {
   margin-top: 22px;
 }
 
+.github-star-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 0 13px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.github-star-button span {
+  color: #d29922;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.github-star-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .intro-video-teaser {
   position: fixed;
   z-index: 30;

@@ -359,6 +359,37 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void discoversAndPullsEveryMemberOfAQualifiedComposite() {
+    ModelJarDescriptor chat = descriptor("qwen3_chat_q4_0", "Q4_0");
+    ModelJarDescriptor tools = descriptor("qwen3_tools_q8_0", "Q8_0");
+    ModelJarDescriptor hybrid = compositeDescriptor(chat, tools);
+    List<String> installed = new java.util.concurrent.CopyOnWriteArrayList<>();
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(chat, tools, hybrid)),
+            (selected, destination, progress) -> {
+              installed.add(selected.alias());
+              return destination;
+            });
+
+    Result listed = run(cli, "models", "hybrid");
+    Result shown = run(cli, "show", hybrid.alias(), "--details");
+    Result pulled = run(cli, "pull", hybrid.alias());
+
+    assertEquals(0, listed.status());
+    assertTrue(listed.output().contains("hybrid"), listed.output());
+    assertTrue(listed.output().contains("MIXED"), listed.output());
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains("Qualified hybrid"), shown.output());
+    assertTrue(shown.output().contains("chat"), shown.output());
+    assertTrue(shown.output().contains("tools"), shown.output());
+    assertEquals(0, pulled.status());
+    assertEquals(List.of(chat.alias(), tools.alias()), installed);
+    assertTrue(pulled.output().contains("2 members ready"), pulled.output());
+    assertTrue(pulled.output().contains(hybrid.markerCoordinate().toString()), pulled.output());
+  }
+
+  @Test
   void keepsJsonCleanAndAllowsProgressToBeDisabled() {
     ModelJarDescriptor descriptor = descriptor();
     ModelJarsCli cli =
@@ -879,6 +910,54 @@ class ModelJarsCliTest {
         source.licenseUri(),
         source.domains(),
         source.dimensions());
+  }
+
+  private static ModelJarDescriptor compositeDescriptor(
+      ModelJarDescriptor chat, ModelJarDescriptor tools) {
+    return new ModelJarDescriptor(
+        "qwen3_chat_tools_composite",
+        "modeljars://qwen3-chat-tools",
+        ModelJarCoordinate.parse("org.modeljars.composite:qwen3-chat-tools:0.1.38"),
+        ModelVersion.parse("0.1.38"),
+        "chat-tools",
+        "composite",
+        "hybrid",
+        "MIXED",
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(URI.create("https://github.com/ModelJars/modeljars")),
+        Optional.empty(),
+        Optional.of("d".repeat(40)),
+        Optional.of("c".repeat(64)),
+        Optional.of(chat.sizeBytes().orElseThrow() + tools.sizeBytes().orElseThrow()),
+        Optional.of("Apache-2.0"),
+        Set.of("text-generation", "chat", "tool-calling"),
+        Set.of(
+            "virtual-model",
+            "composition-member:" + chat.alias(),
+            "composition-member:" + tools.alias(),
+            "composition-role:chat=" + chat.alias(),
+            "composition-role:tools=" + tools.alias()),
+        List.of(),
+        Map.of("pure-java", true),
+        Optional.of("Qwen3 chat + tools hybrid"),
+        Optional.of("Qualified virtual model with separate chat and tool members."),
+        Optional.empty(),
+        Set.of("general", "tool-use"),
+        Optional.of(Instant.parse("2026-09-11T20:00:00Z")),
+        new ModelDimensions(
+            Optional.empty(),
+            Optional.of(40_960),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()));
   }
 
   private static SystemCapabilities.Snapshot snapshot() {

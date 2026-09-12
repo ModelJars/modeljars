@@ -137,3 +137,27 @@ test("filters embedding models by their semantic-search tier", () => {
     [embedder.name],
   );
 });
+
+test("discovers a qualified virtual model as a hybrid catalog entry", () => {
+  const hybrid = {
+    id: "qwen3_chat_tools_composite",
+    kind: "hybrid",
+    name: "Qwen3 chat + tools hybrid",
+    description: "Routes chat and tool turns to qualified specialist models.",
+    sourceId: "modeljars://qwen3-chat-tools",
+    markerCoordinate: "org.modeljars.composite:qwen3-chat-tools:0.1.38",
+    architecture: "hybrid",
+    format: "composite",
+    quantization: "MIXED",
+    capabilities: ["text-generation", "chat", "tool-calling"],
+    features: ["virtual-model", "capability-routing"],
+    domains: ["general", "tool-use"],
+    backends: { "pure-java": true },
+    compositionQualifications: [
+      { qualified: true, useCaseTier: "HYBRID_COMPOSITION", backend: "pure-java" },
+    ],
+  };
+
+  assert.equal(matches(hybrid, "hybrid tools", "pure-java"), true);
+  assert.equal(filterCatalog([model, hybrid], { query: "hybrid" }).length, 1);
+});

@@ -96,6 +96,9 @@ import picocli.shell.jline3.PicocliJLineCompleter;
       CommandLine.HelpCommand.class
     })
 public final class ModelJarsCli implements Callable<Integer> {
+  private static final String COMPOSITE_FORMAT = "composite";
+  private static final String COMPOSITION_MEMBER_PREFIX = "composition-member:";
+  private static final String COMPOSITION_ROLE_PREFIX = "composition-role:";
   private static final String BANNER = loadBanner();
   private static final Map<String, List<String>> SEARCH_ALIASES =
       Map.ofEntries(
@@ -605,8 +608,90 @@ public final class ModelJarsCli implements Callable<Integer> {
   }
 
   private boolean cached(ModelJarDescriptor descriptor) {
+    if (isComposite(descriptor)) {
+      return compositionMembers(descriptor).stream().allMatch(this::cached);
+    }
     Path artifact = ModelJarCache.artifactPath(descriptor, cacheDirectory());
     return ModelJarCache.isComplete(descriptor, artifact);
+  }
+
+  private Instant cachedModified(ModelJarDescriptor descriptor) {
+    if (!isComposite(descriptor)) {
+      return modified(cachePath(descriptor));
+    }
+    return compositionMembers(descriptor).stream()
+        .map(this::cachePath)
+        .map(ModelJarsCli::modified)
+        .max(Comparator.naturalOrder())
+        .orElse(Instant.EPOCH);
+  }
+
+  private Path cachePath(ModelJarDescriptor descriptor) {
+    return isComposite(descriptor)
+        ? cacheDirectory()
+        : ModelJarCache.artifactPath(descriptor, cacheDirectory());
+  }
+
+  private static boolean isComposite(ModelJarDescriptor descriptor) {
+    return COMPOSITE_FORMAT.equals(descriptor.format())
+        && descriptor.features().contains("virtual-model");
+  }
+
+  private List<ModelJarDescriptor> compositionMembers(ModelJarDescriptor descriptor) {
+    if (!isComposite(descriptor)) {
+      return List.of();
+    }
+    List<String> aliases =
+        descriptor.features().stream()
+            .filter(feature -> feature.startsWith(COMPOSITION_MEMBER_PREFIX))
+            .map(feature -> feature.substring(COMPOSITION_MEMBER_PREFIX.length()))
+            .sorted()
+            .toList();
+    if (aliases.isEmpty()) {
+      throw new IllegalStateException(
+          "Composite catalog entry has no members: " + descriptor.alias());
+    }
+    return aliases.stream()
+        .map(
+            alias ->
+                descriptors().stream()
+                    .filter(candidate -> candidate.alias().equals(alias))
+                    .findFirst()
+                    .orElseThrow(
+                        () ->
+                            new IllegalStateException(
+                                "Composite "
+                                    + descriptor.alias()
+                                    + " references missing member "
+                                    + alias)))
+        .toList();
+  }
+
+  private Map<String, ModelJarDescriptor> compositionRoles(ModelJarDescriptor descriptor) {
+    Map<String, ModelJarDescriptor> roles = new java.util.TreeMap<>();
+    for (String feature : descriptor.features()) {
+      if (!feature.startsWith(COMPOSITION_ROLE_PREFIX)) {
+        continue;
+      }
+      String assignment = feature.substring(COMPOSITION_ROLE_PREFIX.length());
+      int separator = assignment.indexOf('=');
+      if (separator <= 0 || separator == assignment.length() - 1) {
+        throw new IllegalStateException(
+            "Invalid composition role in catalog entry " + descriptor.alias() + ": " + feature);
+      }
+      String role = assignment.substring(0, separator);
+      String alias = assignment.substring(separator + 1);
+      ModelJarDescriptor member =
+          compositionMembers(descriptor).stream()
+              .filter(candidate -> candidate.alias().equals(alias))
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Composition role " + role + " references missing member " + alias));
+      roles.put(role, member);
+    }
+    return java.util.Collections.unmodifiableMap(new LinkedHashMap<>(roles));
   }
 
   private boolean matchesQuery(ModelJarDescriptor descriptor, String query) {
@@ -661,7 +746,20 @@ public final class ModelJarsCli implements Callable<Integer> {
     values.put("publishedAt", descriptor.catalogPublishedAt().map(Instant::toString).orElse(null));
     values.put("backends", descriptor.backendSupport());
     values.put("dimensions", dimensionsMap(descriptor.dimensions()));
-    values.put("status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not_pulled");
+    values.put("kind", isComposite(descriptor) ? "hybrid" : "model");
+    if (isComposite(descriptor)) {
+      values.put(
+          "members",
+          compositionRoles(descriptor).entrySet().stream()
+              .map(
+                  entry ->
+                      Map.of(
+                          "role", entry.getKey(),
+                          "alias", entry.getValue().alias(),
+                          "coordinate", entry.getValue().markerCoordinate().toString()))
+              .toList());
+    }
+    values.put("status", cached(descriptor) ? "cached" : "not_pulled");
     values.put("cachePath", cachePath.toString());
     return values;
   }
@@ -1006,12 +1104,8 @@ public final class ModelJarsCli implements Callable<Integer> {
     public Integer call() {
       List<CachedModel> models =
           parent.descriptors().stream()
-              .map(
-                  descriptor ->
-                      new CachedModel(
-                          descriptor,
-                          ModelJarCache.artifactPath(descriptor, parent.cacheDirectory())))
-              .filter(model -> ModelJarCache.isComplete(model.descriptor(), model.path()))
+              .map(descriptor -> new CachedModel(descriptor, parent.cachePath(descriptor)))
+              .filter(model -> parent.cached(model.descriptor()))
               .sorted(Comparator.comparing(model -> parent.shortName(model.descriptor())))
               .toList();
       render(models);
@@ -1027,7 +1121,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                     model -> {
                       Map<String, Object> value =
                           parent.descriptorMap(model.descriptor(), model.path());
-                      value.put("modified", modified(model.path()).toString());
+                      value.put("modified", parent.cachedModified(model.descriptor()).toString());
                       return value;
                     })
                 .toList());
@@ -1043,7 +1137,7 @@ public final class ModelJarsCli implements Callable<Integer> {
                         parent.shortName(model.descriptor()),
                         model.descriptor().alias(),
                         String.valueOf(declaredSize(model.descriptor())),
-                        modified(model.path()).toString(),
+                        parent.cachedModified(model.descriptor()).toString(),
                         model.path().toString(),
                         model.descriptor().markerCoordinate().toString())));
         return;
@@ -1077,7 +1171,9 @@ public final class ModelJarsCli implements Callable<Integer> {
                     row.add(
                         CliOutput.Cell.text(
                             CliOutput.humanBytes(declaredSize(model.descriptor()))));
-                    row.add(CliOutput.Cell.text(MODIFIED_TIME.format(modified(model.path()))));
+                    row.add(
+                        CliOutput.Cell.text(
+                            MODIFIED_TIME.format(parent.cachedModified(model.descriptor()))));
                     return List.copyOf(row);
                   })
               .toList();
@@ -1135,7 +1231,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Override
     public Integer call() {
       ModelJarDescriptor descriptor = parent.resolve(selector);
-      Path cachePath = ModelJarCache.artifactPath(descriptor, parent.cacheDirectory());
+      Path cachePath = parent.cachePath(descriptor);
       CliOutput out = parent.out();
       if (out.format() == CliOutput.Format.JSON) {
         Map<String, Object> value = parent.descriptorMap(descriptor, cachePath);
@@ -1149,6 +1245,7 @@ public final class ModelJarsCli implements Callable<Integer> {
             .forEach((key, value) -> out.line(key + "=" + Objects.toString(value, "")));
       } else {
         renderHuman(
+            parent,
             descriptor,
             cachePath,
             out,
@@ -1166,6 +1263,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
 
     private static void renderHuman(
+        ModelJarsCli parent,
         ModelJarDescriptor descriptor,
         Path cachePath,
         CliOutput out,
@@ -1184,8 +1282,8 @@ public final class ModelJarsCli implements Callable<Integer> {
         identity.put("Custom aliases", String.join(", ", customNames));
       }
       identity.put("Coordinate", descriptor.markerCoordinate());
-      identity.put(
-          "Status", ModelJarCache.isComplete(descriptor, cachePath) ? "cached" : "not pulled");
+      identity.put("Type", isComposite(descriptor) ? "Qualified hybrid" : "Model artifact");
+      identity.put("Status", parent.cached(descriptor) ? "cached" : "not pulled");
       identity.put("Architecture", descriptor.architecture());
       identity.put("Format", descriptor.format().toUpperCase(Locale.ROOT));
       identity.put("Quantization", descriptor.quantization());
@@ -1207,10 +1305,21 @@ public final class ModelJarsCli implements Callable<Integer> {
                           ? "Embedding"
                           : "Hidden width",
                       value + " dimensions"));
-      identity.put("Download", CliOutput.humanBytes(declaredSize(descriptor)));
+      identity.put(
+          isComposite(descriptor) ? "Member weights" : "Download",
+          CliOutput.humanBytes(declaredSize(descriptor)));
       if (details) {
         identity.put("Capabilities", capabilities(descriptor));
         identity.put("Backends", backends(descriptor));
+      }
+      if (isComposite(descriptor)) {
+        parent
+            .compositionRoles(descriptor)
+            .forEach(
+                (role, member) ->
+                    identity.put(
+                        Character.toUpperCase(role.charAt(0)) + role.substring(1),
+                        parent.shortName(member) + " (" + member.alias() + ")"));
       }
       out.section("Model");
       out.properties(identity);
@@ -1226,8 +1335,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       out.properties(provenance);
 
       Map<String, Object> local = new LinkedHashMap<>();
-      local.put("Cache path", cachePath);
-      if (ModelJarCache.isComplete(descriptor, cachePath)) {
+      local.put(isComposite(descriptor) ? "Member cache" : "Cache path", cachePath);
+      if (!isComposite(descriptor) && parent.cached(descriptor)) {
         local.put("Modified", MODIFIED_TIME.format(modified(cachePath)));
       }
       int context = Math.min(4096, descriptor.dimensions().contextLength().orElse(4096));
@@ -1266,6 +1375,9 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Override
     public Integer call() {
       ModelJarDescriptor descriptor = parent.resolve(selector);
+      if (isComposite(descriptor)) {
+        return pullComposite(descriptor);
+      }
       Path destination = ModelJarCache.artifactPath(descriptor, parent.cacheDirectory());
       Path artifact;
       PullProgressRenderer progress = parent.pullProgress(quiet);
@@ -1310,6 +1422,64 @@ public final class ModelJarsCli implements Callable<Integer> {
       return 0;
     }
 
+    private int pullComposite(ModelJarDescriptor descriptor) {
+      List<InstalledMember> members = new ArrayList<>();
+      for (Map.Entry<String, ModelJarDescriptor> entry :
+          parent.compositionRoles(descriptor).entrySet()) {
+        ModelJarDescriptor member = entry.getValue();
+        Path destination = ModelJarCache.artifactPath(member, parent.cacheDirectory());
+        Path artifact;
+        try (PullProgressRenderer progress = parent.pullProgress(quiet)) {
+          artifact =
+              parent.installer.install(member, destination, progress).toAbsolutePath().normalize();
+        }
+        members.add(new InstalledMember(entry.getKey(), member, artifact));
+      }
+
+      CliOutput out = parent.out();
+      if (quiet) {
+        members.forEach(member -> out.line(member.path().toString()));
+      } else if (out.format() == CliOutput.Format.JSON) {
+        Map<String, Object> value = new LinkedHashMap<>();
+        value.put("alias", descriptor.alias());
+        value.put("kind", "hybrid");
+        value.put("coordinate", descriptor.markerCoordinate().toString());
+        value.put(
+            "members",
+            members.stream()
+                .map(
+                    member ->
+                        Map.of(
+                            "role", member.role(),
+                            "alias", member.descriptor().alias(),
+                            "path", member.path().toString()))
+                .toList());
+        out.json(value);
+      } else if (out.format() == CliOutput.Format.PLAIN) {
+        out.line("coordinate=" + descriptor.markerCoordinate());
+        members.forEach(
+            member -> {
+              out.line("member." + member.role() + ".alias=" + member.descriptor().alias());
+              out.line("member." + member.role() + ".path=" + member.path());
+            });
+      } else {
+        out.success(descriptor.alias() + ": " + members.size() + " members ready");
+        Map<String, Object> details = new LinkedHashMap<>();
+        members.forEach(
+            member ->
+                details.put(capitalize(member.role()), parent.shortName(member.descriptor())));
+        details.put("Coordinate", descriptor.markerCoordinate());
+        out.properties(details);
+      }
+      return 0;
+    }
+
+    private static String capitalize(String value) {
+      return Character.toUpperCase(value.charAt(0)) + value.substring(1);
+    }
+
+    private record InstalledMember(String role, ModelJarDescriptor descriptor, Path path) {}
+
     private static String formatElapsed(double seconds) {
       if (seconds < 60) {
         return String.format(Locale.ROOT, "%.1fs", seconds);
@@ -1349,6 +1519,15 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Override
     public Integer call() throws IOException {
       ModelJarDescriptor descriptor = parent.resolveExact(selector);
+      if (isComposite(descriptor)) {
+        String members =
+            parent.compositionMembers(descriptor).stream()
+                .map(parent::shortName)
+                .reduce((left, right) -> left + ", " + right)
+                .orElse("");
+        throw new IllegalArgumentException(
+            "Hybrid member caches may be shared; remove members explicitly: " + members);
+      }
       Path root = parent.cacheDirectory().toAbsolutePath().normalize();
       Path artifact = ModelJarCache.artifactPath(descriptor, root);
       if (!artifact.startsWith(root)) {
@@ -2214,7 +2393,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private static String declaration(
       ModelJarDescriptor descriptor, DependencyCoordinates.Tool tool, boolean includeRuntime) {
     String marker = DependencyCoordinates.render(descriptor.markerCoordinate(), tool);
-    if (!includeRuntime || version().equals("development")) {
+    if (!includeRuntime || isComposite(descriptor) || version().equals("development")) {
       return marker;
     }
     ModelJarCoordinate runtime =

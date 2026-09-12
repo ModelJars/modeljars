@@ -65,10 +65,19 @@
             <div class="catalog-actions" aria-label="Get started">
               <a class="primary-button" href="#modeljars-cli">Install the native CLI</a>
               <a class="secondary-button" href="#using-modeljars">Use from Java</a>
+              <a
+                href="https://github.com/ModelJars/modeljars"
+                class="github-star-button"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Star ModelJars on GitHub">
+                <span aria-hidden="true">&#9733;</span> Star on GitHub
+              </a>
             </div>
           </div>
           <div class="catalog-stats" aria-label="Catalog statistics">
-            <span><strong id="model-total">0</strong> qualified artifacts</span>
+            <span><strong id="model-total">0</strong> model artifacts</span>
+            <span><strong id="hybrid-total">0</strong> qualified hybrids</span>
             <span><strong id="identity-total">0</strong> model identities</span>
             <span><strong id="pure-java-total">0</strong> pure Java</span>
             <span><strong id="publisher-total">0</strong> publishers</span>
@@ -255,7 +264,7 @@ modeljars search gemma --output json</code></pre>
                   <h3>Add the JVM Runtime and the model</h3>
                 </div>
                 <pre><code class="language-kotlin hljs" data-lang="kotlin">dependencies {
-  implementation("org.modeljars:modeljars:0.1.38")
+  implementation("org.modeljars:modeljars:0.1.39")
   implementation("org.modeljars.huggingface:ggml-org.qwen3-0.6b-gguf.q4_0:3.0.0-q4_0.1")
 }</code></pre>
               </article>

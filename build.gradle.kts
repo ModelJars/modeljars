@@ -128,6 +128,66 @@ data class CatalogEntry(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogCompositionMember(
+    val role: String,
+    val modelId: String,
+)
+
+data class CatalogComposition(
+    val id: String,
+    val markerCoordinate: String,
+    val sourceId: String,
+    val sourceUri: String,
+    val revision: String,
+    val modelVersion: String,
+    val variant: String,
+    val format: String,
+    val architecture: String,
+    val quantization: String,
+    val compositionSha256: String,
+    val requiredWeightBytes: Long,
+    val license: String,
+    val name: String,
+    val description: String,
+    val domains: List<String>,
+    val catalogPublishedAt: String,
+    val capabilities: List<String>,
+    val features: List<String>,
+    val backends: Map<String, Boolean>,
+    val members: List<CatalogCompositionMember>,
+    val raw: Map<String, Any?>,
+) {
+    fun registryProperties(): String =
+        buildString {
+            val prefix = "model.$id."
+            appendLine("${prefix}sourceId=${propertyValue(sourceId)}")
+            appendLine("${prefix}markerCoordinate=$markerCoordinate")
+            appendLine("${prefix}modelVersion=$modelVersion")
+            appendLine("${prefix}variant=$variant")
+            appendLine("${prefix}format=$format")
+            appendLine("${prefix}architecture=$architecture")
+            appendLine("${prefix}quantization=$quantization")
+            appendLine("${prefix}sourceUri=$sourceUri")
+            appendLine("${prefix}revision=$revision")
+            appendLine("${prefix}sha256=$compositionSha256")
+            appendLine("${prefix}sizeBytes=$requiredWeightBytes")
+            appendLine("${prefix}license=$license")
+            appendLine("${prefix}name=${propertyValue(name)}")
+            appendLine("${prefix}description=${propertyValue(description)}")
+            appendLine("${prefix}domains=${domains.joinToString(",")}")
+            appendLine("${prefix}catalogPublishedAt=$catalogPublishedAt")
+            appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
+            val compositionFeatures =
+                features +
+                    members.map { "composition-member:${it.modelId}" } +
+                    members.map { "composition-role:${it.role}=${it.modelId}" }
+            appendLine("${prefix}features=${compositionFeatures.joinToString(",")}")
+            backends.toSortedMap().forEach { (backend, supported) ->
+                appendLine("${prefix}backend.$backend=$supported")
+            }
+        }
+}
+
 data class CatalogArtifactFile(
     val path: String,
     val role: String,
@@ -1060,6 +1120,96 @@ val catalogEntries =
             )
         }
 
+val compositionDocument =
+    JsonSlurper()
+        .parse(file("catalog/compositions.json"))
+        .stringKeyMap("catalog/compositions.json")
+require((compositionDocument["schemaVersion"] as? Number)?.toInt() == 1) {
+    "catalog/compositions.json must use schemaVersion 1"
+}
+val catalogCompositions =
+    ((compositionDocument["compositions"] as? List<*>)
+            ?: error("Composition catalog must contain a compositions array"))
+        .map { value ->
+            val raw = value.stringKeyMap("Every catalog composition")
+            require(raw.requiredString("kind") == "hybrid") {
+                "Catalog compositions must declare kind=hybrid"
+            }
+            val coordinate = raw.requiredString("markerCoordinate").split(':')
+            require(coordinate.size == 3) {
+                "Composition markerCoordinate must be groupId:artifactId:version"
+            }
+            val members =
+                ((raw["members"] as? List<*>)
+                        ?: error("Composition members must be an array"))
+                    .map { memberValue ->
+                        val member = memberValue.stringKeyMap("Every composition member")
+                        CatalogCompositionMember(
+                            role = member.requiredString("role"),
+                            modelId = member.requiredString("modelId"),
+                        )
+                    }
+            require(members.size >= 2 && members.map { it.role }.distinct().size == members.size) {
+                "A hybrid composition must contain at least two uniquely named roles"
+            }
+            val compositionSha256 = raw.requiredString("compositionSha256")
+            require(compositionSha256.matches(Regex("[a-f0-9]{64}"))) {
+                "compositionSha256 must contain 64 lowercase hexadecimal characters"
+            }
+            val requiredWeightBytes =
+                (raw["requiredWeightBytes"] as? Number)?.toLong()
+                    ?: error("requiredWeightBytes must be an integer")
+            require(requiredWeightBytes > 0) { "requiredWeightBytes must be positive" }
+            val catalogPublishedAt = raw.requiredString("catalogPublishedAt")
+            try {
+                Instant.parse(catalogPublishedAt)
+            } catch (exception: DateTimeParseException) {
+                error("composition catalogPublishedAt must be an ISO-8601 instant")
+            }
+            fun strings(name: String): List<String> =
+                (raw[name] as? List<*>)
+                    ?.map { it as? String ?: error("$name must contain strings") }
+                    ?: error("$name must be an array")
+            val backends =
+                (raw["backends"] as? Map<*, *>)
+                    ?.map { (key, supported) ->
+                        (key as? String ?: error("backend names must be strings")) to
+                            (supported as? Boolean ?: error("backend values must be booleans"))
+                    }
+                    ?.toMap()
+                    ?: error("backends must be an object")
+            val qualifications =
+                (raw["compositionQualifications"] as? List<*>)
+                    ?: error("A composition must contain qualification evidence")
+            require(qualifications.any { it.stringKeyMap("Composition qualification")["qualified"] == true }) {
+                "A public hybrid composition must contain qualified evidence"
+            }
+            CatalogComposition(
+                id = raw.requiredString("id"),
+                markerCoordinate = raw.requiredString("markerCoordinate"),
+                sourceId = raw.requiredString("sourceId"),
+                sourceUri = raw.requiredString("sourceUri"),
+                revision = raw.requiredString("revision"),
+                modelVersion = raw.requiredString("modelVersion"),
+                variant = raw.requiredString("variant"),
+                format = raw.requiredString("format"),
+                architecture = raw.requiredString("architecture"),
+                quantization = raw.requiredString("quantization"),
+                compositionSha256 = compositionSha256,
+                requiredWeightBytes = requiredWeightBytes,
+                license = raw.requiredString("license"),
+                name = raw.requiredString("name"),
+                description = raw.requiredString("description"),
+                domains = strings("domains"),
+                catalogPublishedAt = catalogPublishedAt,
+                capabilities = strings("capabilities"),
+                features = strings("features"),
+                backends = backends,
+                members = members,
+                raw = raw,
+            )
+        }
+
 val performanceDocument =
     JsonSlurper()
         .parse(file("catalog/performance-profiles.json"))
@@ -1695,6 +1845,27 @@ val publicModelIds =
         publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
         publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet()
+catalogCompositions.forEach { composition ->
+    val missingMembers = composition.members.map { it.modelId }.filterNot(publicModelIds::contains)
+    require(missingMembers.isEmpty()) {
+        "Qualified composition ${composition.id} references unqualified members: " +
+            missingMembers.joinToString(", ")
+    }
+    val expectedWeightBytes =
+        composition.members.sumOf { member ->
+            catalogEntries.single { it.id == member.modelId }.let { entry ->
+                if (entry.files.isEmpty()) entry.sizeBytes else entry.files.sumOf { it.sizeBytes }
+            }
+        }
+    require(composition.requiredWeightBytes == expectedWeightBytes) {
+        "Composition ${composition.id} requiredWeightBytes must equal its member artifacts"
+    }
+}
+val publicCompositionIds = catalogCompositions.map(CatalogComposition::id).toSet()
+require(publicCompositionIds.intersect(publicModelIds).isEmpty()) {
+    "Composition IDs must not collide with physical model IDs"
+}
+val publicCatalogIds = publicModelIds + publicCompositionIds
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
@@ -2655,7 +2826,7 @@ allprojects {
     version =
         providers
             .gradleProperty("modeljarsVersion")
-            .orElse("0.1.38-SNAPSHOT")
+            .orElse("0.1.39-SNAPSHOT")
             .get()
 }
 
@@ -3628,6 +3799,7 @@ project(":modeljars-catalog") {
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
+            inputs.file(rootProject.file("catalog/compositions.json"))
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
             inputs.file(rootProject.file("catalog/benchmarks.json"))
             if (qualificationCatalogFile.isFile) {
@@ -3662,9 +3834,12 @@ project(":modeljars-catalog") {
                 val registry = aggregateRegistry.get().asFile
                 registry.parentFile.mkdirs()
                 registry.writeText(
-                    publicCatalogEntries.joinToString("\n") {
-                        it.registryProperties().trimEnd()
-                    } + "\n",
+                    publicCatalogEntries.joinToString("\n") { it.registryProperties().trimEnd() } +
+                        "\n" +
+                        catalogCompositions.joinToString("\n") {
+                            it.registryProperties().trimEnd()
+                        } +
+                        "\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateMetadata.get().asFile.writeText(
@@ -3710,7 +3885,7 @@ project(":modeljars-catalog") {
                                             .map {
                                                 it.siteMetadata(requireNotNull(speechQualifications))
                                             })
-                            },
+                            } + catalogCompositions.map { it.raw },
                         ),
                     ) +
                         "\n",
@@ -4165,6 +4340,7 @@ val generateSiteCatalog =
     tasks.register("generateSiteCatalog") {
         dependsOn(aggregateCatalogJar)
         inputs.file(aggregateCatalogJar)
+        inputs.file(file("catalog/compositions.json"))
         outputs.files(
             generatedSiteCatalog,
             generatedCliCatalog,
@@ -4201,8 +4377,9 @@ val generateSiteCatalog =
                             model.stringKeyMap("Aggregate site model").requiredString("id") in
                                 publicModelIds
                         }
+                    val publicEntries = publicModels + catalogCompositions.map { it.raw }
                     catalogOutput.writeText(
-                        JsonOutput.prettyPrint(JsonOutput.toJson(publicModels)) + "\n",
+                        JsonOutput.prettyPrint(JsonOutput.toJson(publicEntries)) + "\n",
                         StandardCharsets.UTF_8,
                     )
                 }
@@ -4283,8 +4460,8 @@ tasks.register<Sync>("generateSite") {
         require(Files.isRegularFile(detailTemplate)) {
             "Model detail template is missing: $detailTemplate"
         }
-        publicCatalogEntries.forEach { entry ->
-            val route = siteRoot.resolve("models/${entry.id}/index.html")
+        publicCatalogIds.forEach { id ->
+            val route = siteRoot.resolve("models/$id/index.html")
             Files.createDirectories(route.parent)
             Files.copy(detailTemplate, route, StandardCopyOption.REPLACE_EXISTING)
         }
@@ -4557,8 +4734,8 @@ tasks.register("verifyCatalog") {
                 .filter { it.startsWith("model.") }
                 .map { it.removePrefix("model.").substringBefore('.') }
                 .toSet()
-        require(cliCatalogModelIds == publicModelIds) {
-            "Generated CLI catalog must contain exactly the qualified artifacts"
+        require(cliCatalogModelIds == publicCatalogIds) {
+            "Generated CLI catalog must contain qualified model artifacts and compositions"
         }
         val siteModels =
             JsonSlurper().parse(siteCatalog).let { it as? List<*> }
@@ -4576,9 +4753,9 @@ tasks.register("verifyCatalog") {
                 .map { model ->
                     model.stringKeyMap("Generated site model").requiredString("id")
                 }
-                .toSet() == publicModelIds,
+                .toSet() == publicCatalogIds,
         ) {
-            "Public site catalog must contain only qualified artifacts"
+            "Public site catalog must contain qualified artifacts and compositions"
         }
         val siteBenchmarks = generatedSiteBenchmarks.get().asFile
         require(siteBenchmarks.isFile) {
@@ -4619,8 +4796,8 @@ tasks.register("verifyCatalog") {
             "Generated site qualification count mismatch"
         }
         val generatedSite = layout.buildDirectory.dir("site").get().asFile
-        publicCatalogEntries.forEach { entry ->
-            val detailRoute = generatedSite.resolve("models/${entry.id}/index.html")
+        publicCatalogIds.forEach { id ->
+            val detailRoute = generatedSite.resolve("models/$id/index.html")
             require(detailRoute.isFile) {
                 "Generated model detail route is missing: $detailRoute"
             }
@@ -4634,7 +4811,8 @@ tasks.register("verifyCatalog") {
             }
         println(
             "Verified ${catalogEntries.size} generated ModelJars markers and " +
-                "${publicCatalogEntries.size} qualified website entries",
+                "${publicCatalogEntries.size} qualified model artifacts plus " +
+                "${catalogCompositions.size} qualified compositions",
         )
     }
 }

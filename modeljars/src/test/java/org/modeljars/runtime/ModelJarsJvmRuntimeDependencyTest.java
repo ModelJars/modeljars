@@ -78,12 +78,24 @@ class ModelJarsJvmRuntimeDependencyTest {
     allQualified.addAll(rerankingQualified);
     allQualified.addAll(speechQualified);
 
-    assertEquals(allQualified.size(), descriptors.size());
+    var physicalDescriptors =
+        descriptors.stream()
+            .filter(descriptor -> !"composite".equals(descriptor.format()))
+            .toList();
+    var compositeDescriptors =
+        descriptors.stream().filter(descriptor -> "composite".equals(descriptor.format())).toList();
+
+    assertEquals(allQualified.size(), physicalDescriptors.size());
     assertEquals(
         allQualified,
-        descriptors.stream().map(descriptor -> descriptor.alias()).collect(Collectors.toSet()));
+        physicalDescriptors.stream()
+            .map(descriptor -> descriptor.alias())
+            .collect(Collectors.toSet()));
+    assertEquals(1, compositeDescriptors.size());
+    assertEquals("qwen3_chat_tools_composite", compositeDescriptors.getFirst().alias());
+    assertTrue(compositeDescriptors.getFirst().features().contains("virtual-model"));
     assertTrue(
-        descriptors.stream()
+        physicalDescriptors.stream()
             .allMatch(
                 descriptor ->
                     !qualifications.qualificationsFor(descriptor).isEmpty()

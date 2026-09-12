@@ -79,6 +79,30 @@ from the Models repository.
 Submissions carry the report, the artifact and report SHA-256 values, the probe-set SHA-256, the
 pinned oracle version, and environment identity.
 
+### Composite artifacts
+
+A routed conversation is not automatically a hybrid model, and shared text history is not shared
+model state. A composite can be published only when its claimed handoff mechanism is implemented
+and exercised end to end. Partial or negative results remain experiments and must not appear in the
+qualified catalog.
+
+For every proposed composite, CI requires a versioned machine-readable report that:
+
+- has no unresolved required work and is fetched from an immutable 40-character Models commit with
+  a matching SHA-256;
+- runs every exact member artifact through the public Java API, without an external inference
+  runtime;
+- identifies an actual cache-state mechanism: exact KV-block sharing, qualified cross-model KV
+  translation, or an activation-compatible adapter prefix;
+- retains every native-correct exact answer in the declared long-context gate and passes the task
+  correctness suite;
+- beats target re-prefill after charging the complete handoff cost, at a declared context-length
+  crossover; and
+- records peak process memory, including all resident models, mapper weights, and cache state.
+
+`tools/composition-evidence-gate.mjs` enforces this contract in validation, preview, artifact, and
+release workflows. Documentation or catalog metrics cannot substitute for the underlying report.
+
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not
 been completed; it does not mean the candidate failed.

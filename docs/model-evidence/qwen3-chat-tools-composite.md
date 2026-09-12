@@ -1,11 +1,12 @@
-# Qwen3 chat/tools composite qualification
+# Withdrawn Qwen3 chat/tools routing experiment
 
-The `org.modeljars.composite:qwen3-chat-tools` artifact depends on two exact qualified markers:
+The previously published `org.modeljars.composite:qwen3-chat-tools` artifact depends on two exact
+qualified markers:
 
 - Qwen3 0.6B Q4_0 for ordinary chat and tool-result narration;
 - Qwen3 1.7B Q8_0 for tool selection and argument generation.
 
-The recipe shares canonical semantic history, not tensors. The chat member receives prose history
+The recipe shares canonical semantic history, not KV-cache tensors. The chat member receives prose history
 with tool results expressed as ordinary user messages. The tool member receives only the current
 tool-selection turn. It routes automatically from the presence of declared tools and returns tool
 results to chat for narration; explicit `chat` and `tool-use` tasks remain available as overrides.
@@ -17,9 +18,11 @@ turns passed. The single Qwen3 1.7B control had a 53.166-second median; the comp
 35.151-second median, improving end-to-end latency by 33.88% against the predeclared 5% gate.
 
 Median peak RSS increased from 2,404,032 KiB to 3,270,444 KiB, or 36.04%, because both model files
-remain resident. The composite is qualified as a latency tier with that explicit capacity cost. It
-is not a shared-KV or memory-saving claim.
+remain resident. This is useful routing evidence, but it does not qualify a hybrid model: it neither
+shares nor translates cache state between the members.
 
-The exact Models revision is `e4d130dd8c5986e6cef6d7ff5cb7d3533a5ceb6b`. Raw reports,
-outputs, environment, artifact hashes, process metrics, and the comparison decision are retained at
-`integrallis/models/benchmark-results/2026-09-11-projected-qwen-hybrid`.
+The catalog evidence URL named Models revision `e4d130dd8c5986e6cef6d7ff5cb7d3533a5ceb6b`, but the
+report was first committed later. Because the public record was not retrievable at the pinned
+revision and the implementation did not satisfy shared-state composition, the entry is withdrawn
+from the qualified catalog. The artifact remains historical; it is not advertised as a current
+qualified virtual model.

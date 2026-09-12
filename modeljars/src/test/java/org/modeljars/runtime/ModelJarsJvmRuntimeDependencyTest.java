@@ -91,9 +91,7 @@ class ModelJarsJvmRuntimeDependencyTest {
         physicalDescriptors.stream()
             .map(descriptor -> descriptor.alias())
             .collect(Collectors.toSet()));
-    assertEquals(1, compositeDescriptors.size());
-    assertEquals("qwen3_chat_tools_composite", compositeDescriptors.getFirst().alias());
-    assertTrue(compositeDescriptors.getFirst().features().contains("virtual-model"));
+    assertTrue(compositeDescriptors.isEmpty());
     assertTrue(
         physicalDescriptors.stream()
             .allMatch(

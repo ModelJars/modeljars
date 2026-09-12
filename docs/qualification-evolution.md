@@ -40,6 +40,7 @@ order: Vectors, Models, then ModelJars.
 | 2026-09-03 | Which published small models actually deserve a tool-calling claim? | One checksum-pinned 14-case suite tested six artifacts through pure Java, including typed arguments, crowded tools, refusal, and framework continuation. Qwen3 1.7B and Needle 2 passed; Qwen3 0.6B, MiniCPM5 1B, SmolLM3 3B, and Llama 3.2 3B failed the unchanged behavior floors. | Add Qwen3 1.7B as the first qualified generative tool model, retain Needle as a qualified action selector, remove unsupported claims from MiniCPM5 and SmolLM3, and publish the negative evidence with the passes. |
 | 2026-09-06 | Can a standard Safetensors cross-encoder become a path-free ModelJar without importing its reference runtime? | Models reproduced all six pinned Transformers 4.38.1 logits for `mxbai-rerank-xsmall-v1` within `0.000003100`, preserved the complete ranking, and passed plain Java, LangChain4j, Spring AI, and ModelJars integration. Three fresh JVMs measured `58.660 ms` pair p50 and `17.114` documents/s with ten workers. | Publish the four-file F16 bundle as the second qualified reranker. Keep Transformers as a qualification oracle only; runtime parsing, tokenization, attention, pooling, and scoring remain pure Java. |
 | 2026-09-11 | Can a versioned recipe make two small models faster than the smallest tool-capable control without pretending their KV caches are portable? | Qwen3 0.6B chat plus Qwen3 1.7B tools passed all 36 turns across six fresh JVMs. Capability-specific semantic projection reduced median end-to-end time from 53.166 to 35.151 seconds (33.88%); median peak RSS rose 36.04% because both weights remain resident. | Publish `org.modeljars.composite:qwen3-chat-tools` with transitive dependencies on the exact qualified markers. Retain independent KV per member and expose the memory tradeoff with the recipe evidence. |
+| 2026-09-12 | Did that routing recipe satisfy the intended hybrid-model boundary? | No. It routed semantic history between two independent runtimes, did not share or translate KV state, and its catalog evidence URL pointed to a commit before the report existed. A separate Qwen3 0.6B-to-1.7B cache-translation experiment also failed the predeclared exact-retrieval gate. | Withdraw the recipe from the qualified catalog. Preserve it as a negative experiment, require immutable evidence hashes, and publish no hybrid model until the actual state handoff passes correctness and end-to-end crossover gates. |
 
 ## Current public boundary
 
@@ -54,8 +55,8 @@ The public catalog contains 42 distinct qualified models:
 The category counts overlap; the catalog still contains 42 distinct models. The larger metadata registry is a candidate queue. It is not a claim that every recorded candidate
 can execute or that every marker may be published.
 
-The catalog also publishes one qualified virtual recipe. It composes existing model identities and
-therefore does not increase the distinct-model count.
+The catalog currently publishes no qualified virtual model. Composition candidates remain research
+until their actual shared-state implementation passes the same published-artifact and task gates.
 
 ## Release-engineering findings
 

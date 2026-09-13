@@ -39,7 +39,7 @@ order: Vectors, Models, then ModelJars.
 | 2026-09-02 to 2026-09-03 | Can the JVM execute MobileMoE's original QAT checkpoint without converting it or importing another inference engine? | Models loaded the gated four-file Safetensors bundle, prepared its packed group-32 INT4 experts for Java execution, and passed 27 of 27 controlled RAG attempts plus a separate default-configuration smoke. The controlled host measured 957.97 ms p95 TTFT and 21.83 decode tokens/s. | Publish the immutable MobileMoE-S QAT bundle with the pure-Java backend. Require explicit upstream license acceptance and a Hugging Face read token; keep credentials out of marker metadata and redirected download requests. |
 | 2026-09-03 | Which published small models actually deserve a tool-calling claim? | One checksum-pinned 14-case suite tested six artifacts through pure Java, including typed arguments, crowded tools, refusal, and framework continuation. Qwen3 1.7B and Needle 2 passed; Qwen3 0.6B, MiniCPM5 1B, SmolLM3 3B, and Llama 3.2 3B failed the unchanged behavior floors. | Add Qwen3 1.7B as the first qualified generative tool model, retain Needle as a qualified action selector, remove unsupported claims from MiniCPM5 and SmolLM3, and publish the negative evidence with the passes. |
 | 2026-09-06 | Can a standard Safetensors cross-encoder become a path-free ModelJar without importing its reference runtime? | Models reproduced all six pinned Transformers 4.38.1 logits for `mxbai-rerank-xsmall-v1` within `0.000003100`, preserved the complete ranking, and passed plain Java, LangChain4j, Spring AI, and ModelJars integration. Three fresh JVMs measured `58.660 ms` pair p50 and `17.114` documents/s with ten workers. | Publish the four-file F16 bundle as the second qualified reranker. Keep Transformers as a qualification oracle only; runtime parsing, tokenization, attention, pooling, and scoring remain pure Java. |
-| 2026-09-11 | Can a versioned recipe make two small models faster than the smallest tool-capable control without pretending their KV caches are portable? | Qwen3 0.6B chat plus Qwen3 1.7B tools passed all 36 turns across six fresh JVMs. Capability-specific semantic projection reduced median end-to-end time from 53.166 to 35.151 seconds (33.88%); median peak RSS rose 36.04% because both weights remain resident. | Publish `org.modeljars.composite:qwen3-chat-tools` with transitive dependencies on the exact qualified markers. Retain independent KV per member and expose the memory tradeoff with the recipe evidence. |
+| 2026-09-11 | Can a versioned recipe make two small models faster than the smallest tool-capable control without pretending their KV caches are portable? | Qwen3 0.6B chat plus Qwen3 1.7B tools passed all 36 turns across six fresh JVMs. Capability-specific semantic projection reduced median end-to-end time from 53.166 to 35.151 seconds (33.88%); median peak RSS rose 36.04% because both weights remain resident. The initial catalog entry was subsequently withdrawn because this was routing between independent models, not the requested physical KV-sharing hybrid. | Retain the result as routing evidence only. Do not republish it as a hybrid; require a base-aligned adapter, exact shared KV blocks, long-context retention, complete memory accounting, and the fixed crossover gate before a composition can enter the catalog. |
 | 2026-09-12 | Did that routing recipe satisfy the intended hybrid-model boundary? | No. It routed semantic history between two independent runtimes, did not share or translate KV state, and its catalog evidence URL pointed to a commit before the report existed. A separate Qwen3 0.6B-to-1.7B cache-translation experiment also failed the predeclared exact-retrieval gate. | Withdraw the recipe from the qualified catalog. Preserve it as a negative experiment, require immutable evidence hashes, and publish no hybrid model until the actual state handoff passes correctness and end-to-end crossover gates. |
 
 ## Current public boundary
@@ -85,6 +85,20 @@ promotion independent from the native CLI release train.
 - The generated website and catalog can publish from a catalog change.
 - Native CLI binaries are released only for CLI/runtime releases.
 - SDKMAN automation remains present but disabled until vendor approval.
+
+An activated-adapter hybrid uses two fail-closed publication stages. First, the hidden adapter
+component must bind its complete file bundle to frozen task-correctness evidence and real-weight
+plain Java, Spring AI, and LangChain4j tests. That authorizes only its immutable marker; it does not
+make the component searchable or qualify a hybrid. The component record separately pins the Models
+source revision that was exercised and the later evidence revision that contains the report; this
+avoids a self-referential commit hash while keeping both identities immutable. The same report
+binds the base revision and artifact, formatter, trainer, frozen selection, and training manifest.
+The visible
+composition is published later,
+after a clean host resolves both member markers from Maven Central and proves exact physical KV
+block sharing, long-context retention, lower unique inference-state memory, and the fixed
+performance crossover through the public API. Keeping those stages separate avoids requiring an
+unpublished marker as input to its own qualification.
 
 Each path verifies the artifact after publication instead of treating a successful build as proof
 that the intended bytes reached the public repository.

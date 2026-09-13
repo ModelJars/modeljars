@@ -96,19 +96,40 @@ try (var model = ModelJars.openSpeech(MODEL)) {
 }`;
 }
 
-export function compositionJavaSnippet() {
+export function compositionJavaSnippet(model) {
+  const features = new Set(model?.features || []);
+  const members = Array.isArray(model?.members) ? model.members : [];
+  const base = members.find((member) => member.role === "base");
+  const adapter = members.find((member) => member.role === "tool-adapter");
+  if (
+    model?.kind !== "hybrid" ||
+    !features.has("exact-kv-block-sharing") ||
+    !features.has("activated-lora") ||
+    !base ||
+    !adapter ||
+    !/^[a-z][a-z0-9_]*$/.test(base.modelId || "") ||
+    !/^[a-z][a-z0-9_]*$/.test(adapter.modelId || "")
+  ) {
+    throw new Error("Hybrid has no supported public runtime");
+  }
+  const baseReference = referenceClassName(base.modelId);
+  const adapterReference = referenceClassName(adapter.modelId);
   return `import com.integrallis.models.api.SamplingOptions;
 import com.integrallis.models.runtime.chat.ChatMessage;
 import java.util.List;
-import org.modeljars.composite.qwen3.Qwen3ChatTools;
+import org.modeljars.ModelJars;
+import org.modeljars.catalog.${baseReference};
+import org.modeljars.catalog.${adapterReference};
 
 var options = SamplingOptions.builder()
     .temperature(0).maxTokens(128).build();
 
-try (var hybrid = Qwen3ChatTools.open();
-     var conversation = hybrid.openSession()) {
-  var answer = conversation.generate(
-      ChatMessage.user("Name one JVM language."), List.of(), options);
+try (var hybrid = ModelJars.openActivatedToolRuntime(
+         ${baseReference}.MODEL, ${adapterReference}.MODEL);
+     var conversation = hybrid.openConversation()) {
+  var prompt = hybrid.chatTemplate().render(
+      List.of(ChatMessage.user("Name one JVM language.")));
+  var answer = conversation.generateBase(prompt, options);
 }`;
 }
 
@@ -391,7 +412,10 @@ function checkRows(profile) {
     ["Pinned artifact", "Revision and checksum identify immutable upstream bytes."],
     ["Complete metadata", "Runtime, architecture, dimensions, license, and location are declared."],
     ["Pure Java executed", "The catalog records successful execution through the pure-Java backend."],
-    ["Qualified members", "Every member is an independently qualified catalog artifact."],
+    [
+      "Qualified members",
+      "Standalone members are qualified; internal components are bound by the composition evidence.",
+    ],
     ["Controlled composition", "The complete routing recipe passed a controlled comparison."],
   ]);
   return profile.checks
@@ -640,7 +664,12 @@ function renderCompositionMembers(model, catalog) {
         ${(model.members || [])
           .map((member) => {
             const entry = byId.get(member.modelId);
-            if (!entry) return "";
+            if (!entry) {
+              return `<div class="related-item">
+                <span><strong>${escapeHtml(member.role)}</strong><small>${escapeHtml(member.modelId)}</small></span>
+                <span>internal component</span>
+              </div>`;
+            }
             return `<a href="/models/${encodeURIComponent(entry.id)}/">
               <span><strong>${escapeHtml(member.role)}</strong><small>${escapeHtml(entry.name)}</small></span>
               <span>${escapeHtml(entry.quantization)} &#8594;</span>
@@ -738,7 +767,7 @@ function renderModel(model, catalog) {
           <h2 id="install-title">Install this model</h2>
           <p>
             ${model.kind === "hybrid"
-              ? `Add the qualified composition to the application. Its Maven dependency brings the ModelJars runtime and both exact member markers; member weights are downloaded and verified when first opened.`
+              ? `Add the qualified composition to the application. Its Maven dependency brings the ModelJars runtime and every exact member marker; the base weights and internal components are downloaded and verified when first opened.`
               : `Add the ModelJars JVM Runtime and this model to the application. The runtime brings the <a href="https://integrallis.github.io/models/">Integrallis Models JVM inference library</a> and its execution backends. The model JAR provides the generated Java reference, pinned model location, checksum, and qualification metadata; weights are downloaded to the verified local cache when first opened.`}
           </p>
           ${copyBlock("Gradle", gradleSnippet(model.markerCoordinate), "language-kotlin")}
@@ -750,13 +779,13 @@ function renderModel(model, catalog) {
           <h2 id="run-title">Open and run the model</h2>
           <p>
             ${model.kind === "hybrid"
-              ? `The composition routes ordinary chat and tool-result narration to its chat member, and tool selection to its tool specialist. Each member retains independent prompt and KV state.`
+              ? `The activated tool specialist and exact base model use one loaded weight graph. Both branches reference the same immutable pre-invocation KV blocks; only the post-activation suffix is branch-specific.`
               : `The generated catalog reference pins this exact artifact. ModelJars selects its qualified backend, installs and verifies the weights in the content-addressed cache, and applies a performance profile when the current JVM and hardware match one.`}
           </p>
           ${copyBlock(
             "Java",
             model.kind === "hybrid"
-              ? compositionJavaSnippet()
+              ? compositionJavaSnippet(model)
               : isEmbeddingEvidence(qualification)
               ? embeddingJavaSnippet(model.id)
               : isRerankingEvidence(qualification)

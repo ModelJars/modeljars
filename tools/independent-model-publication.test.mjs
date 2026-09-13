@@ -66,6 +66,23 @@ test("publishes accepted model coordinates independently from platform artifacts
   assert.doesNotMatch(workflow, /:modeljars-core:publish/);
 });
 
+test("publishes hidden components only after their own evidence gate", async () => {
+  const workflow = await read(".github/workflows/model-artifacts.yml");
+
+  assert.match(workflow, /catalog\/compositions\.json/);
+  assert.match(workflow, /npm run catalog:verify-compositions/);
+  assert.match(workflow, /catalog\/component-qualifications\.json/);
+  assert.match(workflow, /npm run catalog:verify-components/);
+  assert.match(
+    workflow,
+    /--component-qualifications catalog\/component-qualifications\.json/,
+  );
+  assert.match(
+    workflow,
+    /--previous-component-qualifications "\$\{previous_components\}"/,
+  );
+});
+
 test("reuses an identical immutable GitHub Package without hiding collisions", async () => {
   const workflow = await read(".github/workflows/model-artifacts.yml");
 

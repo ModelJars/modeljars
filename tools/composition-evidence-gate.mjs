@@ -7,11 +7,7 @@ import { pathToFileURL } from "node:url";
 const SHA256 = /^[a-f0-9]{64}$/;
 const IMMUTABLE_RAW_GITHUB =
   /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/([a-f0-9]{40})\/.+$/;
-const IMPLEMENTED_HANDOFFS = new Set([
-  "exact-kv-block-sharing",
-  "cross-model-kv-translation",
-  "adapter-compatible-prefix",
-]);
+const IMPLEMENTED_HANDOFFS = new Set(["exact-kv-block-sharing"]);
 
 function requireDocument(value) {
   if (
@@ -144,7 +140,13 @@ function requireProductionEvidence(composition, report, modelsById) {
 
   const gates = evaluation.gates;
   for (const name of [
+    "provenance",
     "taskCorrectness",
+    "plainJava",
+    "springAi",
+    "langChain4j",
+    "toolResultLoop",
+    "conversationState",
     "longContextRetrieval",
     "performanceCrossover",
     "memoryAccounting",
@@ -153,21 +155,94 @@ function requireProductionEvidence(composition, report, modelsById) {
       throw new Error(`${composition.id} ${name} gate must pass`);
     }
   }
-  if (!(gates.taskCorrectness.attempts > 0)) {
-    throw new Error(`${composition.id} taskCorrectness gate must record attempts`);
+
+  if (
+    gates.provenance.frozenEvaluation !== true ||
+    !SHA256.test(gates.provenance.selectionManifestSha256 ?? "") ||
+    !SHA256.test(gates.provenance.adapterManifestSha256 ?? "")
+  ) {
+    throw new Error(`${composition.id} provenance must bind the frozen evaluation and adapter`);
+  }
+
+  const task = gates.taskCorrectness;
+  const measuredFalseCallRate = task.falseToolCalls / task.irrelevanceAttempts;
+  if (
+    task.attempts !== 300 ||
+    task.syntaxValidityRate !== 1 ||
+    task.schemaValidityRate !== 1 ||
+    !(task.selectionExactRate >= 0.85) ||
+    !(task.selectionExactRate >= task.baseSelectionExactRate) ||
+    task.irrelevanceAttempts !== 100 ||
+    !(task.falseToolCalls >= 0 && task.falseToolCalls <= 5) ||
+    !(task.falseToolCallRate >= 0 && task.falseToolCallRate <= 0.05) ||
+    Math.abs(task.falseToolCallRate - measuredFalseCallRate) > 1e-12
+  ) {
+    throw new Error(`${composition.id} taskCorrectness does not meet the fixed task-correctness thresholds`);
+  }
+
+  if (
+    gates.plainJava.realWeights !== true ||
+    gates.springAi.realWeights !== true ||
+    gates.springAi.toolInvocations !== 1 ||
+    gates.langChain4j.realWeights !== true ||
+    gates.langChain4j.toolInvocations !== 1
+  ) {
+    throw new Error(
+      `${composition.id} must pass real-weight plain Java, Spring AI, and LangChain4j gates`,
+    );
   }
   if (
-    !(gates.longContextRetrieval.nativeCorrect > 0) ||
-    gates.longContextRetrieval.retainedNativeCorrect !==
-      gates.longContextRetrieval.nativeCorrect
+    gates.toolResultLoop.secondSelectionCompleted !== true ||
+    gates.toolResultLoop.repeatedToolCall !== false
   ) {
-    throw new Error(`${composition.id} longContextRetrieval must retain every native-correct answer`);
+    throw new Error(`${composition.id} must complete the real tool-result selection loop`);
   }
-  if (!(gates.performanceCrossover.contextTokens > 0)) {
-    throw new Error(`${composition.id} performanceCrossover must record its context tier`);
+  if (
+    !(gates.conversationState.turns >= 6) ||
+    gates.conversationState.oneCacheLineage !== true
+  ) {
+    throw new Error(`${composition.id} must retain one cache lineage across six conversation turns`);
   }
-  if (!(gates.memoryAccounting.peakRssBytes > 0)) {
-    throw new Error(`${composition.id} memoryAccounting must record peak RSS`);
+
+  const longContext = gates.longContextRetrieval;
+  if (
+    longContext.cases !== 8 ||
+    longContext.contextTokens !== 4096 ||
+    !(longContext.nativeCorrect >= 6) ||
+    longContext.retainedNativeCorrect !== longContext.nativeCorrect ||
+    longContext.tokenExactCases !== longContext.cases ||
+    longContext.physicallySharedCases !== longContext.cases
+  ) {
+    throw new Error(
+      `${composition.id} longContextRetrieval must retain every native-correct answer over physically shared 4K prefixes`,
+    );
+  }
+
+  const crossover = gates.performanceCrossover;
+  if (
+    crossover.contextTokens !== 4096 ||
+    !(crossover.improvement >= 0.2) ||
+    crossover.improvement !== evaluation.improvement ||
+    crossover.physicallySharedAllTiers !== true ||
+    crossover.recomputedIndependentAllTiers !== true ||
+    crossover.tokenExactAllTiers !== true
+  ) {
+    throw new Error(
+      `${composition.id} performanceCrossover must prove physical KV sharing and token equality with at least 20% improvement at 4K`,
+    );
+  }
+
+  const memory = gates.memoryAccounting;
+  if (
+    memory.complete !== true ||
+    !(memory.peakRssBytes > 0) ||
+    !(memory.sharedUniqueStateBytes > 0) ||
+    !(memory.recomputedUniqueStateBytes > 0) ||
+    !(memory.sharedUniqueStateBytes < memory.recomputedUniqueStateBytes)
+  ) {
+    throw new Error(
+      `${composition.id} memory accounting must prove fewer unique inference-state bytes with sharing`,
+    );
   }
 }
 

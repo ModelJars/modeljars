@@ -30,6 +30,8 @@ function parseArguments(argumentsList) {
         "--previous-reranking-qualifications",
         "--speech-qualifications",
         "--previous-speech-qualifications",
+        "--component-qualifications",
+        "--previous-component-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -45,6 +47,8 @@ function parseArguments(argumentsList) {
           "[--tool-qualifications FILE --previous-tool-qualifications FILE] " +
           "[--reranking-qualifications FILE --previous-reranking-qualifications FILE] " +
           "[--speech-qualifications FILE --previous-speech-qualifications FILE] " +
+          "[--component-qualifications FILE " +
+          "--previous-component-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -55,6 +59,24 @@ function parseArguments(argumentsList) {
   }
   if (values.has("--previous") === values.has("--ids")) {
     throw new Error("Exactly one of --previous or --ids is required");
+  }
+  if (
+    values.has("--previous-component-qualifications") &&
+    (!values.has("--previous") ||
+      !values.has("--component-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-component-qualifications requires --previous and --component-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--component-qualifications") &&
+    !values.has("--previous-component-qualifications")
+  ) {
+    throw new Error(
+      "--previous-component-qualifications is required for a component-qualification-aware delta",
+    );
   }
   if (
     values.has("--previous-speech-qualifications") &&
@@ -145,35 +167,20 @@ function qualifiedCatalog(
   toolManifest,
   rerankingManifest,
   speechManifest,
+  componentManifest,
 ) {
-  filterQualifiedPublications(
-    { publications: [], removed: [] },
+  const filtered = filterQualifiedPublications(
+    selectCatalogPublications(catalog, ["all"]),
     catalog,
     qualificationManifest,
     embeddingManifest,
     toolManifest,
     rerankingManifest,
     speechManifest,
+    componentManifest,
   );
   const qualifiedIds = new Set(
-    [
-      ...qualificationManifest.entries.filter(
-        (entry) => entry.qualified === true,
-      ),
-      ...(embeddingManifest?.entries ?? []).filter(
-        (entry) => entry.qualified === true,
-      ),
-      ...(toolManifest?.entries ?? []).filter(
-        (entry) => entry.summary?.qualified === true,
-      ),
-      ...(rerankingManifest?.entries ?? []).filter(
-        (entry) => entry.qualified === true,
-      ),
-      ...(speechManifest?.entries ?? []).filter(
-        (entry) => entry.qualified === true,
-      ),
-    ]
-      .map((entry) => entry.modelId),
+    filtered.publications.map((publication) => publication.id),
   );
   return {
     catalog: {
@@ -238,6 +245,13 @@ async function main() {
     speechQualificationPath === undefined
       ? undefined
       : await readCatalog(speechQualificationPath);
+  const componentQualificationPath = argumentsMap.get(
+    "--component-qualifications",
+  );
+  const currentComponentQualifications =
+    componentQualificationPath === undefined
+      ? { schemaVersion: 1, entries: [] }
+      : await readCatalog(componentQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -268,6 +282,9 @@ async function main() {
       const previousSpeechPath = argumentsMap.get(
         "--previous-speech-qualifications",
       );
+      const previousComponentPath = argumentsMap.get(
+        "--previous-component-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
@@ -283,6 +300,9 @@ async function main() {
         previousSpeechPath === undefined
           ? undefined
           : await readCatalog(previousSpeechPath),
+        previousComponentPath === undefined
+          ? { schemaVersion: 1, entries: [] }
+          : await readCatalog(previousComponentPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
@@ -291,6 +311,7 @@ async function main() {
         currentToolQualifications,
         currentRerankingQualifications,
         currentSpeechQualifications,
+        currentComponentQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -309,6 +330,9 @@ async function main() {
           ...(previousSpeechPath === undefined
             ? []
             : [await readCatalog(previousSpeechPath)]),
+          ...(previousComponentPath === undefined
+            ? []
+            : [await readCatalog(previousComponentPath)]),
         ],
         currentQualificationManifests: [
           currentQualifications,
@@ -324,6 +348,9 @@ async function main() {
           ...(currentSpeechQualifications === undefined
             ? []
             : [currentSpeechQualifications]),
+          ...(componentQualificationPath === undefined
+            ? []
+            : [currentComponentQualifications]),
         ],
       };
       if (previousProfilesPath !== undefined) {
@@ -355,6 +382,7 @@ async function main() {
           currentToolQualifications,
           currentRerankingQualifications,
           currentSpeechQualifications,
+          currentComponentQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

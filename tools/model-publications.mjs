@@ -70,6 +70,10 @@ function canonicalJson(value) {
   return JSON.stringify(value);
 }
 
+function comparePath(left, right) {
+  return left.path < right.path ? -1 : left.path > right.path ? 1 : 0;
+}
+
 function assertProfiles(document, catalog, label) {
   if (
     document === null ||
@@ -141,7 +145,7 @@ function markerSnapshot(model, profileCatalog, qualificationManifests) {
 
 function artifactBundleSha256(files) {
   const identity = [...files]
-    .sort((left, right) => left.path.localeCompare(right.path))
+    .sort(comparePath)
     .map(
       (file) =>
         `${file.path}\t${file.sizeBytes}\t${file.sha256}\n`,
@@ -324,14 +328,10 @@ function collectQualifiedIds(
       if (
         !Array.isArray(qualification.artifactFiles) ||
         canonicalJson(
-          [...qualification.artifactFiles].sort((left, right) =>
-            left.path.localeCompare(right.path),
-          ),
+          [...qualification.artifactFiles].sort(comparePath),
         ) !==
           canonicalJson(
-            [...model.files].sort((left, right) =>
-              left.path.localeCompare(right.path),
-            ),
+            [...model.files].sort(comparePath),
           )
       ) {
         throw new Error(
@@ -361,6 +361,40 @@ function collectQualifiedIds(
   return qualifiedIds;
 }
 
+function collectQualifiedComponentIds(
+  componentQualifications,
+  modelsById,
+  independentlyQualifiedIds,
+) {
+  const componentIds = new Set(
+    [...modelsById.values()]
+      .filter((model) => model.capabilities?.includes("composition-component"))
+      .map((model) => model.id),
+  );
+  for (const id of componentIds) {
+    if (independentlyQualifiedIds.has(id)) {
+      throw new Error(
+        `Composition component ${id} must not be independently qualified`,
+      );
+    }
+  }
+
+  for (const qualification of componentQualifications?.entries ?? []) {
+    const model = modelsById.get(qualification?.modelId);
+    if (model !== undefined && !componentIds.has(model.id)) {
+      throw new Error(
+        `Component qualification references public model ${model.id}`,
+      );
+    }
+  }
+  return collectQualifiedIds(
+    componentQualifications,
+    modelsById,
+    (qualification) => qualification.qualified === true,
+    true,
+  );
+}
+
 /**
  * Keeps only publications whose exact artifact passed a qualification policy.
  *
@@ -379,6 +413,7 @@ export function filterQualifiedPublications(
   toolQualifications = { schemaVersion: 1, entries: [] },
   rerankingQualifications = { schemaVersion: 1, entries: [] },
   speechQualifications = { schemaVersion: 1, entries: [] },
+  componentQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -403,6 +438,13 @@ export function filterQualifiedPublications(
     qualifiedIds.add(id);
   }
   for (const id of collectQualifiedIds(speechQualifications, modelsById)) {
+    qualifiedIds.add(id);
+  }
+  for (const id of collectQualifiedComponentIds(
+    componentQualifications,
+    modelsById,
+    qualifiedIds,
+  )) {
     qualifiedIds.add(id);
   }
 

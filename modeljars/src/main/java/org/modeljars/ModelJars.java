@@ -22,6 +22,7 @@ import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.Pooling;
 import com.integrallis.models.api.RerankingModel;
+import com.integrallis.models.api.SharedPrefixInferenceBackend;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.audio.SopranoTextToSpeechModel;
@@ -31,6 +32,7 @@ import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
+import com.integrallis.models.runtime.ActivatedToolCallingModel;
 import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.InferencePipeline;
 import com.integrallis.models.runtime.chat.VirtualChatModel;
@@ -64,11 +66,38 @@ public final class ModelJars {
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
+  private final ActivatedBackendLoader activatedBackendLoader;
   private final EmbeddingBackendLoader embeddingBackendLoader;
   private final RerankingModelLoader rerankingModelLoader;
   private final SpeechModelLoader speechModelLoader;
   private final Supplier<Map<String, String>> runtimeEnvironment;
   private final Supplier<List<String>> jvmArguments;
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      ActivatedBackendLoader activatedBackendLoader,
+      Supplier<Map<String, String>> runtimeEnvironment) {
+    this(
+        models,
+        qualifications,
+        ModelToolQualificationRegistry.fromClasspath(),
+        ModelEmbeddingQualificationRegistry.fromClasspath(),
+        ModelRerankingQualificationRegistry.fromClasspath(),
+        ModelSpeechQualificationRegistry.fromClasspath(),
+        profiles,
+        installer,
+        backendLoader,
+        activatedBackendLoader,
+        ModelJars::loadEmbeddingBackend,
+        ModelJars::loadRerankingModel,
+        ModelJars::loadSpeechModel,
+        runtimeEnvironment,
+        () -> ManagementFactory.getRuntimeMXBean().getInputArguments());
+  }
 
   ModelJars(
       ModelJarRegistry models,
@@ -179,6 +208,40 @@ public final class ModelJars {
       SpeechModelLoader speechModelLoader,
       Supplier<Map<String, String>> runtimeEnvironment,
       Supplier<List<String>> jvmArguments) {
+    this(
+        models,
+        qualifications,
+        toolQualifications,
+        embeddingQualifications,
+        rerankingQualifications,
+        speechQualifications,
+        profiles,
+        installer,
+        backendLoader,
+        ModelJars::loadActivatedBackend,
+        embeddingBackendLoader,
+        rerankingModelLoader,
+        speechModelLoader,
+        runtimeEnvironment,
+        jvmArguments);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelToolQualificationRegistry toolQualifications,
+      ModelEmbeddingQualificationRegistry embeddingQualifications,
+      ModelRerankingQualificationRegistry rerankingQualifications,
+      ModelSpeechQualificationRegistry speechQualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      ActivatedBackendLoader activatedBackendLoader,
+      EmbeddingBackendLoader embeddingBackendLoader,
+      RerankingModelLoader rerankingModelLoader,
+      SpeechModelLoader speechModelLoader,
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this.models = Objects.requireNonNull(models, "models");
     this.qualifications = Objects.requireNonNull(qualifications, "qualifications");
     this.toolQualifications = Objects.requireNonNull(toolQualifications, "toolQualifications");
@@ -191,6 +254,8 @@ public final class ModelJars {
     this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
+    this.activatedBackendLoader =
+        Objects.requireNonNull(activatedBackendLoader, "activatedBackendLoader");
     this.embeddingBackendLoader =
         Objects.requireNonNull(embeddingBackendLoader, "embeddingBackendLoader");
     this.rerankingModelLoader =
@@ -331,6 +396,37 @@ public final class ModelJars {
     requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
     return classpathLoader()
         .loadChatToolHybrid(chatModel, toolModel, chatOptions, toolOptions, toolConstraintFactory);
+  }
+
+  /**
+   * Opens one qualified base model with a verified Activated-LoRA tool specialist.
+   *
+   * <p>The returned model loads the base weights once. Its ordinary-chat and activated tool
+   * branches fork from the same physical KV-cache prefix; the adapter is a composition component,
+   * not a second standalone model.
+   *
+   * @param baseModel qualified base-model marker
+   * @param adapter activated-adapter component marker
+   * @return lifecycle-owning activated runtime
+   */
+  public static ModelJarActivatedRuntime openActivatedToolRuntime(
+      ModelJar baseModel, ModelJar adapter) {
+    return openActivatedToolRuntime(baseModel, adapter, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens one qualified base model with a verified Activated-LoRA tool specialist and explicit
+   * cache controls.
+   *
+   * @param baseModel qualified base-model marker
+   * @param adapter activated-adapter component marker
+   * @param options cache and network controls; activated adapters require the Java backend
+   * @return lifecycle-owning activated runtime
+   */
+  public static ModelJarActivatedRuntime openActivatedToolRuntime(
+      ModelJar baseModel, ModelJar adapter, ModelLoadOptions options) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader().loadActivatedToolRuntime(baseModel, adapter, options);
   }
 
   /**
@@ -622,6 +718,70 @@ public final class ModelJars {
         failure.addSuppressed(closeFailure);
       }
       throw failure;
+    }
+  }
+
+  ModelJarActivatedRuntime loadActivatedToolRuntime(
+      ModelJar baseModel, ModelJar adapter, ModelLoadOptions options) {
+    Objects.requireNonNull(baseModel, "baseModel");
+    Objects.requireNonNull(adapter, "adapter");
+    Objects.requireNonNull(options, "options");
+    if (options.backend() == ModelBackend.NATIVE) {
+      throw new ModelJarException("Activated-LoRA compositions require the pure-Java backend");
+    }
+
+    ModelJarDescriptor baseDescriptor =
+        models
+            .resolve(baseModel)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + baseModel));
+    ModelJarDescriptor adapterDescriptor =
+        models
+            .resolve(adapter)
+            .orElseThrow(
+                () -> new ModelJarException("No activated-adapter component matched " + adapter));
+    requireActivatedAdapter(adapterDescriptor);
+
+    ModelExecutionQualification qualification =
+        selectQualification(baseDescriptor, ModelBackend.JAVA);
+    List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
+    Path baseArtifact = installer.install(baseDescriptor, options);
+    Path adapterDirectory = installer.install(adapterDescriptor, options);
+    Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
+    BackendConfiguration configuration =
+        configuration(baseDescriptor, qualification, runtime, activeJvmArguments);
+    SharedPrefixInferenceBackend backend =
+        activatedBackendLoader.load(baseArtifact, adapterDirectory, configuration);
+    ActivatedToolCallingModel model = null;
+    try {
+      model = new ActivatedToolCallingModel(backend);
+      return new ModelJarActivatedRuntime(model, baseDescriptor, adapterDescriptor, qualification);
+    } catch (RuntimeException | Error failure) {
+      try {
+        if (model == null) {
+          backend.close();
+        } else {
+          model.close();
+        }
+      } catch (RuntimeException | Error closeFailure) {
+        failure.addSuppressed(closeFailure);
+      }
+      throw failure;
+    }
+  }
+
+  private static void requireActivatedAdapter(ModelJarDescriptor descriptor) {
+    boolean valid =
+        descriptor.format().equals("safetensors")
+            && !descriptor.files().isEmpty()
+            && descriptor.capabilities().contains("composition-component")
+            && descriptor.features().contains("multi-file-artifact")
+            && descriptor.features().contains("activated-lora-adapter")
+            && descriptor.supportsBackend(JAVA_BACKEND);
+    if (!valid) {
+      throw new ModelJarException(
+          "ModelJar "
+              + descriptor.markerCoordinate()
+              + " is not an activated-lora-adapter composition component");
     }
   }
 
@@ -1029,6 +1189,11 @@ public final class ModelJars {
     };
   }
 
+  private static SharedPrefixInferenceBackend loadActivatedBackend(
+      Path baseArtifact, Path adapterDirectory, BackendConfiguration configuration) {
+    return PureJavaBackend.loadActivatedAdapter(baseArtifact, adapterDirectory, configuration);
+  }
+
   private static EmbeddingBackend loadEmbeddingBackend(
       Path artifact,
       ModelEmbeddingQualificationRegistry.Entry qualification,
@@ -1118,6 +1283,12 @@ public final class ModelJars {
   @FunctionalInterface
   interface BackendLoader {
     InferenceBackend load(String backend, Path artifact, BackendConfiguration configuration);
+  }
+
+  @FunctionalInterface
+  interface ActivatedBackendLoader {
+    SharedPrefixInferenceBackend load(
+        Path baseArtifact, Path adapterDirectory, BackendConfiguration configuration);
   }
 
   @FunctionalInterface

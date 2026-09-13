@@ -119,6 +119,9 @@ jobs:
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions
 
+      - name: Verify qualified component evidence
+        run: npm run catalog:verify-components
+
       - name: Verify exact GGUF dimensions
         run: npm run catalog:enrich -- --concurrency=6
 
@@ -264,6 +267,9 @@ jobs:
 
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions
+
+      - name: Verify qualified component evidence
+        run: npm run catalog:verify-components
 
       - name: Verify release credentials
         env:

@@ -473,6 +473,30 @@ data class CatalogSpeechQualifications(
     val raw: Map<String, Any?>,
 )
 
+data class CatalogComponentQualification(
+    val modelId: String,
+    val baseModelId: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val artifactFiles: List<CatalogArtifactFile>,
+    val artifactBundleSizeBytes: Long,
+    val artifactBundleSha256: String,
+    val reportUri: String,
+    val reportSha256: String,
+    val qualified: Boolean,
+    val raw: Map<String, Any?>,
+)
+
+data class CatalogComponentQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val qualifiedModels: Int,
+    val rejectedModels: Int,
+    val entries: List<CatalogComponentQualification>,
+    val raw: Map<String, Any?>,
+)
+
 fun Map<String, Any?>.requiredString(name: String): String =
     (this[name] as? String)?.takeIf { it.isNotBlank() }
         ?: error("Catalog field '$name' must be a non-blank string")
@@ -1829,6 +1853,95 @@ val speechQualifications =
         null
     }
 
+val componentQualificationCatalogFile = file("catalog/component-qualifications.json")
+val componentQualifications =
+    if (componentQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(componentQualificationCatalogFile)
+                .stringKeyMap("catalog/component-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/component-qualifications.json must use schemaVersion 1"
+        }
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Component qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every component qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    val artifactFiles =
+                        (raw["artifactFiles"] as? List<*>)
+                            ?.mapIndexed { index, fileValue ->
+                                val artifactFile =
+                                    fileValue.stringKeyMap(
+                                        "artifactFiles[$index] for component qualification $modelId",
+                                    )
+                                CatalogArtifactFile(
+                                    path = artifactFile.requiredString("path"),
+                                    role = artifactFile.requiredString("role"),
+                                    sha256 = artifactFile.requiredString("sha256"),
+                                    sizeBytes =
+                                        (artifactFile["sizeBytes"] as? Number)?.toLong()
+                                            ?: error(
+                                                "component qualification $modelId " +
+                                                    "artifactFiles[$index].sizeBytes must be an integer",
+                                            ),
+                                )
+                            } ?: emptyList()
+                    CatalogComponentQualification(
+                        modelId = modelId,
+                        baseModelId = raw.requiredString("baseModelId"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes =
+                            (raw["artifactSizeBytes"] as? Number)?.toLong()
+                                ?: error(
+                                    "component qualification $modelId.artifactSizeBytes must be an integer",
+                                ),
+                        artifactFiles = artifactFiles,
+                        artifactBundleSizeBytes =
+                            (raw["artifactBundleSizeBytes"] as? Number)?.toLong()
+                                ?: error(
+                                    "component qualification $modelId.artifactBundleSizeBytes must be an integer",
+                                ),
+                        artifactBundleSha256 = raw.requiredString("artifactBundleSha256"),
+                        reportUri = raw.requiredString("reportUri"),
+                        reportSha256 = raw.requiredString("reportSha256"),
+                        qualified =
+                            raw["qualified"] as? Boolean
+                                ?: error(
+                                    "component qualification $modelId.qualified must be a boolean",
+                                ),
+                        raw = raw,
+                    )
+                }
+        val qualifiedModels =
+            (document["qualifiedModels"] as? Number)?.toInt()
+                ?: error("Component qualification manifest must contain qualifiedModels")
+        val rejectedModels =
+            (document["rejectedModels"] as? Number)?.toInt()
+                ?: error("Component qualification manifest must contain rejectedModels")
+        require(entries.map(CatalogComponentQualification::modelId).distinct().size == entries.size) {
+            "Component qualification model IDs must be unique"
+        }
+        require(qualifiedModels == entries.count(CatalogComponentQualification::qualified)) {
+            "Component qualification qualifiedModels count does not match entries"
+        }
+        require(rejectedModels == entries.count { !it.qualified }) {
+            "Component qualification rejectedModels count does not match entries"
+        }
+        CatalogComponentQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            qualifiedModels = qualifiedModels,
+            rejectedModels = rejectedModels,
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
 val publicQualifications =
     requireNotNull(ragQualifications) {
         "Production qualification metadata is required to generate the public site"
@@ -1847,8 +1960,66 @@ val publicModelIds =
         publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
         publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet()
+val compositionComponentIds =
+    catalogEntries
+        .filter { "composition-component" in it.capabilities }
+        .map(CatalogEntry::id)
+        .toSet()
+require(publicModelIds.intersect(compositionComponentIds).isEmpty()) {
+    "Composition components must not be independently qualified or exposed as standalone models"
+}
+val qualifiedComponentQualifications =
+    componentQualifications
+        ?.entries
+        ?.filter(CatalogComponentQualification::qualified)
+        .orEmpty()
+componentQualifications?.entries?.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error(
+                "Component qualification references unknown catalog model: ${qualification.modelId}",
+            )
+    require(qualification.modelId in compositionComponentIds) {
+        "Component qualification ${qualification.modelId} must reference a composition component"
+    }
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Component qualification SHA-256 does not match ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Component qualification size does not match ${qualification.modelId}"
+    }
+    require(entry.files == qualification.artifactFiles) {
+        "Component qualification must bind every runtime file for ${qualification.modelId}"
+    }
+    require(entry.files.sumOf(CatalogArtifactFile::sizeBytes) == qualification.artifactBundleSizeBytes) {
+        "Component qualification bundle size does not match ${qualification.modelId}"
+    }
+    require(artifactBundleSha256(entry.files) == qualification.artifactBundleSha256) {
+        "Component qualification bundle SHA-256 does not match ${qualification.modelId}"
+    }
+    require(qualification.baseModelId in publicModelIds) {
+        "Component qualification ${qualification.modelId} requires an unqualified base " +
+            qualification.baseModelId
+    }
+}
+val qualifiedComponentIds =
+    qualifiedComponentQualifications.map(CatalogComponentQualification::modelId).toSet()
+val referencedCompositionComponentIds =
+    catalogCompositions
+        .flatMap(CatalogComposition::members)
+        .map(CatalogCompositionMember::modelId)
+        .filter(compositionComponentIds::contains)
+        .toSet()
+require(qualifiedComponentIds.containsAll(referencedCompositionComponentIds)) {
+    val unqualified = referencedCompositionComponentIds - qualifiedComponentIds
+    "Qualified compositions must not reference unqualified components: " +
+        unqualified.sorted().joinToString(", ")
+}
 catalogCompositions.forEach { composition ->
-    val missingMembers = composition.members.map { it.modelId }.filterNot(publicModelIds::contains)
+    val missingMembers =
+        composition.members
+            .map { it.modelId }
+            .filterNot { it in publicModelIds || it in qualifiedComponentIds }
     require(missingMembers.isEmpty()) {
         "Qualified composition ${composition.id} references unqualified members: " +
             missingMembers.joinToString(", ")
@@ -1869,8 +2040,13 @@ require(publicCompositionIds.intersect(publicModelIds).isEmpty()) {
 }
 val publicCatalogIds = publicModelIds + publicCompositionIds
 val publicCatalogEntries = catalogEntries.filter { it.id in publicModelIds }
+val runtimeCatalogIds = publicModelIds + referencedCompositionComponentIds
+val runtimeCatalogEntries = catalogEntries.filter { it.id in runtimeCatalogIds }
 require(publicCatalogEntries.size == publicModelIds.size) {
     "Public site catalog must contain only qualified artifacts"
+}
+require(runtimeCatalogEntries.size == runtimeCatalogIds.size) {
+    "Runtime catalog must contain every qualified artifact and composition component"
 }
 val publicToolQualifiedIds =
     publicToolQualifications.map(CatalogToolQualification::modelId).toSet()
@@ -3093,6 +3269,9 @@ project(":modeljars-core") {
             if (speechQualificationCatalogFile.isFile) {
                 inputs.file(speechQualificationCatalogFile)
             }
+            if (componentQualificationCatalogFile.isFile) {
+                inputs.file(componentQualificationCatalogFile)
+            }
             outputs.files(
                 candidateTestRegistry,
                 candidateTestMetadata,
@@ -3828,6 +4007,9 @@ project(":modeljars-catalog") {
             if (speechQualificationCatalogFile.isFile) {
                 inputs.file(speechQualificationCatalogFile)
             }
+            if (componentQualificationCatalogFile.isFile) {
+                inputs.file(componentQualificationCatalogFile)
+            }
             outputs.files(
                 aggregateRegistry,
                 aggregateMetadata,
@@ -3845,7 +4027,7 @@ project(":modeljars-catalog") {
                 val registry = aggregateRegistry.get().asFile
                 registry.parentFile.mkdirs()
                 registry.writeText(
-                    publicCatalogEntries.joinToString("\n") { it.registryProperties().trimEnd() } +
+                    runtimeCatalogEntries.joinToString("\n") { it.registryProperties().trimEnd() } +
                         "\n" +
                         catalogCompositions.joinToString("\n") {
                             it.registryProperties().trimEnd()
@@ -3856,7 +4038,7 @@ project(":modeljars-catalog") {
                 aggregateMetadata.get().asFile.writeText(
                     JsonOutput.prettyPrint(
                         JsonOutput.toJson(
-                            publicCatalogEntries.map { entry ->
+                            runtimeCatalogEntries.map { entry ->
                                 entry.raw +
                                     ("performanceProfiles" to
                                         publicPerformanceProfiles
@@ -3895,7 +4077,17 @@ project(":modeljars-catalog") {
                                             .filter { it.modelId == entry.id }
                                             .map {
                                                 it.siteMetadata(requireNotNull(speechQualifications))
-                                            })
+                                            }) +
+                                    if (entry.id in qualifiedComponentIds) {
+                                        mapOf(
+                                            "componentQualifications" to
+                                                qualifiedComponentQualifications
+                                                    .filter { it.modelId == entry.id }
+                                                    .map { it.raw },
+                                        )
+                                    } else {
+                                        emptyMap()
+                                    }
                             } + catalogCompositions.map { it.raw },
                         ),
                     ) +
@@ -4061,6 +4253,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/speech-qualifications-v1.properties")
             }
+        val markerComponentQualificationMetadata =
+            markerRoot.map {
+                it.file("META-INF/modeljars/component-qualifications-v1.json")
+            }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
@@ -4079,6 +4275,9 @@ project(":modeljars-catalog") {
                 if (speechQualificationCatalogFile.isFile) {
                     inputs.file(speechQualificationCatalogFile)
                 }
+                if (componentQualificationCatalogFile.isFile) {
+                    inputs.file(componentQualificationCatalogFile)
+                }
                 outputs.files(
                     markerRegistry,
                     markerMetadata,
@@ -4090,6 +4289,7 @@ project(":modeljars-catalog") {
                     markerRerankingQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerSpeechQualificationRegistry,
+                    markerComponentQualificationMetadata,
                     markerDocs,
                 )
                 doLast {
@@ -4104,6 +4304,11 @@ project(":modeljars-catalog") {
                         rerankingQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val modelSpeechQualifications =
                         speechQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
+                    val modelComponentQualifications =
+                        componentQualifications
+                            ?.entries
+                            ?.filter { it.modelId == entry.id }
+                            .orEmpty()
                     val registry = markerRegistry.get().asFile
                     registry.parentFile.mkdirs()
                     registry.writeText(entry.registryProperties(), StandardCharsets.ISO_8859_1)
@@ -4126,7 +4331,15 @@ project(":modeljars-catalog") {
                                     ("speechQualifications" to
                                         modelSpeechQualifications.map {
                                             it.siteMetadata(requireNotNull(speechQualifications))
-                                        }),
+                                        }) +
+                                    if (modelComponentQualifications.isEmpty()) {
+                                        emptyMap()
+                                    } else {
+                                        mapOf(
+                                            "componentQualifications" to
+                                                modelComponentQualifications.map { it.raw },
+                                        )
+                                    },
                             ),
                         ) + "\n",
                         StandardCharsets.UTF_8,
@@ -4192,6 +4405,27 @@ project(":modeljars-catalog") {
                             ?: emptySpeechQualificationRegistryProperties(),
                         StandardCharsets.ISO_8859_1,
                     )
+                    val componentMetadata = markerComponentQualificationMetadata.get().asFile
+                    if (modelComponentQualifications.isEmpty()) {
+                        componentMetadata.delete()
+                    } else {
+                        componentMetadata.writeText(
+                            JsonOutput.prettyPrint(
+                                JsonOutput.toJson(
+                                    requireNotNull(componentQualifications).raw +
+                                        mapOf(
+                                            "entries" to
+                                                modelComponentQualifications.map { it.raw },
+                                            "qualifiedModels" to
+                                                modelComponentQualifications.count { it.qualified },
+                                            "rejectedModels" to
+                                                modelComponentQualifications.count { !it.qualified },
+                                        ),
+                                ),
+                            ) + "\n",
+                            StandardCharsets.UTF_8,
+                        )
+                    }
                     markerDocs.get().asFile.writeText(
                         "Generated ModelJars metadata for ${entry.markerCoordinate}\n",
                         StandardCharsets.UTF_8,
@@ -4223,6 +4457,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/speech-qualifications-v1.properties",
+                        "META-INF/modeljars/component-qualifications-v1.json",
                         "META-INF/modeljars/qualifications-v1.json",
                     )
                 }
@@ -4244,6 +4479,7 @@ project(":modeljars-catalog") {
                     include("META-INF/modeljars/model.json")
                     include("META-INF/modeljars/performance-v1.json")
                     include("META-INF/modeljars/qualifications-v1.json")
+                    include("META-INF/modeljars/component-qualifications-v1.json")
                 }
                 from(generatedMarkerReferenceSources) {
                     include(
@@ -4745,8 +4981,9 @@ tasks.register("verifyCatalog") {
                 .filter { it.startsWith("model.") }
                 .map { it.removePrefix("model.").substringBefore('.') }
                 .toSet()
-        require(cliCatalogModelIds == publicCatalogIds) {
-            "Generated CLI catalog must contain qualified model artifacts and compositions"
+        require(cliCatalogModelIds == runtimeCatalogIds + publicCompositionIds) {
+            "Generated CLI catalog must contain qualified artifacts, hidden composition " +
+                "components, and compositions"
         }
         val siteModels =
             JsonSlurper().parse(siteCatalog).let { it as? List<*> }

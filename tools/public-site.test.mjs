@@ -52,6 +52,7 @@ test("publishes only artifacts that passed production qualification", async () =
     rerankingQualifications,
     toolQualifications,
     speechQualifications,
+    componentQualifications,
     build,
   ] = await Promise.all([
     read("catalog/models.json").then(JSON.parse),
@@ -60,6 +61,7 @@ test("publishes only artifacts that passed production qualification", async () =
     read("catalog/reranking-qualifications.json").then(JSON.parse),
     read("catalog/tool-qualifications.json").then(JSON.parse),
     read("catalog/speech-qualifications.json").then(JSON.parse),
+    read("catalog/component-qualifications.json").then(JSON.parse),
     read("build.gradle.kts"),
   ]);
 
@@ -98,6 +100,19 @@ test("publishes only artifacts that passed production qualification", async () =
       .filter((entry) => entry.qualified)
       .map((entry) => entry.modelId),
   );
+  const componentIds = new Set(
+    catalog.models
+      .filter((model) => model.capabilities.includes("composition-component"))
+      .map((model) => model.id),
+  );
+  assert.deepEqual(
+    [...publicModelIds].filter((id) => componentIds.has(id)),
+    [],
+    "hidden components must not qualify through a standalone-model policy",
+  );
+  for (const entry of componentQualifications.entries) {
+    assert.ok(componentIds.has(entry.modelId));
+  }
   for (const model of catalog.models.filter((candidate) => publicModelIds.has(candidate.id))) {
     assert.equal(
       model.capabilities.includes("tool-calling"),
@@ -118,21 +133,28 @@ test("publishes only artifacts that passed production qualification", async () =
   assert.match(build, /Speech-qualified model must advertise text-to-speech/);
 });
 
-test("publishes qualified hybrid compositions only when every member is qualified", async () => {
-  const [compositions, qualifications, embeddings, rerankers, tools, speech, build] =
+test("publishes qualified hybrid compositions with qualified models or qualified hidden components", async () => {
+  const [catalog, compositions, qualifications, embeddings, rerankers, tools, speech, components, build] =
     await Promise.all([
+      read("catalog/models.json").then(JSON.parse),
       read("catalog/compositions.json").then(JSON.parse),
       read("catalog/qualifications.json").then(JSON.parse),
       read("catalog/embedding-qualifications.json").then(JSON.parse),
       read("catalog/reranking-qualifications.json").then(JSON.parse),
       read("catalog/tool-qualifications.json").then(JSON.parse),
       read("catalog/speech-qualifications.json").then(JSON.parse),
+      read("catalog/component-qualifications.json").then(JSON.parse),
       read("build.gradle.kts"),
     ]);
   const qualifiedIds = new Set(
     [qualifications, embeddings, rerankers, tools, speech]
       .flatMap((manifest) => manifest.entries)
       .filter((entry) => entry.qualified ?? entry.summary?.qualified)
+      .map((entry) => entry.modelId),
+  );
+  const qualifiedComponentIds = new Set(
+    components.entries
+      .filter((entry) => entry.qualified)
       .map((entry) => entry.modelId),
   );
 
@@ -145,10 +167,15 @@ test("publishes qualified hybrid compositions only when every member is qualifie
       `${composition.id} must carry qualification evidence`,
     );
     for (const member of composition.members) {
-      assert.ok(qualifiedIds.has(member.modelId), `${member.modelId} must be independently qualified`);
+      assert.ok(
+        qualifiedIds.has(member.modelId) || qualifiedComponentIds.has(member.modelId),
+        `${member.modelId} must be independently qualified or a qualified hidden component`,
+      );
     }
   }
   assert.match(build, /publicCatalogIds = publicModelIds \+ publicCompositionIds/);
+  assert.match(build, /runtimeCatalogIds = publicModelIds \+ referencedCompositionComponentIds/);
+  assert.match(build, /Qualified compositions must not reference unqualified components/);
   assert.match(build, /requiredWeightBytes must equal its member artifacts/);
 });
 

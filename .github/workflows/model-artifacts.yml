@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - catalog/models.json
+      - catalog/compositions.json
+      - catalog/component-qualifications.json
       - catalog/qualifications.json
       - catalog/embedding-qualifications.json
       - catalog/tool-qualifications.json
@@ -12,6 +14,10 @@ on:
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
+      - tools/composition-evidence-gate.mjs
+      - tools/composition-evidence-gate.test.mjs
+      - tools/component-evidence-gate.mjs
+      - tools/component-evidence-gate.test.mjs
       - tools/qualification-smoke-gate.mjs
       - tools/qualification-smoke-gate.test.mjs
       - tools/independent-model-publication.test.mjs
@@ -27,6 +33,8 @@ on:
       - main
     paths:
       - catalog/models.json
+      - catalog/compositions.json
+      - catalog/component-qualifications.json
       - catalog/qualifications.json
       - catalog/embedding-qualifications.json
       - catalog/tool-qualifications.json
@@ -35,6 +43,10 @@ on:
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
+      - tools/composition-evidence-gate.mjs
+      - tools/composition-evidence-gate.test.mjs
+      - tools/component-evidence-gate.mjs
+      - tools/component-evidence-gate.test.mjs
       - tools/qualification-smoke-gate.mjs
       - tools/qualification-smoke-gate.test.mjs
       - tools/independent-model-publication.test.mjs
@@ -94,6 +106,12 @@ jobs:
       - name: Install catalog tooling
         run: npm ci
 
+      - name: Verify qualified composition evidence
+        run: npm run catalog:verify-compositions
+
+      - name: Verify qualified component evidence
+        run: npm run catalog:verify-components
+
       - name: Resolve model publication plan
         id: plan
         shell: bash
@@ -106,6 +124,7 @@ jobs:
           if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
             node tools/plan-model-publications.mjs \
               --current catalog/models.json \
+              --component-qualifications catalog/component-qualifications.json \
               --qualifications catalog/qualifications.json \
               --embedding-qualifications catalog/embedding-qualifications.json \
               --tool-qualifications catalog/tool-qualifications.json \
@@ -121,6 +140,7 @@ jobs:
             comparison="${BEFORE_SHA}"
           fi
           previous_catalog="${RUNNER_TEMP}/models-before.json"
+          previous_components="${RUNNER_TEMP}/component-qualifications-before.json"
           previous_profiles="${RUNNER_TEMP}/performance-profiles-before.json"
           previous_qualifications="${RUNNER_TEMP}/qualifications-before.json"
           previous_embedding="${RUNNER_TEMP}/embedding-qualifications-before.json"
@@ -130,6 +150,7 @@ jobs:
           if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
               ! git cat-file -e "${comparison}^{commit}"; then
             printf '%s\n' '{"schemaVersion":2,"models":[]}' > "${previous_catalog}"
+            printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_components}"
             printf '%s\n' '{"schemaVersion":1,"profiles":[]}' > "${previous_profiles}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_qualifications}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_embedding}"
@@ -138,6 +159,9 @@ jobs:
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_speech}"
           else
             git show "${comparison}:catalog/models.json" > "${previous_catalog}"
+            if ! git show "${comparison}:catalog/component-qualifications.json" > "${previous_components}"; then
+              printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_components}"
+            fi
             git show "${comparison}:catalog/performance-profiles.json" > "${previous_profiles}"
             if ! git show "${comparison}:catalog/qualifications.json" > "${previous_qualifications}"; then
               printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_qualifications}"
@@ -163,6 +187,8 @@ jobs:
           node tools/plan-model-publications.mjs \
             --previous "${previous_catalog}" \
             --current catalog/models.json \
+            --component-qualifications catalog/component-qualifications.json \
+            --previous-component-qualifications "${previous_components}" \
             --qualifications catalog/qualifications.json \
             --previous-qualifications "${previous_qualifications}" \
             --embedding-qualifications catalog/embedding-qualifications.json \

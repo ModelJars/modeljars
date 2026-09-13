@@ -476,6 +476,8 @@ data class CatalogSpeechQualifications(
 data class CatalogComponentQualification(
     val modelId: String,
     val baseModelId: String,
+    val baseArtifactSha256: String,
+    val baseArtifactSizeBytes: Long,
     val artifactSha256: String,
     val artifactSizeBytes: Long,
     val artifactFiles: List<CatalogArtifactFile>,
@@ -491,6 +493,7 @@ data class CatalogComponentQualifications(
     val generatedAt: String,
     val policyVersion: String,
     val modelsRevision: String,
+    val evidenceRevision: String,
     val qualifiedModels: Int,
     val rejectedModels: Int,
     val entries: List<CatalogComponentQualification>,
@@ -1005,6 +1008,48 @@ fun CatalogEntry.registryProperties(): String =
         }
         backends.toSortedMap().forEach { (backend, supported) ->
             appendLine("${prefix}backend.$backend=$supported")
+        }
+    }
+
+fun CatalogComponentQualifications.registryProperties(
+    entries: List<CatalogComponentQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.componentQualifications.schemaVersion=1")
+        appendLine("modeljars.componentQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.componentQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.componentQualifications.modelsRevision=$modelsRevision")
+        appendLine("modeljars.componentQualifications.evidenceRevision=$evidenceRevision")
+        appendLine(
+            "modeljars.componentQualifications.qualifiedModels=" +
+                entries.count(CatalogComponentQualification::qualified),
+        )
+        appendLine(
+            "modeljars.componentQualifications.rejectedModels=" +
+                entries.count { !it.qualified },
+        )
+        entries.forEach { entry ->
+            val prefix = "componentQualification.${entry.modelId}."
+            appendLine("${prefix}baseModelId=${propertyValue(entry.baseModelId)}")
+            appendLine("${prefix}baseArtifactSha256=${entry.baseArtifactSha256}")
+            appendLine("${prefix}baseArtifactSizeBytes=${entry.baseArtifactSizeBytes}")
+            appendLine("${prefix}artifactSha256=${entry.artifactSha256}")
+            appendLine("${prefix}artifactSizeBytes=${entry.artifactSizeBytes}")
+            appendLine("${prefix}artifactBundleSizeBytes=${entry.artifactBundleSizeBytes}")
+            appendLine("${prefix}artifactBundleSha256=${entry.artifactBundleSha256}")
+            appendLine("${prefix}reportUri=${propertyValue(entry.reportUri)}")
+            appendLine("${prefix}reportSha256=${entry.reportSha256}")
+            appendLine("${prefix}qualified=${entry.qualified}")
+            appendLine("${prefix}artifactFile.count=${entry.artifactFiles.size}")
+            entry.artifactFiles.forEachIndexed { index, artifactFile ->
+                val filePrefix = "${prefix}artifactFile.${index.toString().padStart(3, '0')}."
+                appendLine("${filePrefix}path=${propertyValue(artifactFile.path)}")
+                appendLine("${filePrefix}role=${propertyValue(artifactFile.role)}")
+                appendLine("${filePrefix}sha256=${artifactFile.sha256}")
+                appendLine("${filePrefix}sizeBytes=${artifactFile.sizeBytes}")
+            }
         }
     }
 
@@ -1891,6 +1936,13 @@ val componentQualifications =
                     CatalogComponentQualification(
                         modelId = modelId,
                         baseModelId = raw.requiredString("baseModelId"),
+                        baseArtifactSha256 = raw.requiredString("baseArtifactSha256"),
+                        baseArtifactSizeBytes =
+                            (raw["baseArtifactSizeBytes"] as? Number)?.toLong()
+                                ?: error(
+                                    "component qualification $modelId.baseArtifactSizeBytes " +
+                                        "must be an integer",
+                                ),
                         artifactSha256 = raw.requiredString("artifactSha256"),
                         artifactSizeBytes =
                             (raw["artifactSizeBytes"] as? Number)?.toLong()
@@ -1933,6 +1985,7 @@ val componentQualifications =
             generatedAt = document.requiredString("generatedAt"),
             policyVersion = document.requiredString("policyVersion"),
             modelsRevision = document.requiredString("modelsRevision"),
+            evidenceRevision = document.requiredString("evidenceRevision"),
             qualifiedModels = qualifiedModels,
             rejectedModels = rejectedModels,
             entries = entries,
@@ -1997,9 +2050,16 @@ componentQualifications?.entries?.forEach { qualification ->
     require(artifactBundleSha256(entry.files) == qualification.artifactBundleSha256) {
         "Component qualification bundle SHA-256 does not match ${qualification.modelId}"
     }
-    require(qualification.baseModelId in publicModelIds) {
+    val baseEntry = catalogEntries.singleOrNull { it.id == qualification.baseModelId }
+    require(baseEntry != null && qualification.baseModelId in publicModelIds) {
         "Component qualification ${qualification.modelId} requires an unqualified base " +
             qualification.baseModelId
+    }
+    require(baseEntry.sha256 == qualification.baseArtifactSha256) {
+        "Component qualification base SHA-256 does not match ${qualification.baseModelId}"
+    }
+    require(baseEntry.sizeBytes == qualification.baseArtifactSizeBytes) {
+        "Component qualification base size does not match ${qualification.baseModelId}"
     }
 }
 val qualifiedComponentIds =
@@ -3235,6 +3295,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
         }
+    val candidateTestComponentQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/component-qualifications-v1.properties")
+        }
     val candidateTestPayloadTasks =
         catalogEntries
             .filter { it.packaging == "classpath" }
@@ -3284,6 +3348,7 @@ project(":modeljars-core") {
                 candidateTestEmbeddingQualificationRegistry,
                 candidateTestRerankingQualificationRegistry,
                 candidateTestSpeechQualificationRegistry,
+                candidateTestComponentQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -3379,6 +3444,10 @@ project(":modeljars-core") {
                 candidateTestSpeechQualificationRegistry.get().asFile.writeText(
                     speechQualifications?.registryProperties()
                         ?: emptySpeechQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestComponentQualificationRegistry.get().asFile.writeText(
+                    requireNotNull(componentQualifications).registryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
             }
@@ -3501,6 +3570,10 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
         }
+    val runtimeComponentQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/component-qualifications-v1.properties")
+        }
     val generateRuntimeQualificationResources =
         tasks.register("generateRuntimeQualificationResources") {
             inputs.file(qualificationCatalogFile)
@@ -3516,6 +3589,7 @@ project(":modeljars") {
             if (speechQualificationCatalogFile.isFile) {
                 inputs.file(speechQualificationCatalogFile)
             }
+            inputs.file(componentQualificationCatalogFile)
             outputs.files(
                 runtimeRagQualificationRegistry,
                 runtimeRagQualificationMetadata,
@@ -3523,6 +3597,7 @@ project(":modeljars") {
                 runtimeRerankingQualificationRegistry,
                 runtimeToolQualificationRegistry,
                 runtimeSpeechQualificationRegistry,
+                runtimeComponentQualificationRegistry,
             )
             doLast {
                 val qualifications = requireNotNull(ragQualifications)
@@ -3554,6 +3629,11 @@ project(":modeljars") {
                 runtimeSpeechQualificationRegistry.get().asFile.writeText(
                     speechQualifications?.registryProperties()
                         ?: emptySpeechQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeComponentQualificationRegistry.get().asFile.writeText(
+                    requireNotNull(componentQualifications)
+                        .registryProperties(qualifiedComponentQualifications),
                     StandardCharsets.ISO_8859_1,
                 )
             }
@@ -3986,6 +4066,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
         }
+    val aggregateComponentQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/component-qualifications-v1.properties")
+        }
     val generateCatalogResources =
         tasks.register("generateCatalogResources") {
             inputs.file(rootProject.file("catalog/models.json"))
@@ -4022,6 +4106,7 @@ project(":modeljars-catalog") {
                 aggregateRerankingQualificationRegistry,
                 aggregateToolQualificationRegistry,
                 aggregateSpeechQualificationRegistry,
+                aggregateComponentQualificationRegistry,
             )
             doLast {
                 val registry = aggregateRegistry.get().asFile
@@ -4114,6 +4199,11 @@ project(":modeljars-catalog") {
                 aggregateSpeechQualificationRegistry.get().asFile.writeText(
                     speechQualifications?.registryProperties(publicSpeechQualifications)
                         ?: emptySpeechQualificationRegistryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateComponentQualificationRegistry.get().asFile.writeText(
+                    requireNotNull(componentQualifications)
+                        .registryProperties(qualifiedComponentQualifications),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregatePerformanceRegistry.get().asFile.writeText(
@@ -4257,6 +4347,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/component-qualifications-v1.json")
             }
+        val markerComponentQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/component-qualifications-v1.properties")
+            }
         val markerDocs = markerRoot.map { it.file("META-INF/modeljars/README.txt") }
         val generateMarker =
             tasks.register("generateMarker$suffix") {
@@ -4289,6 +4383,7 @@ project(":modeljars-catalog") {
                     markerRerankingQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerSpeechQualificationRegistry,
+                    markerComponentQualificationRegistry,
                     markerComponentQualificationMetadata,
                     markerDocs,
                 )
@@ -4405,6 +4500,11 @@ project(":modeljars-catalog") {
                             ?: emptySpeechQualificationRegistryProperties(),
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerComponentQualificationRegistry.get().asFile.writeText(
+                        requireNotNull(componentQualifications)
+                            .registryProperties(modelComponentQualifications),
+                        StandardCharsets.ISO_8859_1,
+                    )
                     val componentMetadata = markerComponentQualificationMetadata.get().asFile
                     if (modelComponentQualifications.isEmpty()) {
                         componentMetadata.delete()
@@ -4457,6 +4557,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/speech-qualifications-v1.properties",
+                        "META-INF/modeljars/component-qualifications-v1.properties",
                         "META-INF/modeljars/component-qualifications-v1.json",
                         "META-INF/modeljars/qualifications-v1.json",
                     )

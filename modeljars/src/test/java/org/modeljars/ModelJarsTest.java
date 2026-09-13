@@ -48,10 +48,15 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -213,6 +218,7 @@ class ModelJarsTest {
               loadedAdapter.set(adapterPath);
               return backend;
             },
+            componentQualificationRegistry(adapter, base, true),
             Map::of);
 
     try (var runtime =
@@ -228,6 +234,39 @@ class ModelJarsTest {
     }
 
     assertTrue(backend.closed());
+  }
+
+  @Test
+  void refusesAnActivatedDescriptorWithoutEvidenceBoundToItsExactBase() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    var installs = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installs.incrementAndGet();
+              return Path.of("unexpected");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, false),
+            Map::of);
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    QWEN,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains("no qualified component evidence"));
+    assertEquals(0, installs.get());
   }
 
   @Test
@@ -270,6 +309,7 @@ class ModelJarsTest {
                 descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root"),
             (backendName, path, configuration) -> new StubBackend(),
             (basePath, adapterPath, configuration) -> backend,
+            componentQualificationRegistry(adapter, base, true),
             Map::of);
 
     ModelJarException failure =
@@ -905,6 +945,64 @@ class ModelJarsTest {
         Optional.empty(),
         Set.of("tool-use"),
         ModelDimensions.unknown());
+  }
+
+  private static ModelComponentQualificationRegistry componentQualificationRegistry(
+      ModelJarDescriptor adapter, ModelJarDescriptor base, boolean qualified) {
+    Properties properties = new Properties();
+    properties.setProperty("modeljars.componentQualifications.schemaVersion", "1");
+    properties.setProperty("modeljars.componentQualifications.generatedAt", "2026-09-13T16:00:00Z");
+    properties.setProperty(
+        "modeljars.componentQualifications.policyVersion", "activated-adapter-component-v1");
+    properties.setProperty("modeljars.componentQualifications.modelsRevision", "1".repeat(40));
+    properties.setProperty("modeljars.componentQualifications.evidenceRevision", "2".repeat(40));
+    properties.setProperty(
+        "modeljars.componentQualifications.qualifiedModels", qualified ? "1" : "0");
+    properties.setProperty(
+        "modeljars.componentQualifications.rejectedModels", qualified ? "0" : "1");
+    String prefix = "componentQualification." + adapter.alias() + ".";
+    properties.setProperty(prefix + "baseModelId", base.alias());
+    properties.setProperty(prefix + "baseArtifactSha256", base.sha256().orElseThrow());
+    properties.setProperty(
+        prefix + "baseArtifactSizeBytes", Long.toString(base.sizeBytes().orElseThrow()));
+    properties.setProperty(prefix + "artifactSha256", adapter.sha256().orElseThrow());
+    properties.setProperty(
+        prefix + "artifactSizeBytes", Long.toString(adapter.sizeBytes().orElseThrow()));
+    properties.setProperty(
+        prefix + "artifactBundleSizeBytes",
+        Long.toString(adapter.files().stream().mapToLong(ModelArtifactFile::sizeBytes).sum()));
+    properties.setProperty(prefix + "artifactBundleSha256", artifactBundleSha256(adapter.files()));
+    properties.setProperty(
+        prefix + "reportUri",
+        "https://raw.githubusercontent.com/integrallis/models/" + "2".repeat(40) + "/report.json");
+    properties.setProperty(prefix + "reportSha256", "3".repeat(64));
+    properties.setProperty(prefix + "qualified", Boolean.toString(qualified));
+    properties.setProperty(prefix + "artifactFile.count", Integer.toString(adapter.files().size()));
+    for (int index = 0; index < adapter.files().size(); index++) {
+      ModelArtifactFile file = adapter.files().get(index);
+      String filePrefix = prefix + "artifactFile." + "%03d".formatted(index) + ".";
+      properties.setProperty(filePrefix + "path", file.path());
+      properties.setProperty(filePrefix + "role", file.role());
+      properties.setProperty(filePrefix + "sha256", file.sha256());
+      properties.setProperty(filePrefix + "sizeBytes", Long.toString(file.sizeBytes()));
+    }
+    return ModelComponentQualificationRegistry.fromProperties(properties);
+  }
+
+  private static String artifactBundleSha256(List<ModelArtifactFile> files) {
+    String identity =
+        files.stream()
+            .sorted(Comparator.comparing(ModelArtifactFile::path))
+            .map(file -> file.path() + "\t" + file.sizeBytes() + "\t" + file.sha256() + "\n")
+            .collect(java.util.stream.Collectors.joining());
+    try {
+      return HexFormat.of()
+          .formatHex(
+              MessageDigest.getInstance("SHA-256")
+                  .digest(identity.getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException impossible) {
+      throw new AssertionError(impossible);
+    }
   }
 
   private static class StubBackend implements BatchInferenceBackend {

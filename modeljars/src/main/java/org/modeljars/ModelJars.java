@@ -63,6 +63,7 @@ public final class ModelJars {
   private final ModelEmbeddingQualificationRegistry embeddingQualifications;
   private final ModelRerankingQualificationRegistry rerankingQualifications;
   private final ModelSpeechQualificationRegistry speechQualifications;
+  private final ModelComponentQualificationRegistry componentQualifications;
   private final ModelPerformanceProfileRegistry profiles;
   private final ArtifactInstaller installer;
   private final BackendLoader backendLoader;
@@ -84,10 +85,31 @@ public final class ModelJars {
     this(
         models,
         qualifications,
+        profiles,
+        installer,
+        backendLoader,
+        activatedBackendLoader,
+        ModelComponentQualificationRegistry.fromClasspath(),
+        runtimeEnvironment);
+  }
+
+  ModelJars(
+      ModelJarRegistry models,
+      ModelRagQualificationRegistry qualifications,
+      ModelPerformanceProfileRegistry profiles,
+      ArtifactInstaller installer,
+      BackendLoader backendLoader,
+      ActivatedBackendLoader activatedBackendLoader,
+      ModelComponentQualificationRegistry componentQualifications,
+      Supplier<Map<String, String>> runtimeEnvironment) {
+    this(
+        models,
+        qualifications,
         ModelToolQualificationRegistry.fromClasspath(),
         ModelEmbeddingQualificationRegistry.fromClasspath(),
         ModelRerankingQualificationRegistry.fromClasspath(),
         ModelSpeechQualificationRegistry.fromClasspath(),
+        componentQualifications,
         profiles,
         installer,
         backendLoader,
@@ -215,6 +237,7 @@ public final class ModelJars {
         embeddingQualifications,
         rerankingQualifications,
         speechQualifications,
+        ModelComponentQualificationRegistry.fromClasspath(),
         profiles,
         installer,
         backendLoader,
@@ -233,6 +256,7 @@ public final class ModelJars {
       ModelEmbeddingQualificationRegistry embeddingQualifications,
       ModelRerankingQualificationRegistry rerankingQualifications,
       ModelSpeechQualificationRegistry speechQualifications,
+      ModelComponentQualificationRegistry componentQualifications,
       ModelPerformanceProfileRegistry profiles,
       ArtifactInstaller installer,
       BackendLoader backendLoader,
@@ -251,6 +275,8 @@ public final class ModelJars {
         Objects.requireNonNull(rerankingQualifications, "rerankingQualifications");
     this.speechQualifications =
         Objects.requireNonNull(speechQualifications, "speechQualifications");
+    this.componentQualifications =
+        Objects.requireNonNull(componentQualifications, "componentQualifications");
     this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.backendLoader = Objects.requireNonNull(backendLoader, "backendLoader");
@@ -739,7 +765,7 @@ public final class ModelJars {
             .resolve(adapter)
             .orElseThrow(
                 () -> new ModelJarException("No activated-adapter component matched " + adapter));
-    requireActivatedAdapter(adapterDescriptor);
+    requireActivatedAdapter(baseDescriptor, adapterDescriptor);
 
     ModelExecutionQualification qualification =
         selectQualification(baseDescriptor, ModelBackend.JAVA);
@@ -769,7 +795,8 @@ public final class ModelJars {
     }
   }
 
-  private static void requireActivatedAdapter(ModelJarDescriptor descriptor) {
+  private void requireActivatedAdapter(
+      ModelJarDescriptor baseDescriptor, ModelJarDescriptor descriptor) {
     boolean valid =
         descriptor.format().equals("safetensors")
             && !descriptor.files().isEmpty()
@@ -783,6 +810,15 @@ public final class ModelJars {
               + descriptor.markerCoordinate()
               + " is not an activated-lora-adapter composition component");
     }
+    componentQualifications
+        .qualificationFor(descriptor, baseDescriptor)
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " has no qualified component evidence bound to base "
+                        + baseDescriptor.markerCoordinate()));
   }
 
   private ModelJarRuntime loadRuntimeConfigured(

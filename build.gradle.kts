@@ -4891,6 +4891,9 @@ tasks.register("verifyCatalog") {
                 val qualificationMetadataResource =
                     zip.getEntry("META-INF/modeljars/qualifications-v1.json")
                         ?: error("Qualification metadata missing from $markerJar")
+                val componentQualificationResource =
+                    zip.getEntry("META-INF/modeljars/component-qualifications-v1.properties")
+                        ?: error("Component qualification resource missing from $markerJar")
                 val referenceClass =
                     "org/modeljars/catalog/${markerReferenceClassName(entry.id)}.class"
                 require(zip.getEntry(referenceClass) != null) {
@@ -4988,6 +4991,118 @@ tasks.register("verifyCatalog") {
                 ) {
                     "Qualification JSON entry count mismatch in $markerJar"
                 }
+                val componentProperties = Properties()
+                zip.getInputStream(componentQualificationResource).use(componentProperties::load)
+                val expectedComponentQualifications =
+                    requireNotNull(componentQualifications).entries.filter { it.modelId == entry.id }
+                require(
+                    componentProperties.getProperty(
+                        "modeljars.componentQualifications.schemaVersion",
+                    ) == "1",
+                ) {
+                    "Component qualification schema mismatch in $markerJar"
+                }
+                require(
+                    componentProperties.getProperty(
+                        "modeljars.componentQualifications.modelsRevision",
+                    ) == requireNotNull(componentQualifications).modelsRevision &&
+                        componentProperties.getProperty(
+                            "modeljars.componentQualifications.evidenceRevision",
+                        ) == componentQualifications.evidenceRevision,
+                ) {
+                    "Component qualification revision binding mismatch in $markerJar"
+                }
+                require(
+                    componentProperties.getProperty(
+                        "modeljars.componentQualifications.qualifiedModels",
+                    ) ==
+                        expectedComponentQualifications
+                            .count(CatalogComponentQualification::qualified)
+                            .toString(),
+                ) {
+                    "Component qualification count mismatch in $markerJar"
+                }
+                require(
+                    componentProperties.getProperty(
+                        "modeljars.componentQualifications.rejectedModels",
+                    ) == expectedComponentQualifications.count { !it.qualified }.toString(),
+                ) {
+                    "Rejected component qualification count mismatch in $markerJar"
+                }
+                expectedComponentQualifications.forEach { qualification ->
+                    val prefix = "componentQualification.${qualification.modelId}."
+                    require(
+                        componentProperties.getProperty("${prefix}baseModelId") ==
+                            qualification.baseModelId,
+                    ) {
+                        "Component qualification base ID mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}baseArtifactSha256") ==
+                            qualification.baseArtifactSha256,
+                    ) {
+                        "Component qualification base SHA-256 mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}baseArtifactSizeBytes") ==
+                            qualification.baseArtifactSizeBytes.toString(),
+                    ) {
+                        "Component qualification base size mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}artifactSha256") ==
+                            qualification.artifactSha256,
+                    ) {
+                        "Component qualification artifact SHA-256 mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}artifactSizeBytes") ==
+                            qualification.artifactSizeBytes.toString(),
+                    ) {
+                        "Component qualification artifact size mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}artifactBundleSha256") ==
+                            qualification.artifactBundleSha256,
+                    ) {
+                        "Component qualification bundle SHA-256 mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}artifactBundleSizeBytes") ==
+                            qualification.artifactBundleSizeBytes.toString(),
+                    ) {
+                        "Component qualification bundle size mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}reportUri") ==
+                            qualification.reportUri &&
+                            componentProperties.getProperty("${prefix}reportSha256") ==
+                                qualification.reportSha256 &&
+                            componentProperties.getProperty("${prefix}qualified") ==
+                                qualification.qualified.toString(),
+                    ) {
+                        "Component qualification report binding mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}artifactFile.count") ==
+                            qualification.artifactFiles.size.toString(),
+                    ) {
+                        "Component qualification file count mismatch in $markerJar"
+                    }
+                    qualification.artifactFiles.forEachIndexed { index, artifactFile ->
+                        val filePrefix =
+                            "${prefix}artifactFile.${index.toString().padStart(3, '0')}."
+                        require(
+                            componentProperties.getProperty("${filePrefix}path") == artifactFile.path &&
+                                componentProperties.getProperty("${filePrefix}role") == artifactFile.role &&
+                                componentProperties.getProperty("${filePrefix}sha256") == artifactFile.sha256 &&
+                                componentProperties.getProperty("${filePrefix}sizeBytes") ==
+                                    artifactFile.sizeBytes.toString(),
+                        ) {
+                            "Component qualification file $index mismatch in $markerJar"
+                        }
+                    }
+                }
                 require(
                     properties.getProperty("model.${entry.id}.markerCoordinate") ==
                         entry.markerCoordinate,
@@ -5061,6 +5176,18 @@ tasks.register("verifyCatalog") {
                     .toSet()
             require(referenceClasses == expectedReferenceClasses) {
                 "Aggregate catalog must expose references only for qualified artifacts"
+            }
+            val componentResource =
+                zip.getEntry("META-INF/modeljars/component-qualifications-v1.properties")
+                    ?: error("Aggregate catalog is missing component qualifications")
+            val componentProperties = Properties()
+            zip.getInputStream(componentResource).use(componentProperties::load)
+            require(
+                componentProperties.getProperty(
+                    "modeljars.componentQualifications.qualifiedModels",
+                ) == qualifiedComponentQualifications.size.toString(),
+            ) {
+                "Aggregate component qualification count mismatch"
             }
         }
         val siteCatalog = generatedSiteCatalog.get().asFile

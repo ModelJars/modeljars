@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-03T14:01:34.051545984Z",
+  "generatedAt": "2026-09-14T20:48:32.544582997Z",
   "policyVersion": "needle2-tool-conformance-v2",
-  "modelsRevision": "cff14f65b2c36530e54c2812efa4576416ed3b11",
-  "reportRevision": "60e5fa40d855553ca960017baf58d646fc03c8d8",
-  "qualifiedModels": 2,
+  "modelsRevision": "50c29f36f6a71972a1ee8e966e2d29cf95e9320b",
+  "reportRevision": "f727b1cefa33b34953870d14197ef1233cf8b66f",
+  "qualifiedModels": 3,
   "rejectedModels": 4,
   "entries": [
     {
@@ -291,6 +291,54 @@
         "physicalMemoryBytes": 32857444352,
         "maxHeapBytes": 8216641536,
         "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "qwen3_8b_q4_k_m",
+      "model": "Qwen3 8B GGUF Q4_K_M",
+      "backend": "pure-java",
+      "backendVersion": "models@50c29f36f6a71972a1ee8e966e2d29cf95e9320b",
+      "artifactSha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+      "artifactSizeBytes": 5027783488,
+      "report": "benchmark-results/2026-09-14-qwen3-8b-qualification/qwen3-8b-v2-full.json",
+      "reportSha256": "9d9aee82ad4b4d876779dc461349a3e543335944390adc4cda82ff5cc73b611e",
+      "suite": {
+        "id": "models-tool-conformance-v2",
+        "sha256": "56931b0dba10c355c7372f773a05267aea48eec15dc2d98057349250da027f55",
+        "sourceRepository": "https://github.com/cactus-compute/needle",
+        "sourceRevision": "7bd8a635ebb977489703b3bb916c21412e8a9cdf",
+        "sourcePath": "needle/playground/app.js"
+      },
+      "generation": {
+        "temperature": 0.0,
+        "maxTokens": 256,
+        "promptTemplate": "chatml-no-think"
+      },
+      "summary": {
+        "attempts": 14,
+        "passed": 14,
+        "structuredOutputRate": 1.0,
+        "toolSelectionExactRate": 1.0,
+        "schemaValidityRate": 1.0,
+        "declaredArgumentsOnlyRate": 1.0,
+        "expectedArgumentAccuracy": 1.0,
+        "refusalAccuracy": 1.0,
+        "p95EndToEndMillis": 207915.0,
+        "qualified": true,
+        "verdict": "PASS"
+      },
+      "environment": {
+        "host": "modeljars-qwen3-8b-v2-20260914",
+        "osName": "Linux",
+        "osVersion": "6.8.0-138-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Rome Processor",
+        "processors": 16,
+        "physicalMemoryBytes": 32859295744,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.4.1",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       }

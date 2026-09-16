@@ -33,9 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 32;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 33;
   private static final String AGGREGATE_MODELS_REVISION =
-      "4c3e2690144414b9b93e8c85166385f8a4f0821c";
+      "8dcaa1821eb020f97e07bc7c1dc762f8dbfa4f15";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";
@@ -1028,6 +1028,33 @@ class ModelRagQualificationRegistryTest {
     assertEquals(21.834571524790327, qualification.p50DecodeTokensPerSecond());
     assertEquals(
         "2e0857a7b8def3b4d0999493f85039eac561e5fb3abd3d85eabdf56698776b85",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogPublishesQualifiedGranite41ThreeBillionEvidence() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("ibm_granite_granite_4_1_3b_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("granite-documents", qualification.promptTemplate());
+    assertEquals("PRODUCTION_READY", qualification.performanceTier());
+    assertEquals("QUALIFIED", qualification.verdict());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(4.0 / 9.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(26.022587688668178, qualification.p50DecodeTokensPerSecond());
+    assertEquals(
+        "3cc63c112ca84b1c7519053b8d19b9597f7cd023d255706e76dcef396182dc25",
         qualification.reportSha256());
     assertTrue(qualification.productionUsable());
   }

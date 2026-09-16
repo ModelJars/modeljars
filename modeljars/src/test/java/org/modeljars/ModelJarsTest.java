@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.integrallis.models.api.ActivatedAdapterMetadata;
 import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.BackendDiagnostics;
 import com.integrallis.models.api.BatchInferenceBackend;
@@ -34,6 +35,8 @@ import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.PcmAudio;
 import com.integrallis.models.api.RerankingModel;
 import com.integrallis.models.api.SamplingOptions;
+import com.integrallis.models.api.SharedInferencePrefix;
+import com.integrallis.models.api.SharedPrefixInferenceBackend;
 import com.integrallis.models.api.SpeechSynthesisOptions;
 import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.api.Tokenizer;
@@ -45,10 +48,15 @@ import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -182,6 +190,140 @@ class ModelJarsTest {
                 VirtualChatModel.ConstraintFactory.none()));
 
     assertTrue(chatBackend.closed());
+  }
+
+  @Test
+  void opensOneBaseAndItsActivatedAdapterAsOnePhysicallyShareableRuntime() {
+    ModelJarRegistry classpath = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor base = classpath.resolve(QWEN).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    ModelJar adapterModel = ModelJar.of(adapter.markerCoordinate().toString());
+    var installed = new java.util.ArrayList<ModelJarDescriptor>();
+    var loadedBase = new AtomicReference<Path>();
+    var loadedAdapter = new AtomicReference<Path>();
+    var backend =
+        new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow());
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installed.add(descriptor);
+              return descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (basePath, adapterPath, configuration) -> {
+              loadedBase.set(basePath);
+              loadedAdapter.set(adapterPath);
+              return backend;
+            },
+            componentQualificationRegistry(adapter, base, true),
+            Map::of);
+
+    try (var runtime =
+        loader.loadActivatedToolRuntime(QWEN, adapterModel, ModelLoadOptions.defaults())) {
+      assertEquals(base.sha256().orElseThrow(), runtime.model().adapter().baseArtifactSha256());
+      assertEquals(256, runtime.model().minimumSharedPrefixTokens());
+      assertEquals(base, runtime.baseDescriptor());
+      assertEquals(adapter, runtime.adapterDescriptor());
+      assertEquals(ChatTemplate.CHATML_NO_THINK, runtime.chatTemplate());
+      assertEquals("verified-base.gguf", loadedBase.get().toString());
+      assertEquals("adapter-root", loadedAdapter.get().toString());
+      assertEquals(List.of(base, adapter), installed);
+      assertFalse(backend.closed());
+    }
+
+    assertTrue(backend.closed());
+  }
+
+  @Test
+  void refusesAnActivatedDescriptorWithoutEvidenceBoundToItsExactBase() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    var installs = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installs.incrementAndGet();
+              return Path.of("unexpected");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, false),
+            Map::of);
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    QWEN,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains("no qualified component evidence"));
+    assertEquals(0, installs.get());
+  }
+
+  @Test
+  void refusesToTreatAStandaloneModelAsAnActivatedAdapter() {
+    var installs = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installs.incrementAndGet();
+              return Path.of("unexpected");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (basePath, adapterPath, configuration) ->
+                new StubSharedBackend("0".repeat(64), "1".repeat(64)),
+            Map::of);
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () -> loader.loadActivatedToolRuntime(QWEN, QWEN_TOOLS, ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains("activated-lora-adapter"));
+    assertEquals(0, installs.get());
+  }
+
+  @Test
+  void closesABackendWhoseAdapterMetadataDoesNotMatchTheVerifiedComponent() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    var backend = new StubSharedBackend(base.sha256().orElseThrow(), "9".repeat(64));
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) ->
+                descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (basePath, adapterPath, configuration) -> backend,
+            componentQualificationRegistry(adapter, base, true),
+            Map::of);
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    QWEN,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains("adapter SHA-256"));
+    assertTrue(backend.closed());
   }
 
   @Test
@@ -762,7 +904,110 @@ class ModelJarsTest {
     }
   }
 
-  private static final class StubBackend implements BatchInferenceBackend {
+  private static ModelJarDescriptor activatedAdapterDescriptor(ModelJarDescriptor base) {
+    String weightsSha = "a".repeat(64);
+    String manifestSha = "b".repeat(64);
+    return new ModelJarDescriptor(
+        "qwen3-1.7b-tools-r32",
+        "integrallis/qwen3-1.7b-tools-r32",
+        ModelJarCoordinate.parse(
+            "org.modeljars.integrallis:qwen3-1.7b-tools-r32.safetensors:1.0.0-r32.1"),
+        ModelVersion.parse("1.0.0"),
+        "r32",
+        "safetensors",
+        "qwen3-activated-lora",
+        "F32",
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(URI.create("https://github.com/integrallis/models")),
+        Optional.empty(),
+        Optional.of("c".repeat(40)),
+        Optional.of(weightsSha),
+        Optional.of(1024L),
+        Optional.of("Apache-2.0"),
+        Set.of("composition-component"),
+        Set.of("multi-file-artifact", "activated-lora-adapter"),
+        List.of(
+            new ModelArtifactFile(
+                "adapter.safetensors",
+                "weights",
+                URI.create("https://example.invalid/adapter.safetensors"),
+                weightsSha,
+                1024L),
+            new ModelArtifactFile(
+                "adapter-manifest.json",
+                "config",
+                URI.create("https://example.invalid/adapter-manifest.json"),
+                manifestSha,
+                512L)),
+        Map.of("pure-java", true),
+        Optional.of("Qwen3 1.7B tool adapter r32"),
+        Optional.of("Activated-LoRA composition component for " + base.alias()),
+        Optional.empty(),
+        Set.of("tool-use"),
+        ModelDimensions.unknown());
+  }
+
+  private static ModelComponentQualificationRegistry componentQualificationRegistry(
+      ModelJarDescriptor adapter, ModelJarDescriptor base, boolean qualified) {
+    Properties properties = new Properties();
+    properties.setProperty("modeljars.componentQualifications.schemaVersion", "1");
+    properties.setProperty("modeljars.componentQualifications.generatedAt", "2026-09-13T16:00:00Z");
+    properties.setProperty(
+        "modeljars.componentQualifications.policyVersion", "activated-adapter-component-v1");
+    properties.setProperty("modeljars.componentQualifications.modelsRevision", "1".repeat(40));
+    properties.setProperty("modeljars.componentQualifications.evidenceRevision", "2".repeat(40));
+    properties.setProperty(
+        "modeljars.componentQualifications.qualifiedModels", qualified ? "1" : "0");
+    properties.setProperty(
+        "modeljars.componentQualifications.rejectedModels", qualified ? "0" : "1");
+    String prefix = "componentQualification." + adapter.alias() + ".";
+    properties.setProperty(prefix + "baseModelId", base.alias());
+    properties.setProperty(prefix + "baseArtifactSha256", base.sha256().orElseThrow());
+    properties.setProperty(
+        prefix + "baseArtifactSizeBytes", Long.toString(base.sizeBytes().orElseThrow()));
+    properties.setProperty(prefix + "artifactSha256", adapter.sha256().orElseThrow());
+    properties.setProperty(
+        prefix + "artifactSizeBytes", Long.toString(adapter.sizeBytes().orElseThrow()));
+    properties.setProperty(
+        prefix + "artifactBundleSizeBytes",
+        Long.toString(adapter.files().stream().mapToLong(ModelArtifactFile::sizeBytes).sum()));
+    properties.setProperty(prefix + "artifactBundleSha256", artifactBundleSha256(adapter.files()));
+    properties.setProperty(prefix + "minimumSharedPrefixTokens", "256");
+    properties.setProperty(
+        prefix + "reportUri",
+        "https://raw.githubusercontent.com/integrallis/models/" + "2".repeat(40) + "/report.json");
+    properties.setProperty(prefix + "reportSha256", "3".repeat(64));
+    properties.setProperty(prefix + "qualified", Boolean.toString(qualified));
+    properties.setProperty(prefix + "artifactFile.count", Integer.toString(adapter.files().size()));
+    for (int index = 0; index < adapter.files().size(); index++) {
+      ModelArtifactFile file = adapter.files().get(index);
+      String filePrefix = prefix + "artifactFile." + "%03d".formatted(index) + ".";
+      properties.setProperty(filePrefix + "path", file.path());
+      properties.setProperty(filePrefix + "role", file.role());
+      properties.setProperty(filePrefix + "sha256", file.sha256());
+      properties.setProperty(filePrefix + "sizeBytes", Long.toString(file.sizeBytes()));
+    }
+    return ModelComponentQualificationRegistry.fromProperties(properties);
+  }
+
+  private static String artifactBundleSha256(List<ModelArtifactFile> files) {
+    String identity =
+        files.stream()
+            .sorted(Comparator.comparing(ModelArtifactFile::path))
+            .map(file -> file.path() + "\t" + file.sizeBytes() + "\t" + file.sha256() + "\n")
+            .collect(java.util.stream.Collectors.joining());
+    try {
+      return HexFormat.of()
+          .formatHex(
+              MessageDigest.getInstance("SHA-256")
+                  .digest(identity.getBytes(StandardCharsets.UTF_8)));
+    } catch (NoSuchAlgorithmException impossible) {
+      throw new AssertionError(impossible);
+    }
+  }
+
+  private static class StubBackend implements BatchInferenceBackend {
     private int plainEncodes;
     private int structuredEncodes;
     private final Tokenizer tokenizer =
@@ -899,6 +1144,55 @@ class ModelJarsTest {
         throw new IllegalArgumentException("foreign session");
       }
       return state;
+    }
+  }
+
+  private static final class StubSharedBackend extends StubBackend
+      implements SharedPrefixInferenceBackend {
+    private final ActivatedAdapterMetadata adapter;
+
+    private StubSharedBackend(String baseArtifactSha256, String adapterSha256) {
+      String hash = "d".repeat(64);
+      ActivatedAdapterMetadata.TrainingSource source =
+          new ActivatedAdapterMetadata.TrainingSource(
+              "primary", "fixture", "e".repeat(40), "train.jsonl", hash);
+      this.adapter =
+          new ActivatedAdapterMetadata(
+              "fixture/base",
+              "f".repeat(40),
+              baseArtifactSha256,
+              Map.of("tokenizer.json", hash),
+              adapterSha256,
+              32,
+              64,
+              List.of(1),
+              new ActivatedAdapterMetadata.TrainingProvenance(
+                  List.of(source), 1, hash, hash, hash, "formatter.py", hash));
+    }
+
+    @Override
+    public boolean supportsActivatedBranch() {
+      return true;
+    }
+
+    @Override
+    public Optional<ActivatedAdapterMetadata> activatedAdapter() {
+      return Optional.of(adapter);
+    }
+
+    @Override
+    public SharedInferencePrefix freezePrefix(InferenceSession source) {
+      throw new UnsupportedOperationException("not needed by this lifecycle test");
+    }
+
+    @Override
+    public InferenceSession fork(SharedInferencePrefix prefix, Branch branch) {
+      throw new UnsupportedOperationException("not needed by this lifecycle test");
+    }
+
+    @Override
+    public boolean sharesPrefixStorage(InferenceSession first, InferenceSession second) {
+      return false;
     }
   }
 

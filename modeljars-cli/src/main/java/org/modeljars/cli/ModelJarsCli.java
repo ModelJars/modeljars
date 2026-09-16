@@ -227,7 +227,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
     this.contributionService = Objects.requireNonNull(contributionService, "contributionService");
     this.clock = Objects.requireNonNull(clock, "clock");
-    this.generatedAliases = GeneratedModelAliases.from(registry.descriptors());
+    this.generatedAliases = GeneratedModelAliases.from(visibleDescriptors(registry.descriptors()));
     this.aliases = Objects.requireNonNull(aliases, "aliases");
   }
 
@@ -499,7 +499,19 @@ public final class ModelJarsCli implements Callable<Integer> {
   }
 
   private List<ModelJarDescriptor> descriptors() {
+    return visibleDescriptors(registry.descriptors());
+  }
+
+  private List<ModelJarDescriptor> allDescriptors() {
     return registry.descriptors();
+  }
+
+  private static List<ModelJarDescriptor> visibleDescriptors(List<ModelJarDescriptor> descriptors) {
+    return descriptors.stream().filter(descriptor -> !isCompositionComponent(descriptor)).toList();
+  }
+
+  private static boolean isCompositionComponent(ModelJarDescriptor descriptor) {
+    return descriptor.capabilities().contains("composition-component");
   }
 
   private ModelArgumentCompleter modelCompleter() {
@@ -549,6 +561,18 @@ public final class ModelJarsCli implements Callable<Integer> {
     }
     String original = selector.trim();
     String requested = expandAlias(original);
+    boolean internalComponent =
+        allDescriptors().stream()
+            .filter(ModelJarsCli::isCompositionComponent)
+            .anyMatch(
+                descriptor ->
+                    descriptor.alias().equals(requested)
+                        || descriptor.markerCoordinate().toString().equals(requested)
+                        || descriptor.sourceId().equals(requested));
+    if (internalComponent) {
+      throw new IllegalArgumentException(
+          "Composition components are installed through their qualified hybrid: " + requested);
+    }
     List<ModelJarDescriptor> exact =
         descriptors().stream()
             .filter(
@@ -654,7 +678,7 @@ public final class ModelJarsCli implements Callable<Integer> {
     return aliases.stream()
         .map(
             alias ->
-                descriptors().stream()
+                allDescriptors().stream()
                     .filter(candidate -> candidate.alias().equals(alias))
                     .findFirst()
                     .orElseThrow(

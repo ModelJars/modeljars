@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   mkdtemp,
   readFile,
@@ -45,6 +46,56 @@ function qualifications(entries) {
   return { schemaVersion: 1, entries };
 }
 
+function componentModel(overrides = {}) {
+  const weights = {
+    path: "adapter_model.safetensors",
+    role: "adapter-weights",
+    sha256: "c".repeat(64),
+    sizeBytes: 42_000_000,
+  };
+  return model({
+    id: "qwen3_1_7b_tool_alora_r32",
+    name: "Qwen3 1.7B Tool Activated-LoRA R32",
+    markerCoordinate:
+      "org.modeljars.huggingface:integrallis.qwen3-1.7b-tool-alora-r32:1.0.0-alora.1",
+    sha256: weights.sha256,
+    sizeBytes: weights.sizeBytes,
+    capabilities: ["composition-component"],
+    features: ["multi-file-artifact", "activated-lora-adapter"],
+    files: [
+      weights,
+      {
+        path: "adapter-manifest.json",
+        role: "adapter-configuration",
+        sha256: "d".repeat(64),
+        sizeBytes: 4_096,
+      },
+    ],
+    ...overrides,
+  });
+}
+
+function componentQualification(entry, qualified = true) {
+  const identity = [...entry.files]
+    .sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0))
+    .map((file) => `${file.path}\t${file.sizeBytes}\t${file.sha256}\n`)
+    .join("");
+  return {
+    modelId: entry.id,
+    artifactSha256: entry.sha256,
+    artifactSizeBytes: entry.sizeBytes,
+    artifactFiles: entry.files,
+    artifactBundleSizeBytes: entry.files.reduce(
+      (total, file) => total + file.sizeBytes,
+      0,
+    ),
+    artifactBundleSha256: createHash("sha256")
+      .update(identity, "utf8")
+      .digest("hex"),
+    qualified,
+  };
+}
+
 const toolsDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 test("selects one independent publication for a newly accepted model", () => {
@@ -74,6 +125,30 @@ test("requires a new coordinate when immutable marker metadata changes", () => {
 
   assert.throws(
     () => catalogPublicationDelta(catalog([before]), catalog([after])),
+    /changed without a new markerCoordinate/,
+  );
+});
+
+test("moving the manifest revision or generation time does not republish an unchanged marker", () => {
+  const entry = { modelId: "qwen3_0_6b_q4_0", report: "benchmark-results/x/report.json", reportSha256: "a".repeat(64) };
+  const before = { schemaVersion: 1, generatedAt: "2026-09-03T02:20:00Z", policyVersion: "v6",
+    modelsRevision: "4".repeat(40), targetQualifiedModels: 25, qualifiedModels: 1, rejectedModels: 0, entries: [entry] };
+  const after = { ...before, generatedAt: "2026-09-16T09:54:54Z", modelsRevision: "8".repeat(40), qualifiedModels: 2 };
+  const unchanged = model();
+  assert.deepEqual(
+    catalogPublicationDelta(catalog([unchanged]), catalog([unchanged]), {
+      previousQualificationManifests: [before],
+      currentQualificationManifests: [after],
+    }),
+    { publications: [], removed: [] },
+  );
+  const changedEntry = { ...after, entries: [{ ...entry, reportSha256: "b".repeat(64) }] };
+  assert.throws(
+    () =>
+      catalogPublicationDelta(catalog([unchanged]), catalog([unchanged]), {
+        previousQualificationManifests: [before],
+        currentQualificationManifests: [changedEntry],
+      }),
     /changed without a new markerCoordinate/,
   );
 });
@@ -349,6 +424,106 @@ test("publishes only exact artifacts that passed production qualification", () =
   );
 });
 
+test("publishes a hidden component only through exact component qualification", () => {
+  const base = model();
+  const adapter = componentModel();
+  const current = catalog([base, adapter]);
+  const delta = selectCatalogPublications(current, ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    current,
+    qualifications([
+      {
+        modelId: base.id,
+        artifactSha256: base.sha256,
+        artifactSizeBytes: base.sizeBytes,
+        qualified: true,
+      },
+    ]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([componentQualification(adapter)]),
+  );
+
+  assert.deepEqual(
+    filtered.publications.map((publication) => publication.id),
+    [base.id, adapter.id],
+  );
+});
+
+test("withholds a component when its own qualification fails", () => {
+  const adapter = componentModel();
+  const current = catalog([adapter]);
+  const delta = selectCatalogPublications(current, ["all"]);
+
+  const filtered = filterQualifiedPublications(
+    delta,
+    current,
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([]),
+    qualifications([componentQualification(adapter, false)]),
+  );
+
+  assert.deepEqual(filtered.publications, []);
+});
+
+test("rejects a component smuggled through a standalone qualification policy", () => {
+  const adapter = componentModel();
+  const current = catalog([adapter]);
+  const delta = selectCatalogPublications(current, ["all"]);
+
+  assert.throws(
+    () =>
+      filterQualifiedPublications(
+        delta,
+        current,
+        qualifications([
+          {
+            modelId: adapter.id,
+            artifactSha256: adapter.sha256,
+            artifactSizeBytes: adapter.sizeBytes,
+            qualified: true,
+          },
+        ]),
+      ),
+    /must not be independently qualified/,
+  );
+});
+
+test("rejects a public model in the hidden component qualification channel", () => {
+  const entry = model();
+  const current = catalog([entry]);
+  const delta = selectCatalogPublications(current, ["all"]);
+
+  assert.throws(
+    () =>
+      filterQualifiedPublications(
+        delta,
+        current,
+        qualifications([]),
+        qualifications([]),
+        qualifications([]),
+        qualifications([]),
+        qualifications([]),
+        qualifications([
+          {
+            modelId: entry.id,
+            artifactSha256: entry.sha256,
+            artifactSizeBytes: entry.sizeBytes,
+            qualified: false,
+          },
+        ]),
+      ),
+    /references public model/,
+  );
+});
+
 test("rejects stale qualification evidence for changed artifact bytes", () => {
   const entry = model();
   const delta = selectCatalogPublications(catalog([entry]), ["all"]);
@@ -565,6 +740,85 @@ test("CLI accepts all for an explicit catalog bootstrap publication", async () =
 
     assert.equal(result.status, 0, result.stderr);
     assert.match(await readFile(output, "utf8"), /^count=2$/m);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("CLI plans a newly qualified component without republishing its base", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "modeljars-plan-"));
+  try {
+    const base = model();
+    const adapter = componentModel();
+    const paths = Object.fromEntries(
+      [
+        "previous",
+        "current",
+        "previousQualifications",
+        "currentQualifications",
+        "previousComponentQualifications",
+        "currentComponentQualifications",
+        "output",
+      ].map((name) => [name, path.join(directory, name)]),
+    );
+    const baseQualification = {
+      modelId: base.id,
+      artifactSha256: base.sha256,
+      artifactSizeBytes: base.sizeBytes,
+      qualified: true,
+    };
+    await Promise.all([
+      writeFile(paths.previous, JSON.stringify(catalog([base]))),
+      writeFile(paths.current, JSON.stringify(catalog([base, adapter]))),
+      writeFile(
+        paths.previousQualifications,
+        JSON.stringify(qualifications([baseQualification])),
+      ),
+      writeFile(
+        paths.currentQualifications,
+        JSON.stringify(qualifications([baseQualification])),
+      ),
+      writeFile(
+        paths.previousComponentQualifications,
+        JSON.stringify(qualifications([])),
+      ),
+      writeFile(
+        paths.currentComponentQualifications,
+        JSON.stringify(
+          qualifications([componentQualification(adapter)]),
+        ),
+      ),
+    ]);
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        path.join(toolsDirectory, "plan-model-publications.mjs"),
+        "--previous",
+        paths.previous,
+        "--current",
+        paths.current,
+        "--qualifications",
+        paths.currentQualifications,
+        "--previous-qualifications",
+        paths.previousQualifications,
+        "--component-qualifications",
+        paths.currentComponentQualifications,
+        "--previous-component-qualifications",
+        paths.previousComponentQualifications,
+        "--github-output",
+        paths.output,
+      ],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 0, result.stderr);
+    const plan = JSON.parse(result.stdout);
+    assert.deepEqual(
+      plan.publications.map((publication) => publication.id),
+      [adapter.id],
+    );
+    assert.match(await readFile(paths.output, "utf8"), /^count=1$/m);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

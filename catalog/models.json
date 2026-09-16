@@ -5568,6 +5568,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-4.1-3b-Q4_K_M.gguf",
       "sha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
       "sizeBytes": 2099501664,
+      "catalogPublishedAt": "2026-09-16T14:37:29Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-generation",
@@ -5580,7 +5581,8 @@
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "llama.cpp": true,
+        "rust-ffm": true
       },
       "domains": [
         "general"
@@ -6332,6 +6334,69 @@
         "speech",
         "audio",
         "text-to-speech"
+      ]
+    },
+    {
+      "id": "modeljars_granite_4_1_3b_answerability_alora_f32",
+      "name": "Granite 4.1 3B answerability aLoRA F32",
+      "description": "IBM Granite RAG Library activated-LoRA answerability specialist for granite-4.1-3b, packaged with fail-closed runtime metadata as a hybrid composition component. Not a standalone model.",
+      "sourceId": "gh://ModelJars/activated-adapters",
+      "sourceUri": "https://github.com/ModelJars/activated-adapters",
+      "downloadUri": "https://github.com/ModelJars/activated-adapters/releases/download/granite-4.1-3b-answerability-alora-v1/adapter_model.safetensors",
+      "revision": "0d330ea26543ce2662052835505c22a406ca9e62",
+      "markerCoordinate": "org.modeljars.github:modeljars.activated-adapters.granite-4.1-3b-answerability-alora.f32:1.0.0-f32.1",
+      "modelVersion": "1.0.0",
+      "variant": "f32",
+      "format": "safetensors",
+      "architecture": "granite-alora",
+      "quantization": "F32",
+      "localPath": "${user.home}/.modeljars/models/granite-4.1-3b-answerability-alora/adapter_model.safetensors",
+      "sha256": "765e85650d39b89e055634c8da0c2d469c3bfa436df271df17f516ad7466d6ca",
+      "sizeBytes": 124593064,
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/ibm-granite/granitelib-rag-r1.0/blob/2f0b2c79c6731068625aca8045c2eb2e8912b353/README.md",
+      "capabilities": [
+        "composition-component"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "activated-lora-adapter",
+        "upstream-rag-specialist"
+      ],
+      "files": [
+        {
+          "path": "adapter_model.safetensors",
+          "role": "adapter-weights",
+          "sha256": "765e85650d39b89e055634c8da0c2d469c3bfa436df271df17f516ad7466d6ca",
+          "sizeBytes": 124593064
+        },
+        {
+          "path": "models-activated-lora.json",
+          "role": "adapter-configuration",
+          "sha256": "f6bb7c5165e62783a29ecb0ce84bc82387939c4df92cb5f2fd27c637cc86bdb1",
+          "sizeBytes": 1989
+        },
+        {
+          "path": "NOTICE",
+          "role": "attribution-notice",
+          "sha256": "cad444e05b6503c9eb2ae192495e66227182102087a2cf4d2054991067b565e1",
+          "sizeBytes": 1329
+        },
+        {
+          "path": "LICENSE",
+          "role": "license",
+          "sha256": "f3b8149a65f7ae0e2fe55de40d52b98dd8965e6b213b7c441a9596ba670c2e64",
+          "sizeBytes": 10784
+        }
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "domains": [
+        "rag",
+        "retrieval"
       ]
     }
   ]

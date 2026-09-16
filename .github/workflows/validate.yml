@@ -90,6 +90,9 @@ jobs:
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions
 
+      - name: Verify qualified component evidence
+        run: npm run catalog:verify-components
+
       - name: Validate build
         run: >
           ./gradlew --no-daemon

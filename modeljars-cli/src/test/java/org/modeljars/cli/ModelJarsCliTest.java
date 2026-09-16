@@ -390,6 +390,36 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void hidesCompositionComponentsButInstallsThemThroughTheirQualifiedHybrid() {
+    ModelJarDescriptor base = descriptor("qwen3_base_q8_0", "Q8_0");
+    ModelJarDescriptor adapter = activatedAdapterComponentDescriptor();
+    ModelJarDescriptor hybrid = compositeDescriptor(base, adapter);
+    List<String> installed = new java.util.concurrent.CopyOnWriteArrayList<>();
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(base, adapter, hybrid)),
+            (selected, destination, progress) -> {
+              installed.add(selected.alias());
+              return destination;
+            });
+
+    Result listed = run(cli, "models", "--output", "plain");
+    Result directPull = run(cli, "pull", adapter.alias());
+    Result hybridPull = run(cli, "pull", hybrid.alias());
+
+    assertEquals(0, listed.status());
+    assertTrue(listed.output().contains(base.alias()), listed.output());
+    assertTrue(listed.output().contains("qwen3_chat_tools_composite"), listed.output());
+    assertFalse(listed.output().contains(adapter.alias()), listed.output());
+    assertEquals(2, directPull.status());
+    assertTrue(
+        directPull.error().contains("installed through their qualified hybrid"),
+        directPull.error());
+    assertEquals(0, hybridPull.status());
+    assertEquals(List.of(base.alias(), adapter.alias()), installed);
+  }
+
+  @Test
   void keepsJsonCleanAndAllowsProgressToBeDisabled() {
     ModelJarDescriptor descriptor = descriptor();
     ModelJarsCli cli =
@@ -910,6 +940,37 @@ class ModelJarsCliTest {
         source.licenseUri(),
         source.domains(),
         source.dimensions());
+  }
+
+  private static ModelJarDescriptor activatedAdapterComponentDescriptor() {
+    ModelJarDescriptor source = multiFileDescriptor();
+    return new ModelJarDescriptor(
+        "qwen3_tools_r32_adapter",
+        "integrallis/qwen3-tools-r32",
+        ModelJarCoordinate.parse("org.modeljars.integrallis:qwen3-tools-r32:1.0.0-r32.1"),
+        source.modelVersion(),
+        "r32",
+        source.format(),
+        "qwen3-activated-lora",
+        "F32",
+        source.localPath(),
+        source.classpathResource(),
+        source.sourceUri(),
+        source.downloadUri(),
+        source.revision(),
+        source.sha256(),
+        source.sizeBytes(),
+        source.license(),
+        Set.of("composition-component"),
+        Set.of("multi-file-artifact", "activated-lora-adapter"),
+        source.files(),
+        Map.of("pure-java", true),
+        Optional.of("Qwen3 activated tool adapter"),
+        Optional.of("Internal component of a qualified hybrid."),
+        source.licenseUri(),
+        Set.of("tool-use"),
+        source.catalogPublishedAt(),
+        ModelDimensions.unknown());
   }
 
   private static ModelJarDescriptor compositeDescriptor(

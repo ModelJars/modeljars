@@ -80,12 +80,34 @@ test("renders qualified speech loading and WAV output without exposing paths", (
   assert.doesNotMatch(snippet, /modelPath|PureJavaBackend/);
 });
 
-test("renders a composition through its purpose-built public entry point", () => {
-  const snippet = compositionJavaSnippet();
+test("renders an activated composition through its exact member markers", () => {
+  const snippet = compositionJavaSnippet({
+    kind: "hybrid",
+    id: "qwen3_1_7b_activated_tools",
+    features: ["virtual-model", "activated-lora", "exact-kv-block-sharing"],
+    members: [
+      { role: "base", modelId: "qwen3_1_7b_q8_0" },
+      { role: "tool-adapter", modelId: "qwen3_1_7b_tool_alora_r32" },
+    ],
+  });
 
-  assert.match(snippet, /Qwen3ChatTools\.open\(\)/);
-  assert.match(snippet, /hybrid\.openSession\(\)/);
-  assert.doesNotMatch(snippet, /org\.modeljars\.catalog/);
+  assert.match(snippet, /ModelJars\.openActivatedToolRuntime/);
+  assert.match(snippet, /Qwen3_1_7b_Q8_0\.MODEL/);
+  assert.match(snippet, /Qwen3_1_7b_Tool_Alora_R32\.MODEL/);
+  assert.match(snippet, /openConversation\(\)/);
+  assert.match(snippet, /generateBase/);
+});
+
+test("refuses to invent a runtime snippet for an unsupported hybrid", () => {
+  assert.throws(
+    () =>
+      compositionJavaSnippet({
+        kind: "hybrid",
+        features: ["virtual-model", "independent-kv-cache"],
+        members: [],
+      }),
+    /no supported public runtime/i,
+  );
 });
 
 test("describes the complete artifact manifest rather than only the primary weight", () => {

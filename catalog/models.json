@@ -940,7 +940,7 @@
       "sourceUri": "https://huggingface.co/Qwen/Qwen3-8B-GGUF",
       "downloadUri": "https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/7c41481f57cb95916b40956ab2f0b139b296d974/Qwen3-8B-Q4_K_M.gguf",
       "revision": "7c41481f57cb95916b40956ab2f0b139b296d974",
-      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-8b-gguf.q4_k_m:3.0.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen3-8b-gguf.q4_k_m:3.0.0-q4_k_m.2",
       "modelVersion": "3.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

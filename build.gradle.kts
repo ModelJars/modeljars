@@ -1409,6 +1409,186 @@ val ragRows =
     ((ragComparison["rows"] as? List<*>) ?: error("Benchmark ragComparison must contain rows"))
         .map { value -> value.stringKeyMap("Every RAG comparison row") }
 
+// Generation profiles and computed memory fit (tools/generate-model-profiles.mjs). They are
+// published only through the aggregate catalog, never inside a marker JAR, so they do not affect
+// any marker coordinate.
+val catalogModelProfileDocument =
+    JsonSlurper()
+        .parse(file("catalog/model-profiles.json"))
+        .stringKeyMap("catalog/model-profiles.json")
+require((catalogModelProfileDocument["schemaVersion"] as? Number)?.toInt() == 1) {
+    "catalog/model-profiles.json must use schemaVersion 1"
+}
+val catalogModelProfileList =
+    ((catalogModelProfileDocument["profiles"] as? List<*>)
+            ?: error("catalog/model-profiles.json must contain a profiles array"))
+        .map { value -> value.stringKeyMap("Every model profile") }
+val catalogModelProfiles: Map<String, Map<String, Any?>> =
+    catalogModelProfileList.associateBy { raw ->
+        val modelId = raw.requiredString("modelId")
+        val entry =
+            catalogEntries.singleOrNull { it.id == modelId }
+                ?: error("Model profile references unknown catalog model: $modelId")
+        require(raw.requiredString("artifactSha256") == entry.sha256) {
+            "Model profile $modelId does not match the catalog artifact SHA-256"
+        }
+        require(raw.requiredString("revision") == entry.revision) {
+            "Model profile $modelId does not match the catalog revision"
+        }
+        require(raw["memoryFit"] == null || entry.format == "gguf") {
+            "Model profile $modelId memory fit requires a GGUF artifact"
+        }
+        modelId
+    }
+require(catalogModelProfiles.size == catalogModelProfileList.size) {
+    "catalog/model-profiles.json repeats a model"
+}
+
+fun catalogModelProfileValue(value: Any?): String =
+    buildString {
+        propertyValue(value.toString()).forEach { character ->
+            if (character.code > 0xFF) {
+                append("\\u%04x".format(character.code))
+            } else {
+                append(character)
+            }
+        }
+    }
+
+fun catalogModelProfileProvenance(value: Any?, context: String): String =
+    (value as? List<*> ?: error("$context provenance must be an array")).joinToString(",") {
+        val reference = it.stringKeyMap("$context provenance")
+        "${reference.requiredString("source")}:${reference.requiredString("key")}"
+    }
+
+fun catalogModelProfileProperties(modelId: String, raw: Map<String, Any?>): String =
+    buildString {
+        val prefix = "modelProfile.$modelId."
+
+        fun line(key: String, value: Any?) {
+            appendLine("$prefix$key=${catalogModelProfileValue(value)}")
+        }
+
+        line("artifactSha256", raw.requiredString("artifactSha256"))
+        raw["generation"]?.let { value ->
+            val generation = value.stringKeyMap("generation for $modelId")
+            val sources =
+                generation["sources"] as? List<*> ?: error("generation sources for $modelId")
+            line("generation.source.count", sources.size)
+            sources.forEachIndexed { index, source ->
+                val values = source.stringKeyMap("generation source for $modelId")
+                val sourcePrefix = "generation.source.%03d.".format(index)
+                listOf("id", "kind", "file", "uri", "revision", "sha256").forEach { name ->
+                    line(sourcePrefix + name, values.requiredString(name))
+                }
+            }
+            generation["sampling"]?.stringKeyMap("sampling for $modelId")?.forEach { (name, entry) ->
+                val values = entry.stringKeyMap("sampling $name for $modelId")
+                line("generation.sampling.$name", values["value"])
+                line(
+                    "generation.sampling.$name.provenance",
+                    catalogModelProfileProvenance(values["provenance"], "sampling $name"),
+                )
+                (values["conflicts"] as? List<*>)?.let { conflicts ->
+                    line(
+                        "generation.sampling.$name.conflicts",
+                        conflicts.joinToString(",") {
+                            val conflict = it.stringKeyMap("sampling $name conflict")
+                            "${conflict.requiredString("source")}:" +
+                                "${conflict.requiredString("key")}=${conflict["value"]}"
+                        },
+                    )
+                }
+            }
+            (generation["eosTokenIds"] as? List<*>)?.let { tokens ->
+                val entries = tokens.map { it.stringKeyMap("eosTokenIds for $modelId") }
+                line("generation.eosTokenIds", entries.joinToString(",") { it["id"].toString() })
+                entries.forEach { token ->
+                    line(
+                        "generation.eosTokenId.${token["id"]}.provenance",
+                        catalogModelProfileProvenance(token["provenance"], "eos token"),
+                    )
+                }
+            }
+            generation["reasoning"]?.stringKeyMap("reasoning for $modelId")?.let { reasoning ->
+                listOf("openToken", "closeToken").forEach { name ->
+                    reasoning[name]?.stringKeyMap("reasoning $name")?.let { token ->
+                        line("generation.reasoning.$name", token.requiredString("text"))
+                        line("generation.reasoning.${name}Id", token["id"])
+                        if (name == "openToken") {
+                            line(
+                                "generation.reasoning.markers.provenance",
+                                catalogModelProfileProvenance(token["provenance"], "reasoning"),
+                            )
+                        }
+                    }
+                }
+                reasoning["thinkingDefault"]?.stringKeyMap("thinkingDefault")?.let { thinking ->
+                    line("generation.reasoning.thinkingDefault", thinking["value"])
+                    line(
+                        "generation.reasoning.thinkingDefault.rule",
+                        thinking.requiredString("rule"),
+                    )
+                    line(
+                        "generation.reasoning.thinkingDefault.provenance",
+                        catalogModelProfileProvenance(thinking["provenance"], "thinkingDefault"),
+                    )
+                }
+            }
+        }
+        raw["memoryFit"]?.let { value ->
+            val fit = value.stringKeyMap("memoryFit for $modelId")
+            val layout = fit["layout"].stringKeyMap("memoryFit layout for $modelId")
+            line("memory.status", fit.requiredString("status"))
+            line("memory.weightBytes", fit["weightBytes"])
+            line("memory.fixedOverheadBytes", fit["fixedOverheadBytes"])
+            line("memory.contextLength", layout["contextLength"])
+            layout["slidingWindow"]?.let { line("memory.slidingWindow", it) }
+            line("memory.upperBound", fit["upperBound"])
+            line("memory.recurrentStateExcluded", layout["recurrentStateExcluded"] == true)
+            val notes = fit["notes"].stringList("memoryFit notes for $modelId")
+            line("memory.note.count", notes.size)
+            notes.forEachIndexed { index, note -> line("memory.note.%03d".format(index), note) }
+            val caches =
+                (fit["kvCache"] as? List<*> ?: error("memoryFit kvCache for $modelId"))
+                    .map { it.stringKeyMap("memoryFit kvCache for $modelId") }
+            line("memory.kvTypes", caches.joinToString(",") { it.requiredString("type") })
+            caches.forEach { cache ->
+                val cachePrefix = "memory.kv.${cache.requiredString("type")}."
+                line(cachePrefix + "bytesPerToken", cache["bytesPerToken"])
+                line(
+                    cachePrefix + "slidingWindowBytesPerToken",
+                    cache["slidingWindowBytesPerToken"],
+                )
+                val contexts =
+                    (cache["contexts"] as? List<*> ?: error("memoryFit contexts for $modelId"))
+                        .map { it.stringKeyMap("memoryFit context for $modelId") }
+                line(
+                    cachePrefix + "contexts",
+                    contexts.joinToString(",") { it["contextTokens"].toString() },
+                )
+                contexts.forEach { context ->
+                    val contextPrefix = cachePrefix + "context.${context["contextTokens"]}."
+                    line(contextPrefix + "kvBytes", context["kvBytes"])
+                    line(contextPrefix + "totalBytes", context["totalBytes"])
+                }
+                val budgets =
+                    (cache["maxContextByBudget"] as? List<*>
+                            ?: error("memoryFit budgets for $modelId"))
+                        .map { it.stringKeyMap("memoryFit budget for $modelId") }
+                line(
+                    cachePrefix + "budgets",
+                    budgets.joinToString(",") { it["budgetBytes"].toString() },
+                )
+                budgets.forEach { budget ->
+                    val budgetPrefix = cachePrefix + "budget.${budget["budgetBytes"]}."
+                    line(budgetPrefix + "maxContextTokens", budget["maxContextTokens"])
+                    line(budgetPrefix + "limitedBy", budget.requiredString("limitedBy"))
+                }
+            }
+        }
+    }
+
 val qualificationCatalogFile = file("catalog/qualifications.json")
 val ragQualifications =
     if (qualificationCatalogFile.isFile) {
@@ -4155,6 +4335,7 @@ project(":modeljars-catalog") {
             inputs.file(rootProject.file("catalog/compositions.json"))
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
             inputs.file(rootProject.file("catalog/benchmarks.json"))
+            inputs.file(rootProject.file("catalog/model-profiles.json"))
             if (qualificationCatalogFile.isFile) {
                 inputs.file(qualificationCatalogFile)
             }
@@ -4196,7 +4377,15 @@ project(":modeljars-catalog") {
                         catalogCompositions.joinToString("\n") {
                             it.registryProperties().trimEnd()
                         } +
-                        "\n",
+                        "\n" +
+                        "modeljars.modelProfiles.schemaVersion=1\n" +
+                        runtimeCatalogEntries
+                            .mapNotNull { entry ->
+                                catalogModelProfiles[entry.id]?.let {
+                                    catalogModelProfileProperties(entry.id, it)
+                                }
+                            }
+                            .joinToString(""),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateMetadata.get().asFile.writeText(
@@ -4204,6 +4393,9 @@ project(":modeljars-catalog") {
                         JsonOutput.toJson(
                             runtimeCatalogEntries.map { entry ->
                                 entry.raw +
+                                    (catalogModelProfiles[entry.id]
+                                        ?.let { mapOf("modelProfile" to it) }
+                                        ?: emptyMap()) +
                                     ("performanceProfiles" to
                                         publicPerformanceProfiles
                                             .filter { it.modelId == entry.id }

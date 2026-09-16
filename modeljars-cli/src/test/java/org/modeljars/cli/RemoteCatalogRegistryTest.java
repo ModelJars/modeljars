@@ -36,6 +36,31 @@ import org.modeljars.ModelJarRegistry;
 import org.modeljars.PropertiesModelJarRegistry;
 
 class RemoteCatalogRegistryTest {
+  @Test
+  void readsModelProfilesFromTheSameVerifiedRegistryBytes() {
+    byte[] content =
+        String.join(
+                "\n",
+                "modeljars.modelProfiles.schemaVersion=1",
+                "modelProfile.example_q4_0.artifactSha256=" + "a".repeat(64),
+                "modelProfile.example_q4_0.generation.eosTokenIds=2")
+            .getBytes(StandardCharsets.ISO_8859_1);
+
+    assertEquals(1, RemoteCatalogRegistry.profiles(content).profiles().size());
+    assertEquals(
+        java.util.List.of(2),
+        RemoteCatalogRegistry.profiles(content)
+            .profiles()
+            .getFirst()
+            .generation()
+            .orElseThrow()
+            .eosTokenIds());
+    assertEquals(0, RemoteCatalogRegistry.profiles(new byte[0]).profiles().size());
+    byte[] future =
+        "modeljars.modelProfiles.schemaVersion=9\n".getBytes(StandardCharsets.ISO_8859_1);
+    assertEquals(0, RemoteCatalogRegistry.profiles(future).profiles().size());
+  }
+
   private static final URI CATALOG_URI =
       URI.create("https://modeljars.org/catalog/registry.properties");
   private static final URI HASH_URI =

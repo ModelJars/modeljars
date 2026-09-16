@@ -5580,7 +5580,8 @@
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "llama.cpp": true,
+        "rust-ffm": true
       },
       "domains": [
         "general"

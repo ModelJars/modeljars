@@ -522,6 +522,7 @@ data class CatalogComponentQualification(
     val reportUri: String,
     val reportSha256: String,
     val qualified: Boolean,
+    val specialistKind: String,
     val raw: Map<String, Any?>,
 )
 
@@ -1079,6 +1080,7 @@ fun CatalogComponentQualifications.registryProperties(
             appendLine("${prefix}reportUri=${propertyValue(entry.reportUri)}")
             appendLine("${prefix}reportSha256=${entry.reportSha256}")
             appendLine("${prefix}qualified=${entry.qualified}")
+            appendLine("${prefix}specialistKind=${propertyValue(entry.specialistKind)}")
             appendLine("${prefix}artifactFile.count=${entry.artifactFiles.size}")
             entry.artifactFiles.forEachIndexed { index, artifactFile ->
                 val filePrefix = "${prefix}artifactFile.${index.toString().padStart(3, '0')}."
@@ -2006,6 +2008,12 @@ val componentQualifications =
                                 ?: error(
                                     "component qualification $modelId.qualified must be a boolean",
                                 ),
+                        specialistKind =
+                            (raw["specialistKind"] as? String ?: "trained-tool-specialist").also {
+                                require(it in setOf("trained-tool-specialist", "upstream-rag-specialist")) {
+                                    "component qualification $modelId.specialistKind is unsupported: $it"
+                                }
+                            },
                         raw = raw,
                     )
                 }

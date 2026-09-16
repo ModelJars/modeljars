@@ -7,6 +7,13 @@ import { pathToFileURL } from "node:url";
 const SHA256 = /^[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
 const COMPONENT_POLICY = "activated-adapter-component-v1";
+const TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
+const UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
+const SPECIALIST_KINDS = new Set([TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST]);
+const MINIMUM_WINDOW_SUITES = 2;
+const MINIMUM_WINDOW_CASES = 100;
+const MINIMUM_BALANCED_ACCURACY = 0.8;
+const MINIMUM_KERNEL_IDENTITY_CASES = 10;
 const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const IMMUTABLE_MODELS_REPORT =
   /^https:\/\/raw\.githubusercontent\.com\/integrallis\/models\/([a-f0-9]{40})\/.+$/;
@@ -93,6 +100,15 @@ function requireDocuments(qualifications, models) {
   ) {
     throw new Error("Component rejectedModels count does not match entries");
   }
+}
+
+/** The evidence shape an entry claims; absent means the original trained tool specialist. */
+function specialistKind(entry) {
+  const kind = entry.specialistKind ?? TRAINED_TOOL_SPECIALIST;
+  if (!SPECIALIST_KINDS.has(kind)) {
+    throw new Error(`${entry.modelId} declares an unknown specialistKind ${kind}`);
+  }
+  return kind;
 }
 
 function requireArtifactIdentity(entry, model) {
@@ -367,6 +383,25 @@ async function requireReport(
     throw new Error(`${entry.modelId} report base identity does not match`);
   }
   const gates = report.evaluation.gates;
+  if (specialistKind(entry) === UPSTREAM_RAG_SPECIALIST) {
+    requireUpstreamRagSpecialistGates(entry, report, gates);
+    await requireReleasedModelsArtifacts(
+      entry,
+      gates.modelsArtifact,
+      loadReleasedArtifact,
+    );
+    await requireCleanHostRun(
+      entry,
+      gates.cleanHostRun,
+      evidenceRevision,
+      gates.modelsArtifact.version,
+      loadEvidenceFile,
+    );
+    return;
+  }
+  if (report.specialistKind !== undefined && report.specialistKind !== TRAINED_TOOL_SPECIALIST) {
+    throw new Error(`${entry.modelId} report specialistKind does not match the catalog entry`);
+  }
   if (
     gates?.provenance?.pass !== true ||
     gates.provenance.frozenEvaluation !== true ||
@@ -480,6 +515,129 @@ async function requireReport(
     gates.modelsArtifact.version,
     loadEvidenceFile,
   );
+}
+
+/**
+ * Gates for a publisher-trained activated specialist that Models runs unchanged. There is no
+ * training manifest to bind, so provenance pins the upstream repository, revision, adapter,
+ * configuration, model card, and tokenizer files instead. Task correctness is a frozen window of
+ * at least two public datasets scored with balanced accuracy against the unadapted base, and the
+ * component is usable only through the Models Java activated API; no framework surface is claimed.
+ */
+function requireUpstreamRagSpecialistGates(entry, report, gates) {
+  if (report.specialistKind !== UPSTREAM_RAG_SPECIALIST) {
+    throw new Error(`${entry.modelId} report must declare ${UPSTREAM_RAG_SPECIALIST}`);
+  }
+  const provenance = gates?.provenance;
+  if (
+    provenance?.pass !== true ||
+    provenance.upstream !== true ||
+    typeof provenance.upstreamRepository !== "string" ||
+    provenance.upstreamRepository.length === 0 ||
+    !/^[a-f0-9]{40}$/.test(provenance.upstreamRevision ?? "") ||
+    !SHA256.test(provenance.adapterSha256 ?? "") ||
+    !SHA256.test(provenance.adapterConfigSha256 ?? "") ||
+    !SHA256.test(provenance.modelCardSha256 ?? "") ||
+    typeof provenance.license !== "string" ||
+    provenance.license.length === 0 ||
+    !Array.isArray(provenance.tokenizerFiles) ||
+    provenance.tokenizerFiles.length === 0 ||
+    provenance.tokenizerFiles.some(
+      (file) => typeof file?.name !== "string" || !SHA256.test(file.sha256 ?? ""),
+    )
+  ) {
+    throw new Error(`${entry.modelId} provenance must pin the upstream adapter and tokenizer`);
+  }
+  const task = gates.taskCorrectness;
+  if (
+    task?.pass !== true ||
+    !SHA256.test(task.windowSha256 ?? "") ||
+    task.promptOracleIdentical !== true ||
+    typeof task.backend !== "string" ||
+    !Array.isArray(task.suites) ||
+    task.suites.length < MINIMUM_WINDOW_SUITES ||
+    task.suites.some(
+      (suite) =>
+        typeof suite?.name !== "string" ||
+        !Number.isInteger(suite.cases) ||
+        suite.cases < MINIMUM_WINDOW_CASES ||
+        suite.structuredRate !== 1 ||
+        !(suite.balancedAccuracy >= MINIMUM_BALANCED_ACCURACY) ||
+        !(typeof suite.baseBalancedAccuracy === "number") ||
+        !(suite.balancedAccuracy >= suite.baseBalancedAccuracy) ||
+        suite.physicallySharedCases !== suite.cases,
+    )
+  ) {
+    throw new Error(
+      `${entry.modelId} taskCorrectness does not meet the fixed answerability window thresholds`,
+    );
+  }
+  if (task.backend !== "pure-java") {
+    const identity = gates.kernelIdentity;
+    if (
+      identity?.pass !== true ||
+      identity.backend !== task.backend ||
+      !Number.isInteger(identity.casesPerSuitePerArm) ||
+      identity.casesPerSuitePerArm < MINIMUM_KERNEL_IDENTITY_CASES ||
+      identity.identicalOutputs !== true
+    ) {
+      throw new Error(
+        `${entry.modelId} window ran on ${task.backend} without proven identity to pure Java`,
+      );
+    }
+  }
+  if (
+    gates.plainJava?.pass !== true ||
+    gates.plainJava.realWeights !== true ||
+    typeof gates.plainJava.conformanceOracle !== "string" ||
+    !(gates.plainJava.greedyOracles >= 2) ||
+    gates.plainJava.markerRoundTrip !== true
+  ) {
+    throw new Error(`${entry.modelId} must pass real-weight plain Java conformance`);
+  }
+  if (
+    gates.jvmMechanics?.pass !== true ||
+    gates.jvmMechanics.realWeights !== true ||
+    gates.jvmMechanics.physicalStorageIdentity !== true ||
+    gates.jvmMechanics.exactBaseContinuation !== true ||
+    gates.jvmMechanics.disabledAdapterNoOp !== true ||
+    gates.jvmMechanics.batchedPrefillIdentity !== true
+  ) {
+    throw new Error(`${entry.modelId} must pass real-weight JVM mechanics`);
+  }
+  if (
+    gates.longContext?.pass !== true ||
+    gates.longContext.cases !== 8 ||
+    gates.longContext.prefixTokens !== 4_096 ||
+    gates.longContext.physicalStorageIdentity !== true ||
+    !Number.isInteger(gates.longContext.nativeCorrectCases) ||
+    gates.longContext.nativeCorrectCases < 6 ||
+    gates.longContext.nativeCorrectCases > gates.longContext.cases ||
+    gates.longContext.retainedNativeCorrectCases !==
+      gates.longContext.nativeCorrectCases ||
+    gates.longContext.exactBaseOutput !== true ||
+    !Number.isInteger(gates.longContext.specialistCorrectCases) ||
+    gates.longContext.specialistCorrectCases < 6
+  ) {
+    throw new Error(`${entry.modelId} must pass the fixed answerability long-context gate`);
+  }
+  if (
+    gates.performanceAndMemory?.pass !== true ||
+    gates.performanceAndMemory.physicalSharing !== true ||
+    gates.performanceAndMemory.tokenExactAtAllTiers !== true ||
+    gates.performanceAndMemory.memoryComplete !== true ||
+    gates.performanceAndMemory.crossoverPrefixTokens !==
+      entry.minimumSharedPrefixTokens ||
+    !sameMembers(gates.performanceAndMemory.prefixTiers, [256, 1_024, 4_096]) ||
+    gates.performanceAndMemory.recomputedIndependence !== true ||
+    gates.performanceAndMemory.jvmNativeMemoryAvailable !== true ||
+    !(gates.performanceAndMemory.fourKImprovement >= 0.2) ||
+    !(gates.performanceAndMemory.peakRssBytes > 0)
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind passing physical-sharing performance and memory evidence`,
+    );
+  }
 }
 
 export async function validateComponentEvidence({

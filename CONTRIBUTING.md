@@ -103,6 +103,29 @@ For every proposed composite, CI requires a versioned machine-readable report th
 `tools/composition-evidence-gate.mjs` enforces this contract in validation, preview, artifact, and
 release workflows. Documentation or catalog metrics cannot substitute for the underlying report.
 
+### Activated specialist components
+
+A hybrid's hidden adapter component is qualified separately by `tools/component-evidence-gate.mjs`
+before any composition can name it. Two component shapes exist, declared per entry by
+`specialistKind`:
+
+- `trained-tool-specialist` (the default): an adapter we trained. Provenance binds the frozen
+  evaluation selection, training manifest, formatter, and trainer; task correctness is the fixed
+  300-case tool window; real-weight plain Java, Spring AI, and LangChain4j tool loops are required.
+- `upstream-rag-specialist`: a publisher-trained adapter that Models runs unchanged. Provenance
+  binds the upstream repository, revision, adapter weights, configuration, model card, tokenizer
+  files, and license. Task correctness is a frozen window of at least two public datasets with at
+  least 100 cases each, every completion structured, balanced accuracy at least 0.80 and no worse
+  than the unadapted base, and physical prefix sharing on every case, with the rendered prompts
+  proven identical to the publisher's chat template. A window run on a native kernel arm must
+  also bind token identity with pure Java on at least ten cases per suite and arm. The component
+  claims no Spring AI or LangChain4j surface; it is usable through the Models Java activated API.
+
+Both shapes require real-weight JVM mechanics (physical storage identity, exact base continuation,
+disabled-adapter no-op), the fixed 4,096-token long-context retention gate, the 256/1,024/4,096
+prefix-sharing crossover with complete memory accounting, released Maven Central Models artifacts,
+and a clean-host Java 25 run.
+
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not
 been completed; it does not mean the candidate failed.

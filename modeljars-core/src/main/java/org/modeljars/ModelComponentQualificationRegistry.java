@@ -51,6 +51,15 @@ public final class ModelComponentQualificationRegistry {
   private static final String ENTRY_PREFIX = "componentQualification.";
   private static final String POLICY = "activated-adapter-component-v1";
 
+  /** The component shape of an adapter we trained ourselves. */
+  public static final String TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
+
+  /** The component shape of a publisher-trained adapter that Models runs unchanged. */
+  public static final String UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
+
+  private static final Set<String> SPECIALIST_KINDS =
+      Set.of(TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST);
+
   private final Instant generatedAt;
   private final String policyVersion;
   private final String modelsRevision;
@@ -254,7 +263,8 @@ public final class ModelComponentQualificationRegistry {
         integer(properties, prefix + "minimumSharedPrefixTokens"),
         URI.create(required(properties, prefix + "reportUri")),
         required(properties, prefix + "reportSha256"),
-        bool(properties, prefix + "qualified"));
+        bool(properties, prefix + "qualified"),
+        properties.getProperty(prefix + "specialistKind", TRAINED_TOOL_SPECIALIST));
   }
 
   private static SourcedEntry newestEntry(SourcedEntry first, SourcedEntry other) {
@@ -312,7 +322,8 @@ public final class ModelComponentQualificationRegistry {
       int minimumSharedPrefixTokens,
       URI reportUri,
       String reportSha256,
-      boolean qualified) {
+      boolean qualified,
+      String specialistKind) {
     /** Validates a complete component evidence binding. */
     public Entry {
       modelId = requireText(modelId, "modelId");
@@ -352,6 +363,10 @@ public final class ModelComponentQualificationRegistry {
       }
       reportUri = Objects.requireNonNull(reportUri, "reportUri");
       reportSha256 = requireSha256(reportSha256, "reportSha256");
+      specialistKind = requireText(specialistKind, "specialistKind");
+      if (!SPECIALIST_KINDS.contains(specialistKind)) {
+        throw new IllegalArgumentException("unsupported specialistKind: " + specialistKind);
+      }
     }
 
     private boolean matches(ModelJarDescriptor component, ModelJarDescriptor base) {

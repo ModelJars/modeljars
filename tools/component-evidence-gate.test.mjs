@@ -740,3 +740,147 @@ test("rejects a clean-host output hash mismatch", async () => {
     /clean-host output bytes do not match immutable evidence/,
   );
 });
+
+function upstreamReport(overrides = {}) {
+  const base = report();
+  return {
+    ...base,
+    specialistKind: "upstream-rag-specialist",
+    evaluation: {
+      ...base.evaluation,
+      gates: {
+        provenance: {
+          pass: true,
+          upstream: true,
+          upstreamRepository: "ibm-granite/granitelib-rag-r1.0",
+          upstreamRevision: "3".repeat(40),
+          adapterSha256: "c".repeat(64),
+          adapterConfigSha256: "5".repeat(64),
+          modelCardSha256: "6".repeat(64),
+          license: "Apache-2.0",
+          tokenizerFiles: [{ name: "tokenizer.json", sha256: "8".repeat(64) }],
+        },
+        taskCorrectness: {
+          pass: true,
+          windowSha256: "9".repeat(64),
+          promptOracleIdentical: true,
+          backend: "rust-ffm",
+          suites: [
+            {
+              name: "mtrag-human-rag",
+              cases: 110,
+              structuredRate: 1,
+              balancedAccuracy: 0.88,
+              baseBalancedAccuracy: 0.71,
+              physicallySharedCases: 110,
+            },
+            {
+              name: "squad-v2-dev",
+              cases: 200,
+              structuredRate: 1,
+              balancedAccuracy: 0.84,
+              baseBalancedAccuracy: 0.66,
+              physicallySharedCases: 200,
+            },
+          ],
+        },
+        kernelIdentity: {
+          pass: true,
+          backend: "rust-ffm",
+          casesPerSuitePerArm: 10,
+          identicalOutputs: true,
+        },
+        plainJava: {
+          pass: true,
+          realWeights: true,
+          conformanceOracle: "llama.cpp b9960-a935fbffe",
+          greedyOracles: 2,
+          markerRoundTrip: true,
+        },
+        jvmMechanics: {
+          pass: true,
+          realWeights: true,
+          physicalStorageIdentity: true,
+          exactBaseContinuation: true,
+          disabledAdapterNoOp: true,
+          batchedPrefillIdentity: true,
+        },
+        longContext: {
+          pass: true,
+          cases: 8,
+          prefixTokens: 4096,
+          physicalStorageIdentity: true,
+          nativeCorrectCases: 7,
+          retainedNativeCorrectCases: 7,
+          exactBaseOutput: true,
+          specialistCorrectCases: 7,
+        },
+        performanceAndMemory: base.evaluation.gates.performanceAndMemory,
+        modelsArtifact: base.evaluation.gates.modelsArtifact,
+        cleanHostRun: base.evaluation.gates.cleanHostRun,
+      },
+    },
+    ...overrides,
+  };
+}
+
+function upstreamDocument(value) {
+  const { bytes, document } = qualificationDocument(value);
+  document.entries[0].specialistKind = "upstream-rag-specialist";
+  return { bytes, document };
+}
+
+test("accepts an upstream RAG specialist bound to a frozen window and kernel identity", async () => {
+  const { bytes, document } = upstreamDocument(upstreamReport());
+  await validate(document, bytes);
+});
+
+test("rejects an upstream specialist whose report claims the trained-tool shape", async () => {
+  const { bytes, document } = upstreamDocument(report());
+  await assert.rejects(validate(document, bytes), /must declare upstream-rag-specialist/);
+});
+
+test("rejects an upstream specialist below the balanced-accuracy floor or without sharing", async () => {
+  const low = upstreamReport();
+  low.evaluation.gates.taskCorrectness.suites[1].balancedAccuracy = 0.79;
+  const lowDocument = upstreamDocument(low);
+  await assert.rejects(validate(lowDocument.document, lowDocument.bytes), /answerability window/);
+
+  const worseThanBase = upstreamReport();
+  worseThanBase.evaluation.gates.taskCorrectness.suites[0].baseBalancedAccuracy = 0.9;
+  const worseDocument = upstreamDocument(worseThanBase);
+  await assert.rejects(validate(worseDocument.document, worseDocument.bytes), /answerability window/);
+
+  const unshared = upstreamReport();
+  unshared.evaluation.gates.taskCorrectness.suites[0].physicallySharedCases = 109;
+  const unsharedDocument = upstreamDocument(unshared);
+  await assert.rejects(validate(unsharedDocument.document, unsharedDocument.bytes), /answerability window/);
+});
+
+test("rejects a kernel-backed window without proven identity to pure Java", async () => {
+  const missing = upstreamReport();
+  delete missing.evaluation.gates.kernelIdentity;
+  const missingDocument = upstreamDocument(missing);
+  await assert.rejects(validate(missingDocument.document, missingDocument.bytes), /without proven identity/);
+
+  const tooFew = upstreamReport();
+  tooFew.evaluation.gates.kernelIdentity.casesPerSuitePerArm = 9;
+  const fewDocument = upstreamDocument(tooFew);
+  await assert.rejects(validate(fewDocument.document, fewDocument.bytes), /without proven identity/);
+
+  const pureJava = upstreamReport();
+  pureJava.evaluation.gates.taskCorrectness.backend = "pure-java";
+  delete pureJava.evaluation.gates.kernelIdentity;
+  const pureDocument = upstreamDocument(pureJava);
+  await validate(pureDocument.document, pureDocument.bytes);
+});
+
+test("rejects an unknown specialist kind and a mismatched trained report", async () => {
+  const { bytes, document } = qualificationDocument(report());
+  document.entries[0].specialistKind = "distilled-router";
+  await assert.rejects(validate(document, bytes), /unknown specialistKind/);
+
+  const mismatched = qualificationDocument({ ...report(), specialistKind: "upstream-rag-specialist" });
+  await assert.rejects(validate(mismatched.document, mismatched.bytes), /does not match the catalog entry/);
+});
+

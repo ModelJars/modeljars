@@ -88,8 +88,11 @@ promotion independent from the native CLI release train.
 
 An activated-adapter hybrid uses two fail-closed publication stages. First, the hidden adapter
 component must bind its complete file bundle to frozen task-correctness evidence and real-weight
-plain Java, Spring AI, and LangChain4j tests. That authorizes only its immutable marker; it does not
-make the component searchable or qualify a hybrid. The component record separately pins the Models
+Java tests. A trained tool specialist also binds Spring AI and LangChain4j tool loops; an upstream
+RAG specialist instead binds the publisher's exact artifacts, a two-dataset balanced-accuracy
+window with prompts proven identical to the publisher's template, and, when the window ran on a
+native kernel arm, token identity with pure Java. That authorizes only its immutable marker; it
+does not make the component searchable or qualify a hybrid. The component record separately pins the Models
 source revision that was exercised and the later evidence revision that contains the report; this
 avoids a self-referential commit hash while keeping both identities immutable. The same report
 binds the base revision and artifact, formatter, trainer, frozen selection, and training manifest.

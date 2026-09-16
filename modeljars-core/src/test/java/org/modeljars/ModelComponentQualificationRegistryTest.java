@@ -50,6 +50,9 @@ class ModelComponentQualificationRegistryTest {
     assertEquals("2".repeat(40), registry.evidenceRevision());
     assertEquals("adapter", qualification.modelId());
     assertEquals(256, qualification.minimumSharedPrefixTokens());
+    assertEquals(
+        ModelComponentQualificationRegistry.TRAINED_TOOL_SPECIALIST,
+        qualification.specialistKind());
     assertEquals(1, registry.qualifiedModels());
     assertEquals(0, registry.rejectedModels());
   }
@@ -146,6 +149,24 @@ class ModelComponentQualificationRegistryTest {
         Optional.empty(),
         Set.of(),
         ModelDimensions.unknown());
+  }
+
+  @Test
+  void readsAnUpstreamSpecialistKindAndRejectsUnknownKinds() throws Exception {
+    Properties upstream = properties(true);
+    upstream.setProperty(
+        "componentQualification.adapter.specialistKind", "upstream-rag-specialist");
+    ModelComponentQualificationRegistry registry =
+        ModelComponentQualificationRegistry.fromProperties(upstream);
+    assertEquals(
+        ModelComponentQualificationRegistry.UPSTREAM_RAG_SPECIALIST,
+        registry.entries().getFirst().specialistKind());
+
+    Properties unknown = properties(true);
+    unknown.setProperty("componentQualification.adapter.specialistKind", "distilled-router");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelComponentQualificationRegistry.fromProperties(unknown));
   }
 
   private static ModelArtifactFile file(String path, String role, String sha256, long sizeBytes) {

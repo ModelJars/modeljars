@@ -1536,6 +1536,22 @@ select {
   font-weight: 650;
 }
 
+.profile-grid small,
+.profile-sources small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.profile-sources {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-sources code {
+  overflow-wrap: anywhere;
+}
+
 .resource-note {
   font-size: 0.78rem;
 }

@@ -588,6 +588,25 @@ attention block counts, attention/KV heads, feed-forward width, and MoE dimensio
 Memory estimates are deliberately limited to model-file bytes plus the requested KV cache. Backend
 workspace, tensor repacking, allocator overhead, the JVM, and the operating system are excluded.
 
+Generation profiles and computed memory fit ship in the aggregate `modeljars-catalog` registry (not
+in marker JARs) and bind to the exact artifact SHA-256:
+
+```java
+ModelProfileRegistry.fromClasspath().profileFor(descriptor).ifPresent(profile -> {
+    profile.generation().ifPresent(generation -> {
+        OptionalDouble temperature = generation.temperature(); // absent unless the vendor publishes it
+        List<Integer> eosTokenIds = generation.eosTokenIds();
+    });
+    profile.memoryFit().flatMap(fit -> fit.kvCache("q8_0")).ifPresent(q8 -> {
+        List<ModelMemoryFit.BudgetFit> fits = q8.budgets(); // largest context for 8/16/24 GiB
+    });
+});
+```
+
+Generation values are read only from files at the pinned revision and carry per-value provenance.
+Memory fit is computed from GGUF header metadata with a stated 1 GiB runtime-overhead constant; it
+is not measured. `modeljars show <model>` prints both.
+
 Feature flags expose requirements and handling metadata such as `q4-k`, `chatml`,
 `community-conversion`, and `medical-use-warning`. Markers created before the feature property was
 introduced remain loadable and return an empty set.

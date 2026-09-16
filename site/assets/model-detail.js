@@ -306,6 +306,138 @@ export function qualificationSummary(qualification) {
   };
 }
 
+const SAMPLING_LABELS = [
+  ["temperature", "Temperature"],
+  ["topP", "Top-p"],
+  ["topK", "Top-k"],
+  ["minP", "Min-p"],
+  ["repetitionPenalty", "Repetition penalty"],
+  ["doSample", "Sampling enabled"],
+];
+
+function provenanceText(provenance = []) {
+  return provenance.map((reference) => `${reference.source}: ${reference.key}`).join(" · ");
+}
+
+function profileRow(label, value, provenance, extra = "") {
+  const note = provenance?.length ? ` <small>${escapeHtml(provenanceText(provenance))}</small>` : "";
+  return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${note}${extra}</dd></div>`;
+}
+
+export function renderGenerationProfile(generation) {
+  if (!generation) return "";
+  const rows = [];
+  for (const [key, label] of SAMPLING_LABELS) {
+    const entry = generation.sampling?.[key];
+    if (!entry) continue;
+    const conflicts = (entry.conflicts || [])
+      .map((conflict) => `${conflict.source}: ${conflict.key} = ${conflict.value}`)
+      .join(" · ");
+    rows.push(
+      profileRow(
+        label,
+        typeof entry.value === "boolean" ? (entry.value ? "Yes" : "No") : String(entry.value),
+        entry.provenance,
+        conflicts ? ` <small>disagrees: ${escapeHtml(conflicts)}</small>` : "",
+      ),
+    );
+  }
+  if (generation.eosTokenIds?.length) {
+    rows.push(
+      profileRow(
+        "EOS token IDs",
+        generation.eosTokenIds.map((token) => token.id).join(", "),
+        generation.eosTokenIds.flatMap((token) => token.provenance),
+      ),
+    );
+  }
+  const reasoning = generation.reasoning || {};
+  if (reasoning.openToken && reasoning.closeToken) {
+    rows.push(
+      profileRow(
+        "Reasoning markers",
+        `${reasoning.openToken.text} (${reasoning.openToken.id}) / ${reasoning.closeToken.text} (${reasoning.closeToken.id})`,
+        reasoning.openToken.provenance,
+      ),
+    );
+  }
+  if (reasoning.thinkingDefault) {
+    rows.push(
+      profileRow(
+        "Thinking by default",
+        reasoning.thinkingDefault.value ? "Yes" : "No",
+        reasoning.thinkingDefault.provenance,
+      ),
+    );
+  }
+  const sources = (generation.sources || [])
+    .map(
+      (source) => `<li><code>${escapeHtml(source.id)}</code> <a href="${safeExternalUrl(source.uri)}">${escapeHtml(source.file)}</a>
+        <small>revision <code>${escapeHtml(source.revision)}</code> · SHA-256 <code>${escapeHtml(source.sha256)}</code></small></li>`,
+    )
+    .join("");
+  return `
+        <section class="detail-section" aria-labelledby="generation-profile-title">
+          <p class="eyebrow">Vendor-published settings</p>
+          <h2 id="generation-profile-title">Generation profile</h2>
+          <dl class="dimension-grid profile-grid">${rows.join("")}</dl>
+          <ul class="profile-sources">${sources}</ul>
+          <p class="resource-note">Read only from files at the pinned revision. Settings that are absent are not published in the pinned files; ModelJars does not fill them in.</p>
+        </section>`;
+}
+
+function tokens(value) {
+  return Number(value).toLocaleString("en-US");
+}
+
+export function renderMemoryFit(fit) {
+  if (!fit) return "";
+  const contextRows = fit.kvCache
+    .flatMap((cache) =>
+      cache.contexts.map(
+        (context) =>
+          `<tr><td>${escapeHtml(cache.type)}</td><td>${escapeHtml(formatBytes(cache.bytesPerToken))}</td><td>${tokens(context.contextTokens)}</td><td>${escapeHtml(formatBytes(context.totalBytes))}</td></tr>`,
+      ),
+    )
+    .join("");
+  const budgetRows = fit.kvCache
+    .flatMap((cache) =>
+      cache.maxContextByBudget.map(
+        (budget) =>
+          `<tr><td>${escapeHtml(cache.type)}</td><td>${escapeHtml(formatBytes(budget.budgetBytes))}</td><td>${tokens(budget.maxContextTokens)}</td><td>${
+            budget.maxContextTokens === 0 ? "does not fit" : escapeHtml(budget.limitedBy.replace("-", " "))
+          }</td></tr>`,
+      ),
+    )
+    .join("");
+  const window = fit.layout?.slidingWindow;
+  const notes = [
+    ...(window && fit.layout.slidingWindowPatternDeclared
+      ? [`sliding-window layers are charged at most ${tokens(window)} tokens`]
+      : []),
+    ...(fit.notes || []),
+  ];
+  return `
+        <section class="detail-section" aria-labelledby="memory-fit-title">
+          <p class="eyebrow">Planning estimate</p>
+          <h2 id="memory-fit-title">Memory fit</h2>
+          <p>Computed from GGUF header metadata, not measured. Total = weights (${escapeHtml(formatBytes(fit.weightBytes))}) + an assumed ${escapeHtml(formatBytes(fit.fixedOverheadBytes))} runtime overhead + the KV cache for one sequence.</p>
+          <div class="table-scroll" tabindex="0" aria-label="Computed memory by context length">
+            <table class="benchmark-table">
+              <thead><tr><th scope="col">KV cache</th><th scope="col">KV per token</th><th scope="col">Context</th><th scope="col">Total</th></tr></thead>
+              <tbody>${contextRows}</tbody>
+            </table>
+          </div>
+          <div class="table-scroll" tabindex="0" aria-label="Largest context by memory budget">
+            <table class="benchmark-table">
+              <thead><tr><th scope="col">KV cache</th><th scope="col">Memory</th><th scope="col">Largest context</th><th scope="col">Limited by</th></tr></thead>
+              <tbody>${budgetRows}</tbody>
+            </table>
+          </div>
+          ${notes.length ? `<p class="resource-note">${notes.map(escapeHtml).join(". ")}.</p>` : ""}
+        </section>`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -805,6 +937,10 @@ function renderModel(model, catalog) {
             ${escapeHtml(resourceMemoryNote(model))}
           </p>
         </section>
+
+        ${renderGenerationProfile(model.modelProfile?.generation)}
+
+        ${renderMemoryFit(model.modelProfile?.memoryFit)}
 
         <section class="detail-section" aria-labelledby="integrity-title">
           <p class="eyebrow">Reproducibility</p>

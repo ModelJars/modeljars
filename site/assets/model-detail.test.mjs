@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -11,6 +12,8 @@ import {
   mavenSnippet,
   modelIdFromPath,
   qualificationSummary,
+  renderGenerationProfile,
+  renderMemoryFit,
   rerankingJavaSnippet,
   resourceMemoryNote,
   speechJavaSnippet,
@@ -316,4 +319,55 @@ test("summarizes speech correctness, streaming, and latency evidence", () => {
   assert.equal(summary.realTimeFactor, "0.800x");
   assert.equal(summary.ttfa, "900 ms");
   assert.equal(summary.streaming, true);
+});
+
+const committedProfiles = JSON.parse(
+  readFileSync(new URL("../../catalog/model-profiles.json", import.meta.url), "utf8"),
+).profiles;
+const profileFor = (id) => committedProfiles.find((profile) => profile.modelId === id);
+
+test("renders a generation profile with per-value provenance and pinned sources", () => {
+  const html = renderGenerationProfile(profileFor("umarfarookm_umartransit_1b_q4_k_m").generation);
+
+  assert.match(html, /Generation profile/);
+  assert.match(html, /Temperature<\/dt><dd>0\.7 <small>generation-config: temperature · gguf: general\.sampling\.temp<\/small>/);
+  assert.match(html, /Repetition penalty<\/dt><dd>1\.1 /);
+  assert.match(html, /EOS token IDs<\/dt><dd>151645, 151643/);
+  assert.match(html, /generation_config\.json/);
+  assert.match(html, /[0-9a-f]{64}/);
+  assert.doesNotMatch(html, /Min-p/);
+  assert.match(html, /not published in the pinned files/);
+});
+
+test("renders reasoning markers and the template-derived thinking default", () => {
+  const html = renderGenerationProfile(profileFor("qwen3_8b_q4_k_m").generation);
+
+  assert.match(html, /&lt;think&gt; \(151667\) \/ &lt;\/think&gt; \(151668\)/);
+  assert.match(html, /Thinking by default<\/dt><dd>Yes/);
+  assert.doesNotMatch(html, /Temperature/);
+});
+
+test("renders no generation section when nothing was sourced", () => {
+  assert.equal(renderGenerationProfile(undefined), "");
+});
+
+test("labels the memory fit as computed and shows context totals and budget limits", () => {
+  const html = renderMemoryFit(profileFor("qwen3_8b_q4_k_m").memoryFit);
+
+  assert.match(html, /Memory fit/);
+  assert.match(html, /Computed from GGUF header metadata, not measured/);
+  assert.match(html, /1\.00 GiB/);
+  assert.match(html, /<td>f16<\/td><td>144\.00 KiB<\/td><td>4,096<\/td><td>6\.24 GiB<\/td>/);
+  assert.match(html, /<td>q8_0<\/td><td>8\.00 GiB<\/td><td>31,765<\/td><td>memory<\/td>/);
+  assert.match(html, /<td>f16<\/td><td>16\.00 GiB<\/td><td>40,960<\/td><td>context length<\/td>/);
+});
+
+test("marks models that do not fit and upper-bound estimates", () => {
+  const gemma4 = renderMemoryFit(profileFor("ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m").memoryFit);
+  assert.match(gemma4, /<td>f16<\/td><td>8\.00 GiB<\/td><td>0<\/td><td>does not fit<\/td>/);
+  assert.match(gemma4, /sliding-window layers/);
+
+  const gemma3 = renderMemoryFit(profileFor("bartowski_google_gemma_3_1b_it_gguf_q4_k_m").memoryFit);
+  assert.match(gemma3, /upper bound/);
+  assert.equal(renderMemoryFit(undefined), "");
 });

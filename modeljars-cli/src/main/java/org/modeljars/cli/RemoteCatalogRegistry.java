@@ -37,6 +37,7 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 import org.modeljars.ClasspathModelJarRegistry;
 import org.modeljars.ModelJarRegistry;
+import org.modeljars.ModelProfileRegistry;
 import org.modeljars.PropertiesModelJarRegistry;
 
 /** Refreshes the CLI's qualified catalog while retaining deterministic offline behavior. */
@@ -74,15 +75,46 @@ final class RemoteCatalogRegistry {
 
   /** Loads the freshest verified catalog available to the CLI. */
   static ModelJarRegistry loadDefault() {
+    return loadDefaultCatalog().registry();
+  }
+
+  /**
+   * Loads the freshest verified catalog together with the model profiles published in the same
+   * registry file.
+   */
+  static LoadedCatalog loadDefaultCatalog() {
     ModelJarRegistry shipped = ModelJarRegistry.fromClasspath();
     byte[] shippedBytes = shippedCatalog();
-    if (offline()) {
-      return createDefault().offlineFallback(shipped, shippedBytes).registry();
+    RemoteCatalogRegistry remote = createDefault();
+    Candidate candidate =
+        offline()
+            ? remote.offlineFallback(shipped, shippedBytes)
+            : remote.loadCandidate(shipped, shippedBytes);
+    return new LoadedCatalog(candidate.registry(), profiles(candidate.content()));
+  }
+
+  /** A verified registry and the model profiles carried by the same bytes. */
+  record LoadedCatalog(ModelJarRegistry registry, ModelProfileRegistry profiles) {}
+
+  static ModelProfileRegistry profiles(byte[] content) {
+    if (content == null || content.length == 0) {
+      return ModelProfileRegistry.empty();
     }
-    return createDefault().load(shipped, shippedBytes);
+    Properties properties = new Properties();
+    try (ByteArrayInputStream input = new ByteArrayInputStream(content)) {
+      properties.load(input);
+      return ModelProfileRegistry.fromProperties(properties);
+    } catch (IOException | RuntimeException exception) {
+      // Profiles are advisory; a malformed or newer profile block never blocks catalog use.
+      return ModelProfileRegistry.empty();
+    }
   }
 
   ModelJarRegistry load(ModelJarRegistry shipped, byte[] shippedBytes) {
+    return loadCandidate(shipped, shippedBytes).registry();
+  }
+
+  private Candidate loadCandidate(ModelJarRegistry shipped, byte[] shippedBytes) {
     Objects.requireNonNull(shipped, "shipped");
     byte[] safeShippedBytes = Objects.requireNonNullElseGet(shippedBytes, () -> new byte[0]);
     Candidate fallback = offlineFallback(shipped, safeShippedBytes);
@@ -90,7 +122,7 @@ final class RemoteCatalogRegistry {
       String expectedHash = publishedHash(fetcher.fetch(hashUri));
       Candidate cached = cachedCandidate();
       if (cached != null && expectedHash.equals(sha256(cached.content()))) {
-        return cached.registry();
+        return cached;
       }
       if (safeShippedBytes.length > 0 && expectedHash.equals(sha256(safeShippedBytes))) {
         if (cached != null) {
@@ -100,15 +132,15 @@ final class RemoteCatalogRegistry {
             // The published catalog is still authoritative for this process.
           }
         }
-        return shipped;
+        return new Candidate(safeShippedBytes, shipped);
       }
 
       byte[] downloaded = fetcher.fetch(catalogUri);
       if (downloaded.length == 0 || downloaded.length > MAX_CATALOG_BYTES) {
-        return fallback.registry();
+        return fallback;
       }
       if (!expectedHash.equals(sha256(downloaded))) {
-        return fallback.registry();
+        return fallback;
       }
       Candidate published = parse(downloaded);
       try {
@@ -116,12 +148,12 @@ final class RemoteCatalogRegistry {
       } catch (IOException ignored) {
         // Use the verified download for this process even if the local cache is read-only.
       }
-      return published.registry();
+      return published;
     } catch (IOException | IllegalArgumentException exception) {
-      return fallback.registry();
+      return fallback;
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
-      return fallback.registry();
+      return fallback;
     }
   }
 

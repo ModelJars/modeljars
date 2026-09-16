@@ -41,6 +41,7 @@ order: Vectors, Models, then ModelJars.
 | 2026-09-06 | Can a standard Safetensors cross-encoder become a path-free ModelJar without importing its reference runtime? | Models reproduced all six pinned Transformers 4.38.1 logits for `mxbai-rerank-xsmall-v1` within `0.000003100`, preserved the complete ranking, and passed plain Java, LangChain4j, Spring AI, and ModelJars integration. Three fresh JVMs measured `58.660 ms` pair p50 and `17.114` documents/s with ten workers. | Publish the four-file F16 bundle as the second qualified reranker. Keep Transformers as a qualification oracle only; runtime parsing, tokenization, attention, pooling, and scoring remain pure Java. |
 | 2026-09-11 | Can a versioned recipe make two small models faster than the smallest tool-capable control without pretending their KV caches are portable? | Qwen3 0.6B chat plus Qwen3 1.7B tools passed all 36 turns across six fresh JVMs. Capability-specific semantic projection reduced median end-to-end time from 53.166 to 35.151 seconds (33.88%); median peak RSS rose 36.04% because both weights remain resident. The initial catalog entry was subsequently withdrawn because this was routing between independent models, not the requested physical KV-sharing hybrid. | Retain the result as routing evidence only. Do not republish it as a hybrid; require a base-aligned adapter, exact shared KV blocks, long-context retention, complete memory accounting, and the fixed crossover gate before a composition can enter the catalog. |
 | 2026-09-12 | Did that routing recipe satisfy the intended hybrid-model boundary? | No. It routed semantic history between two independent runtimes, did not share or translate KV state, and its catalog evidence URL pointed to a commit before the report existed. A separate Qwen3 0.6B-to-1.7B cache-translation experiment also failed the predeclared exact-retrieval gate. | Withdraw the recipe from the qualified catalog. Preserve it as a negative experiment, require immutable evidence hashes, and publish no hybrid model until the actual state handoff passes correctness and end-to-end crossover gates. |
+| 2026-09-16 | Can a catalog entry tell a user how to sample a model and whether it fits their memory, without guessing and without touching marker identity? | A generator read generation settings only from pinned files (`generation_config.json` and GGUF headers) and computed a KV-cache memory fit from GGUF header metadata for the 44 public models: 33 carry a profile, 32 a memory fit. Only 4 publish any sampling value. Several headers declare a single EOS token while their chat template ends a turn with a different token (Gemma 3 1B declares `1` but its template closes turns with `<end_of_turn>`; MiniCPM5 1B declares `1` but uses `<|im_end|>`); only declared IDs are recorded. The planner scheduled zero marker publications. | Publish profiles in a separate `catalog/model-profiles.json` through the aggregate catalog, website, and CLI, never in marker JARs. Label memory fit as computed, not measured. Require new entries to carry a published generation profile and require fine-tunes to beat the same-size base quantisation on our harness. |
 
 ## Current public boundary
 
@@ -57,6 +58,18 @@ can execute or that every marker may be published.
 
 The catalog currently publishes no qualified virtual model. Composition candidates remain research
 until their actual shared-state implementation passes the same published-artifact and task gates.
+
+## Admission policy for new entries
+
+Applies to entries proposed from 2026-09-16 onward; existing qualified entries are not retroactively
+failed.
+
+- **Fine-tunes must beat their base.** A fine-tune is admitted only if it beats the same-size base
+  model quantisation on our harness, under the same workload and controlled run. A fine-tune's own
+  reported scores are not evidence for admission.
+- **Generation profiles are required where published.** A qualified entry must carry its generation
+  profile (`catalog/model-profiles.json`) where the vendor publishes one in the pinned files. Values
+  the files do not publish stay absent and are recorded as unsourced, not filled in.
 
 ## Release-engineering findings
 

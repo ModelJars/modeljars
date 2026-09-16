@@ -2815,6 +2815,32 @@ catalogEntries.forEach { entry ->
             "Hugging Face license must be resolved before publication for ${entry.id}"
         }
     }
+    if (entry.sourceId.startsWith("gh://")) {
+        // A bundle we package ourselves and publish as an immutable GitHub release under the
+        // ModelJars organization. The revision is the commit the release tag points to; the
+        // per-file hashes bound below are what the installer verifies after download.
+        require(entry.sourceId.matches(Regex("gh://ModelJars/[A-Za-z0-9][A-Za-z0-9._-]*"))) {
+            "Invalid GitHub sourceId for ${entry.id}: ${entry.sourceId}"
+        }
+        val repository = entry.sourceId.removePrefix("gh://")
+        require(entry.sourceUri == "https://github.com/$repository") {
+            "GitHub sourceUri does not match sourceId for ${entry.id}"
+        }
+        require(download.host == "github.com") {
+            "GitHub release downloads must use github.com for ${entry.id}"
+        }
+        require(
+            download.path.matches(Regex("/$repository/releases/download/[A-Za-z0-9][A-Za-z0-9._-]*/[^/]+")),
+        ) {
+            "GitHub release download path does not match sourceId for ${entry.id}"
+        }
+        require(entry.revision.matches(Regex("[0-9a-f]{40}"))) {
+            "GitHub release revision must be the tagged commit for ${entry.id}"
+        }
+        require(entry.files.isNotEmpty()) {
+            "GitHub release bundles must bind every file for ${entry.id}"
+        }
+    }
     entry.licenseUri?.let { licenseUri ->
         require(URI.create(licenseUri).scheme == "https") {
             "licenseUri must use HTTPS for ${entry.id}"
@@ -2828,8 +2854,10 @@ catalogEntries.forEach { entry ->
             "External entry must not declare classpathResource for ${entry.id}"
         }
         requireNotNull(entry.localPath) { "External entry must declare localPath for ${entry.id}" }
-        require(download.path.contains("/resolve/${entry.revision}/")) {
-            "downloadUri must pin revision ${entry.revision} for ${entry.id}"
+        if (!entry.sourceId.startsWith("gh://")) {
+            require(download.path.contains("/resolve/${entry.revision}/")) {
+                "downloadUri must pin revision ${entry.revision} for ${entry.id}"
+            }
         }
         require(entry.localPath.substringAfterLast('/') == download.path.substringAfterLast('/')) {
             "localPath and downloadUri filenames differ for ${entry.id}"

@@ -127,6 +127,14 @@ function qualificationSnapshot(modelId, manifests) {
     delete metadata.entries;
     delete metadata.qualifiedModels;
     delete metadata.rejectedModels;
+    delete metadata.targetQualifiedModels;
+    // The evidence identity of an entry is its report path and SHA-256 (and the artifact
+    // identity it binds); the Git revision the whole manifest is fetched from and the time the
+    // manifest was generated are where and when the same bytes were read, and they move every
+    // time another model is qualified. A marker's evidence is unchanged while its entries are.
+    delete metadata.modelsRevision;
+    delete metadata.evidenceRevision;
+    delete metadata.generatedAt;
     return [{ metadata, entries }];
   });
 }

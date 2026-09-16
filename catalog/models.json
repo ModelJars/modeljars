@@ -5559,7 +5559,7 @@
       "sourceUri": "https://huggingface.co/ibm-granite/granite-4.1-3b-GGUF",
       "downloadUri": "https://huggingface.co/ibm-granite/granite-4.1-3b-GGUF/resolve/ab4701481089b58a082ef63cc1cee738887293ff/granite-4.1-3b-Q4_K_M.gguf",
       "revision": "ab4701481089b58a082ef63cc1cee738887293ff",
-      "markerCoordinate": "org.modeljars.huggingface:ibm-granite.granite-4.1-3b-gguf.q4_k_m:4.1.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:ibm-granite.granite-4.1-3b-gguf.q4_k_m:4.1.0-q4_k_m.2",
       "modelVersion": "4.1.0",
       "variant": "q4_k_m",
       "format": "gguf",

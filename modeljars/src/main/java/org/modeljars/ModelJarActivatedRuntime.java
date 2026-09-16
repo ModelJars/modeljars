@@ -69,32 +69,56 @@ public final class ModelJarActivatedRuntime implements AutoCloseable {
     }
   }
 
-  /** Returns the loaded base plus activated tool specialist as one Models runtime. */
+  /**
+   * Returns the loaded base plus activated tool specialist as one Models runtime.
+   *
+   * @return the loaded base with its activated specialist as one Models runtime
+   */
   public ActivatedToolCallingModel model() {
     return model;
   }
 
-  /** Opens one stateful conversation retaining a single physically shareable cache lineage. */
+  /**
+   * Opens one stateful conversation retaining a single physically shareable cache lineage.
+   *
+   * @return a stateful conversation that keeps one physically shareable cache lineage
+   */
   public ActivatedToolConversation openConversation() {
     return model.openConversation();
   }
 
-  /** Returns the exact qualified base-model descriptor. */
+  /**
+   * Returns the exact qualified base-model descriptor.
+   *
+   * @return the exact qualified base-model descriptor
+   */
   public ModelJarDescriptor baseDescriptor() {
     return baseDescriptor;
   }
 
-  /** Returns the exact adapter-component descriptor. */
+  /**
+   * Returns the exact adapter-component descriptor.
+   *
+   * @return the exact adapter-component descriptor
+   */
   public ModelJarDescriptor adapterDescriptor() {
     return adapterDescriptor;
   }
 
-  /** Returns the base model's exact execution qualification. */
+  /**
+   * Returns the base model's exact execution qualification.
+   *
+   * @return the base model's exact execution qualification
+   */
   public ModelExecutionQualification baseQualification() {
     return baseQualification;
   }
 
-  /** Returns the base model's qualified chat template used by both branches. */
+  /**
+   * Returns the base model's qualified chat template used by both branches.
+   *
+   * @return the base model's qualified chat template, shared by both branches
+   */
   public ChatTemplate chatTemplate() {
     return chatTemplate;
   }

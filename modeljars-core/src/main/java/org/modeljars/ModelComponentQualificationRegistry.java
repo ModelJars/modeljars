@@ -85,37 +85,65 @@ public final class ModelComponentQualificationRegistry {
     }
   }
 
-  /** Returns when this qualification collection was generated. */
+  /**
+   * Returns when this qualification collection was generated.
+   *
+   * @return time at which this evidence collection was generated
+   */
   public Instant generatedAt() {
     return generatedAt;
   }
 
-  /** Returns the qualification policy version. */
+  /**
+   * Returns the qualification policy version.
+   *
+   * @return qualification policy version applied to the evidence
+   */
   public String policyVersion() {
     return policyVersion;
   }
 
-  /** Returns the exact Models implementation revision exercised by the evidence. */
+  /**
+   * Returns the exact Models implementation revision exercised by the evidence.
+   *
+   * @return immutable Models repository revision the evidence exercised
+   */
   public String modelsRevision() {
     return modelsRevision;
   }
 
-  /** Returns the immutable Models revision containing the evidence report. */
+  /**
+   * Returns the immutable Models revision containing the evidence report.
+   *
+   * @return immutable Models repository revision that carries the evidence report
+   */
   public String evidenceRevision() {
     return evidenceRevision;
   }
 
-  /** Returns every component qualification in stable model-ID order. */
+  /**
+   * Returns every component qualification in stable model-ID order.
+   *
+   * @return all component qualification entries ordered by model identifier
+   */
   public List<Entry> entries() {
     return entries;
   }
 
-  /** Returns the number of qualified components. */
+  /**
+   * Returns the number of qualified components.
+   *
+   * @return number of components satisfying the qualification policy
+   */
   public int qualifiedModels() {
     return Math.toIntExact(entries.stream().filter(Entry::qualified).count());
   }
 
-  /** Returns the number of rejected components. */
+  /**
+   * Returns the number of rejected components.
+   *
+   * @return number of components rejected by the qualification policy
+   */
   public int rejectedModels() {
     return entries.size() - qualifiedModels();
   }
@@ -134,7 +162,12 @@ public final class ModelComponentQualificationRegistry {
         .findFirst();
   }
 
-  /** Loads a versioned component qualification resource from a file. */
+  /**
+   * Loads a versioned component qualification resource from a file.
+   *
+   * @param path component qualification properties file
+   * @return parsed and validated component qualifications
+   */
   public static ModelComponentQualificationRegistry load(Path path) {
     try (InputStream input = Files.newInputStream(path)) {
       return parse(input);
@@ -144,12 +177,21 @@ public final class ModelComponentQualificationRegistry {
     }
   }
 
-  /** Loads and merges component qualifications visible to the context class loader. */
+  /**
+   * Loads and merges component qualifications visible to the context class loader.
+   *
+   * @return merged component qualifications from every visible resource
+   */
   public static ModelComponentQualificationRegistry fromClasspath() {
     return fromClasspath(Thread.currentThread().getContextClassLoader());
   }
 
-  /** Loads and merges component qualifications visible to a class loader. */
+  /**
+   * Loads and merges component qualifications visible to a class loader.
+   *
+   * @param classLoader class loader whose resources are merged
+   * @return merged component qualifications from every visible resource
+   */
   public static ModelComponentQualificationRegistry fromClasspath(ClassLoader classLoader) {
     ClassLoader loader =
         classLoader == null
@@ -191,14 +233,25 @@ public final class ModelComponentQualificationRegistry {
         merged.values().stream().map(SourcedEntry::entry).toList());
   }
 
-  /** Parses one component qualification properties stream. */
+  /**
+   * Parses one component qualification properties stream.
+   *
+   * @param stream component qualification properties
+   * @return parsed and validated component qualifications
+   * @throws IOException if the stream cannot be read
+   */
   public static ModelComponentQualificationRegistry parse(InputStream stream) throws IOException {
     Properties properties = new Properties();
     properties.load(Objects.requireNonNull(stream, "stream"));
     return fromProperties(properties);
   }
 
-  /** Parses and validates component qualification properties. */
+  /**
+   * Parses and validates component qualification properties.
+   *
+   * @param properties component qualification properties
+   * @return parsed and validated component qualifications
+   */
   public static ModelComponentQualificationRegistry fromProperties(Properties properties) {
     Objects.requireNonNull(properties, "properties");
     int schemaVersion = integer(properties, ROOT_PREFIX + "schemaVersion");
@@ -295,7 +348,14 @@ public final class ModelComponentQualificationRegistry {
 
   private record SourcedEntry(Instant generatedAt, Entry entry) {}
 
-  /** Immutable file identity bound by component evidence. */
+  /**
+   * Immutable file identity bound by component evidence.
+   *
+   * @param path artifact-relative file path
+   * @param role role the file plays in the runtime bundle
+   * @param sha256 lowercase SHA-256 of the file
+   * @param sizeBytes file size in bytes
+   */
   public record ArtifactFile(String path, String role, String sha256, long sizeBytes) {
     /** Validates one immutable artifact-file identity. */
     public ArtifactFile {
@@ -308,7 +368,24 @@ public final class ModelComponentQualificationRegistry {
     }
   }
 
-  /** Immutable evidence binding for one internal hybrid component. */
+  /**
+   * Immutable evidence binding for one internal hybrid component.
+   *
+   * @param modelId catalog identifier of the component
+   * @param baseModelId catalog identifier of the physical base model
+   * @param baseArtifactSha256 lowercase SHA-256 of the base artifact
+   * @param baseArtifactSizeBytes base artifact size in bytes
+   * @param artifactSha256 lowercase SHA-256 of the component's primary artifact
+   * @param artifactSizeBytes primary artifact size in bytes
+   * @param artifactFiles every file of the runtime bundle
+   * @param artifactBundleSizeBytes total bundle size in bytes
+   * @param artifactBundleSha256 lowercase SHA-256 over the ordered bundle identities
+   * @param minimumSharedPrefixTokens smallest prefix at which physical sharing pays off
+   * @param reportUri immutable evidence report location
+   * @param reportSha256 lowercase SHA-256 of the evidence report
+   * @param qualified whether the component satisfies the policy
+   * @param specialistKind kind of specialist the evidence was gated as
+   */
   public record Entry(
       String modelId,
       String baseModelId,

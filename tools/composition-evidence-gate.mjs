@@ -8,6 +8,22 @@ const SHA256 = /^[a-f0-9]{64}$/;
 const IMMUTABLE_RAW_GITHUB =
   /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/([a-f0-9]{40})\/.+$/;
 const IMPLEMENTED_HANDOFFS = new Set(["exact-kv-block-sharing"]);
+const TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
+const UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
+const SPECIALIST_KINDS = new Set([TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST]);
+const MINIMUM_WINDOW_SUITES = 2;
+const MINIMUM_WINDOW_CASES = 100;
+const MINIMUM_BALANCED_ACCURACY = 0.8;
+const MINIMUM_KERNEL_IDENTITY_CASES = 10;
+
+/** The kind of specialist a composition binds; the fixed gates differ per kind. */
+function specialistKind(composition) {
+  const kind = composition.specialistKind ?? TRAINED_TOOL_SPECIALIST;
+  if (!SPECIALIST_KINDS.has(kind)) {
+    throw new Error(`${composition.id} declares an unknown specialistKind ${kind}`);
+  }
+  return kind;
+}
 
 function requireDocument(value) {
   if (
@@ -139,6 +155,13 @@ function requireProductionEvidence(composition, report, modelsById) {
   }
 
   const gates = evaluation.gates;
+  if (specialistKind(composition) === UPSTREAM_RAG_SPECIALIST) {
+    requireUpstreamRagSpecialistGates(composition, report, gates, evaluation);
+    return;
+  }
+  if (report.specialistKind !== undefined && report.specialistKind !== TRAINED_TOOL_SPECIALIST) {
+    throw new Error(`${composition.id} report specialistKind does not match the catalog entry`);
+  }
   for (const name of [
     "provenance",
     "taskCorrectness",
@@ -244,6 +267,133 @@ function requireProductionEvidence(composition, report, modelsById) {
       `${composition.id} memory accounting must prove fewer unique inference-state bytes with sharing`,
     );
   }
+}
+
+function requireSharingGates(composition, gates, evaluation) {
+  const longContext = gates.longContextRetrieval;
+  if (
+    longContext?.pass !== true ||
+    longContext.cases !== 8 ||
+    longContext.contextTokens !== 4096 ||
+    !(longContext.nativeCorrect >= 6) ||
+    longContext.retainedNativeCorrect !== longContext.nativeCorrect ||
+    longContext.tokenExactCases !== longContext.cases ||
+    longContext.physicallySharedCases !== longContext.cases
+  ) {
+    throw new Error(
+      `${composition.id} longContextRetrieval must retain every native-correct answer over physically shared 4K prefixes`,
+    );
+  }
+  const crossover = gates.performanceCrossover;
+  if (
+    crossover?.pass !== true ||
+    crossover.contextTokens !== 4096 ||
+    !(crossover.improvement >= 0.2) ||
+    crossover.improvement !== evaluation.improvement ||
+    crossover.physicallySharedAllTiers !== true ||
+    crossover.recomputedIndependentAllTiers !== true ||
+    crossover.tokenExactAllTiers !== true
+  ) {
+    throw new Error(
+      `${composition.id} performanceCrossover must prove physical KV sharing and token equality with at least 20% improvement at 4K`,
+    );
+  }
+  const memory = gates.memoryAccounting;
+  if (
+    memory?.pass !== true ||
+    memory.complete !== true ||
+    !(memory.peakRssBytes > 0) ||
+    !(memory.sharedUniqueStateBytes > 0) ||
+    !(memory.recomputedUniqueStateBytes > 0) ||
+    !(memory.sharedUniqueStateBytes < memory.recomputedUniqueStateBytes)
+  ) {
+    throw new Error(
+      `${composition.id} memory accounting must prove fewer unique inference-state bytes with sharing`,
+    );
+  }
+}
+
+/**
+ * Gates for a composition whose specialist is an upstream-published RAG adapter over the base
+ * (no tool loop, no trained selection window): the upstream provenance is pinned, the frozen
+ * two-suite answerability window decides task correctness on pure Java (or on a kernel backend
+ * with proven identity), real-weight plain-Java conformance and JVM mechanics hold, and the same
+ * sharing, crossover and memory evidence as every other composition is bound.
+ */
+function requireUpstreamRagSpecialistGates(composition, report, gates, evaluation) {
+  if (report.specialistKind !== UPSTREAM_RAG_SPECIALIST) {
+    throw new Error(`${composition.id} report must declare ${UPSTREAM_RAG_SPECIALIST}`);
+  }
+  const provenance = gates?.provenance;
+  if (
+    provenance?.pass !== true ||
+    provenance.upstream !== true ||
+    typeof provenance.upstreamRepository !== "string" ||
+    provenance.upstreamRepository.length === 0 ||
+    !/^[a-f0-9]{40}$/.test(provenance.upstreamRevision ?? "") ||
+    !SHA256.test(provenance.adapterSha256 ?? "") ||
+    !SHA256.test(provenance.adapterConfigSha256 ?? "")
+  ) {
+    throw new Error(`${composition.id} provenance must pin the upstream adapter`);
+  }
+  const task = gates.taskCorrectness;
+  if (
+    task?.pass !== true ||
+    !SHA256.test(task.windowSha256 ?? "") ||
+    task.promptOracleIdentical !== true ||
+    typeof task.backend !== "string" ||
+    !Array.isArray(task.suites) ||
+    task.suites.length < MINIMUM_WINDOW_SUITES ||
+    task.suites.some(
+      (suite) =>
+        typeof suite?.name !== "string" ||
+        !Number.isInteger(suite.cases) ||
+        suite.cases < MINIMUM_WINDOW_CASES ||
+        suite.structuredRate !== 1 ||
+        !(suite.balancedAccuracy >= MINIMUM_BALANCED_ACCURACY) ||
+        !(typeof suite.baseBalancedAccuracy === "number") ||
+        !(suite.balancedAccuracy >= suite.baseBalancedAccuracy) ||
+        suite.physicallySharedCases !== suite.cases,
+    )
+  ) {
+    throw new Error(
+      `${composition.id} taskCorrectness does not meet the fixed answerability window thresholds`,
+    );
+  }
+  if (task.backend !== "pure-java") {
+    const identity = gates.kernelIdentity;
+    if (
+      identity?.pass !== true ||
+      identity.backend !== task.backend ||
+      !Number.isInteger(identity.casesPerSuitePerArm) ||
+      identity.casesPerSuitePerArm < MINIMUM_KERNEL_IDENTITY_CASES ||
+      identity.identicalOutputs !== true
+    ) {
+      throw new Error(
+        `${composition.id} window ran on ${task.backend} without proven identity to pure Java`,
+      );
+    }
+  }
+  if (
+    gates.plainJava?.pass !== true ||
+    gates.plainJava.realWeights !== true ||
+    typeof gates.plainJava.conformanceOracle !== "string" ||
+    !(gates.plainJava.greedyOracles >= 2) ||
+    gates.plainJava.markerRoundTrip !== true
+  ) {
+    throw new Error(`${composition.id} must pass real-weight plain Java conformance`);
+  }
+  if (
+    gates.jvmMechanics?.pass !== true ||
+    gates.jvmMechanics.realWeights !== true ||
+    gates.jvmMechanics.physicalStorageIdentity !== true ||
+    gates.jvmMechanics.exactBaseContinuation !== true ||
+    gates.jvmMechanics.disabledAdapterNoOp !== true ||
+    gates.jvmMechanics.batchedPrefillIdentity !== true
+  ) {
+    throw new Error(`${composition.id} must pass real-weight JVM mechanics`);
+  }
+  requireSharingGates(composition, gates, evaluation);
 }
 
 export async function validateCompositionEvidence({ compositions, models, loadReport }) {

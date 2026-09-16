@@ -435,3 +435,154 @@ test("rejects a member artifact that differs from the physical catalog", async (
     /must match the physical model catalog/,
   );
 });
+
+function ragReport(overrides = {}) {
+  const base = report();
+  return {
+    ...base,
+    specialistKind: "upstream-rag-specialist",
+    evaluation: {
+      ...base.evaluation,
+      gates: {
+        provenance: {
+          pass: true,
+          upstream: true,
+          upstreamRepository: "ibm-granite/granitelib-rag-r1.0",
+          upstreamRevision: "2".repeat(40),
+          adapterSha256: "3".repeat(64),
+          adapterConfigSha256: "4".repeat(64),
+        },
+        taskCorrectness: {
+          pass: true,
+          windowSha256: "5".repeat(64),
+          promptOracleIdentical: true,
+          backend: "pure-java",
+          suites: [
+            {
+              name: "mtrag-human-rag",
+              cases: 110,
+              structuredRate: 1,
+              balancedAccuracy: 0.86,
+              baseBalancedAccuracy: 0.6,
+              physicallySharedCases: 110,
+            },
+            {
+              name: "squad-v2-dev",
+              cases: 200,
+              structuredRate: 1,
+              balancedAccuracy: 0.81,
+              baseBalancedAccuracy: 0.55,
+              physicallySharedCases: 200,
+            },
+          ],
+        },
+        plainJava: {
+          pass: true,
+          realWeights: true,
+          conformanceOracle: "llama.cpp b9960",
+          greedyOracles: 2,
+          markerRoundTrip: true,
+        },
+        jvmMechanics: {
+          pass: true,
+          realWeights: true,
+          physicalStorageIdentity: true,
+          exactBaseContinuation: true,
+          disabledAdapterNoOp: true,
+          batchedPrefillIdentity: true,
+        },
+        longContextRetrieval: base.evaluation.gates.longContextRetrieval,
+        performanceCrossover: base.evaluation.gates.performanceCrossover,
+        memoryAccounting: base.evaluation.gates.memoryAccounting,
+      },
+    },
+    ...overrides,
+  };
+}
+
+function ragDocumentFor(value, overrides = {}) {
+  const { bytes, document } = documentFor(value, overrides);
+  document.compositions[0].specialistKind = "upstream-rag-specialist";
+  return { bytes, document };
+}
+
+test("accepts an upstream RAG specialist composition on the fixed answerability gates", async () => {
+  const { bytes, document } = ragDocumentFor(ragReport());
+  assert.deepEqual(
+    await validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
+    ["qwen3_chat_tools_composite"],
+  );
+});
+
+test("rejects an upstream RAG composition whose window has one unstructured output", async () => {
+  const good = ragReport();
+  const suites = good.evaluation.gates.taskCorrectness.suites.map((suite, index) =>
+    index === 1 ? { ...suite, structuredRate: 0.995 } : suite,
+  );
+  const bad = ragReport({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        taskCorrectness: { ...good.evaluation.gates.taskCorrectness, suites },
+      },
+    },
+  });
+  const { bytes, document } = ragDocumentFor(bad);
+  await assert.rejects(
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
+    /fixed answerability window thresholds/,
+  );
+});
+
+test("rejects an upstream RAG window on a kernel backend without proven identity", async () => {
+  const good = ragReport();
+  const bad = ragReport({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        taskCorrectness: { ...good.evaluation.gates.taskCorrectness, backend: "rust-ffm" },
+      },
+    },
+  });
+  const { bytes, document } = ragDocumentFor(bad);
+  await assert.rejects(
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
+    /without proven identity to pure Java/,
+  );
+});
+
+test("rejects a report whose specialist kind differs from the catalog entry", async () => {
+  const { bytes, document } = documentFor(ragReport());
+  await assert.rejects(
+    validateCompositionEvidence({
+      compositions: document,
+      models: modelCatalog,
+      loadReport: async () => bytes,
+    }),
+    /specialistKind does not match/,
+  );
+  const unknown = ragDocumentFor(ragReport());
+  unknown.document.compositions[0].specialistKind = "distilled-router";
+  await assert.rejects(
+    validateCompositionEvidence({
+      compositions: unknown.document,
+      models: modelCatalog,
+      loadReport: async () => unknown.bytes,
+    }),
+    /unknown specialistKind/,
+  );
+});

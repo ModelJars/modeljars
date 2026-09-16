@@ -224,6 +224,7 @@ class ModelJarsTest {
     try (var runtime =
         loader.loadActivatedToolRuntime(QWEN, adapterModel, ModelLoadOptions.defaults())) {
       assertEquals(base.sha256().orElseThrow(), runtime.model().adapter().baseArtifactSha256());
+      assertEquals(256, runtime.model().minimumSharedPrefixTokens());
       assertEquals(base, runtime.baseDescriptor());
       assertEquals(adapter, runtime.adapterDescriptor());
       assertEquals(ChatTemplate.CHATML_NO_THINK, runtime.chatTemplate());
@@ -972,6 +973,7 @@ class ModelJarsTest {
         prefix + "artifactBundleSizeBytes",
         Long.toString(adapter.files().stream().mapToLong(ModelArtifactFile::sizeBytes).sum()));
     properties.setProperty(prefix + "artifactBundleSha256", artifactBundleSha256(adapter.files()));
+    properties.setProperty(prefix + "minimumSharedPrefixTokens", "256");
     properties.setProperty(
         prefix + "reportUri",
         "https://raw.githubusercontent.com/integrallis/models/" + "2".repeat(40) + "/report.json");

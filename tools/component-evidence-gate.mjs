@@ -10,6 +10,14 @@ const COMPONENT_POLICY = "activated-adapter-component-v1";
 const UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const IMMUTABLE_MODELS_REPORT =
   /^https:\/\/raw\.githubusercontent\.com\/integrallis\/models\/([a-f0-9]{40})\/.+$/;
+const MAVEN_CENTRAL = "https://repo1.maven.org/maven2";
+const REQUIRED_MODELS_MODULES = [
+  "backend-java",
+  "models-runtime",
+  "models-spring-ai",
+  "models-langchain4j",
+];
+const RELEASE_VERSION = /^\d+\.\d+\.\d+$/;
 
 function canonicalJson(value) {
   if (Array.isArray(value)) {
@@ -88,6 +96,14 @@ function requireDocuments(qualifications, models) {
 }
 
 function requireArtifactIdentity(entry, model) {
+  if (
+    !Number.isInteger(entry.minimumSharedPrefixTokens) ||
+    entry.minimumSharedPrefixTokens <= 0
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind a positive measured sharing crossover`,
+    );
+  }
   if (!model.capabilities?.includes("composition-component")) {
     throw new Error(
       `${entry.modelId} must declare the composition-component capability`,
@@ -169,7 +185,147 @@ function requireTaskCorrectness(modelId, task) {
   }
 }
 
-function requireReport(entry, report, model, base, modelsRevision) {
+function sameMembers(actual, expected) {
+  return (
+    Array.isArray(actual) &&
+    actual.length === expected.length &&
+    expected.every((item) => actual.includes(item))
+  );
+}
+
+function requirePositiveInteger(value) {
+  return Number.isInteger(value) && value > 0;
+}
+
+function requireReleasedArtifactFile(entry, artifact, version, kind) {
+  const file = artifact?.[kind];
+  const extension = kind === "jar" ? "jar" : "pom";
+  const module = artifact?.module;
+  const expectedCoordinate = `com.integrallis:${module}:${version}`;
+  const expectedUri =
+    `${MAVEN_CENTRAL}/com/integrallis/${module}/${version}/` +
+    `${module}-${version}.${extension}`;
+  if (
+    file === null ||
+    typeof file !== "object" ||
+    artifact?.coordinate !== expectedCoordinate ||
+    file.uri !== expectedUri ||
+    !SHA256.test(file.sha256 ?? "") ||
+    !requirePositiveInteger(file.sizeBytes)
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind immutable Maven Central ${artifact?.module ?? "artifact"} ${kind} evidence`,
+    );
+  }
+  return file;
+}
+
+async function requireReleasedModelsArtifacts(entry, gate, loadReleasedArtifact) {
+  if (
+    gate?.pass !== true ||
+    !RELEASE_VERSION.test(gate.version ?? "") ||
+    !Array.isArray(gate.artifacts) ||
+    gate.artifacts.length !== REQUIRED_MODELS_MODULES.length
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind clean-host immutable Maven Central Models artifacts`,
+    );
+  }
+  const modules = gate.artifacts.map((artifact) => artifact?.module);
+  if (!sameMembers(modules, REQUIRED_MODELS_MODULES)) {
+    throw new Error(
+      `${entry.modelId} must bind exactly the required Models artifacts`,
+    );
+  }
+  for (const artifact of gate.artifacts) {
+    const jar = requireReleasedArtifactFile(entry, artifact, gate.version, "jar");
+    const pom = requireReleasedArtifactFile(entry, artifact, gate.version, "pom");
+    for (const [kind, expected] of [
+      ["jar", jar],
+      ["pom", pom],
+    ]) {
+      const bytes = await loadReleasedArtifact({ entry, artifact, kind });
+      if (!(bytes instanceof Uint8Array)) {
+        throw new Error(
+          `${entry.modelId} released ${artifact.module} ${kind} loader did not return bytes`,
+        );
+      }
+      if (
+        bytes.byteLength !== expected.sizeBytes ||
+        createHash("sha256").update(bytes).digest("hex") !== expected.sha256
+      ) {
+        throw new Error(
+          `${entry.modelId} released ${artifact.module} ${kind} bytes do not match immutable evidence`,
+        );
+      }
+    }
+  }
+}
+
+async function requireCleanHostRun(
+  entry,
+  run,
+  evidenceRevision,
+  modelsVersion,
+  loadEvidenceFile,
+) {
+  const startedAt = Date.parse(run?.startedAt ?? "");
+  const completedAt = Date.parse(run?.completedAt ?? "");
+  const outputLog = run?.outputLog;
+  const logLocation = IMMUTABLE_MODELS_REPORT.exec(outputLog?.uri ?? "");
+  if (
+    run?.pass !== true ||
+    run.freshMachine !== true ||
+    run.externalInference !== false ||
+    run.javaMajor !== 25 ||
+    run.exitCode !== 0 ||
+    run.modelsVersion !== modelsVersion ||
+    !UTC_TIMESTAMP.test(run.startedAt ?? "") ||
+    !UTC_TIMESTAMP.test(run.completedAt ?? "") ||
+    Number.isNaN(startedAt) ||
+    Number.isNaN(completedAt) ||
+    completedAt <= startedAt ||
+    !Array.isArray(run.command) ||
+    run.command.length === 0 ||
+    run.command.some((part) => typeof part !== "string" || part.length === 0) ||
+    !SHA256.test(run.resolvedClasspathSha256 ?? "") ||
+    logLocation === null ||
+    logLocation[1] !== evidenceRevision ||
+    !SHA256.test(outputLog?.sha256 ?? "") ||
+    !requirePositiveInteger(outputLog?.sizeBytes)
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind a completed immutable clean-host Java 25 run`,
+    );
+  }
+  const bytes = await loadEvidenceFile({
+    entry,
+    evidence: outputLog,
+    kind: "clean-host-output",
+  });
+  if (!(bytes instanceof Uint8Array)) {
+    throw new Error(`${entry.modelId} clean-host output loader did not return bytes`);
+  }
+  if (
+    bytes.byteLength !== outputLog.sizeBytes ||
+    createHash("sha256").update(bytes).digest("hex") !== outputLog.sha256
+  ) {
+    throw new Error(
+      `${entry.modelId} clean-host output bytes do not match immutable evidence`,
+    );
+  }
+}
+
+async function requireReport(
+  entry,
+  report,
+  model,
+  base,
+  modelsRevision,
+  evidenceRevision,
+  loadReleasedArtifact,
+  loadEvidenceFile,
+) {
   if (report?.schemaVersion !== 1 || report.evaluation?.qualified !== true) {
     throw new Error(`${entry.modelId} component report must be qualified schemaVersion 1`);
   }
@@ -204,6 +360,7 @@ function requireReport(entry, report, model, base, modelsRevision) {
   if (
     report.evaluation.base?.modelId !== base.id ||
     report.evaluation.base.sha256 !== base.sha256 ||
+    report.evaluation.base.sizeBytes !== base.sizeBytes ||
     !COMMIT.test(base.revision ?? "") ||
     report.evaluation.base.revision !== base.revision
   ) {
@@ -228,12 +385,21 @@ function requireReport(entry, report, model, base, modelsRevision) {
   if (
     gates.plainJava?.pass !== true ||
     gates.plainJava.realWeights !== true ||
+    gates.plainJava.cases !== 14 ||
+    gates.plainJava.zipcodeRegression !== true ||
+    gates.plainJava.argumentThreshold !== true ||
+    gates.plainJava.abstention !== true ||
+    gates.plainJava.sixTurnConversation !== true ||
     gates.springAi?.pass !== true ||
     gates.springAi.realWeights !== true ||
     gates.springAi.toolInvocations !== 1 ||
+    gates.springAi.naturalLanguageResult !== true ||
+    !sameMembers(gates.springAi.versions, ["1.1.4", "1.1.8", "2.0.0"]) ||
     gates.langChain4j?.pass !== true ||
     gates.langChain4j.realWeights !== true ||
-    gates.langChain4j.toolInvocations !== 1
+    gates.langChain4j.toolInvocations !== 1 ||
+    gates.langChain4j.naturalLanguageResult !== true ||
+    !sameMembers(gates.langChain4j.versions, ["1.0.0", "1.13.1", "1.17.2"])
   ) {
     throw new Error(
       `${entry.modelId} must pass real-weight plain Java, Spring AI, and LangChain4j gates`,
@@ -242,20 +408,98 @@ function requireReport(entry, report, model, base, modelsRevision) {
   if (
     gates.toolResultLoop?.pass !== true ||
     gates.toolResultLoop.secondSelectionCompleted !== true ||
-    gates.toolResultLoop.repeatedToolCall !== false
+    gates.toolResultLoop.repeatedToolCall !== false ||
+    gates.toolResultLoop.naturalLanguageResult !== true
   ) {
     throw new Error(`${entry.modelId} must complete the real tool-result loop`);
   }
+  if (
+    gates.projectionOracle?.pass !== true ||
+    !(gates.projectionOracle.comparedProjections > 0) ||
+    !(gates.projectionOracle.maximumAbsoluteDelta >= 0) ||
+    !(
+      gates.projectionOracle.maximumAbsoluteDelta <=
+      gates.projectionOracle.tolerance
+    )
+  ) {
+    throw new Error(`${entry.modelId} must pass the independent projection oracle`);
+  }
+  if (
+    gates.jvmMechanics?.pass !== true ||
+    gates.jvmMechanics.realWeights !== true ||
+    gates.jvmMechanics.physicalStorageIdentity !== true ||
+    gates.jvmMechanics.exactBaseContinuation !== true ||
+    gates.jvmMechanics.repeatedTurns !== true ||
+    gates.jvmMechanics.disabledAdapterNoOp !== true
+  ) {
+    throw new Error(`${entry.modelId} must pass real-weight JVM mechanics`);
+  }
+  if (
+    gates.longContext?.pass !== true ||
+    gates.longContext.cases !== 8 ||
+    gates.longContext.prefixTokens !== 4_096 ||
+    gates.longContext.physicalStorageIdentity !== true ||
+    !Number.isInteger(gates.longContext.nativeCorrectCases) ||
+    gates.longContext.nativeCorrectCases < 6 ||
+    gates.longContext.nativeCorrectCases > gates.longContext.cases ||
+    !requirePositiveInteger(gates.longContext.retainedNativeCorrectCases) ||
+    gates.longContext.retainedNativeCorrectCases > gates.longContext.cases ||
+    gates.longContext.retainedNativeCorrectCases !==
+      gates.longContext.nativeCorrectCases ||
+    gates.longContext.exactBaseOutput !== true ||
+    gates.longContext.correctTool !== true
+  ) {
+    throw new Error(`${entry.modelId} must pass the fixed long-context gate`);
+  }
+  if (
+    gates.performanceAndMemory?.pass !== true ||
+    gates.performanceAndMemory.physicalSharing !== true ||
+    gates.performanceAndMemory.tokenExactAtAllTiers !== true ||
+    gates.performanceAndMemory.memoryComplete !== true ||
+    gates.performanceAndMemory.crossoverPrefixTokens !==
+      entry.minimumSharedPrefixTokens ||
+    !sameMembers(gates.performanceAndMemory.prefixTiers, [256, 1_024, 4_096]) ||
+    gates.performanceAndMemory.recomputedIndependence !== true ||
+    gates.performanceAndMemory.jvmNativeMemoryAvailable !== true ||
+    !(gates.performanceAndMemory.fourKImprovement >= 0.2) ||
+    !(gates.performanceAndMemory.peakRssBytes > 0)
+  ) {
+    throw new Error(
+      `${entry.modelId} must bind passing physical-sharing performance and memory evidence`,
+    );
+  }
+  await requireReleasedModelsArtifacts(
+    entry,
+    gates.modelsArtifact,
+    loadReleasedArtifact,
+  );
+  await requireCleanHostRun(
+    entry,
+    gates.cleanHostRun,
+    evidenceRevision,
+    gates.modelsArtifact.version,
+    loadEvidenceFile,
+  );
 }
 
 export async function validateComponentEvidence({
   qualifications,
   models,
   loadReport,
+  loadReleasedArtifact,
+  loadEvidenceFile,
 }) {
   requireDocuments(qualifications, models);
   if (typeof loadReport !== "function") {
     throw new Error("A report loader is required for component evidence");
+  }
+  if (typeof loadReleasedArtifact !== "function") {
+    throw new Error(
+      "A released Models artifact loader is required for component evidence",
+    );
+  }
+  if (typeof loadEvidenceFile !== "function") {
+    throw new Error("An evidence-file loader is required for component evidence");
   }
   const modelsById = new Map();
   for (const model of models.models) {
@@ -282,6 +526,12 @@ export async function validateComponentEvidence({
       base.capabilities?.includes("composition-component")
     ) {
       throw new Error(`${entry.modelId} must name a physical public base model`);
+    }
+    if (
+      entry.baseArtifactSha256 !== base.sha256 ||
+      entry.baseArtifactSizeBytes !== base.sizeBytes
+    ) {
+      throw new Error(`${entry.modelId} qualification base identity is stale`);
     }
     if (entry.qualified !== true) {
       continue;
@@ -318,7 +568,16 @@ export async function validateComponentEvidence({
         cause: error,
       });
     }
-    requireReport(entry, report, model, base, qualifications.modelsRevision);
+    await requireReport(
+      entry,
+      report,
+      model,
+      base,
+      qualifications.modelsRevision,
+      qualifications.evidenceRevision,
+      loadReleasedArtifact,
+      loadEvidenceFile,
+    );
     checked.push(entry.modelId);
   }
   return checked;
@@ -342,6 +601,22 @@ async function main() {
       const response = await fetch(entry.reportUri);
       if (!response.ok) {
         throw new Error(`Could not fetch ${entry.reportUri}: HTTP ${response.status}`);
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    },
+    loadReleasedArtifact: async ({ artifact, kind }) => {
+      const response = await fetch(artifact[kind].uri, { redirect: "error" });
+      if (!response.ok) {
+        throw new Error(
+          `Could not fetch ${artifact[kind].uri}: HTTP ${response.status}`,
+        );
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    },
+    loadEvidenceFile: async ({ evidence }) => {
+      const response = await fetch(evidence.uri, { redirect: "error" });
+      if (!response.ok) {
+        throw new Error(`Could not fetch ${evidence.uri}: HTTP ${response.status}`);
       }
       return new Uint8Array(await response.arrayBuffer());
     },

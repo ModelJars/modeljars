@@ -6,6 +6,13 @@ import { validateComponentEvidence } from "./component-evidence-gate.mjs";
 
 const modelsRevision = "a".repeat(40);
 const evidenceRevision = "b".repeat(40);
+const modelsReleaseVersion = "0.3.38";
+const requiredModelsModules = [
+  "backend-java",
+  "models-runtime",
+  "models-spring-ai",
+  "models-langchain4j",
+];
 const files = [
   {
     path: "models-activated-lora.json",
@@ -63,6 +70,94 @@ const models = {
   ],
 };
 
+function immutableArtifactFile(module, kind) {
+  const bytes = Buffer.from(`${module}:${modelsReleaseVersion}:${kind}\n`);
+  const extension = kind === "jar" ? "jar" : "pom";
+  return {
+    uri:
+      `https://repo1.maven.org/maven2/com/integrallis/${module}/` +
+      `${modelsReleaseVersion}/${module}-${modelsReleaseVersion}.${extension}`,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    sizeBytes: bytes.byteLength,
+    bytes,
+  };
+}
+
+const releasedModelsArtifacts = requiredModelsModules.map((module) => ({
+  module,
+  coordinate: `com.integrallis:${module}:${modelsReleaseVersion}`,
+  jar: immutableArtifactFile(module, "jar"),
+  pom: immutableArtifactFile(module, "pom"),
+}));
+
+function releasedModelsArtifactGate() {
+  return {
+    pass: true,
+    version: modelsReleaseVersion,
+    artifacts: releasedModelsArtifacts.map(({ module, coordinate, jar, pom }) => ({
+      module,
+      coordinate,
+      jar: { ...jar, bytes: undefined },
+      pom: { ...pom, bytes: undefined },
+    })),
+  };
+}
+
+async function releasedModelsArtifactLoader({ artifact, kind }) {
+  const expected = releasedModelsArtifacts.find(
+    (candidate) => candidate.module === artifact.module,
+  )?.[kind];
+  if (expected === undefined || artifact[kind].uri !== expected.uri) {
+    throw new Error("Unknown immutable release artifact");
+  }
+  return expected.bytes;
+}
+
+const cleanHostOutputBytes = Buffer.from(
+  "java=25\nmodels=0.3.38\nexternalInference=false\nexit=0\n",
+);
+const cleanHostOutput = {
+  uri:
+    `https://raw.githubusercontent.com/integrallis/models/${evidenceRevision}/` +
+    "benchmark-results/alora/clean-host.log",
+  sha256: createHash("sha256").update(cleanHostOutputBytes).digest("hex"),
+  sizeBytes: cleanHostOutputBytes.byteLength,
+};
+
+function cleanHostRun() {
+  return {
+    pass: true,
+    freshMachine: true,
+    externalInference: false,
+    javaMajor: 25,
+    exitCode: 0,
+    modelsVersion: modelsReleaseVersion,
+    startedAt: "2026-09-13T13:15:00Z",
+    completedAt: "2026-09-13T13:15:12Z",
+    command: ["java", "--add-modules", "jdk.incubator.vector", "-jar", "smoke.jar"],
+    resolvedClasspathSha256: "7".repeat(64),
+    outputLog: { ...cleanHostOutput },
+  };
+}
+
+async function evidenceFileLoader({ evidence }) {
+  if (evidence.uri !== cleanHostOutput.uri) {
+    throw new Error("Unknown immutable evidence file");
+  }
+  return cleanHostOutputBytes;
+}
+
+async function validate(document, bytes, options = {}) {
+  return validateComponentEvidence({
+    qualifications: document,
+    models: options.models ?? models,
+    loadReport: async () => bytes,
+    loadReleasedArtifact:
+      options.loadReleasedArtifact ?? releasedModelsArtifactLoader,
+    loadEvidenceFile: options.loadEvidenceFile ?? evidenceFileLoader,
+  });
+}
+
 function report(overrides = {}) {
   return {
     schemaVersion: 1,
@@ -86,6 +181,7 @@ function report(overrides = {}) {
         modelId: "base",
         revision: "9".repeat(40),
         sha256: "b".repeat(64),
+        sizeBytes: 1_700_000_000,
       },
       gates: {
         provenance: {
@@ -107,14 +203,75 @@ function report(overrides = {}) {
           falseToolCalls: 4,
           falseToolCallRate: 0.04,
         },
-        plainJava: { pass: true, realWeights: true },
-        springAi: { pass: true, realWeights: true, toolInvocations: 1 },
-        langChain4j: { pass: true, realWeights: true, toolInvocations: 1 },
+        plainJava: {
+          pass: true,
+          realWeights: true,
+          cases: 14,
+          zipcodeRegression: true,
+          argumentThreshold: true,
+          abstention: true,
+          sixTurnConversation: true,
+        },
+        springAi: {
+          pass: true,
+          realWeights: true,
+          toolInvocations: 1,
+          naturalLanguageResult: true,
+          versions: ["1.1.4", "1.1.8", "2.0.0"],
+        },
+        langChain4j: {
+          pass: true,
+          realWeights: true,
+          toolInvocations: 1,
+          naturalLanguageResult: true,
+          versions: ["1.0.0", "1.13.1", "1.17.2"],
+        },
         toolResultLoop: {
           pass: true,
           secondSelectionCompleted: true,
           repeatedToolCall: false,
+          naturalLanguageResult: true,
         },
+        projectionOracle: {
+          pass: true,
+          comparedProjections: 28,
+          maximumAbsoluteDelta: 0.00001,
+          tolerance: 0.0001,
+        },
+        jvmMechanics: {
+          pass: true,
+          realWeights: true,
+          physicalStorageIdentity: true,
+          exactBaseContinuation: true,
+          repeatedTurns: true,
+          disabledAdapterNoOp: true,
+        },
+        longContext: {
+          pass: true,
+          cases: 8,
+          prefixTokens: 4096,
+          physicalStorageIdentity: true,
+          nativeCorrectCases: 7,
+          retainedNativeCorrectCases: 7,
+          exactBaseOutput: true,
+          correctTool: true,
+        },
+        performanceAndMemory: {
+          pass: true,
+          physicalSharing: true,
+          tokenExactAtAllTiers: true,
+          memoryComplete: true,
+          crossoverPrefixTokens: 256,
+          prefixTiers: [256, 1024, 4096],
+          recomputedIndependence: true,
+          jvmNativeMemoryAvailable: true,
+          fourKImprovement: 0.25,
+          peakRssBytes: 4_000_000_000,
+        },
+        modelsArtifact: {
+          ...releasedModelsArtifactGate(),
+        },
+        cleanHostRun: cleanHostRun(),
       },
     },
     ...overrides,
@@ -137,11 +294,14 @@ function qualificationDocument(value, overrides = {}) {
         {
           modelId: "adapter",
           baseModelId: "base",
+          baseArtifactSha256: "b".repeat(64),
+          baseArtifactSizeBytes: 1_700_000_000,
           artifactSha256: "c".repeat(64),
           artifactSizeBytes: 42_000_000,
           artifactFiles: files,
           artifactBundleSizeBytes: bundleSizeBytes,
           artifactBundleSha256: bundleSha256,
+          minimumSharedPrefixTokens: 256,
           qualified: true,
           unresolvedRequiredWork: [],
           reportUri:
@@ -158,11 +318,7 @@ function qualificationDocument(value, overrides = {}) {
 test("accepts a component bound to frozen correctness and real Java adapters", async () => {
   const { bytes, document } = qualificationDocument(report());
   assert.deepEqual(
-    await validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    await validate(document, bytes),
     ["adapter"],
   );
 });
@@ -174,11 +330,7 @@ test("rejects a normal public model in the component channel", async () => {
     artifactSizeBytes: 1_700_000_000,
   });
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /composition-component/,
   );
 });
@@ -188,11 +340,7 @@ test("rejects stale bytes or an incomplete artifact bundle", async () => {
     artifactFiles: [files[1]],
   });
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /complete runtime file list/,
   );
 });
@@ -224,11 +372,7 @@ test("rejects an adapter bundle without runtime metadata, notice, and license", 
       .digest("hex"),
   });
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models: incompleteModel,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes, { models: incompleteModel }),
     /runtime metadata, attribution notice, and license/,
   );
 });
@@ -239,11 +383,7 @@ test("rejects mutable evidence and unresolved work", async () => {
     reportUri: "https://github.com/integrallis/models/blob/main/report.json",
   });
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /unresolved required work/,
   );
 });
@@ -266,11 +406,7 @@ test("rejects non-Java or synthetic framework evidence", async () => {
   });
   const { bytes, document } = qualificationDocument(invalid);
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /Java production runtime/,
   );
 });
@@ -291,11 +427,7 @@ test("rejects correctness below the fixed thresholds", async () => {
   });
   const { bytes, document } = qualificationDocument(invalid);
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /task-correctness thresholds/,
   );
 });
@@ -316,11 +448,7 @@ test("rejects incomplete training-pipeline provenance", async () => {
   });
   const { bytes, document } = qualificationDocument(invalid);
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /formatter and trainer/,
   );
 });
@@ -335,11 +463,7 @@ test("rejects a report that does not match the catalog and qualification identit
   });
   const { bytes, document } = qualificationDocument(invalid);
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /report artifact identity/,
   );
 });
@@ -351,11 +475,7 @@ test("rejects evidence that is not pinned to the declared evidence revision", as
       "benchmark-results/alora/component-qualification.json",
   });
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /declared evidence revision/,
   );
 });
@@ -371,11 +491,252 @@ test("rejects a report produced from a different Models revision", async () => {
   });
   const { bytes, document } = qualificationDocument(invalid);
   await assert.rejects(
-    validateComponentEvidence({
-      qualifications: document,
-      models,
-      loadReport: async () => bytes,
-    }),
+    validate(document, bytes),
     /report Models revision does not match/,
+  );
+});
+
+test("rejects a crossover that is not bound to the performance evidence", async () => {
+  const { bytes, document } = qualificationDocument(report(), {
+    minimumSharedPrefixTokens: 1_024,
+  });
+  await assert.rejects(
+    validate(document, bytes),
+    /physical-sharing performance and memory evidence/,
+  );
+});
+
+test("rejects missing long-context correctness counts", async () => {
+  const good = report();
+  const invalid = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        longContext: {
+          ...good.evaluation.gates.longContext,
+          nativeCorrectCases: undefined,
+          retainedNativeCorrectCases: undefined,
+        },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(invalid);
+  await assert.rejects(validate(document, bytes), /fixed long-context gate/);
+});
+
+test("rejects zero long-context correctness counts", async () => {
+  const good = report();
+  const invalid = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        longContext: {
+          ...good.evaluation.gates.longContext,
+          nativeCorrectCases: 0,
+          retainedNativeCorrectCases: 0,
+        },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(invalid);
+  await assert.rejects(validate(document, bytes), /fixed long-context gate/);
+});
+
+test("rejects a long-context result below the frozen six-case floor", async () => {
+  const good = report();
+  const invalid = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        longContext: {
+          ...good.evaluation.gates.longContext,
+          nativeCorrectCases: 5,
+          retainedNativeCorrectCases: 5,
+        },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(invalid);
+  await assert.rejects(validate(document, bytes), /fixed long-context gate/);
+});
+
+test("rejects missing released Models artifacts", async () => {
+  const good = report();
+  const invalid = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        modelsArtifact: {
+          ...good.evaluation.gates.modelsArtifact,
+          artifacts: good.evaluation.gates.modelsArtifact.artifacts.slice(1),
+        },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(invalid);
+  await assert.rejects(validate(document, bytes), /immutable Maven Central Models artifacts/);
+});
+
+test("rejects SNAPSHOT or noncanonical released Models artifact evidence", async () => {
+  const good = report();
+  const snapshot = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        modelsArtifact: {
+          ...good.evaluation.gates.modelsArtifact,
+          version: "0.3.38-SNAPSHOT",
+        },
+      },
+    },
+  });
+  const snapshotDocument = qualificationDocument(snapshot);
+  await assert.rejects(
+    validate(snapshotDocument.document, snapshotDocument.bytes),
+    /immutable Maven Central Models artifacts/,
+  );
+
+  const wrongUri = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        modelsArtifact: {
+          ...good.evaluation.gates.modelsArtifact,
+          artifacts: good.evaluation.gates.modelsArtifact.artifacts.map((artifact) =>
+            artifact.module === "backend-java"
+              ? {
+                  ...artifact,
+                  jar: { ...artifact.jar, uri: "https://example.invalid/backend-java.jar" },
+                }
+              : artifact,
+          ),
+        },
+      },
+    },
+  });
+  const wrongUriDocument = qualificationDocument(wrongUri);
+  await assert.rejects(
+    validate(wrongUriDocument.document, wrongUriDocument.bytes),
+    /immutable Maven Central backend-java jar evidence/,
+  );
+});
+
+test("rejects released Models artifact byte hash or size mismatches", async () => {
+  const good = report();
+  const wrongHash = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        modelsArtifact: {
+          ...good.evaluation.gates.modelsArtifact,
+          artifacts: good.evaluation.gates.modelsArtifact.artifacts.map((artifact) =>
+            artifact.module === "models-runtime"
+              ? {
+                  ...artifact,
+                  jar: { ...artifact.jar, sha256: "0".repeat(64) },
+                }
+              : artifact,
+          ),
+        },
+      },
+    },
+  });
+  const wrongHashDocument = qualificationDocument(wrongHash);
+  await assert.rejects(
+    validate(wrongHashDocument.document, wrongHashDocument.bytes),
+    /released models-runtime jar bytes do not match immutable evidence/,
+  );
+
+  const wrongSize = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        modelsArtifact: {
+          ...good.evaluation.gates.modelsArtifact,
+          artifacts: good.evaluation.gates.modelsArtifact.artifacts.map((artifact) =>
+            artifact.module === "models-runtime"
+              ? {
+                  ...artifact,
+                  jar: { ...artifact.jar, sizeBytes: artifact.jar.sizeBytes + 1 },
+                }
+              : artifact,
+          ),
+        },
+      },
+    },
+  });
+  const wrongSizeDocument = qualificationDocument(wrongSize);
+  await assert.rejects(
+    validate(wrongSizeDocument.document, wrongSizeDocument.bytes),
+    /released models-runtime jar bytes do not match immutable evidence/,
+  );
+});
+
+test("rejects an absent or inconsistent clean-host run", async () => {
+  const good = report();
+  const absent = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        cleanHostRun: undefined,
+      },
+    },
+  });
+  const absentDocument = qualificationDocument(absent);
+  await assert.rejects(
+    validate(absentDocument.document, absentDocument.bytes),
+    /completed immutable clean-host Java 25 run/,
+  );
+
+  const inconsistent = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        cleanHostRun: {
+          ...good.evaluation.gates.cleanHostRun,
+          externalInference: true,
+          completedAt: "2026-09-13T13:14:59Z",
+        },
+      },
+    },
+  });
+  const inconsistentDocument = qualificationDocument(inconsistent);
+  await assert.rejects(
+    validate(inconsistentDocument.document, inconsistentDocument.bytes),
+    /completed immutable clean-host Java 25 run/,
+  );
+});
+
+test("rejects a clean-host output hash mismatch", async () => {
+  const good = report();
+  const invalid = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        cleanHostRun: {
+          ...good.evaluation.gates.cleanHostRun,
+          outputLog: {
+            ...good.evaluation.gates.cleanHostRun.outputLog,
+            sha256: "0".repeat(64),
+          },
+        },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(invalid);
+  await assert.rejects(
+    validate(document, bytes),
+    /clean-host output bytes do not match immutable evidence/,
   );
 });

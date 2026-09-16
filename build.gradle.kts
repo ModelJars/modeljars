@@ -22,6 +22,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.JavaApplication
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Zip
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
@@ -58,6 +59,20 @@ fun isNormalizedRepositoryRelativePath(path: String): Boolean {
     }
 }
 
+fun positiveExactInt(
+    value: Any?,
+    description: String,
+): Int {
+    val number = value as? Number ?: error("$description must be a positive integer")
+    val integer = number.toLong()
+    require(
+        integer in 1..Int.MAX_VALUE.toLong() && number.toDouble() == integer.toDouble(),
+    ) {
+        "$description must be a positive integer"
+    }
+    return integer.toInt()
+}
+
 val testCatalogReportPathValidation =
     tasks.register("testCatalogReportPathValidation") {
         group = "verification"
@@ -87,6 +102,26 @@ val testCatalogReportPathValidation =
                 .forEach { path ->
                     require(!isNormalizedRepositoryRelativePath(path)) {
                         "Expected an invalid repository-relative path: $path"
+                    }
+                }
+        }
+    }
+
+val testCatalogIntegerValidation =
+    tasks.register("testCatalogIntegerValidation") {
+        group = "verification"
+        description = "Tests strict positive integer parsing for catalog policy values."
+
+        doLast {
+            mapOf<Any, Int>(1 to 1, 256L to 256, 4_096.0 to 4_096).forEach { (value, expected) ->
+                require(positiveExactInt(value, "test value") == expected)
+            }
+            listOf<Any?>(null, 0, -1, 256.5, Double.NaN, Double.POSITIVE_INFINITY, Long.MAX_VALUE)
+                .forEach { value ->
+                    require(
+                        runCatching { positiveExactInt(value, "test value") }.isFailure,
+                    ) {
+                        "Expected strict positive integer parsing to reject $value"
                     }
                 }
         }
@@ -483,6 +518,7 @@ data class CatalogComponentQualification(
     val artifactFiles: List<CatalogArtifactFile>,
     val artifactBundleSizeBytes: Long,
     val artifactBundleSha256: String,
+    val minimumSharedPrefixTokens: Int,
     val reportUri: String,
     val reportSha256: String,
     val qualified: Boolean,
@@ -1039,6 +1075,7 @@ fun CatalogComponentQualifications.registryProperties(
             appendLine("${prefix}artifactSizeBytes=${entry.artifactSizeBytes}")
             appendLine("${prefix}artifactBundleSizeBytes=${entry.artifactBundleSizeBytes}")
             appendLine("${prefix}artifactBundleSha256=${entry.artifactBundleSha256}")
+            appendLine("${prefix}minimumSharedPrefixTokens=${entry.minimumSharedPrefixTokens}")
             appendLine("${prefix}reportUri=${propertyValue(entry.reportUri)}")
             appendLine("${prefix}reportSha256=${entry.reportSha256}")
             appendLine("${prefix}qualified=${entry.qualified}")
@@ -1956,6 +1993,12 @@ val componentQualifications =
                                     "component qualification $modelId.artifactBundleSizeBytes must be an integer",
                                 ),
                         artifactBundleSha256 = raw.requiredString("artifactBundleSha256"),
+                        minimumSharedPrefixTokens =
+                            positiveExactInt(
+                                raw["minimumSharedPrefixTokens"],
+                                "component qualification " +
+                                    "$modelId.minimumSharedPrefixTokens",
+                            ),
                         reportUri = raw.requiredString("reportUri"),
                         reportSha256 = raw.requiredString("reportSha256"),
                         qualified =
@@ -4864,10 +4907,51 @@ tasks.register("verifyRemoteCatalogMetadata") {
     }
 }
 
+val verifyComponentEvidence =
+    tasks.register<Exec>("verifyComponentEvidence") {
+        group = "verification"
+        description = "Verify every qualified composition component against immutable evidence."
+        inputs.files(
+            componentQualificationCatalogFile,
+            file("catalog/models.json"),
+            file("tools/component-evidence-gate.mjs"),
+        )
+        commandLine(
+            "node",
+            "tools/component-evidence-gate.mjs",
+            "--qualifications",
+            componentQualificationCatalogFile.path,
+            "--models",
+            file("catalog/models.json").path,
+        )
+    }
+
+val verifyCompositionEvidence =
+    tasks.register<Exec>("verifyCompositionEvidence") {
+        group = "verification"
+        description = "Verify every qualified composition against immutable evidence."
+        inputs.files(
+            file("catalog/compositions.json"),
+            file("catalog/models.json"),
+            file("tools/composition-evidence-gate.mjs"),
+        )
+        commandLine(
+            "node",
+            "tools/composition-evidence-gate.mjs",
+            "--compositions",
+            file("catalog/compositions.json").path,
+            "--models",
+            file("catalog/models.json").path,
+        )
+    }
+
 tasks.register("verifyCatalog") {
     dependsOn(markerJarTasks)
     dependsOn("generateSite")
     dependsOn(testCatalogReportPathValidation)
+    dependsOn(testCatalogIntegerValidation)
+    dependsOn(verifyComponentEvidence)
+    dependsOn(verifyCompositionEvidence)
     doLast {
         catalogEntries.zip(markerJarTasks).forEach { (entry, markerTask) ->
             val markerJar = markerTask.get().archiveFile.get().asFile
@@ -5074,6 +5158,12 @@ tasks.register("verifyCatalog") {
                         "Component qualification bundle size mismatch in $markerJar"
                     }
                     require(
+                        componentProperties.getProperty("${prefix}minimumSharedPrefixTokens") ==
+                            qualification.minimumSharedPrefixTokens.toString(),
+                    ) {
+                        "Component qualification sharing crossover mismatch in $markerJar"
+                    }
+                    require(
                         componentProperties.getProperty("${prefix}reportUri") ==
                             qualification.reportUri &&
                             componentProperties.getProperty("${prefix}reportSha256") ==
@@ -5188,6 +5278,17 @@ tasks.register("verifyCatalog") {
                 ) == qualifiedComponentQualifications.size.toString(),
             ) {
                 "Aggregate component qualification count mismatch"
+            }
+            val actualComponentRegistry =
+                zip.getInputStream(componentResource).use { input ->
+                    input.readAllBytes().toString(StandardCharsets.ISO_8859_1)
+                }
+            val expectedComponentRegistry =
+                requireNotNull(componentQualifications)
+                    .registryProperties(qualifiedComponentQualifications)
+            require(actualComponentRegistry == expectedComponentRegistry) {
+                "Aggregate component qualification registry does not exactly match the " +
+                    "qualified catalog entries"
             }
         }
         val siteCatalog = generatedSiteCatalog.get().asFile
@@ -5428,6 +5529,12 @@ tasks.named("check") {
     dependsOn(verifyJvmRuntimePublication)
     dependsOn(verifyQwenChatToolsPublication)
     dependsOn(verifyMarkerPublicationIndependence)
+}
+
+allprojects {
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        dependsOn(rootProject.tasks.named("verifyCatalog"))
+    }
 }
 
 val releaseSigningKey = providers.environmentVariable("GPG_PRIVATE_KEY")

@@ -49,6 +49,7 @@ class ModelComponentQualificationRegistryTest {
     assertEquals("1".repeat(40), registry.modelsRevision());
     assertEquals("2".repeat(40), registry.evidenceRevision());
     assertEquals("adapter", qualification.modelId());
+    assertEquals(256, qualification.minimumSharedPrefixTokens());
     assertEquals(1, registry.qualifiedModels());
     assertEquals(0, registry.rejectedModels());
   }
@@ -180,6 +181,7 @@ class ModelComponentQualificationRegistryTest {
     properties.setProperty(prefix + "artifactSizeBytes", "1024");
     properties.setProperty(prefix + "artifactBundleSizeBytes", "1920");
     properties.setProperty(prefix + "artifactBundleSha256", bundleSha);
+    properties.setProperty(prefix + "minimumSharedPrefixTokens", "256");
     properties.setProperty(
         prefix + "reportUri",
         "https://raw.githubusercontent.com/integrallis/models/" + "2".repeat(40) + "/report.json");

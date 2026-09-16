@@ -251,6 +251,7 @@ public final class ModelComponentQualificationRegistry {
         files,
         longValue(properties, prefix + "artifactBundleSizeBytes"),
         required(properties, prefix + "artifactBundleSha256"),
+        integer(properties, prefix + "minimumSharedPrefixTokens"),
         URI.create(required(properties, prefix + "reportUri")),
         required(properties, prefix + "reportSha256"),
         bool(properties, prefix + "qualified"));
@@ -308,6 +309,7 @@ public final class ModelComponentQualificationRegistry {
       List<ArtifactFile> artifactFiles,
       long artifactBundleSizeBytes,
       String artifactBundleSha256,
+      int minimumSharedPrefixTokens,
       URI reportUri,
       String reportSha256,
       boolean qualified) {
@@ -344,6 +346,9 @@ public final class ModelComponentQualificationRegistry {
       artifactBundleSha256 = requireSha256(artifactBundleSha256, "artifactBundleSha256");
       if (!artifactBundleSha256.equals(bundleSha256(artifactFiles))) {
         throw new IllegalArgumentException("artifactBundleSha256 does not match artifact files");
+      }
+      if (minimumSharedPrefixTokens <= 0) {
+        throw new IllegalArgumentException("minimumSharedPrefixTokens must be positive");
       }
       reportUri = Objects.requireNonNull(reportUri, "reportUri");
       reportSha256 = requireSha256(reportSha256, "reportSha256");

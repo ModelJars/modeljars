@@ -765,7 +765,8 @@ public final class ModelJars {
             .resolve(adapter)
             .orElseThrow(
                 () -> new ModelJarException("No activated-adapter component matched " + adapter));
-    requireActivatedAdapter(baseDescriptor, adapterDescriptor);
+    ModelComponentQualificationRegistry.Entry componentQualification =
+        requireActivatedAdapter(baseDescriptor, adapterDescriptor);
 
     ModelExecutionQualification qualification =
         selectQualification(baseDescriptor, ModelBackend.JAVA);
@@ -779,7 +780,9 @@ public final class ModelJars {
         activatedBackendLoader.load(baseArtifact, adapterDirectory, configuration);
     ActivatedToolCallingModel model = null;
     try {
-      model = new ActivatedToolCallingModel(backend);
+      model =
+          new ActivatedToolCallingModel(
+              backend, componentQualification.minimumSharedPrefixTokens());
       return new ModelJarActivatedRuntime(model, baseDescriptor, adapterDescriptor, qualification);
     } catch (RuntimeException | Error failure) {
       try {
@@ -795,7 +798,7 @@ public final class ModelJars {
     }
   }
 
-  private void requireActivatedAdapter(
+  private ModelComponentQualificationRegistry.Entry requireActivatedAdapter(
       ModelJarDescriptor baseDescriptor, ModelJarDescriptor descriptor) {
     boolean valid =
         descriptor.format().equals("safetensors")
@@ -810,7 +813,7 @@ public final class ModelJars {
               + descriptor.markerCoordinate()
               + " is not an activated-lora-adapter composition component");
     }
-    componentQualifications
+    return componentQualifications
         .qualificationFor(descriptor, baseDescriptor)
         .orElseThrow(
             () ->

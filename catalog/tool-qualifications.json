@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-14T23:04:00Z",
+  "generatedAt": "2026-09-16T17:09:39Z",
   "policyVersion": "needle2-tool-conformance-v2",
-  "modelsRevision": "80f23a791d6c2e21cf8aa6373ed719bc03b1c5e6",
-  "reportRevision": "80f23a791d6c2e21cf8aa6373ed719bc03b1c5e6",
+  "modelsRevision": "f94855b7547652bd10eee3f568bb5d4ae961ee15",
+  "reportRevision": "f94855b7547652bd10eee3f568bb5d4ae961ee15",
   "qualifiedModels": 3,
   "rejectedModels": 4,
   "entries": [

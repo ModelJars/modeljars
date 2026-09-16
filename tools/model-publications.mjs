@@ -133,6 +133,7 @@ function qualificationSnapshot(modelId, manifests) {
     // manifest was generated are where and when the same bytes were read, and they move every
     // time another model is qualified. A marker's evidence is unchanged while its entries are.
     delete metadata.modelsRevision;
+    delete metadata.reportRevision;
     delete metadata.evidenceRevision;
     delete metadata.generatedAt;
     return [{ metadata, entries }];

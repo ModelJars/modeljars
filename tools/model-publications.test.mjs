@@ -132,8 +132,10 @@ test("requires a new coordinate when immutable marker metadata changes", () => {
 test("moving the manifest revision or generation time does not republish an unchanged marker", () => {
   const entry = { modelId: "qwen3_0_6b_q4_0", report: "benchmark-results/x/report.json", reportSha256: "a".repeat(64) };
   const before = { schemaVersion: 1, generatedAt: "2026-09-03T02:20:00Z", policyVersion: "v6",
-    modelsRevision: "4".repeat(40), targetQualifiedModels: 25, qualifiedModels: 1, rejectedModels: 0, entries: [entry] };
-  const after = { ...before, generatedAt: "2026-09-16T09:54:54Z", modelsRevision: "8".repeat(40), qualifiedModels: 2 };
+    modelsRevision: "4".repeat(40), reportRevision: "5".repeat(40), targetQualifiedModels: 25,
+    qualifiedModels: 1, rejectedModels: 0, entries: [entry] };
+  const after = { ...before, generatedAt: "2026-09-16T09:54:54Z", modelsRevision: "8".repeat(40),
+    reportRevision: "9".repeat(40), qualifiedModels: 2 };
   const unchanged = model();
   assert.deepEqual(
     catalogPublicationDelta(catalog([unchanged]), catalog([unchanged]), {

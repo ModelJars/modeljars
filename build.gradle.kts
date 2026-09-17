@@ -1321,6 +1321,8 @@ val catalogCompositions =
         }
 val qwenChatToolsQualified =
     catalogCompositions.any { it.id == "qwen3_chat_tools_composite" }
+val graniteAnswerabilityQualified =
+    catalogCompositions.any { it.id == "granite_4_1_3b_answerability_hybrid" }
 
 val performanceDocument =
     JsonSlurper()
@@ -4176,6 +4178,123 @@ project(":modeljars-composite-qwen3-chat-tools") {
     }
 }
 
+project(":modeljars-composite-granite-answerability") {
+    group = "org.modeljars.composite"
+    description =
+        "Granite 4.1 3B base and Integrallis answerability activated-LoRA specialist hybrid recipe"
+
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        onlyIf { graniteAnswerabilityQualified }
+    }
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "granite-answerability"
+        }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    dependencies {
+        api(project(":modeljars"))
+        runtimeOnly(
+            "org.modeljars.huggingface:ibm-granite.granite-4.1-3b-gguf.q4_k_m:4.1.0-q4_k_m.2",
+        )
+        runtimeOnly(
+            "org.modeljars.github:modeljars.activated-adapters." +
+                "granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.2",
+        )
+    }
+
+    tasks.named<Test>("test") {
+        exclude("**/*IntegrationIT.class")
+    }
+
+    tasks.register<Test>("qualifiedIntegrationTest") {
+        description =
+            "Runs the pinned Granite answerability hybrid through ModelJars on real weights."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching(
+                "org.modeljars.composite.granite.GraniteAnswerabilityIntegrationIT",
+            )
+        }
+        jvmArgs(
+            "--add-modules",
+            "jdk.incubator.vector",
+            "--enable-native-access=ALL-UNNAMED",
+        )
+        maxHeapSize = "8g"
+        outputs.upToDateWhen { false }
+    }
+}
+
+val graniteAnswerabilityPom =
+    project(":modeljars-composite-granite-answerability")
+        .layout.buildDirectory.file("publications/maven/pom-default.xml")
+val verifyGraniteAnswerabilityPublication =
+    tasks.register("verifyGraniteAnswerabilityPublication") {
+        dependsOn(
+            ":modeljars-composite-granite-answerability:generatePomFileForMavenPublication",
+        )
+        inputs.file(graniteAnswerabilityPom)
+
+        doLast {
+            val factory = DocumentBuilderFactory.newInstance()
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            val document =
+                factory.newDocumentBuilder().parse(graniteAnswerabilityPom.get().asFile)
+            val projectElement = document.documentElement
+            fun Element.childText(name: String): String =
+                getElementsByTagName(name).item(0)?.textContent
+                    ?: error("Composite POM is missing <$name>")
+            require(projectElement.childText("groupId") == "org.modeljars.composite") {
+                "Granite answerability composite groupId must be org.modeljars.composite"
+            }
+            require(projectElement.childText("artifactId") == "granite-answerability") {
+                "Granite answerability composite artifactId must be granite-answerability"
+            }
+            require(projectElement.childText("version") == project.version.toString()) {
+                "Granite answerability composite version must match the ModelJars release"
+            }
+            val dependencies = document.getElementsByTagName("dependency")
+            val coordinates =
+                (0 until dependencies.length)
+                    .map { dependencies.item(it) as Element }
+                    .map { dependency ->
+                        fun text(name: String): String =
+                            dependency.getElementsByTagName(name).item(0)?.textContent
+                                ?: error("Composite dependency is missing <$name>")
+                        Triple(text("groupId"), text("artifactId"), text("version"))
+                    }.toSet()
+            require(
+                coordinates ==
+                    setOf(
+                        Triple("org.modeljars", "modeljars", project.version.toString()),
+                        Triple(
+                            "org.modeljars.huggingface",
+                            "ibm-granite.granite-4.1-3b-gguf.q4_k_m",
+                            "4.1.0-q4_k_m.2",
+                        ),
+                        Triple(
+                            "org.modeljars.github",
+                            "modeljars.activated-adapters." +
+                                "granite-4.1-3b-answerability-alora-integrallis.f32",
+                            "1.0.0-f32.2",
+                        ),
+                    ),
+            ) {
+                "Granite answerability composite must depend on its runtime and exact member markers"
+            }
+        }
+    }
+
 val jvmRuntimePom =
     project(":modeljars").layout.buildDirectory.file("publications/maven/pom-default.xml")
 val jvmRuntimePublicationVersion = version.toString()
@@ -4349,6 +4468,12 @@ val publishGitHubPackagesPreview =
         if (qwenChatToolsQualified) {
             dependsOn(
                 ":modeljars-composite-qwen3-chat-tools:" +
+                    "publishMavenPublicationToGitHubPackagesRepository",
+            )
+        }
+        if (graniteAnswerabilityQualified) {
+            dependsOn(
+                ":modeljars-composite-granite-answerability:" +
                     "publishMavenPublicationToGitHubPackagesRepository",
             )
         }
@@ -5861,6 +5986,7 @@ val verifyInferenceArchitecture =
                 file("modeljars/src/main/java"),
                 file("modeljars-core/src/main/java"),
                 file("modeljars-composite-qwen3-chat-tools/src/main/java"),
+                file("modeljars-composite-granite-answerability/src/main/java"),
             )
         inputs.files(runtimeSourceDirectories)
 
@@ -5903,6 +6029,7 @@ tasks.named("check") {
     dependsOn(verifyReadmeVersions)
     dependsOn(verifyJvmRuntimePublication)
     dependsOn(verifyQwenChatToolsPublication)
+    dependsOn(verifyGraniteAnswerabilityPublication)
     dependsOn(verifyMarkerPublicationIndependence)
 }
 
@@ -5947,6 +6074,14 @@ val releasePublicationTasks =
         if (qwenChatToolsQualified) {
             listOf(
                 ":modeljars-composite-qwen3-chat-tools:" +
+                    "publishMavenPublicationToReleaseBundleRepository",
+            )
+        } else {
+            emptyList()
+        } +
+        if (graniteAnswerabilityQualified) {
+            listOf(
+                ":modeljars-composite-granite-answerability:" +
                     "publishMavenPublicationToReleaseBundleRepository",
             )
         } else {

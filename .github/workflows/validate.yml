@@ -108,7 +108,7 @@ jobs:
         run: >
           ./gradlew --no-daemon
           spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication
-          verifyQwenChatToolsPublication generateSite
+          verifyQwenChatToolsPublication verifyGraniteAnswerabilityPublication generateSite
 
       - name: Exercise the qualified mxbai bundle through ModelJars
         run: >

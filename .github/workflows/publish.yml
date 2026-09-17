@@ -133,6 +133,7 @@ jobs:
           spotlessCheck
           test
           verifyQwenChatToolsPublication
+          verifyGraniteAnswerabilityPublication
           verifyCatalog
           verifyRemoteCatalogMetadata
           publishToMavenLocal

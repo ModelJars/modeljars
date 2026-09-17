@@ -89,3 +89,31 @@ test("does not republish the withdrawn Qwen routing experiment", async () => {
 function read(relativePath) {
   return readFile(path.join(repositoryRoot, relativePath), "utf8");
 }
+
+test("gates the Granite answerability composite module on its catalog composition", async () => {
+  const [validateWorkflow, publishWorkflow, build, settings] = await Promise.all([
+    read(".github/workflows/validate.yml"),
+    read(".github/workflows/publish.yml"),
+    read("build.gradle.kts"),
+    read("settings.gradle.kts"),
+  ]);
+
+  assert.match(settings, /include\("modeljars-composite-granite-answerability"\)/);
+  assert.match(
+    build,
+    /val graniteAnswerabilityQualified =\s*catalogCompositions\.any \{ it\.id == "granite_4_1_3b_answerability_hybrid" \}/,
+  );
+  assert.match(build, /onlyIf\s*\{ graniteAnswerabilityQualified \}/);
+  assert.match(
+    build,
+    /if \(graniteAnswerabilityQualified\)[\s\S]*?publishMavenPublicationToGitHubPackagesRepository/,
+  );
+  assert.match(
+    build,
+    /if \(graniteAnswerabilityQualified\)[\s\S]*?publishMavenPublicationToReleaseBundleRepository/,
+  );
+  assert.match(build, /file\("modeljars-composite-granite-answerability\/src\/main\/java"\)/);
+  assert.match(build, /dependsOn\(verifyGraniteAnswerabilityPublication\)/);
+  assert.match(validateWorkflow, /verifyGraniteAnswerabilityPublication/);
+  assert.match(publishWorkflow, /verifyGraniteAnswerabilityPublication/);
+});

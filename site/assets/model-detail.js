@@ -1,6 +1,10 @@
 import { formatDuration } from "./benchmark-data.js";
 import { gradleSnippet, mavenSnippet } from "./dependency-snippets.js";
-import { primaryQualification, qualificationLabel } from "./qualification-data.js";
+import {
+  primaryQualification,
+  qualificationLabel,
+  repetitionLoopText,
+} from "./qualification-data.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { relatedModels, sizeTier, verificationProfile } from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
@@ -329,7 +333,18 @@ function profileRow(label, value, provenance, extra = "") {
   return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${note}${extra}</dd></div>`;
 }
 
-export function renderGenerationProfile(generation) {
+function repetitionLoopRow(measurements = []) {
+  const values = measurements.length
+    ? measurements.map(
+        (measurement) =>
+          `${repetitionLoopText(measurement)} ${measurement.backend}, ${measurement.workload} workload, Models ${measurement.modelsVersion}, detector span ${measurement.detector.maxSpan} / repeats ${measurement.detector.minRepeats} / min tokens ${measurement.detector.minLoopTokens}`,
+      )
+    : ["not measured"];
+  const note = measurements.length ? " · measured at the documented sampling" : "";
+  return `<div><dt>Repetition-loop stops</dt><dd>${escapeHtml(values.join("; ") + note)}</dd></div>`;
+}
+
+export function renderGenerationProfile(generation, repetitionLoopMeasurements = []) {
   if (!generation) return "";
   const rows = [];
   for (const [key, label] of SAMPLING_LABELS) {
@@ -375,6 +390,7 @@ export function renderGenerationProfile(generation) {
       ),
     );
   }
+  rows.push(repetitionLoopRow(repetitionLoopMeasurements));
   const sources = (generation.sources || [])
     .map(
       (source) => `<li><code>${escapeHtml(source.id)}</code> <a href="${safeExternalUrl(source.uri)}">${escapeHtml(source.file)}</a>
@@ -387,7 +403,7 @@ export function renderGenerationProfile(generation) {
           <h2 id="generation-profile-title">Generation profile</h2>
           <dl class="dimension-grid profile-grid">${rows.join("")}</dl>
           <ul class="profile-sources">${sources}</ul>
-          <p class="resource-note">Read only from files at the pinned revision. Settings that are absent are not published in the pinned files; ModelJars does not fill them in.</p>
+          <p class="resource-note">Read only from files at the pinned revision. Settings that are absent are not published in the pinned files; ModelJars does not fill them in. The repetition-loop stop rate is the only measured value here: the share of generations the Models repetition-loop detector stopped when run at these settings, shown only once such a run is recorded.</p>
         </section>`;
 }
 
@@ -965,7 +981,7 @@ function renderModel(model, catalog) {
           </p>
         </section>
 
-        ${renderGenerationProfile(model.modelProfile?.generation)}
+        ${renderGenerationProfile(model.modelProfile?.generation, model.repetitionLoopMeasurements)}
 
         ${renderMemoryFit(model.modelProfile?.memoryFit)}
 

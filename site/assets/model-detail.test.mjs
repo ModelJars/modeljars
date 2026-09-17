@@ -422,3 +422,24 @@ test("a generation model without a computed memory fit shows no memory figure", 
   assert.equal(planningMemory(model), null);
   assert.doesNotMatch(descriptorRows(model), /memory/i);
 });
+
+test("the generation profile names the repetition-loop stop rate, not measured by default", () => {
+  const generation = profileFor("ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m").generation;
+  assert.match(renderGenerationProfile(generation), /Repetition-loop stops<\/dt><dd>not measured/);
+
+  const html = renderGenerationProfile(generation, [
+    {
+      backend: "pure-java",
+      workload: "general",
+      modelsVersion: "0.3.41",
+      detector: { maxSpan: 32, minRepeats: 4, minLoopTokens: 16 },
+      generations: 27,
+      stops: 3,
+      stopRate: 3 / 27,
+    },
+  ]);
+  assert.match(
+    html,
+    /Repetition-loop stops<\/dt><dd>11\.1% \(3\/27\) pure-java, general workload, Models 0\.3\.41, detector span 32 \/ repeats 4 \/ min tokens 16 · measured at the documented sampling/,
+  );
+});

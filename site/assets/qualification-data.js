@@ -215,6 +215,19 @@ function percent(value) {
   return `${(value * 100).toFixed(1)}%`;
 }
 
+// Repetition-loop stop rate at the documented generation profile (catalog/generation-safety.json).
+// Only a recorded run has a value; absence is "not measured", never a zero rate.
+export function repetitionLoopText(measurement) {
+  if (!measurement) return "not measured";
+  return `${percent(measurement.stopRate)} (${measurement.stops}/${measurement.generations})`;
+}
+
+function repetitionLoopFor(model, entry) {
+  return (model.repetitionLoopMeasurements || []).find(
+    (measurement) => measurement.backend === entry.backend && measurement.workload === entry.workload,
+  );
+}
+
 export function buildQualificationRows(qualifications, models) {
   const modelsById = new Map(models.map((model) => [model.id, model]));
   return qualifications.entries
@@ -235,6 +248,7 @@ export function buildQualificationRows(qualifications, models) {
         rawQuality: percent(entry.rawCorrectAnswerRate),
         finalQuality: percent(entry.correctAnswerRate),
         fallbackRate: percent(entry.extractiveFallbackRate),
+        loopStops: repetitionLoopText(repetitionLoopFor(model, entry)),
         peakRss: formatBytes(entry.peakRssBytes),
         evidence: { url: entry.reportUri, sha256: entry.reportSha256 },
       };

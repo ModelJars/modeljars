@@ -73,6 +73,41 @@ Profiles are deliberately outside `catalog/models.json`: they ship in the aggreg
 website, and the CLI, never inside a marker JAR, so adding or correcting one never requires a new
 marker coordinate.
 
+## Repetition-Loop Stop Rate
+
+`catalog/generation-safety.json` holds one optional measured metric per exact artifact, backend,
+and workload: the repetition-loop stop rate at the model's documented generation profile. Every
+entry is absent until a run is recorded, and the website and `modeljars show` display "not
+measured" until then. It is never computed, estimated, or defaulted to zero. The manifest's
+`repetitionLoopMethod` is fixed by `tools/generation-safety.mjs`, which `npm test` validates.
+
+How a value is measured:
+
+1. Use Models 0.3.41 or later, the first release with the detector. Enable it with
+   `SamplingOptions.repetitionLoopDetection(new RepetitionLoopDetection(maxSpan, minRepeats,
+   minLoopTokens))`. It is off by default.
+2. Apply every sampling value that `catalog/model-profiles.json` documents for the exact artifact
+   (temperature, top-p, top-k, min-p, repetition penalty), using exactly those values. A model
+   whose profile documents no sampling value has no documented generation profile and cannot carry
+   this metric. Today that includes the Qwen3 GGUF artifacts, whose pinned files publish no
+   sampling settings.
+3. Generate once per workload case with fresh model state on the recorded backend. `stops` is the
+   delta of `RuntimeTextGenerationModel.repetitionLoopStops()` (or `GenerationLoop` /
+   `ContinuousBatchingMetrics`) across the run, cross-checked against each generation's
+   `StopReason.REPETITION_LOOP`. `generations` counts completed generations, and
+   `stopRate = stops / generations`.
+4. Record the detector thresholds, the sampling actually applied, the Models version and commit,
+   the workload, and the raw report path and SHA-256. The rate depends on the thresholds, so it
+   is never compared across different detector settings.
+
+What it cannot show: the detector stops only exactly periodic output. Instructed or legitimately
+repeated output counts as a stop, and a loop whose tokens drift is not caught. A zero rate on a
+workload that never elicits loops is no data about loops, not evidence that they are absent.
+
+The manifest lives outside `catalog/qualifications.json` on purpose. Qualification entries are
+embedded in marker JARs, so a metric added after publication would force a new marker coordinate.
+Like model profiles, it ships only in the aggregate catalog, the website, and the CLI.
+
 ## Qualification
 
 Catalog registration is not publication approval. A marker appears on ModelJARs.org and becomes

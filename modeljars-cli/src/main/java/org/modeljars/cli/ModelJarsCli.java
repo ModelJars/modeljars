@@ -66,6 +66,7 @@ import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelMemoryFit;
 import org.modeljars.ModelProfile;
 import org.modeljars.ModelProfileRegistry;
+import org.modeljars.ModelRepetitionLoopMeasurement;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -1429,6 +1430,32 @@ public final class ModelJarsCli implements Callable<Integer> {
                     + ")");
   }
 
+  /** Measured repetition-loop stop rates; "not measured" when no run is recorded. */
+  static String repetitionLoop(List<ModelRepetitionLoopMeasurement> measurements) {
+    if (measurements.isEmpty()) {
+      return "not measured";
+    }
+    return String.join(
+            "; ",
+            measurements.stream()
+                .map(
+                    measurement ->
+                        String.format(
+                            Locale.ROOT,
+                            "%.1f%% (%d/%d) %s, %s workload, Models %s, detector %d/%d/%d",
+                            measurement.stopRate() * 100.0,
+                            measurement.stops(),
+                            measurement.generations(),
+                            measurement.backend(),
+                            measurement.workload(),
+                            measurement.modelsVersion(),
+                            measurement.maxSpan(),
+                            measurement.minRepeats(),
+                            measurement.minLoopTokens()))
+                .toList())
+        + "; measured at the documented sampling";
+  }
+
   static void renderProfile(ModelProfile profile, CliOutput out) {
     profile
         .generation()
@@ -1466,6 +1493,7 @@ public final class ModelJarsCli implements Callable<Integer> {
               generation
                   .thinkingDefault()
                   .ifPresent(value -> values.put("Thinking by default", value ? "yes" : "no"));
+              values.put("Repetition-loop stops", repetitionLoop(profile.repetitionLoop()));
               values.put(
                   "Sources",
                   String.join(

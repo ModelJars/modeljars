@@ -1444,6 +1444,35 @@ require(catalogModelProfiles.size == catalogModelProfileList.size) {
     "catalog/model-profiles.json repeats a model"
 }
 
+// Measured repetition-loop stop rates at the documented generation profile. Full validation is in
+// tools/generation-safety.mjs (npm test); like model profiles, the manifest ships only in the
+// aggregate catalog and never in a marker JAR, so recording a run never moves a marker coordinate.
+val generationSafetyFile = file("catalog/generation-safety.json")
+val catalogRepetitionLoops: Map<String, List<Map<String, Any?>>> =
+    run {
+        val document =
+            JsonSlurper().parse(generationSafetyFile).stringKeyMap("catalog/generation-safety.json")
+        require(document["schemaVersion"] == 1) {
+            "catalog/generation-safety.json must use schemaVersion 1"
+        }
+        ((document["entries"] as? List<*>)
+                ?: error("catalog/generation-safety.json must contain an entries array"))
+            .map { value -> value.stringKeyMap("Every generation-safety entry") }
+            .onEach { raw ->
+                val modelId = raw.requiredString("modelId")
+                val entry =
+                    catalogEntries.singleOrNull { it.id == modelId }
+                        ?: error("Generation-safety entry references unknown model: $modelId")
+                require(raw.requiredString("artifactSha256") == entry.sha256) {
+                    "Generation-safety entry $modelId does not match the catalog artifact SHA-256"
+                }
+                require(catalogModelProfiles.containsKey(modelId)) {
+                    "Generation-safety entry $modelId has no documented generation profile"
+                }
+            }
+            .groupBy { it.requiredString("modelId") }
+    }
+
 fun catalogModelProfileValue(value: Any?): String =
     buildString {
         propertyValue(value.toString()).forEach { character ->
@@ -1462,7 +1491,11 @@ fun catalogModelProfileProvenance(value: Any?, context: String): String =
             ((reference["token"] as? String)?.let { "($it)" } ?: "")
     }
 
-fun catalogModelProfileProperties(modelId: String, raw: Map<String, Any?>): String =
+fun catalogModelProfileProperties(
+    modelId: String,
+    raw: Map<String, Any?>,
+    repetitionLoops: List<Map<String, Any?>> = emptyList(),
+): String =
     buildString {
         val prefix = "modelProfile.$modelId."
 
@@ -1471,6 +1504,26 @@ fun catalogModelProfileProperties(modelId: String, raw: Map<String, Any?>): Stri
         }
 
         line("artifactSha256", raw.requiredString("artifactSha256"))
+        if (repetitionLoops.isNotEmpty()) {
+            line("repetitionLoop.count", repetitionLoops.size)
+            repetitionLoops.forEachIndexed { index, measurement ->
+                val entry = "repetitionLoop.%03d.".format(index)
+                listOf(
+                    "backend",
+                    "workload",
+                    "modelsVersion",
+                    "modelsRevision",
+                    "report",
+                    "reportSha256",
+                ).forEach { name -> line(entry + name, measurement.requiredString(name)) }
+                val detector = measurement["detector"].stringKeyMap("repetitionLoop detector")
+                listOf("maxSpan", "minRepeats", "minLoopTokens").forEach { name ->
+                    line(entry + "detector.$name", detector[name])
+                }
+                line(entry + "generations", measurement["generations"])
+                line(entry + "stops", measurement["stops"])
+            }
+        }
         raw["generation"]?.let { value ->
             val generation = value.stringKeyMap("generation for $modelId")
             val sources =
@@ -4389,6 +4442,7 @@ project(":modeljars-catalog") {
             inputs.file(rootProject.file("catalog/performance-profiles.json"))
             inputs.file(rootProject.file("catalog/benchmarks.json"))
             inputs.file(rootProject.file("catalog/model-profiles.json"))
+            inputs.file(rootProject.file("catalog/generation-safety.json"))
             if (qualificationCatalogFile.isFile) {
                 inputs.file(qualificationCatalogFile)
             }
@@ -4435,7 +4489,11 @@ project(":modeljars-catalog") {
                         runtimeCatalogEntries
                             .mapNotNull { entry ->
                                 catalogModelProfiles[entry.id]?.let {
-                                    catalogModelProfileProperties(entry.id, it)
+                                    catalogModelProfileProperties(
+                                        entry.id,
+                                        it,
+                                        catalogRepetitionLoops[entry.id].orEmpty(),
+                                    )
                                 }
                             }
                             .joinToString(""),
@@ -4448,6 +4506,9 @@ project(":modeljars-catalog") {
                                 entry.raw +
                                     (catalogModelProfiles[entry.id]
                                         ?.let { mapOf("modelProfile" to it) }
+                                        ?: emptyMap()) +
+                                    (catalogRepetitionLoops[entry.id]
+                                        ?.let { mapOf("repetitionLoopMeasurements" to it) }
                                         ?: emptyMap()) +
                                     ("performanceProfiles" to
                                         publicPerformanceProfiles

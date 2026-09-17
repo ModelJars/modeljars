@@ -258,6 +258,46 @@ class ModelJarsCliTest {
     assertTrue(shown.output().contains("16875"), shown.output());
     assertTrue(shown.output().contains("6.24 GiB"), shown.output());
     assertFalse(shown.output().contains("Top-p"), shown.output());
+    assertTrue(
+        shown.output().matches("(?s).*Repetition-loop stops\\s+not measured.*"), shown.output());
+
+    properties.load(
+        new java.io.StringReader(
+            String.join(
+                "\n",
+                prefix + "repetitionLoop.count=1",
+                prefix + "repetitionLoop.000.backend=pure-java",
+                prefix + "repetitionLoop.000.workload=general",
+                prefix + "repetitionLoop.000.modelsVersion=0.3.41",
+                prefix + "repetitionLoop.000.modelsRevision=" + "e".repeat(40),
+                prefix + "repetitionLoop.000.detector.maxSpan=32",
+                prefix + "repetitionLoop.000.detector.minRepeats=4",
+                prefix + "repetitionLoop.000.detector.minLoopTokens=16",
+                prefix + "repetitionLoop.000.generations=27",
+                prefix + "repetitionLoop.000.stops=3",
+                prefix + "repetitionLoop.000.report=benchmark-results/loops.json",
+                prefix + "repetitionLoop.000.reportSha256=" + "f".repeat(64))));
+    Result measured =
+        run(
+            new ModelJarsCli(
+                ModelJarRegistry.of(List.of(descriptor)),
+                (selected, destination, progress) -> destination,
+                ModelJarsCliTest::snapshot,
+                request -> {
+                  throw new UnsupportedOperationException();
+                },
+                Clock.systemUTC(),
+                new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
+                ModelProfileRegistry.fromProperties(properties)),
+            "show",
+            descriptor.alias());
+    assertTrue(
+        measured
+            .output()
+            .contains(
+                "11.1% (3/27) pure-java, general workload, Models 0.3.41, detector 32/4/16;"
+                    + " measured at the documented sampling"),
+        measured.output());
   }
 
   @Test

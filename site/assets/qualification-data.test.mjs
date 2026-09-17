@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildQualificationRows,
+  repetitionLoopText,
   primaryQualification,
   qualificationLabel,
   validateQualificationCatalog,
@@ -259,4 +260,19 @@ test("prefers RAG evidence when a model carries both", () => {
 test("reports a model with no evidence of either kind as unevaluated", () => {
   assert.equal(primaryQualification({ id: "bare" }), null);
   assert.equal(qualificationLabel(null), "Not evaluated");
+});
+
+test("shows the repetition-loop stop rate as not measured unless a matching run is recorded", () => {
+  const validated = validateQualificationCatalog(document, [model]);
+  assert.equal(buildQualificationRows(validated, [model])[0].loopStops, "not measured");
+
+  const measured = {
+    ...model,
+    repetitionLoopMeasurements: [
+      { backend: qualification.backend, workload: "other", stops: 1, generations: 2, stopRate: 0.5 },
+      { backend: qualification.backend, workload: qualification.workload, stops: 3, generations: 27, stopRate: 3 / 27 },
+    ],
+  };
+  assert.equal(buildQualificationRows(validated, [measured])[0].loopStops, "11.1% (3/27)");
+  assert.equal(repetitionLoopText(undefined), "not measured");
 });

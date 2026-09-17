@@ -93,6 +93,17 @@ jobs:
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
 
+      - name: Verify qualification manifests advance generatedAt
+        env:
+          COMPARISON: ${{ steps.remote-catalog.outputs.comparison }}
+        run: |
+          if [[ -z "${COMPARISON}" || "${COMPARISON}" =~ ^0+$ ]] || \
+              ! git cat-file -e "${COMPARISON}^{commit}"; then
+            echo "No base revision to compare qualification manifests against"
+          else
+            node tools/qualification-generation-gate.mjs --base "${COMPARISON}"
+          fi
+
       - name: Validate build
         run: >
           ./gradlew --no-daemon

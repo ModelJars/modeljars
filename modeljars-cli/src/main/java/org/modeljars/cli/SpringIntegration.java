@@ -29,6 +29,7 @@ import org.modeljars.ModelExecutionQualification;
 import org.modeljars.ModelJarDescriptor;
 import org.modeljars.ModelRagQualificationRegistry;
 import org.modeljars.ModelToolQualificationRegistry;
+import org.modeljars.QualifiedPromptTemplates;
 
 /**
  * Decides which Models Spring integration applies to a catalog model.
@@ -146,7 +147,8 @@ final class SpringIntegration {
     /**
      * Selects the template the ModelJars runtime would use by default: among production-usable RAG
      * and tool qualifications for the exact artifact, the one with the lowest p95 end-to-end
-     * latency, matching {@code ModelJars.openRuntime} with automatic backend selection.
+     * latency, matching {@code ModelJars.openRuntime} with automatic backend selection. The
+     * recorded prompt template is mapped to its runtime chat-template id, as the runtime does.
      */
     static ChatTemplates fromClasspath() {
       ModelRagQualificationRegistry rag = ModelRagQualificationRegistry.fromClasspath();
@@ -160,7 +162,10 @@ final class SpringIntegration {
                   Comparator.comparingDouble(ModelExecutionQualification::p95EndToEndMillis)
                       .thenComparing(ModelExecutionQualification::backend)
                       .thenComparing(ModelExecutionQualification::workload))
-              .map(ModelExecutionQualification::promptTemplate);
+              .map(
+                  qualification ->
+                      QualifiedPromptTemplates.runtimeChatTemplateId(
+                          qualification.promptTemplate()));
     }
   }
 

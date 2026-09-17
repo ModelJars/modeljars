@@ -4206,7 +4206,7 @@ project(":modeljars-composite-granite-answerability") {
         )
         runtimeOnly(
             "org.modeljars.github:modeljars.activated-adapters." +
-                "granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.1",
+                "granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.2",
         )
     }
 
@@ -4286,7 +4286,7 @@ val verifyGraniteAnswerabilityPublication =
                             "org.modeljars.github",
                             "modeljars.activated-adapters." +
                                 "granite-4.1-3b-answerability-alora-integrallis.f32",
-                            "1.0.0-f32.1",
+                            "1.0.0-f32.2",
                         ),
                     ),
             ) {

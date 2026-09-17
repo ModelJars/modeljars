@@ -58,7 +58,7 @@ public final class GraniteAnswerability {
   public static final ModelJar SPECIALIST =
       ModelJar.of(
           "org.modeljars.github:modeljars.activated-adapters."
-              + "granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.1");
+              + "granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.2");
 
   /**
    * Completion budget the frozen answerability window used: the contract is one JSON string label,

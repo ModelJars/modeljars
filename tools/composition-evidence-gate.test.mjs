@@ -586,3 +586,166 @@ test("rejects a report whose specialist kind differs from the catalog entry", as
     /unknown specialistKind/,
   );
 });
+
+const trainingRevision = "6".repeat(40);
+const trainingManifestBytes = Buffer.from(
+  JSON.stringify({
+    adapterFiles: {
+      "adapter_config.json": { sha256: "4".repeat(64) },
+      "adapter_model.safetensors": { sha256: "3".repeat(64) },
+    },
+  }),
+);
+const preparedDataManifestBytes = Buffer.from(JSON.stringify({ salt: "fixture" }));
+
+function pinned(path, bytes) {
+  return {
+    uri: `https://raw.githubusercontent.com/integrallis/models/${trainingRevision}/${path}`,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    sizeBytes: bytes.byteLength,
+  };
+}
+
+const trainingManifest = pinned("results/training-manifest.json", trainingManifestBytes);
+const preparedDataManifest = pinned("results/prepared-manifest.json", preparedDataManifestBytes);
+
+function trainingEvidenceLoader(overrides = {}) {
+  const served = new Map([
+    [trainingManifest.uri, trainingManifestBytes],
+    [preparedDataManifest.uri, preparedDataManifestBytes],
+    ...Object.entries(overrides),
+  ]);
+  return async ({ evidence }) => {
+    const bytes = served.get(evidence.uri);
+    if (bytes === undefined) {
+      throw new Error(`Unknown immutable training evidence ${evidence.uri}`);
+    }
+    return bytes;
+  };
+}
+
+function firstPartyRagReport() {
+  const base = ragReport();
+  const gates = base.evaluation.gates;
+  return {
+    ...base,
+    specialistKind: "first-party-rag-specialist",
+    evaluation: {
+      ...base.evaluation,
+      gates: {
+        ...gates,
+        provenance: {
+          pass: true,
+          upstream: false,
+          publisher: "Integrallis",
+          trainingRepository: "integrallis/models",
+          trainingRevision,
+          trainingManifest,
+          preparedDataManifest,
+          adapterSha256: "3".repeat(64),
+          adapterConfigSha256: "4".repeat(64),
+          modelCardSha256: "7".repeat(64),
+          license: "Apache-2.0",
+          trainingDataLicenses: [{ dataset: "SQuAD 2.0", license: "CC-BY-SA-4.0" }],
+          tokenizerFiles: [{ name: "tokenizer.json", sha256: "8".repeat(64) }],
+        },
+        taskCorrectness: {
+          ...gates.taskCorrectness,
+          suites: gates.taskCorrectness.suites.map((suite) => ({
+            ...suite,
+            labelSource: "confirmed",
+            labelsSha256: "9".repeat(64),
+            originalBalancedAccuracy: suite.balancedAccuracy - 0.01,
+          })),
+        },
+      },
+    },
+  };
+}
+
+async function validateFirstPartyComposition(value, options = {}) {
+  const { bytes, document } = documentFor(value);
+  document.compositions[0].specialistKind = options.kind ?? "first-party-rag-specialist";
+  return validateCompositionEvidence({
+    compositions: document,
+    models: modelCatalog,
+    loadReport: async () => bytes,
+    loadEvidenceFile:
+      "loadEvidenceFile" in options ? options.loadEvidenceFile : trainingEvidenceLoader(),
+  });
+}
+
+test("accepts a first-party RAG specialist composition bound to its training commit", async () => {
+  assert.deepEqual(await validateFirstPartyComposition(firstPartyRagReport()), [
+    "qwen3_chat_tools_composite",
+  ]);
+});
+
+test("requires an evidence loader to verify a first-party composition", async () => {
+  await assert.rejects(
+    validateFirstPartyComposition(firstPartyRagReport(), { loadEvidenceFile: undefined }),
+    /requires an evidence-file loader/,
+  );
+});
+
+test("rejects a first-party composition that claims upstream provenance or another kind", async () => {
+  const upstream = firstPartyRagReport();
+  upstream.evaluation.gates.provenance.upstream = true;
+  await assert.rejects(
+    validateFirstPartyComposition(upstream),
+    /provenance must pin the first-party training commit/,
+  );
+  await assert.rejects(
+    validateFirstPartyComposition(ragReport()),
+    /must declare first-party-rag-specialist/,
+  );
+  await assert.rejects(
+    validateFirstPartyComposition(firstPartyRagReport(), { kind: "upstream-rag-specialist" }),
+    /must declare upstream-rag-specialist/,
+  );
+  const unpinned = firstPartyRagReport();
+  unpinned.evaluation.gates.provenance.trainingManifest = {
+    ...trainingManifest,
+    uri: trainingManifest.uri.replace(trainingRevision, "5".repeat(40)),
+  };
+  await assert.rejects(
+    validateFirstPartyComposition(unpinned),
+    /provenance must pin the first-party training commit/,
+  );
+});
+
+test("rejects a first-party composition whose manifests or adapter do not verify", async () => {
+  await assert.rejects(
+    validateFirstPartyComposition(firstPartyRagReport(), {
+      loadEvidenceFile: trainingEvidenceLoader({ [trainingManifest.uri]: Buffer.from("{}") }),
+    }),
+    /training manifest bytes do not match/,
+  );
+  await assert.rejects(
+    validateFirstPartyComposition(firstPartyRagReport(), {
+      loadEvidenceFile: trainingEvidenceLoader({ [preparedDataManifest.uri]: Buffer.from("x") }),
+    }),
+    /prepared-data manifest bytes do not match/,
+  );
+  const mismatched = firstPartyRagReport();
+  mismatched.evaluation.gates.provenance.adapterSha256 = "d".repeat(64);
+  await assert.rejects(
+    validateFirstPartyComposition(mismatched),
+    /adapter weights do not match the training manifest/,
+  );
+});
+
+test("rejects a first-party composition that does not strictly beat base or lacks label identity", async () => {
+  const tie = firstPartyRagReport();
+  const suite = tie.evaluation.gates.taskCorrectness.suites[1];
+  suite.baseBalancedAccuracy = suite.balancedAccuracy;
+  await assert.rejects(validateFirstPartyComposition(tie), /strictly beat its base/);
+
+  const unlabeled = firstPartyRagReport();
+  delete unlabeled.evaluation.gates.taskCorrectness.suites[0].labelsSha256;
+  await assert.rejects(validateFirstPartyComposition(unlabeled), /confirmed labels/);
+
+  const sharing = firstPartyRagReport();
+  sharing.evaluation.gates.memoryAccounting.sharedUniqueStateBytes = 2_000_000_000;
+  await assert.rejects(validateFirstPartyComposition(sharing), /memory accounting/);
+});

@@ -10,7 +10,15 @@ const IMMUTABLE_RAW_GITHUB =
 const IMPLEMENTED_HANDOFFS = new Set(["exact-kv-block-sharing"]);
 const TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
 const UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
-const SPECIALIST_KINDS = new Set([TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST]);
+const FIRST_PARTY_RAG_SPECIALIST = "first-party-rag-specialist";
+const SPECIALIST_KINDS = new Set([
+  TRAINED_TOOL_SPECIALIST,
+  UPSTREAM_RAG_SPECIALIST,
+  FIRST_PARTY_RAG_SPECIALIST,
+]);
+const COMMIT = /^[a-f0-9]{40}$/;
+const LABEL_SOURCES = new Set(["dataset", "confirmed"]);
+const GITHUB_REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const MINIMUM_WINDOW_SUITES = 2;
 const MINIMUM_WINDOW_CASES = 100;
 const MINIMUM_BALANCED_ACCURACY = 0.8;
@@ -93,7 +101,7 @@ function metricsMatch(qualification, report) {
   );
 }
 
-function requireProductionEvidence(composition, report, modelsById) {
+async function requireProductionEvidence(composition, report, modelsById, loadEvidenceFile) {
   if (report.schemaVersion !== 2) {
     throw new Error(`${composition.id} evidence report must use schemaVersion 2`);
   }
@@ -155,8 +163,19 @@ function requireProductionEvidence(composition, report, modelsById) {
   }
 
   const gates = evaluation.gates;
-  if (specialistKind(composition) === UPSTREAM_RAG_SPECIALIST) {
+  const kind = specialistKind(composition);
+  if (kind === UPSTREAM_RAG_SPECIALIST) {
     requireUpstreamRagSpecialistGates(composition, report, gates, evaluation);
+    return;
+  }
+  if (kind === FIRST_PARTY_RAG_SPECIALIST) {
+    await requireFirstPartyRagSpecialistGates(
+      composition,
+      report,
+      gates,
+      evaluation,
+      loadEvidenceFile,
+    );
     return;
   }
   if (report.specialistKind !== undefined && report.specialistKind !== TRAINED_TOOL_SPECIALIST) {
@@ -336,6 +355,14 @@ function requireUpstreamRagSpecialistGates(composition, report, gates, evaluatio
   ) {
     throw new Error(`${composition.id} provenance must pin the upstream adapter`);
   }
+  requireRagSpecialistGates(composition, gates, evaluation);
+}
+
+/**
+ * The answerability window, conformance, mechanics, and sharing gates shared by every RAG
+ * specialist composition, whatever the specialist's provenance.
+ */
+function requireRagSpecialistGates(composition, gates, evaluation) {
   const task = gates.taskCorrectness;
   if (
     task?.pass !== true ||
@@ -396,7 +423,147 @@ function requireUpstreamRagSpecialistGates(composition, report, gates, evaluatio
   requireSharingGates(composition, gates, evaluation);
 }
 
-export async function validateCompositionEvidence({ compositions, models, loadReport }) {
+function isNonBlankString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function pinnedTrainingFile(provenance, name) {
+  const file = provenance[name];
+  const prefix =
+    `https://raw.githubusercontent.com/${provenance.trainingRepository}/` +
+    `${provenance.trainingRevision}/`;
+  return (
+    file !== null &&
+    typeof file === "object" &&
+    typeof file.uri === "string" &&
+    file.uri.startsWith(prefix) &&
+    file.uri.length > prefix.length &&
+    !file.uri.slice(prefix.length).split("/").some((part) => part === "" || part === "..") &&
+    SHA256.test(file.sha256 ?? "") &&
+    Number.isInteger(file.sizeBytes) &&
+    file.sizeBytes > 0
+  );
+}
+
+async function loadPinnedTrainingFile(composition, evidence, kind, label, loadEvidenceFile) {
+  const bytes = await loadEvidenceFile({ composition, evidence, kind });
+  if (!(bytes instanceof Uint8Array)) {
+    throw new Error(`${composition.id} ${label} loader did not return bytes`);
+  }
+  if (
+    bytes.byteLength !== evidence.sizeBytes ||
+    createHash("sha256").update(bytes).digest("hex") !== evidence.sha256
+  ) {
+    throw new Error(`${composition.id} ${label} bytes do not match immutable evidence`);
+  }
+  return bytes;
+}
+
+/**
+ * Gates for a composition whose specialist is an adapter Integrallis trained. Provenance pins the
+ * training commit and byte-verifies its training and prepared-data manifests (the adapter must be
+ * the one the training manifest recorded) instead of an upstream publisher; every suite must
+ * strictly beat the base, and confirmed-label suites must bind their label identity. All window,
+ * conformance, mechanics, and sharing gates of an upstream RAG composition apply unchanged.
+ */
+async function requireFirstPartyRagSpecialistGates(
+  composition,
+  report,
+  gates,
+  evaluation,
+  loadEvidenceFile,
+) {
+  if (report.specialistKind !== FIRST_PARTY_RAG_SPECIALIST) {
+    throw new Error(`${composition.id} report must declare ${FIRST_PARTY_RAG_SPECIALIST}`);
+  }
+  const provenance = gates?.provenance;
+  if (
+    provenance?.pass !== true ||
+    provenance.upstream !== false ||
+    provenance.upstreamRepository !== undefined ||
+    provenance.upstreamRevision !== undefined ||
+    !isNonBlankString(provenance.publisher) ||
+    !GITHUB_REPOSITORY.test(provenance.trainingRepository ?? "") ||
+    !COMMIT.test(provenance.trainingRevision ?? "") ||
+    !pinnedTrainingFile(provenance, "trainingManifest") ||
+    !pinnedTrainingFile(provenance, "preparedDataManifest") ||
+    !SHA256.test(provenance.adapterSha256 ?? "") ||
+    !SHA256.test(provenance.adapterConfigSha256 ?? "") ||
+    !SHA256.test(provenance.modelCardSha256 ?? "") ||
+    !isNonBlankString(provenance.license) ||
+    !Array.isArray(provenance.trainingDataLicenses) ||
+    provenance.trainingDataLicenses.length === 0 ||
+    provenance.trainingDataLicenses.some(
+      (item) => !isNonBlankString(item?.dataset) || !isNonBlankString(item?.license),
+    ) ||
+    !Array.isArray(provenance.tokenizerFiles) ||
+    provenance.tokenizerFiles.length === 0 ||
+    provenance.tokenizerFiles.some(
+      (file) => typeof file?.name !== "string" || !SHA256.test(file.sha256 ?? ""),
+    )
+  ) {
+    throw new Error(
+      `${composition.id} provenance must pin the first-party training commit, manifests, adapter, data licenses, and tokenizer`,
+    );
+  }
+  const trainingBytes = await loadPinnedTrainingFile(
+    composition,
+    provenance.trainingManifest,
+    "training-manifest",
+    "training manifest",
+    loadEvidenceFile,
+  );
+  await loadPinnedTrainingFile(
+    composition,
+    provenance.preparedDataManifest,
+    "prepared-data-manifest",
+    "prepared-data manifest",
+    loadEvidenceFile,
+  );
+  let manifest;
+  try {
+    manifest = JSON.parse(Buffer.from(trainingBytes).toString("utf8"));
+  } catch (error) {
+    throw new Error(`${composition.id} training manifest is not JSON`, { cause: error });
+  }
+  const recorded = manifest?.adapterFiles;
+  if (recorded?.["adapter_model.safetensors"]?.sha256 !== provenance.adapterSha256) {
+    throw new Error(`${composition.id} adapter weights do not match the training manifest`);
+  }
+  if (recorded?.["adapter_config.json"]?.sha256 !== provenance.adapterConfigSha256) {
+    throw new Error(
+      `${composition.id} adapter configuration does not match the training manifest`,
+    );
+  }
+  requireRagSpecialistGates(composition, gates, evaluation);
+  for (const suite of gates.taskCorrectness.suites) {
+    if (!(suite.balancedAccuracy > suite.baseBalancedAccuracy)) {
+      throw new Error(
+        `${composition.id} ${suite.name} must strictly beat its base balanced accuracy`,
+      );
+    }
+    if (suite.labelSource !== undefined && !LABEL_SOURCES.has(suite.labelSource)) {
+      throw new Error(`${composition.id} ${suite.name} declares an unknown labelSource`);
+    }
+    if (
+      suite.labelSource === "confirmed" &&
+      (!SHA256.test(suite.labelsSha256 ?? "") ||
+        typeof suite.originalBalancedAccuracy !== "number" ||
+        !Number.isFinite(suite.originalBalancedAccuracy))
+    ) {
+      throw new Error(
+        `${composition.id} ${suite.name} confirmed labels must bind labelsSha256 and originalBalancedAccuracy`,
+      );
+    }
+  }
+}
+
+export async function validateCompositionEvidence({
+  compositions,
+  models,
+  loadReport,
+  loadEvidenceFile,
+}) {
   requireDocument(compositions);
   const modelsById = physicalModels(models);
   if (typeof loadReport !== "function") {
@@ -421,7 +588,15 @@ export async function validateCompositionEvidence({ compositions, models, loadRe
       if (report.evaluation?.qualified !== true || report.evaluation?.correctnessPassed !== true) {
         throw new Error(`${composition.id} evidence report must pass correctness and qualification`);
       }
-      requireProductionEvidence(composition, report, modelsById);
+      if (
+        specialistKind(composition) === FIRST_PARTY_RAG_SPECIALIST &&
+        typeof loadEvidenceFile !== "function"
+      ) {
+        throw new Error(
+          `${composition.id} requires an evidence-file loader to verify first-party training evidence`,
+        );
+      }
+      await requireProductionEvidence(composition, report, modelsById, loadEvidenceFile);
       if (!metricsMatch(qualification, report)) {
         throw new Error(`${composition.id} catalog metrics do not match its evidence report`);
       }
@@ -455,6 +630,13 @@ async function main() {
       const response = await fetch(qualification.reportUri);
       if (!response.ok) {
         throw new Error(`Could not fetch ${qualification.reportUri}: HTTP ${response.status}`);
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    },
+    loadEvidenceFile: async ({ evidence }) => {
+      const response = await fetch(evidence.uri, { redirect: "error" });
+      if (!response.ok) {
+        throw new Error(`Could not fetch ${evidence.uri}: HTTP ${response.status}`);
       }
       return new Uint8Array(await response.arrayBuffer());
     },

@@ -169,6 +169,18 @@ class ModelComponentQualificationRegistryTest {
         () -> ModelComponentQualificationRegistry.fromProperties(unknown));
   }
 
+  @Test
+  void readsAFirstPartySpecialistKind() throws Exception {
+    Properties firstParty = properties(true);
+    firstParty.setProperty(
+        "componentQualification.adapter.specialistKind", "first-party-rag-specialist");
+    ModelComponentQualificationRegistry registry =
+        ModelComponentQualificationRegistry.fromProperties(firstParty);
+    assertEquals(
+        ModelComponentQualificationRegistry.FIRST_PARTY_RAG_SPECIALIST,
+        registry.entries().getFirst().specialistKind());
+  }
+
   private static ModelArtifactFile file(String path, String role, String sha256, long sizeBytes) {
     return new ModelArtifactFile(
         path, role, URI.create("https://example.invalid/adapter/" + path), sha256, sizeBytes);

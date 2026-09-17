@@ -9,7 +9,14 @@ const COMMIT = /^[a-f0-9]{40}$/;
 const COMPONENT_POLICY = "activated-adapter-component-v1";
 const TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
 const UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
-const SPECIALIST_KINDS = new Set([TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST]);
+const FIRST_PARTY_RAG_SPECIALIST = "first-party-rag-specialist";
+const SPECIALIST_KINDS = new Set([
+  TRAINED_TOOL_SPECIALIST,
+  UPSTREAM_RAG_SPECIALIST,
+  FIRST_PARTY_RAG_SPECIALIST,
+]);
+const LABEL_SOURCES = new Set(["dataset", "confirmed"]);
+const GITHUB_REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const MINIMUM_WINDOW_SUITES = 2;
 const MINIMUM_WINDOW_CASES = 100;
 const MINIMUM_BALANCED_ACCURACY = 0.8;
@@ -383,8 +390,19 @@ async function requireReport(
     throw new Error(`${entry.modelId} report base identity does not match`);
   }
   const gates = report.evaluation.gates;
-  if (specialistKind(entry) === UPSTREAM_RAG_SPECIALIST) {
-    requireUpstreamRagSpecialistGates(entry, report, gates);
+  const kind = specialistKind(entry);
+  if (kind === UPSTREAM_RAG_SPECIALIST || kind === FIRST_PARTY_RAG_SPECIALIST) {
+    if (kind === UPSTREAM_RAG_SPECIALIST) {
+      requireUpstreamRagSpecialistGates(entry, report, gates);
+    } else {
+      await requireFirstPartyRagSpecialistGates(
+        entry,
+        report,
+        gates,
+        model,
+        loadEvidenceFile,
+      );
+    }
     await requireReleasedModelsArtifacts(
       entry,
       gates.modelsArtifact,
@@ -528,7 +546,12 @@ function requireUpstreamRagSpecialistGates(entry, report, gates) {
   if (report.specialistKind !== UPSTREAM_RAG_SPECIALIST) {
     throw new Error(`${entry.modelId} report must declare ${UPSTREAM_RAG_SPECIALIST}`);
   }
-  const provenance = gates?.provenance;
+  requireUpstreamProvenance(entry, gates?.provenance);
+  requireAnswerabilityWindow(entry, gates);
+  requireRagSpecialistRuntimeGates(entry, gates);
+}
+
+function requireUpstreamProvenance(entry, provenance) {
   if (
     provenance?.pass !== true ||
     provenance.upstream !== true ||
@@ -548,7 +571,16 @@ function requireUpstreamRagSpecialistGates(entry, report, gates) {
   ) {
     throw new Error(`${entry.modelId} provenance must pin the upstream adapter and tokenizer`);
   }
-  const task = gates.taskCorrectness;
+}
+
+/**
+ * The frozen answerability window shared by every RAG specialist kind: at least two public suites
+ * of at least 100 cases, every completion structured, balanced accuracy at least 0.80 and no worse
+ * than the unadapted base, physical sharing on every case, and a kernel arm proven identical to
+ * pure Java.
+ */
+function requireAnswerabilityWindow(entry, gates) {
+  const task = gates?.taskCorrectness;
   if (
     task?.pass !== true ||
     !SHA256.test(task.windowSha256 ?? "") ||
@@ -586,6 +618,10 @@ function requireUpstreamRagSpecialistGates(entry, report, gates) {
       );
     }
   }
+}
+
+/** Real-weight conformance, mechanics, long-context, and sharing gates of every RAG specialist. */
+function requireRagSpecialistRuntimeGates(entry, gates) {
   if (
     gates.plainJava?.pass !== true ||
     gates.plainJava.realWeights !== true ||
@@ -638,6 +674,160 @@ function requireUpstreamRagSpecialistGates(entry, report, gates) {
       `${entry.modelId} must bind passing physical-sharing performance and memory evidence`,
     );
   }
+}
+
+function isNonBlankString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function pinnedTrainingFile(provenance, name) {
+  const file = provenance[name];
+  const prefix =
+    `https://raw.githubusercontent.com/${provenance.trainingRepository}/` +
+    `${provenance.trainingRevision}/`;
+  return (
+    file !== null &&
+    typeof file === "object" &&
+    typeof file.uri === "string" &&
+    file.uri.startsWith(prefix) &&
+    file.uri.length > prefix.length &&
+    !file.uri.slice(prefix.length).split("/").some((part) => part === "" || part === "..") &&
+    SHA256.test(file.sha256 ?? "") &&
+    requirePositiveInteger(file.sizeBytes)
+  );
+}
+
+async function loadPinnedTrainingFile(entry, evidence, kind, label, loadEvidenceFile) {
+  const bytes = await loadEvidenceFile({ entry, evidence, kind });
+  if (!(bytes instanceof Uint8Array)) {
+    throw new Error(`${entry.modelId} ${label} loader did not return bytes`);
+  }
+  if (
+    bytes.byteLength !== evidence.sizeBytes ||
+    createHash("sha256").update(bytes).digest("hex") !== evidence.sha256
+  ) {
+    throw new Error(`${entry.modelId} ${label} bytes do not match immutable evidence`);
+  }
+  return bytes;
+}
+
+/**
+ * Provenance of an adapter we trained ourselves. It is not upstream, so it must not borrow the
+ * upstream fields; instead it pins the publisher, the training repository and the commit holding
+ * the trainer, data preparation, and manifests, and it byte-verifies the training and
+ * prepared-data manifests at that commit. The adapter weights and configuration must be the
+ * files the training manifest recorded, and the weights must be the file the catalog publishes.
+ */
+async function requireFirstPartyProvenance(entry, provenance, model, loadEvidenceFile) {
+  if (
+    provenance?.pass !== true ||
+    provenance.upstream !== false ||
+    provenance.upstreamRepository !== undefined ||
+    provenance.upstreamRevision !== undefined ||
+    !isNonBlankString(provenance.publisher) ||
+    !GITHUB_REPOSITORY.test(provenance.trainingRepository ?? "") ||
+    !COMMIT.test(provenance.trainingRevision ?? "") ||
+    !pinnedTrainingFile(provenance, "trainingManifest") ||
+    !pinnedTrainingFile(provenance, "preparedDataManifest") ||
+    !SHA256.test(provenance.adapterSha256 ?? "") ||
+    !SHA256.test(provenance.adapterConfigSha256 ?? "") ||
+    !SHA256.test(provenance.modelCardSha256 ?? "") ||
+    !isNonBlankString(provenance.license) ||
+    !Array.isArray(provenance.trainingDataLicenses) ||
+    provenance.trainingDataLicenses.length === 0 ||
+    provenance.trainingDataLicenses.some(
+      (item) => !isNonBlankString(item?.dataset) || !isNonBlankString(item?.license),
+    ) ||
+    !Array.isArray(provenance.tokenizerFiles) ||
+    provenance.tokenizerFiles.length === 0 ||
+    provenance.tokenizerFiles.some(
+      (file) => typeof file?.name !== "string" || !SHA256.test(file.sha256 ?? ""),
+    )
+  ) {
+    throw new Error(
+      `${entry.modelId} provenance must pin the first-party training commit, manifests, adapter, data licenses, and tokenizer`,
+    );
+  }
+  const trainingBytes = await loadPinnedTrainingFile(
+    entry,
+    provenance.trainingManifest,
+    "training-manifest",
+    "training manifest",
+    loadEvidenceFile,
+  );
+  await loadPinnedTrainingFile(
+    entry,
+    provenance.preparedDataManifest,
+    "prepared-data-manifest",
+    "prepared-data manifest",
+    loadEvidenceFile,
+  );
+  let manifest;
+  try {
+    manifest = JSON.parse(Buffer.from(trainingBytes).toString("utf8"));
+  } catch (error) {
+    throw new Error(`${entry.modelId} training manifest is not JSON`, { cause: error });
+  }
+  const recorded = manifest?.adapterFiles;
+  if (recorded?.["adapter_model.safetensors"]?.sha256 !== provenance.adapterSha256) {
+    throw new Error(`${entry.modelId} adapter weights do not match the training manifest`);
+  }
+  if (recorded?.["adapter_config.json"]?.sha256 !== provenance.adapterConfigSha256) {
+    throw new Error(`${entry.modelId} adapter configuration does not match the training manifest`);
+  }
+  const weights = model.files.find((file) => file.role === "adapter-weights");
+  if (weights?.sha256 !== provenance.adapterSha256) {
+    throw new Error(`${entry.modelId} adapter weights do not match the catalog bundle`);
+  }
+}
+
+/**
+ * A fine-tune is admitted only when it beats its base, so every suite must be strictly better
+ * than the unadapted base. A suite scored on confirmed labels must bind the label set and keep
+ * its dataset-label score beside the confirmed one; ModelJars does not re-score either.
+ */
+function requireFirstPartyWindow(entry, gates) {
+  for (const suite of gates.taskCorrectness.suites) {
+    if (!(suite.balancedAccuracy > suite.baseBalancedAccuracy)) {
+      throw new Error(
+        `${entry.modelId} ${suite.name} must strictly beat its base balanced accuracy`,
+      );
+    }
+    if (suite.labelSource !== undefined && !LABEL_SOURCES.has(suite.labelSource)) {
+      throw new Error(`${entry.modelId} ${suite.name} declares an unknown labelSource`);
+    }
+    if (
+      suite.labelSource === "confirmed" &&
+      (!SHA256.test(suite.labelsSha256 ?? "") ||
+        typeof suite.originalBalancedAccuracy !== "number" ||
+        !Number.isFinite(suite.originalBalancedAccuracy))
+    ) {
+      throw new Error(
+        `${entry.modelId} ${suite.name} confirmed labels must bind labelsSha256 and originalBalancedAccuracy`,
+      );
+    }
+  }
+}
+
+/**
+ * Gates for an activated RAG specialist Integrallis trained. Every task, mechanics, long-context,
+ * and sharing requirement of an upstream specialist applies unchanged; provenance binds the
+ * training commit instead of an upstream publisher, and each suite must strictly beat the base.
+ */
+async function requireFirstPartyRagSpecialistGates(
+  entry,
+  report,
+  gates,
+  model,
+  loadEvidenceFile,
+) {
+  if (report.specialistKind !== FIRST_PARTY_RAG_SPECIALIST) {
+    throw new Error(`${entry.modelId} report must declare ${FIRST_PARTY_RAG_SPECIALIST}`);
+  }
+  await requireFirstPartyProvenance(entry, gates?.provenance, model, loadEvidenceFile);
+  requireAnswerabilityWindow(entry, gates);
+  requireFirstPartyWindow(entry, gates);
+  requireRagSpecialistRuntimeGates(entry, gates);
 }
 
 export async function validateComponentEvidence({

@@ -51,14 +51,20 @@ public final class ModelComponentQualificationRegistry {
   private static final String ENTRY_PREFIX = "componentQualification.";
   private static final String POLICY = "activated-adapter-component-v1";
 
-  /** The component shape of an adapter we trained ourselves. */
+  /** The component shape of a tool-calling adapter we trained ourselves. */
   public static final String TRAINED_TOOL_SPECIALIST = "trained-tool-specialist";
 
   /** The component shape of a publisher-trained adapter that Models runs unchanged. */
   public static final String UPSTREAM_RAG_SPECIALIST = "upstream-rag-specialist";
 
+  /**
+   * The component shape of a RAG adapter we trained ourselves, bound to its training commit and
+   * required to strictly beat its base.
+   */
+  public static final String FIRST_PARTY_RAG_SPECIALIST = "first-party-rag-specialist";
+
   private static final Set<String> SPECIALIST_KINDS =
-      Set.of(TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST);
+      Set.of(TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST, FIRST_PARTY_RAG_SPECIALIST);
 
   private final Instant generatedAt;
   private final String policyVersion;

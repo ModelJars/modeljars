@@ -884,3 +884,360 @@ test("rejects an unknown specialist kind and a mismatched trained report", async
   await assert.rejects(validate(mismatched.document, mismatched.bytes), /does not match the catalog entry/);
 });
 
+
+const trainingRevision = "4".repeat(40);
+const trainingManifestBytes = Buffer.from(
+  JSON.stringify({
+    base: "ibm-granite/granite-4.1-3b",
+    adapterFiles: {
+      "adapter_config.json": { bytes: 1_217, sha256: "5".repeat(64) },
+      "adapter_model.safetensors": { bytes: 42_000_000, sha256: "c".repeat(64) },
+    },
+  }),
+);
+const preparedDataManifestBytes = Buffer.from(
+  JSON.stringify({ salt: "fixture", train: { records: 24_000, sha256: "a".repeat(64) } }),
+);
+
+function pinnedTrainingFile(path, bytes, revision = trainingRevision) {
+  return {
+    uri: `https://raw.githubusercontent.com/integrallis/models/${revision}/${path}`,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    sizeBytes: bytes.byteLength,
+  };
+}
+
+const trainingManifestPath = "benchmark-results/answerability-alora/training-manifest.json";
+const preparedDataManifestPath = "benchmark-results/answerability-alora/prepared-manifest.json";
+
+function firstPartyEvidenceLoader(overrides = {}) {
+  const served = new Map([
+    [pinnedTrainingFile(trainingManifestPath, trainingManifestBytes).uri, trainingManifestBytes],
+    [
+      pinnedTrainingFile(preparedDataManifestPath, preparedDataManifestBytes).uri,
+      preparedDataManifestBytes,
+    ],
+    ...Object.entries(overrides),
+  ]);
+  return async ({ evidence, kind }) => {
+    if (kind === "clean-host-output") {
+      return evidenceFileLoader({ evidence });
+    }
+    const bytes = served.get(evidence.uri);
+    if (bytes === undefined) {
+      throw new Error(`Unknown immutable training evidence ${evidence.uri}`);
+    }
+    return bytes;
+  };
+}
+
+function firstPartyReport() {
+  const base = upstreamReport();
+  const gates = base.evaluation.gates;
+  return {
+    ...base,
+    specialistKind: "first-party-rag-specialist",
+    evaluation: {
+      ...base.evaluation,
+      gates: {
+        ...gates,
+        provenance: {
+          pass: true,
+          upstream: false,
+          publisher: "Integrallis",
+          trainingRepository: "integrallis/models",
+          trainingRevision,
+          trainingManifest: pinnedTrainingFile(trainingManifestPath, trainingManifestBytes),
+          preparedDataManifest: pinnedTrainingFile(
+            preparedDataManifestPath,
+            preparedDataManifestBytes,
+          ),
+          adapterSha256: "c".repeat(64),
+          adapterConfigSha256: "5".repeat(64),
+          modelCardSha256: "6".repeat(64),
+          license: "Apache-2.0",
+          trainingDataLicenses: [
+            { dataset: "SQuAD 2.0", license: "CC-BY-SA-4.0" },
+            { dataset: "QuAC", license: "CC-BY-SA-4.0" },
+          ],
+          tokenizerFiles: [{ name: "tokenizer.json", sha256: "8".repeat(64) }],
+        },
+        taskCorrectness: {
+          ...gates.taskCorrectness,
+          suites: gates.taskCorrectness.suites.map((suite, index) =>
+            index === 0
+              ? { ...suite, labelSource: "dataset" }
+              : {
+                  ...suite,
+                  labelSource: "confirmed",
+                  labelsSha256: "7".repeat(64),
+                  originalBalancedAccuracy: 0.79,
+                },
+          ),
+        },
+      },
+    },
+  };
+}
+
+function firstPartyDocument(value) {
+  const { bytes, document } = qualificationDocument(value);
+  document.entries[0].specialistKind = "first-party-rag-specialist";
+  return { bytes, document };
+}
+
+async function validateFirstParty(value, loader = firstPartyEvidenceLoader()) {
+  const { bytes, document } = firstPartyDocument(value);
+  return validate(document, bytes, { loadEvidenceFile: loader });
+}
+
+test("accepts a first-party RAG specialist bound to its pinned training commit", async () => {
+  assert.deepEqual(await validateFirstParty(firstPartyReport()), ["adapter"]);
+});
+
+test("rejects a first-party specialist whose report claims another kind", async () => {
+  await assert.rejects(
+    validateFirstParty({ ...firstPartyReport(), specialistKind: "upstream-rag-specialist" }),
+    /must declare first-party-rag-specialist/,
+  );
+  const upstreamClaim = qualificationDocument(firstPartyReport());
+  upstreamClaim.document.entries[0].specialistKind = "upstream-rag-specialist";
+  await assert.rejects(
+    validate(upstreamClaim.document, upstreamClaim.bytes, {
+      loadEvidenceFile: firstPartyEvidenceLoader(),
+    }),
+    /must declare upstream-rag-specialist/,
+  );
+});
+
+test("rejects first-party provenance that claims to be upstream or omits training identity", async () => {
+  const mutations = [
+    (provenance) => {
+      provenance.upstream = true;
+    },
+    (provenance) => {
+      delete provenance.upstream;
+    },
+    (provenance) => {
+      provenance.upstreamRepository = "ibm-granite/granitelib-rag-r1.0";
+    },
+    (provenance) => {
+      provenance.publisher = "  ";
+    },
+    (provenance) => {
+      provenance.trainingRevision = "4".repeat(39);
+    },
+    (provenance) => {
+      provenance.trainingRepository = "integrallis";
+    },
+    (provenance) => {
+      delete provenance.trainingManifest;
+    },
+    (provenance) => {
+      delete provenance.preparedDataManifest;
+    },
+    (provenance) => {
+      provenance.trainingManifest.sizeBytes = 0;
+    },
+    (provenance) => {
+      provenance.modelCardSha256 = "6".repeat(63);
+    },
+    (provenance) => {
+      provenance.license = "";
+    },
+    (provenance) => {
+      provenance.trainingDataLicenses = [];
+    },
+    (provenance) => {
+      provenance.trainingDataLicenses = [{ dataset: "QuAC" }];
+    },
+    (provenance) => {
+      provenance.tokenizerFiles = [];
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const value = firstPartyReport();
+    mutate(value.evaluation.gates.provenance);
+    await assert.rejects(
+      validateFirstParty(value),
+      /provenance must pin the first-party training commit/,
+      `mutation ${index}`,
+    );
+  }
+});
+
+test("rejects a training manifest not pinned to the declared training commit", async () => {
+  const otherRevision = firstPartyReport();
+  otherRevision.evaluation.gates.provenance.trainingManifest = pinnedTrainingFile(
+    trainingManifestPath,
+    trainingManifestBytes,
+    "5".repeat(40),
+  );
+  await assert.rejects(
+    validateFirstParty(otherRevision),
+    /provenance must pin the first-party training commit/,
+  );
+
+  const otherRepository = firstPartyReport();
+  otherRepository.evaluation.gates.provenance.preparedDataManifest.uri =
+    `https://raw.githubusercontent.com/someone/else/${trainingRevision}/${preparedDataManifestPath}`;
+  await assert.rejects(
+    validateFirstParty(otherRepository),
+    /provenance must pin the first-party training commit/,
+  );
+});
+
+test("rejects training or prepared-data manifests whose bytes do not match", async () => {
+  const trainingUri = pinnedTrainingFile(trainingManifestPath, trainingManifestBytes).uri;
+  await assert.rejects(
+    validateFirstParty(
+      firstPartyReport(),
+      firstPartyEvidenceLoader({ [trainingUri]: Buffer.from("{}") }),
+    ),
+    /training manifest bytes do not match/,
+  );
+  const preparedUri = pinnedTrainingFile(preparedDataManifestPath, preparedDataManifestBytes).uri;
+  await assert.rejects(
+    validateFirstParty(
+      firstPartyReport(),
+      firstPartyEvidenceLoader({ [preparedUri]: Buffer.from("tampered") }),
+    ),
+    /prepared-data manifest bytes do not match/,
+  );
+  await assert.rejects(
+    validateFirstParty(firstPartyReport(), async ({ evidence, kind }) =>
+      kind === "clean-host-output" ? evidenceFileLoader({ evidence }) : "not bytes",
+    ),
+    /training manifest loader did not return bytes/,
+  );
+});
+
+test("rejects a first-party adapter that is not the one the training manifest recorded", async () => {
+  const mismatched = firstPartyReport();
+  mismatched.evaluation.gates.provenance.adapterSha256 = "d".repeat(64);
+  await assert.rejects(
+    validateFirstParty(mismatched),
+    /adapter weights do not match the training manifest/,
+  );
+
+  const configMismatch = firstPartyReport();
+  configMismatch.evaluation.gates.provenance.adapterConfigSha256 = "9".repeat(64);
+  await assert.rejects(
+    validateFirstParty(configMismatch),
+    /adapter configuration does not match the training manifest/,
+  );
+
+  const unrecorded = Buffer.from(JSON.stringify({ adapterFiles: {} }));
+  const value = firstPartyReport();
+  value.evaluation.gates.provenance.trainingManifest = pinnedTrainingFile(
+    trainingManifestPath,
+    unrecorded,
+  );
+  await assert.rejects(
+    validateFirstParty(
+      value,
+      firstPartyEvidenceLoader({
+        [pinnedTrainingFile(trainingManifestPath, unrecorded).uri]: unrecorded,
+      }),
+    ),
+    /adapter weights do not match the training manifest/,
+  );
+
+  const notJson = Buffer.from("not json");
+  const garbage = firstPartyReport();
+  garbage.evaluation.gates.provenance.trainingManifest = pinnedTrainingFile(
+    trainingManifestPath,
+    notJson,
+  );
+  await assert.rejects(
+    validateFirstParty(
+      garbage,
+      firstPartyEvidenceLoader({
+        [pinnedTrainingFile(trainingManifestPath, notJson).uri]: notJson,
+      }),
+    ),
+    /training manifest is not JSON/,
+  );
+});
+
+test("rejects a first-party adapter whose trained weights differ from the catalog bundle", async () => {
+  // The training manifest and the report agree with each other, but not with the weights file
+  // the catalog publishes: the training commit describes some other adapter.
+  const trainedOn = Buffer.from(
+    JSON.stringify({
+      adapterFiles: {
+        "adapter_config.json": { sha256: "5".repeat(64) },
+        "adapter_model.safetensors": { sha256: "d".repeat(64) },
+      },
+    }),
+  );
+  const value = firstPartyReport();
+  value.evaluation.gates.provenance.adapterSha256 = "d".repeat(64);
+  value.evaluation.gates.provenance.trainingManifest = pinnedTrainingFile(
+    trainingManifestPath,
+    trainedOn,
+  );
+  await assert.rejects(
+    validateFirstParty(
+      value,
+      firstPartyEvidenceLoader({
+        [pinnedTrainingFile(trainingManifestPath, trainedOn).uri]: trainedOn,
+      }),
+    ),
+    /adapter weights do not match the catalog bundle/,
+  );
+});
+
+test("rejects a first-party specialist that does not strictly beat its base", async () => {
+  const tie = firstPartyReport();
+  const suite = tie.evaluation.gates.taskCorrectness.suites[0];
+  suite.baseBalancedAccuracy = suite.balancedAccuracy;
+  await assert.rejects(validateFirstParty(tie), /strictly beat its base/);
+
+  // The same tie is admissible for an upstream specialist, whose rule is "no worse than base".
+  const upstreamTie = upstreamReport();
+  const upstreamSuite = upstreamTie.evaluation.gates.taskCorrectness.suites[0];
+  upstreamSuite.baseBalancedAccuracy = upstreamSuite.balancedAccuracy;
+  const { bytes, document } = upstreamDocument(upstreamTie);
+  await validate(document, bytes);
+
+  const missingBase = firstPartyReport();
+  delete missingBase.evaluation.gates.taskCorrectness.suites[1].baseBalancedAccuracy;
+  await assert.rejects(validateFirstParty(missingBase), /answerability window/);
+});
+
+test("rejects confirmed labels without their identity and unknown label sources", async () => {
+  const withoutHash = firstPartyReport();
+  delete withoutHash.evaluation.gates.taskCorrectness.suites[1].labelsSha256;
+  await assert.rejects(validateFirstParty(withoutHash), /confirmed labels/);
+
+  const withoutOriginal = firstPartyReport();
+  delete withoutOriginal.evaluation.gates.taskCorrectness.suites[1].originalBalancedAccuracy;
+  await assert.rejects(validateFirstParty(withoutOriginal), /confirmed labels/);
+
+  const unknownSource = firstPartyReport();
+  unknownSource.evaluation.gates.taskCorrectness.suites[0].labelSource = "judge";
+  await assert.rejects(validateFirstParty(unknownSource), /labelSource/);
+
+  const absentSource = firstPartyReport();
+  delete absentSource.evaluation.gates.taskCorrectness.suites[0].labelSource;
+  await validateFirstParty(absentSource);
+});
+
+test("a first-party specialist still requires every upstream runtime gate", async () => {
+  const cases = [
+    [(gates) => delete gates.kernelIdentity, /without proven identity/],
+    [(gates) => (gates.plainJava.markerRoundTrip = false), /plain Java conformance/],
+    [(gates) => (gates.jvmMechanics.batchedPrefillIdentity = false), /JVM mechanics/],
+    [(gates) => (gates.longContext.specialistCorrectCases = 5), /long-context gate/],
+    [(gates) => (gates.performanceAndMemory.fourKImprovement = 0.19), /performance and memory/],
+    [(gates) => (gates.taskCorrectness.suites[0].balancedAccuracy = 0.79), /answerability window/],
+    [(gates) => delete gates.modelsArtifact, /Maven Central Models artifacts/],
+    [(gates) => delete gates.cleanHostRun, /clean-host Java 25 run/],
+  ];
+  for (const [mutate, expected] of cases) {
+    const value = firstPartyReport();
+    mutate(value.evaluation.gates);
+    await assert.rejects(validateFirstParty(value), expected);
+  }
+});

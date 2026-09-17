@@ -127,6 +127,13 @@ public record ModelDimensions(
    *
    * <p>The estimate is unavailable for architectures that do not advertise enough dimensions.
    *
+   * <p>This descriptor-only estimate charges every attention block the full context, assumes one KV
+   * head per attention head when no scalar KV-head count is recorded, and excludes runtime
+   * overhead. It overstates sliding-window and per-layer grouped-query models (Gemma 4 26B A4B:
+   * 19.4 GiB here against 16.9 GiB computed from its GGUF layout, overhead included). Prefer the
+   * catalog {@link ModelMemoryFit} from {@link ModelProfileRegistry}, which the CLI and website
+   * display.
+   *
    * @param contextTokens context-window size to estimate
    * @param precision precision of each KV-cache element
    * @param weightBytes model-weight storage in bytes

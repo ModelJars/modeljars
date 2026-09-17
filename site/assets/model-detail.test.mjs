@@ -6,11 +6,13 @@ import {
   artifactDownloadBytes,
   artifactManifest,
   compositionJavaSnippet,
+  descriptorRows,
   embeddingJavaSnippet,
   gradleSnippet,
   javaSnippet,
   mavenSnippet,
   modelIdFromPath,
+  planningMemory,
   qualificationSummary,
   renderGenerationProfile,
   renderMemoryFit,
@@ -370,4 +372,46 @@ test("marks models that do not fit and upper-bound estimates", () => {
   const gemma3 = renderMemoryFit(profileFor("bartowski_google_gemma_3_1b_it_gguf_q4_k_m").memoryFit);
   assert.match(gemma3, /upper bound/);
   assert.equal(renderMemoryFit(undefined), "");
+});
+
+const catalogModels = JSON.parse(
+  readFileSync(new URL("../../catalog/models.json", import.meta.url), "utf8"),
+).models;
+const siteModel = (id) => ({
+  ...catalogModels.find((model) => model.id === id),
+  modelProfile: profileFor(id),
+});
+
+test("the descriptor memory row reads the computed memory fit, not the legacy floor", () => {
+  // Hand-computed totals at 4,096 tokens, f16 KV cache, 1 GiB stated overhead (see
+  // tools/model-profiles.mjs). Gemma 4 26B: 25 sliding layers * 1,024 * 8 * 512 * 2 + 5 full layers
+  // * 4,096 * 2 * 1,024 * 2 = 293,601,280 KV bytes. The legacy floor charged 30 layers * 16 heads
+  // and no overhead, 20,822,546,976 bytes (19.39 GiB).
+  const cases = [
+    ["ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m", 18_163_358_240, "16.92 GiB", "19.39 GiB", false],
+    ["qwen3_8b_q4_k_m", 6_705_505_088, "6.24 GiB", "5.24 GiB", false],
+    ["bartowski_google_gemma_3_1b_it_gguf_q4_k_m", 1_988_852_224, "1.85 GiB", "872.72 MiB", true],
+  ];
+  for (const [id, totalBytes, shown, legacy, upperBound] of cases) {
+    const model = siteModel(id);
+    assert.deepEqual(planningMemory(model), {
+      contextTokens: 4_096,
+      totalBytes,
+      kvCacheType: "f16",
+      fixedOverheadBytes: 1_073_741_824,
+      upperBound,
+    });
+    const html = descriptorRows(model);
+    assert.match(html, new RegExp(`Computed memory</dt><dd>${shown.replace(".", "\\.")} at 4,096 tokens`), id);
+    assert.doesNotMatch(html, new RegExp(legacy.replace(".", "\\.")), id);
+    assert.doesNotMatch(html, /Memory baseline/, id);
+    assert.equal(/upper bound/.test(html), upperBound, id);
+  }
+  assert.match(resourceMemoryNote({ capabilities: ["text-generation"] }), /computed, not measured/);
+});
+
+test("a generation model without a computed memory fit shows no memory figure", () => {
+  const model = { ...siteModel("qwen3_8b_q4_k_m"), modelProfile: undefined };
+  assert.equal(planningMemory(model), null);
+  assert.doesNotMatch(descriptorRows(model), /memory/i);
 });

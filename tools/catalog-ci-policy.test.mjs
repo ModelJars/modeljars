@@ -117,3 +117,43 @@ test("gates the Granite answerability composite module on its catalog compositio
   assert.match(validateWorkflow, /verifyGraniteAnswerabilityPublication/);
   assert.match(publishWorkflow, /verifyGraniteAnswerabilityPublication/);
 });
+
+test("binds the Granite answerability composition to the roles its report assembler writes", async () => {
+  const [compositions, models] = await Promise.all([
+    read("catalog/compositions.json").then(JSON.parse),
+    read("catalog/models.json").then(JSON.parse),
+  ]);
+
+  const composition = compositions.compositions.find(
+    (entry) => entry.id === "granite_4_1_3b_answerability_hybrid",
+  );
+  if (composition === undefined) {
+    return;
+  }
+
+  assert.equal(composition.kind, "hybrid");
+  assert.equal(composition.specialistKind, "first-party-rag-specialist");
+  // assemble_composition_report.py writes exactly these two roles, in this order.
+  assert.deepEqual(
+    composition.members.map((member) => member.role),
+    ["base", "answerability"],
+  );
+
+  const byId = new Map(models.models.map((model) => [model.id, model]));
+  const weightBytes = composition.members.reduce((total, member) => {
+    const model = byId.get(member.modelId);
+    assert.ok(model !== undefined, `${member.modelId} is not in catalog/models.json`);
+    const files = model.files ?? [];
+    return total + (files.length === 0
+      ? model.sizeBytes
+      : files.reduce((sum, file) => sum + file.sizeBytes, 0));
+  }, 0);
+  assert.equal(composition.requiredWeightBytes, weightBytes);
+
+  const specialist = byId.get(
+    composition.members.find((member) => member.role === "answerability").modelId,
+  );
+  assert.ok(specialist.capabilities.includes("composition-component"));
+  assert.ok(specialist.features.includes("activated-lora-adapter"));
+  assert.equal(specialist.backends["rust-ffm"], true);
+});

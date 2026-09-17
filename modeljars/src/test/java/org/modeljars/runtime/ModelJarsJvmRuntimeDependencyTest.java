@@ -24,6 +24,7 @@ import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.modeljars.ModelComponentQualificationRegistry;
 import org.modeljars.ModelEmbeddingQualificationRegistry;
 import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
@@ -49,9 +50,13 @@ class ModelJarsJvmRuntimeDependencyTest {
     var toolQualifications = ModelToolQualificationRegistry.fromClasspath();
     var rerankingQualifications = ModelRerankingQualificationRegistry.fromClasspath();
     var speechQualifications = ModelSpeechQualificationRegistry.fromClasspath();
+    var componentQualifications = ModelComponentQualificationRegistry.fromClasspath();
 
     // Every public capability has its own evidence gate. Passing any gate is sufficient to publish,
-    // so the aggregate catalog is the union of all qualification registries.
+    // so the aggregate catalog is the union of all qualification registries. A composition
+    // component is qualified by the component registry rather than by a capability gate: it is not
+    // a standalone model, and it reaches the runtime catalog because a qualified composition
+    // references it, so that registry belongs in the union too.
     var ragQualified =
         qualifications.qualified().stream()
             .map(ModelRagQualification::modelId)
@@ -72,11 +77,17 @@ class ModelJarsJvmRuntimeDependencyTest {
         speechQualifications.qualified().stream()
             .map(ModelSpeechQualificationRegistry.Entry::modelId)
             .collect(Collectors.toSet());
+    var componentQualified =
+        componentQualifications.entries().stream()
+            .filter(ModelComponentQualificationRegistry.Entry::qualified)
+            .map(ModelComponentQualificationRegistry.Entry::modelId)
+            .collect(Collectors.toSet());
     var allQualified = new java.util.HashSet<>(ragQualified);
     allQualified.addAll(embeddingQualified);
     allQualified.addAll(toolQualified);
     allQualified.addAll(rerankingQualified);
     allQualified.addAll(speechQualified);
+    allQualified.addAll(componentQualified);
 
     var physicalDescriptors =
         descriptors.stream()
@@ -91,7 +102,13 @@ class ModelJarsJvmRuntimeDependencyTest {
         physicalDescriptors.stream()
             .map(descriptor -> descriptor.alias())
             .collect(Collectors.toSet()));
-    assertTrue(compositeDescriptors.isEmpty());
+    // A composite descriptor reaches the runtime catalog only through a qualified composition, so
+    // the invariant is that each one names a qualified composition, not that none exist.
+    assertEquals(
+        catalogQualifiedCompositionIds(),
+        compositeDescriptors.stream()
+            .map(descriptor -> descriptor.alias())
+            .collect(Collectors.toSet()));
     assertTrue(
         physicalDescriptors.stream()
             .allMatch(
@@ -109,7 +126,8 @@ class ModelJarsJvmRuntimeDependencyTest {
                         || descriptor
                             .sha256()
                             .flatMap(speechQualifications::qualificationFor)
-                            .isPresent()));
+                            .isPresent()
+                        || componentQualified.contains(descriptor.alias())));
     assertNull(
         getClass()
             .getClassLoader()
@@ -142,5 +160,37 @@ class ModelJarsJvmRuntimeDependencyTest {
     var descriptor = ModelJarRegistry.fromClasspath().resolve(Qwen3_0_6b_Q4_0.MODEL).orElseThrow();
 
     assertEquals("qwen3_0_6b_q4_0", descriptor.alias());
+  }
+
+  /**
+   * The composition ids the catalog declares. A composite descriptor reaches the runtime catalog
+   * only because a qualified composition references it, so this is the set a composite descriptor
+   * may name.
+   */
+  private static java.util.Set<String> catalogQualifiedCompositionIds() {
+    var path = java.nio.file.Path.of("..", "catalog", "compositions.json");
+    if (!java.nio.file.Files.exists(path)) {
+      return java.util.Set.of();
+    }
+    String json;
+    try {
+      json = java.nio.file.Files.readString(path);
+    } catch (java.io.IOException failure) {
+      throw new java.io.UncheckedIOException(failure);
+    }
+    var ids = new java.util.HashSet<String>();
+    var marker = "\"id\"";
+    var index = json.indexOf(marker);
+    while (index >= 0) {
+      var colon = json.indexOf(':', index + marker.length());
+      var open = colon < 0 ? -1 : json.indexOf('"', colon + 1);
+      var close = open < 0 ? -1 : json.indexOf('"', open + 1);
+      if (close < 0) {
+        break;
+      }
+      ids.add(json.substring(open + 1, close));
+      index = json.indexOf(marker, close + 1);
+    }
+    return ids;
   }
 }

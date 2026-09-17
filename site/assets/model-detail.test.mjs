@@ -341,6 +341,13 @@ test("renders a generation profile with per-value provenance and pinned sources"
   assert.match(html, /not published in the pinned files/);
 });
 
+test("names the template token behind an end-of-generation id read from the chat template", () => {
+  const html = renderGenerationProfile(profileFor("bartowski_google_gemma_3_1b_it_gguf_q4_k_m").generation);
+
+  assert.match(html, /EOS token IDs<\/dt><dd>1, 106 /);
+  assert.match(html, /gguf: tokenizer\.chat_template &lt;end_of_turn&gt;/);
+});
+
 test("renders reasoning markers and the template-derived thinking default", () => {
   const html = renderGenerationProfile(profileFor("qwen3_8b_q4_k_m").generation);
 

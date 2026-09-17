@@ -11,12 +11,14 @@ import {
   computeMemoryFit,
   detectReasoningMarkers,
   detectThinkingDefault,
+  detectTurnTerminator,
   float32Decimal,
   generationProfile,
   kvCacheBytes,
   kvLayoutFromGguf,
   validateModelProfiles,
 } from "./model-profiles.mjs";
+import { renderChatTemplate } from "./chat-template-render.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GIB = 1024 ** 3;
@@ -424,6 +426,112 @@ test("validation rejects stale artifact bindings and hand-edited memory tables",
   edited.profiles.find((profile) => profile.modelId === withFit.modelId).memoryFit.kvCache[0]
     .contexts[0].totalBytes += 1;
   assert.throws(() => validateModelProfiles(edited, catalog), /memoryFit/);
+});
+
+async function templateFixture(id) {
+  const fixture = JSON.parse(await read("tools/fixtures/chat-templates/gguf-chat-templates.json"))[id];
+  const tokens = [];
+  const tokenTypes = [];
+  for (const [index, text] of Object.entries(fixture.controlTokens)) {
+    tokens[Number(index)] = text;
+    tokenTypes[Number(index)] = 3; // GGUF token_type CONTROL
+  }
+  return {
+    fixture,
+    input: {
+      template: fixture.chatTemplate,
+      tokens,
+      tokenTypes,
+      bosToken: tokens[fixture.bosTokenId],
+      eosToken: tokens[fixture.eosTokenId],
+    },
+  };
+}
+
+function ggufWithTemplate(fixture, input) {
+  return {
+    source: { kind: "gguf-metadata", file: "model.gguf", uri: "https://example", revision: fixture.revision, sha256: fixture.artifactSha256 },
+    metadata: {
+      "tokenizer.ggml.eos_token_id": fixture.eosTokenId,
+      "tokenizer.chat_template": fixture.chatTemplate,
+    },
+    tokens: input.tokens,
+  };
+}
+
+test("reads the assistant-turn terminator by rendering the pinned chat template (Gemma 3 1B, MiniCPM5)", async () => {
+  for (const [id, text, tokenId] of [
+    ["bartowski_google_gemma_3_1b_it_gguf_q4_k_m", "<end_of_turn>", 106],
+    ["minicpm5_1b_q4_k_m", "<|im_end|>", 130073],
+  ]) {
+    const { fixture, input } = await templateFixture(id);
+    const terminator = detectTurnTerminator(input, renderChatTemplate);
+    assert.deepEqual(terminator, { status: "detected", text, id: tokenId }, id);
+
+    const profile = generationProfile({ gguf: ggufWithTemplate(fixture, input), turnTerminator: terminator });
+    assert.deepEqual(
+      profile.eosTokenIds,
+      [
+        { id: fixture.eosTokenId, provenance: [{ source: "gguf", key: "tokenizer.ggml.eos_token_id" }] },
+        { id: tokenId, provenance: [{ source: "gguf", key: "tokenizer.chat_template", token: text }] },
+      ],
+      id,
+    );
+  }
+});
+
+test("adds no end-of-generation token the header already declares (Qwen3 8B)", async () => {
+  const { fixture, input } = await templateFixture("qwen3_8b_q4_k_m");
+  const terminator = detectTurnTerminator(input, renderChatTemplate);
+  assert.deepEqual(terminator, { status: "detected", text: "<|im_end|>", id: 151645 });
+  const profile = generationProfile({ gguf: ggufWithTemplate(fixture, input), turnTerminator: terminator });
+  assert.deepEqual(profile.eosTokenIds, [
+    { id: 151645, provenance: [{ source: "gguf", key: "tokenizer.ggml.eos_token_id" }] },
+  ]);
+});
+
+test("never guesses a terminator the template does not render", async () => {
+  // Nexus Medical ships a placeholder string, not a Jinja template: the assistant content never
+  // appears in the rendering, so nothing can be read from it.
+  const { input } = await templateFixture("king3djbl_nexus_medical_gguf_q4_k_m");
+  const terminator = detectTurnTerminator(input, renderChatTemplate);
+  assert.equal(terminator.status, "not determined");
+  assert.match(terminator.reason, /assistant content/);
+
+  assert.equal(detectTurnTerminator({ ...input, template: undefined }, renderChatTemplate).status, "not determined");
+  // Plain text after the content is not a token, so it is not a terminator.
+  assert.equal(
+    detectTurnTerminator(
+      { ...input, template: "{% for m in messages %}{{ m.content }} END{% endfor %}" },
+      renderChatTemplate,
+    ).status,
+    "not determined",
+  );
+  // A renderer failure is reported, not swallowed into a value.
+  const failing = detectTurnTerminator(input, () => {
+    throw new Error("unsupported filter");
+  });
+  assert.deepEqual(failing, { status: "not determined", reason: "chat template did not render: unsupported filter" });
+});
+
+test("the committed profiles carry every rendered terminator the declared EOS missed", async () => {
+  const profiles = JSON.parse(await read("catalog/model-profiles.json"));
+  const eos = (id) => profiles.profiles.find((profile) => profile.modelId === id).generation.eosTokenIds;
+  for (const [id, text, tokenId] of [
+    ["bartowski_google_gemma_3_1b_it_gguf_q4_k_m", "<end_of_turn>", 106],
+    ["minicpm5_1b_q4_k_m", "<|im_end|>", 130073],
+    ["ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m", "<turn|>", 106],
+    ["bartowski_yi_coder_1_5b_chat_gguf_q4_k_m", "<|im_end|>", 7],
+  ]) {
+    assert.deepEqual(
+      eos(id).find((entry) => entry.id === tokenId),
+      { id: tokenId, provenance: [{ source: "gguf", key: "tokenizer.chat_template", token: text }] },
+      id,
+    );
+  }
+  assert.deepEqual(eos("qwen3_8b_q4_k_m").map((entry) => entry.id), [151645]);
+  const coverage = profiles.coverage.find((entry) => entry.modelId === "king3djbl_nexus_medical_gguf_q4_k_m");
+  assert.match(coverage.turnTerminator, /^not determined/);
 });
 
 test("model profiles stay outside every marker identity input", async () => {

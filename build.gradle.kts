@@ -1458,7 +1458,8 @@ fun catalogModelProfileValue(value: Any?): String =
 fun catalogModelProfileProvenance(value: Any?, context: String): String =
     (value as? List<*> ?: error("$context provenance must be an array")).joinToString(",") {
         val reference = it.stringKeyMap("$context provenance")
-        "${reference.requiredString("source")}:${reference.requiredString("key")}"
+        "${reference.requiredString("source")}:${reference.requiredString("key")}" +
+            ((reference["token"] as? String)?.let { "($it)" } ?: "")
     }
 
 fun catalogModelProfileProperties(modelId: String, raw: Map<String, Any?>): String =

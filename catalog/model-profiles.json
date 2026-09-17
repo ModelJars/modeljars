@@ -1446,6 +1446,16 @@
                 "key": "tokenizer.ggml.eos_token_id"
               }
             ]
+          },
+          {
+            "id": 130073,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<|im_end|>"
+              }
+            ]
           }
         ],
         "reasoning": {
@@ -2578,6 +2588,16 @@
                 "key": "tokenizer.ggml.eos_token_id"
               }
             ]
+          },
+          {
+            "id": 106,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<turn|>"
+              }
+            ]
           }
         ],
         "reasoning": {
@@ -2736,6 +2756,16 @@
               {
                 "source": "gguf",
                 "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          },
+          {
+            "id": 106,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<end_of_turn>"
               }
             ]
           }
@@ -4364,6 +4394,16 @@
                 "key": "tokenizer.ggml.eos_token_id"
               }
             ]
+          },
+          {
+            "id": 7,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<|im_end|>"
+              }
+            ]
           }
         ]
       },
@@ -4476,6 +4516,7 @@
       "modelId": "qwen3_0_6b_q4_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4489,6 +4530,7 @@
       "modelId": "qwen3_1_7b_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4502,6 +4544,7 @@
       "modelId": "qwen2_5_coder_0_5b_instruct_q4_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4517,6 +4560,7 @@
       "modelId": "qwen2_5_coder_0_5b_instruct_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4532,6 +4576,7 @@
       "modelId": "qwen2_5_coder_1_5b_instruct_q4_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4547,6 +4592,7 @@
       "modelId": "qwen2_5_coder_1_5b_instruct_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4562,6 +4608,7 @@
       "modelId": "smollm2_360m_instruct_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (2) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4577,6 +4624,7 @@
       "modelId": "tinyllama_1_1b_chat_v1_0_q4_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "</s> (2) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4592,6 +4640,7 @@
       "modelId": "deepseek_coder_1_3b_instruct_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
       "unsourced": [
         "temperature",
         "topP",
@@ -4607,6 +4656,7 @@
       "modelId": "qwen2_5_math_1_5b_instruct_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4622,6 +4672,7 @@
       "modelId": "eurollm_1_7b_instruct_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (4) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4637,6 +4688,7 @@
       "modelId": "minicpm5_1b_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (130073) added from tokenizer.chat_template",
       "unsourced": [
         "temperature",
         "topP",
@@ -4651,6 +4703,7 @@
       "modelId": "qwen3_8b_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4664,6 +4717,7 @@
       "modelId": "smollm3_3b_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (128012) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4677,6 +4731,7 @@
       "modelId": "unsloth_qwen3_5_0_8b_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4701,6 +4756,7 @@
       "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4716,6 +4772,7 @@
       "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4731,6 +4788,7 @@
       "modelId": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4746,6 +4804,7 @@
       "modelId": "ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<turn|> (106) added from tokenizer.chat_template",
       "unsourced": [
         "minP",
         "repetitionPenalty",
@@ -4757,6 +4816,7 @@
       "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<end_of_turn> (106) added from tokenizer.chat_template",
       "unsourced": [
         "temperature",
         "topP",
@@ -4772,6 +4832,7 @@
       "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|eot_id|> (128009) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4787,6 +4848,7 @@
       "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|eot_id|> (128009) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4802,6 +4864,7 @@
       "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<｜end▁of▁sentence｜> (151643) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4851,6 +4914,7 @@
       "modelId": "umarfarookm_umartransit_1b_q4_k_m",
       "generationConfig": "recorded",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "minP",
         "reasoningMarkers",
@@ -4862,6 +4926,7 @@
       "modelId": "king3djbl_nexus_medical_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "not determined: rendered template does not contain the assistant content",
       "unsourced": [
         "temperature",
         "topP",
@@ -4877,6 +4942,7 @@
       "modelId": "king3djbl_nexus_finance_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "not determined: rendered template does not contain the assistant content",
       "unsourced": [
         "temperature",
         "topP",
@@ -4892,6 +4958,7 @@
       "modelId": "king3djbl_nexus_legal_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
       "unsourced": [
         "temperature",
         "topP",
@@ -4907,6 +4974,7 @@
       "modelId": "gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
       "unsourced": [
         "minP",
         "repetitionPenalty",
@@ -4919,6 +4987,7 @@
       "modelId": "ibm_granite_granite_4_1_3b_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|end_of_text|> (100257) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4934,6 +5003,7 @@
       "modelId": "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (2) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4949,6 +5019,7 @@
       "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "</s> (2) already declared",
       "unsourced": [
         "temperature",
         "topP",
@@ -4964,6 +5035,7 @@
       "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (7) added from tokenizer.chat_template",
       "unsourced": [
         "temperature",
         "topP",

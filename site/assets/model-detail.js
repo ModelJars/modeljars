@@ -316,7 +316,12 @@ const SAMPLING_LABELS = [
 ];
 
 function provenanceText(provenance = []) {
-  return provenance.map((reference) => `${reference.source}: ${reference.key}`).join(" · ");
+  return provenance
+    .map(
+      (reference) =>
+        `${reference.source}: ${reference.key}${reference.token ? ` ${reference.token}` : ""}`,
+    )
+    .join(" · ");
 }
 
 function profileRow(label, value, provenance, extra = "") {

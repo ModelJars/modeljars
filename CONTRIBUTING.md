@@ -53,7 +53,13 @@ gated repositories) and checked with `npm run catalog:profiles:check`.
   thinking by default are read only from files at the pinned revision: the repository's
   `generation_config.json` and the GGUF header (`general.sampling.*`, `tokenizer.ggml.eos_token_id`
   / `eot_token_id` / `eom_token_id`, the vocabulary, and recognised `tokenizer.chat_template`
-  idioms). Every value names its source file, revision, SHA-256, and key. A value the pinned files
+  idioms). When the GGUF chat template ends an assistant turn with a special token the header does
+  not declare as end-of-sequence (Gemma 3 `<end_of_turn>`, MiniCPM5 `<|im_end|>`), that token is
+  added to the end-of-sequence IDs with `tokenizer.chat_template` provenance and the token text. It
+  is read by rendering the template itself (pinned `@huggingface/jinja`) on a user and assistant
+  turn and taking the special token that immediately follows the assistant content; a template that
+  does not render, or does not place a special token there, records "not determined" in the
+  coverage and adds nothing. Every value names its source file, revision, SHA-256, and key. A value the pinned files
   do not publish is left absent; it is never guessed or copied from a different repository. When
   sources disagree, the `generation_config.json` value is recorded and the disagreement is kept.
 - **Memory fit.** For GGUF generators the file records KV bytes per token at f16 and q8_0, the total

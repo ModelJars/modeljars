@@ -397,6 +397,24 @@ class ModelJarsCliTest {
     assertTrue(gemma3.output().contains("upper bound"), gemma3.output());
   }
 
+  @Test
+  void bundledProfilesCarryTheTurnTerminatorReadFromTheChatTemplate() {
+    ModelProfileRegistry profiles = ModelProfileRegistry.fromClasspath();
+    ModelJarDescriptor gemma3 =
+        ClasspathModelJarRegistry.load().descriptors().stream()
+            .filter(
+                descriptor ->
+                    descriptor.alias().equals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    var generation = profiles.profileFor(gemma3).orElseThrow().generation().orElseThrow();
+
+    assertEquals(List.of(1, 106), generation.eosTokenIds());
+    assertEquals(
+        List.of("gguf:tokenizer.chat_template(<end_of_turn>)"),
+        generation.provenance().get("eosTokenId.106"));
+  }
+
   private static Result assertComputedMemory(
       ModelJarsCli cli,
       ModelJarRegistry registry,

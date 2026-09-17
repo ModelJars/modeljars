@@ -6400,6 +6400,68 @@
         "rag",
         "retrieval"
       ]
+    },
+    {
+      "id": "modeljars_granite_4_1_3b_answerability_alora_integrallis_f32",
+      "name": "Granite 4.1 3B answerability aLoRA (Integrallis) F32",
+      "description": "Integrallis-trained activated-LoRA answerability specialist for granite-4.1-3b: classifies whether the last single-turn question is answerable from the supplied documents. Packaged with fail-closed runtime metadata as a hybrid composition component. Not a standalone model.",
+      "sourceId": "gh://ModelJars/activated-adapters",
+      "sourceUri": "https://github.com/ModelJars/activated-adapters",
+      "downloadUri": "https://github.com/ModelJars/activated-adapters/releases/download/granite-4.1-3b-answerability-alora-integrallis-v1/adapter_model.safetensors",
+      "revision": "1614e0d667d9a29d6aa8b56c49966b87351ef2ef",
+      "markerCoordinate": "org.modeljars.github:modeljars.activated-adapters.granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.1",
+      "modelVersion": "1.0.0",
+      "variant": "f32",
+      "format": "safetensors",
+      "architecture": "granite-alora",
+      "quantization": "F32",
+      "localPath": "${user.home}/.modeljars/models/granite-4.1-3b-answerability-alora-integrallis/adapter_model.safetensors",
+      "sha256": "67533dff14cd0cfa9ae0d00e83a9955226426ff1f98f1fd28790b2fd8757eea6",
+      "sizeBytes": 124593064,
+      "license": "Apache-2.0",
+      "licenseUri": "https://raw.githubusercontent.com/integrallis/models/ec56bc99a04457df8274c84c1f4ff72dc4167d9d/benchmark-results/2026-09-16-granite-answerability-alora/release-pilot2/MODEL_CARD.md",
+      "capabilities": [
+        "composition-component"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "activated-lora-adapter"
+      ],
+      "files": [
+        {
+          "path": "adapter_model.safetensors",
+          "role": "adapter-weights",
+          "sha256": "67533dff14cd0cfa9ae0d00e83a9955226426ff1f98f1fd28790b2fd8757eea6",
+          "sizeBytes": 124593064
+        },
+        {
+          "path": "models-activated-lora.json",
+          "role": "adapter-configuration",
+          "sha256": "27de22cf55ca941832bb3d5d6e0ce46de570edfc85f00ea33a11c30b2d33ccd3",
+          "sizeBytes": 1976
+        },
+        {
+          "path": "NOTICE",
+          "role": "attribution-notice",
+          "sha256": "4d3b1f70e77411b1d51ba33215dfe2bd7d1f4090d384725b7f1820df7a8937b1",
+          "sizeBytes": 1095
+        },
+        {
+          "path": "LICENSE",
+          "role": "license",
+          "sha256": "f3b8149a65f7ae0e2fe55de40d52b98dd8965e6b213b7c441a9596ba670c2e64",
+          "sizeBytes": 10784
+        }
+      ],
+      "backends": {
+        "pure-java": true
+      },
+      "domains": [
+        "rag",
+        "retrieval"
+      ]
     }
   ]
 }

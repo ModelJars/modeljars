@@ -3328,6 +3328,8 @@ allprojects {
 }
 
 val modelsVersion = providers.gradleProperty("modelsVersion").get()
+val springAiVersion = providers.gradleProperty("springAiVersion").get()
+val springBootVersion = providers.gradleProperty("springBootVersion").get()
 
 val apacheLicenseHeader =
     """
@@ -3735,6 +3737,53 @@ project(":modeljars-cli") {
         implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
         annotationProcessor("info.picocli:picocli-codegen:4.7.7")
         runtimeOnly(project(":modeljars-catalog"))
+        // Generated Spring AI and Spring Boot programs are compiled in-test against the real
+        // adapters, so a renamed class or constructor fails the build instead of a user's demo.
+        testImplementation(project(":modeljars"))
+        testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
+        testImplementation("com.integrallis:models-spring-boot-starter:$modelsVersion")
+        testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")
+        testImplementation("org.springframework.ai:spring-ai-rag:$springAiVersion")
+        testImplementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+    }
+
+    val springIntegrationResources = layout.buildDirectory.dir("generated/resources/spring-integration")
+    val generateSpringIntegrationVersions =
+        tasks.register("generateSpringIntegrationVersions") {
+            description = "Records the Models and Spring versions used by generated Spring snippets."
+            val output = springIntegrationResources.map {
+                it.file("org/modeljars/cli/spring-integration.properties")
+            }
+            inputs.property("modelsVersion", modelsVersion)
+            inputs.property("springAiVersion", springAiVersion)
+            inputs.property("springBootVersion", springBootVersion)
+            outputs.file(output)
+            doLast {
+                val file = output.get().asFile
+                file.parentFile.mkdirs()
+                file.writeText(
+                    "modelsVersion=$modelsVersion\n" +
+                        "springAiVersion=$springAiVersion\n" +
+                        "springBootVersion=$springBootVersion\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+            }
+        }
+    extensions.configure<SourceSetContainer> {
+        named("main") {
+            resources.srcDir(springIntegrationResources)
+        }
+    }
+    tasks.named("processResources") {
+        dependsOn(generateSpringIntegrationVersions)
+    }
+    tasks.named<Jar>("sourcesJar") {
+        dependsOn(generateSpringIntegrationVersions)
+    }
+    tasks.withType<Test>().configureEach {
+        systemProperty("modeljars.test.modelsVersion", modelsVersion)
+        systemProperty("modeljars.test.springAiVersion", springAiVersion)
+        systemProperty("modeljars.test.springBootVersion", springBootVersion)
     }
 
     java {
@@ -3913,7 +3962,7 @@ project(":modeljars") {
         testImplementation(project(":modeljars-catalog"))
         testImplementation("com.integrallis:backend-tornado:$modelsVersion")
         testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
-        testImplementation("org.springframework.ai:spring-ai-client-chat:2.0.0")
+        testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")
     }
 
     extensions.configure<SourceSetContainer> {

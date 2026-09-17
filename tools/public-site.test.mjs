@@ -409,6 +409,21 @@ test("renders the Java guide as readable, highlighted vertical steps", async () 
   assert.match(highlighter, /registerLanguage\("kotlin"/);
 });
 
+test("points Java guide readers at the CLI's Spring AI and Spring Boot paths", async () => {
+  const index = await read("site/index.html");
+  const guide =
+    index.match(/<section class="guide-band" id="using-modeljars"[\s\S]*?<\/section>/)?.[0];
+
+  assert.ok(guide, "landing page must contain the Java guide");
+  const note = guide.match(/<p class="guide-runtime-note guide-spring-note">[\s\S]*?<\/p>/)?.[0];
+  assert.ok(note, "Java guide must describe the Spring AI and Spring Boot paths");
+  assert.match(note, /Spring AI/);
+  assert.match(note, /Spring Boot/);
+  assert.match(note, /<code>modeljars coordinates &lt;model&gt; --spring-boot<\/code>/);
+  assert.match(note, /<code>modeljars demo &lt;model&gt; --spring-ai<\/code>/);
+  assert.match(note, /<code>--spring-boot<\/code>/);
+});
+
 test("highlights every code block on the Apple guide", async () => {
   const apple = await read("site/apple/index.html");
 

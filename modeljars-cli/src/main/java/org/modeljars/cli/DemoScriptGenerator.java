@@ -132,7 +132,7 @@ final class DemoScriptGenerator {
     };
   }
 
-  private static String baseName(ModelJarDescriptor descriptor) {
+  static String baseName(ModelJarDescriptor descriptor) {
     String name = descriptor.alias().toLowerCase(Locale.ROOT);
     name = name.replaceFirst("_(gguf|cact|safetensors)(_|$).*$", "");
     name = name.replaceFirst("_(q|f|iq|cq)[0-9].*$", "");
@@ -502,7 +502,7 @@ final class DemoScriptGenerator {
             .formatted(descriptor.markerCoordinate(), javaString(defaultInput));
   }
 
-  private static String javaString(String value) {
+  static String javaString(String value) {
     StringBuilder escaped = new StringBuilder(value.length());
     for (int index = 0; index < value.length(); index++) {
       char character = value.charAt(index);

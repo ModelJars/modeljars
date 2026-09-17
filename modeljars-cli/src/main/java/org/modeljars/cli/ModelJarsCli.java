@@ -1986,6 +1986,8 @@ public final class ModelJarsCli implements Callable<Integer> {
         "Examples:",
         "  modeljars demo qwen-0.6b",
         "  modeljars demo embeddinggemma 'Public transit schedule'",
+        "  modeljars demo qwen-0.6b --spring-ai",
+        "  modeljars demo qwen-0.6b --spring-boot",
         "  jbang qwen3-0-6b-chat-demo.java"
       },
       mixinStandardHelpOptions = true)
@@ -2014,32 +2016,55 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Option(names = "--force", description = "Replace an existing regular file.")
     private boolean force;
 
+    @Option(
+        names = "--spring-ai",
+        description = "Generate a Spring AI ChatClient, EmbeddingModel, or reranker demo.")
+    private boolean springAi;
+
+    @Option(
+        names = "--spring-boot",
+        description = "Generate a single-file Spring Boot app using the Models starter.")
+    private boolean springBoot;
+
     @Override
     public Integer call() throws IOException {
+      Optional<SpringIntegration.Flavor> flavor = springFlavor(springAi, springBoot);
       ModelJarDescriptor descriptor = parent.resolve(selector);
       Optional<String> requestedInput =
           input.isEmpty() ? Optional.empty() : Optional.of(String.join(" ", input).strip());
       DemoScriptGenerator.GeneratedDemo demo =
-          new DemoScriptGenerator(version()).generate(descriptor, requestedInput);
+          flavor.isPresent()
+              ? new SpringDemoGenerator(
+                      SpringIntegration.Versions.bundled(version()),
+                      SpringIntegration.ChatTemplates.fromClasspath())
+                  .generate(descriptor, flavor.orElseThrow(), requestedInput)
+              : new DemoScriptGenerator(version()).generate(descriptor, requestedInput);
       Path destination =
           (outputFile == null ? Path.of(demo.fileName()) : outputFile).toAbsolutePath().normalize();
       write(destination, demo.source());
 
       CliOutput out = parent.out();
+      String framework = flavor.map(SpringIntegration.Flavor::id).orElse("java");
       if (out.format() == CliOutput.Format.JSON) {
         out.json(
             Map.of(
                 "model", descriptor.alias(),
                 "type", demo.type().toString().toLowerCase(Locale.ROOT),
+                "framework", framework,
                 "file", destination.toString(),
                 "command", "jbang " + destination));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("model=" + descriptor.alias());
         out.line("type=" + demo.type().toString().toLowerCase(Locale.ROOT));
+        out.line("framework=" + framework);
         out.line("file=" + destination);
         out.line("command=jbang " + destination);
       } else {
-        out.success("Generated " + demo.type().toString().toLowerCase(Locale.ROOT) + " demo");
+        out.success(
+            "Generated "
+                + flavor.map(value -> value.label() + " ").orElse("")
+                + demo.type().toString().toLowerCase(Locale.ROOT)
+                + " demo");
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("Model", parent.shortName(descriptor));
         properties.put("File", destination);
@@ -2094,7 +2119,9 @@ public final class ModelJarsCli implements Callable<Integer> {
       footer = {
         "Examples:",
         "  modeljars snippet qwen3_0_6b_q4_0 --tool maven",
-        "  modeljars snippet qwen3_0_6b_q4_0 --tool gradle-kotlin"
+        "  modeljars snippet qwen3_0_6b_q4_0 --tool gradle-kotlin",
+        "  modeljars coordinates qwen3_0_6b_q4_0 --spring-boot --tool gradle-kotlin",
+        "  modeljars coordinates qwen3_0_6b_q4_0 --spring-ai --tool maven"
       },
       mixinStandardHelpOptions = true)
   static final class CoordinatesCommand implements Callable<Integer> {
@@ -2114,8 +2141,35 @@ public final class ModelJarsCli implements Callable<Integer> {
     @Option(names = "--marker-only", description = "Omit the ModelJars runtime dependency.")
     private boolean markerOnly;
 
+    @Option(
+        names = "--spring-ai",
+        description = "Print Spring AI adapter dependencies and setup code for the model.")
+    private boolean springAi;
+
+    @Option(
+        names = "--spring-boot",
+        description =
+            "Print Spring Boot starter dependencies, application configuration, and the model bean.")
+    private boolean springBoot;
+
+    @Option(
+        names = "--config",
+        paramLabel = "FORMAT",
+        description = "Spring Boot configuration format: ${COMPLETION-CANDIDATES} (default: yaml).")
+    private SpringCoordinates.ConfigFormat configFormat;
+
     @Override
     public Integer call() {
+      Optional<SpringIntegration.Flavor> flavor = springFlavor(springAi, springBoot);
+      if (flavor.isPresent() && markerOnly) {
+        throw new IllegalArgumentException(
+            "--marker-only cannot be combined with "
+                + flavor.orElseThrow().flag()
+                + "; Spring setups need the ModelJars runtime and the Models adapter.");
+      }
+      if (flavor.isEmpty() && configFormat != null) {
+        throw new IllegalArgumentException("--config applies only with --spring-boot.");
+      }
       ModelJarDescriptor descriptor = parent.resolve(selector);
       CliOutput out = parent.out();
       List<DependencyCoordinates.Tool> selected =
@@ -2125,6 +2179,19 @@ public final class ModelJarsCli implements Callable<Integer> {
                   DependencyCoordinates.Tool.GRADLE,
                   DependencyCoordinates.Tool.GRADLE_KOTLIN)
               : List.copyOf(tools);
+      if (flavor.isPresent()) {
+        printSpringSetup(
+            descriptor,
+            out,
+            SpringCoordinates.setup(
+                descriptor,
+                flavor.orElseThrow(),
+                SpringIntegration.Versions.bundled(version()),
+                SpringIntegration.ChatTemplates.fromClasspath(),
+                selected,
+                configFormat == null ? SpringCoordinates.ConfigFormat.YAML : configFormat));
+        return 0;
+      }
       if (out.format() == CliOutput.Format.JSON) {
         Map<String, Object> value = new LinkedHashMap<>();
         value.put("alias", descriptor.alias());
@@ -2602,6 +2669,56 @@ public final class ModelJarsCli implements Callable<Integer> {
     if (includeRuntime && version().equals("development")) {
       out.hint(
           "Development build: runtime dependency omitted because no release version is embedded.");
+    }
+  }
+
+  private static Optional<SpringIntegration.Flavor> springFlavor(
+      boolean springAi, boolean springBoot) {
+    if (springAi && springBoot) {
+      throw new IllegalArgumentException(
+          "Choose one of --spring-ai or --spring-boot; the Boot starter already includes the"
+              + " Spring AI adapter.");
+    }
+    if (springAi) {
+      return Optional.of(SpringIntegration.Flavor.SPRING_AI);
+    }
+    return springBoot ? Optional.of(SpringIntegration.Flavor.SPRING_BOOT) : Optional.empty();
+  }
+
+  private static void printSpringSetup(
+      ModelJarDescriptor descriptor, CliOutput out, SpringCoordinates.Setup setup) {
+    if (out.format() == CliOutput.Format.JSON) {
+      Map<String, Object> value = new LinkedHashMap<>();
+      value.put("alias", descriptor.alias());
+      value.put("coordinate", descriptor.markerCoordinate().toString());
+      value.put("flavor", setup.flavor().id());
+      value.put("kind", setup.kind().id());
+      Map<String, String> declarations = new LinkedHashMap<>();
+      setup.declarations().forEach((tool, text) -> declarations.put(tool.toString(), text));
+      value.put("declarations", declarations);
+      setup.configurationFileName().ifPresent(name -> value.put("configurationFile", name));
+      setup.configuration().ifPresent(text -> value.put("configuration", text));
+      value.put("java", setup.java());
+      value.put("notes", setup.notes());
+      out.json(value);
+      return;
+    }
+    setup
+        .declarations()
+        .forEach(
+            (tool, text) -> {
+              out.section(tool.toString());
+              out.line(text);
+            });
+    if (setup.configuration().isPresent()) {
+      out.section(setup.configurationFileName().orElseThrow());
+      out.line(setup.configuration().orElseThrow().stripTrailing());
+    }
+    out.section("java");
+    out.line(setup.java().stripTrailing());
+    if (out.format() != CliOutput.Format.PLAIN) {
+      out.line("");
+      setup.notes().forEach(out::hint);
     }
   }
 }

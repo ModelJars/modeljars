@@ -42,6 +42,31 @@ Run `./gradlew spotlessCheck test verifyCatalog` before opening a pull request. 
 the website catalog from the metadata, then rejects duplicate coordinates, mutable download URLs,
 invalid versions, missing integrity fields, or inconsistent filenames.
 
+## Generation Profiles and Memory Fit
+
+`catalog/model-profiles.json` records, per exact artifact, the vendor-published generation settings
+and a computed memory fit. It is regenerated with `npm run catalog:profiles` (set `HF_TOKEN` for
+gated repositories) and checked with `npm run catalog:profiles:check`.
+
+- **Generation profile.** Sampling values (temperature, top-p, top-k, min-p, repetition penalty),
+  every declared end-of-sequence token ID, reasoning markers, and whether the chat template enables
+  thinking by default are read only from files at the pinned revision: the repository's
+  `generation_config.json` and the GGUF header (`general.sampling.*`, `tokenizer.ggml.eos_token_id`
+  / `eot_token_id` / `eom_token_id`, the vocabulary, and recognised `tokenizer.chat_template`
+  idioms). Every value names its source file, revision, SHA-256, and key. A value the pinned files
+  do not publish is left absent; it is never guessed or copied from a different repository. When
+  sources disagree, the `generation_config.json` value is recorded and the disagreement is kept.
+- **Memory fit.** For GGUF generators the file records KV bytes per token at f16 and q8_0, the total
+  at 4K/32K/128K/256K tokens (capped at the context length), and the largest context that fits
+  8/16/24 GiB. It is computed from header metadata with the formula in `tools/model-profiles.mjs`
+  and a stated 1 GiB runtime-overhead constant; it is not a measurement. Sliding-window layers are
+  charged the declared window only, and a window without a declared per-layer pattern is charged as
+  full attention and marked as an upper bound.
+
+Profiles are deliberately outside `catalog/models.json`: they ship in the aggregate catalog, the
+website, and the CLI, never inside a marker JAR, so adding or correcting one never requires a new
+marker coordinate.
+
 ## Qualification
 
 Catalog registration is not publication approval. A marker appears on ModelJARs.org and becomes
@@ -62,6 +87,20 @@ Qualification requires:
   cannot ingest; llama.cpp remains supporting GGUF evidence;
 - raw report files, artifact and report SHA-256 values, environment identity, and a passing
   `production-rag-model-contribution-v6` verdict.
+
+### Admission policy for new entries
+
+These rules apply to entries proposed from 2026-09-16 onward. Existing qualified entries are not
+retroactively failed by them.
+
+- **A fine-tune is admitted only if it beats the same-size base model quantisation on our harness.**
+  The comparison uses the same quantisation of the base model, the same workload, and the same
+  controlled run; a fine-tune that does not measurably beat that base is not qualified, whatever
+  its own model card reports.
+- **A qualified entry must carry its generation profile where the vendor publishes one.** If the
+  pinned `generation_config.json` or GGUF header publishes sampling settings, end-of-sequence
+  tokens, or reasoning markers, the entry's `catalog/model-profiles.json` record must contain them
+  with provenance. Where nothing is published, the coverage record says so.
 
 New or changed qualified entries must include `defaultConfigurationSmoke`
 metadata pointing to the immutable Models report. CI fetches that report from

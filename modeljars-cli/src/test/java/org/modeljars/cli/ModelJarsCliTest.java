@@ -45,6 +45,7 @@ import org.modeljars.ModelJarCache;
 import org.modeljars.ModelJarCoordinate;
 import org.modeljars.ModelJarDescriptor;
 import org.modeljars.ModelJarRegistry;
+import org.modeljars.ModelProfileRegistry;
 import org.modeljars.ModelVersion;
 
 class ModelJarsCliTest {
@@ -186,6 +187,84 @@ class ModelJarsCliTest {
     assertTrue(shown.output().contains("example"));
     assertTrue(shown.output().contains(descriptor.alias()));
     assertTrue(aliases.aliases().isEmpty());
+  }
+
+  @Test
+  void showsTheSourcedGenerationProfileAndComputedMemoryFit() throws IOException {
+    ModelJarDescriptor descriptor = descriptor();
+    java.util.Properties properties = new java.util.Properties();
+    String prefix = "modelProfile." + descriptor.alias() + ".";
+    properties.load(
+        new java.io.StringReader(
+            String.join(
+                "\n",
+                "modeljars.modelProfiles.schemaVersion=1",
+                prefix + "artifactSha256=" + "a".repeat(64),
+                prefix + "generation.source.count=1",
+                prefix + "generation.source.000.id=gguf",
+                prefix + "generation.source.000.kind=gguf-metadata",
+                prefix + "generation.source.000.file=model.gguf",
+                prefix
+                    + "generation.source.000.uri=https://huggingface.co/example/model/model.gguf",
+                prefix + "generation.source.000.revision=" + "b".repeat(40),
+                prefix + "generation.source.000.sha256=" + "a".repeat(64),
+                prefix + "generation.sampling.temperature=0.6",
+                prefix + "generation.sampling.temperature.provenance=gguf:general.sampling.temp",
+                prefix + "generation.eosTokenIds=151645,151643",
+                prefix + "generation.reasoning.openToken=<think>",
+                prefix + "generation.reasoning.openTokenId=151667",
+                prefix + "generation.reasoning.closeToken=</think>",
+                prefix + "generation.reasoning.closeTokenId=151668",
+                prefix + "generation.reasoning.thinkingDefault=true",
+                prefix + "memory.status=computed",
+                prefix + "memory.weightBytes=5027783488",
+                prefix + "memory.fixedOverheadBytes=1073741824",
+                prefix + "memory.contextLength=40960",
+                prefix + "memory.upperBound=false",
+                prefix + "memory.kvTypes=f16",
+                prefix + "memory.kv.f16.bytesPerToken=147456",
+                prefix + "memory.kv.f16.slidingWindowBytesPerToken=0",
+                prefix + "memory.kv.f16.contexts=4096",
+                prefix + "memory.kv.f16.context.4096.kvBytes=603979776",
+                prefix + "memory.kv.f16.context.4096.totalBytes=6705505088",
+                prefix + "memory.kv.f16.budgets=8589934592",
+                prefix + "memory.kv.f16.budget.8589934592.maxContextTokens=16875",
+                prefix + "memory.kv.f16.budget.8589934592.limitedBy=memory")));
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ModelJarRegistry.of(List.of(descriptor)),
+            (selected, destination, progress) -> destination,
+            ModelJarsCliTest::snapshot,
+            request -> {
+              throw new UnsupportedOperationException();
+            },
+            Clock.systemUTC(),
+            new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
+            ModelProfileRegistry.fromProperties(properties));
+
+    Result shown = run(cli, "show", descriptor.alias());
+
+    assertEquals(0, shown.status());
+    assertTrue(shown.output().contains("GENERATION PROFILE"), shown.output());
+    assertTrue(shown.output().contains("Temperature"), shown.output());
+    assertTrue(shown.output().contains("0.6 (gguf:general.sampling.temp)"), shown.output());
+    assertTrue(shown.output().contains("151645, 151643"), shown.output());
+    assertTrue(shown.output().contains("<think> (151667) / </think> (151668)"), shown.output());
+    assertTrue(shown.output().contains("MEMORY FIT"), shown.output());
+    assertTrue(
+        shown.output().contains("computed from GGUF metadata, not measured"), shown.output());
+    assertTrue(shown.output().contains("16875"), shown.output());
+    assertTrue(shown.output().contains("6.24 GiB"), shown.output());
+    assertFalse(shown.output().contains("Top-p"), shown.output());
+  }
+
+  @Test
+  void omitsProfileSectionsWhenTheCatalogPublishesNone() {
+    Result shown = run(cli(descriptor()), "show", "example");
+
+    assertEquals(0, shown.status());
+    assertFalse(shown.output().contains("GENERATION PROFILE"));
+    assertFalse(shown.output().contains("MEMORY FIT"));
   }
 
   @Test

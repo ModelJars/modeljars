@@ -56,6 +56,7 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.terminal.impl.DumbTerminal;
 import org.modeljars.KvCachePrecision;
 import org.modeljars.ModelDimensions;
+import org.modeljars.ModelGenerationProfile;
 import org.modeljars.ModelInstallProgress;
 import org.modeljars.ModelJarCache;
 import org.modeljars.ModelJarCoordinate;
@@ -63,6 +64,9 @@ import org.modeljars.ModelJarDescriptor;
 import org.modeljars.ModelJarException;
 import org.modeljars.ModelJarInstaller;
 import org.modeljars.ModelJarRegistry;
+import org.modeljars.ModelMemoryFit;
+import org.modeljars.ModelProfile;
+import org.modeljars.ModelProfileRegistry;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -129,6 +133,7 @@ public final class ModelJarsCli implements Callable<Integer> {
   private final Clock clock;
   private final Map<String, String> generatedAliases;
   private final ModelAliasStore aliases;
+  private final ModelProfileRegistry profiles;
 
   @Spec private CommandSpec commandSpec;
 
@@ -222,6 +227,25 @@ public final class ModelJarsCli implements Callable<Integer> {
       ContributionService contributionService,
       Clock clock,
       ModelAliasStore aliases) {
+    this(
+        registry,
+        installer,
+        systemProbe,
+        contributionService,
+        clock,
+        aliases,
+        ModelProfileRegistry.empty());
+  }
+
+  ModelJarsCli(
+      ModelJarRegistry registry,
+      ArtifactInstaller installer,
+      SystemCapabilities.Probe systemProbe,
+      ContributionService contributionService,
+      Clock clock,
+      ModelAliasStore aliases,
+      ModelProfileRegistry profiles) {
+    this.profiles = Objects.requireNonNull(profiles, "profiles");
     this.registry = Objects.requireNonNull(registry, "registry");
     this.installer = Objects.requireNonNull(installer, "installer");
     this.systemProbe = Objects.requireNonNull(systemProbe, "systemProbe");
@@ -238,13 +262,22 @@ public final class ModelJarsCli implements Callable<Integer> {
    */
   public static void main(String[] args) {
     configureLibraryLogging();
-    ModelJarRegistry registry = RemoteCatalogRegistry.loadDefault();
+    RemoteCatalogRegistry.LoadedCatalog catalog = RemoteCatalogRegistry.loadDefaultCatalog();
+    ModelJarRegistry registry = catalog.registry();
     ArtifactInstaller installer =
         (descriptor, destination, progress) ->
             ModelJarInstaller.reportingProgressTo(registry, progress)
                 .install(descriptor, destination);
     int status =
-        new ModelJarsCli(registry, installer).launch(args, System.in, System.out, System.err, true);
+        new ModelJarsCli(
+                registry,
+                installer,
+                new SystemCapabilities()::detect,
+                new HuggingFaceContributionService(),
+                Clock.systemUTC(),
+                ModelAliasStore.defaults(),
+                catalog.profiles())
+            .launch(args, System.in, System.out, System.err, true);
     if (status != 0) {
       System.exit(status);
     }
@@ -1358,6 +1391,8 @@ public final class ModelJarsCli implements Callable<Integer> {
       out.section("Provenance");
       out.properties(provenance);
 
+      parent.profiles.profileFor(descriptor).ifPresent(profile -> renderProfile(profile, out));
+
       Map<String, Object> local = new LinkedHashMap<>();
       local.put(isComposite(descriptor) ? "Member cache" : "Cache path", cachePath);
       if (!isComposite(descriptor) && parent.cached(descriptor)) {
@@ -1377,6 +1412,134 @@ public final class ModelJarsCli implements Callable<Integer> {
       out.section("Local");
       out.properties(local);
     }
+  }
+
+  static void renderProfile(ModelProfile profile, CliOutput out) {
+    profile
+        .generation()
+        .ifPresent(
+            generation -> {
+              Map<String, Object> values = new LinkedHashMap<>();
+              sampling(values, generation, "Temperature", "temperature");
+              sampling(values, generation, "Top-p", "topP");
+              sampling(values, generation, "Top-k", "topK");
+              sampling(values, generation, "Min-p", "minP");
+              sampling(values, generation, "Repetition penalty", "repetitionPenalty");
+              if (!generation.eosTokenIds().isEmpty()) {
+                values.put(
+                    "EOS token IDs",
+                    String.join(
+                        ", ", generation.eosTokenIds().stream().map(String::valueOf).toList()));
+              }
+              if (generation.reasoningOpenToken().isPresent()
+                  && generation.reasoningCloseToken().isPresent()) {
+                ModelGenerationProfile.ReasoningToken open =
+                    generation.reasoningOpenToken().orElseThrow();
+                ModelGenerationProfile.ReasoningToken close =
+                    generation.reasoningCloseToken().orElseThrow();
+                values.put(
+                    "Reasoning markers",
+                    open.text()
+                        + " ("
+                        + open.id()
+                        + ") / "
+                        + close.text()
+                        + " ("
+                        + close.id()
+                        + ")");
+              }
+              generation
+                  .thinkingDefault()
+                  .ifPresent(value -> values.put("Thinking by default", value ? "yes" : "no"));
+              values.put(
+                  "Sources",
+                  String.join(
+                      ", ",
+                      generation.sources().stream()
+                          .map(source -> source.file() + " @ " + abbreviate(source.revision()))
+                          .toList()));
+              out.section("Generation profile");
+              out.properties(values);
+              out.hint("  Values absent here are not published in the pinned files.");
+            });
+    profile
+        .memoryFit()
+        .ifPresent(
+            fit -> {
+              out.section("Memory fit");
+              out.hint(
+                  "  computed from GGUF metadata, not measured; weights "
+                      + CliOutput.humanBytes(fit.weightBytes())
+                      + " + assumed runtime overhead "
+                      + CliOutput.humanBytes(fit.fixedOverheadBytes())
+                      + " + KV cache");
+              List<CliOutput.Column> columns =
+                  List.of(
+                      CliOutput.Column.left("KV", 4, 4),
+                      CliOutput.Column.right("KV/TOKEN", 9, 12),
+                      CliOutput.Column.right("CONTEXT", 7, 8),
+                      CliOutput.Column.right("TOTAL", 9, 10));
+              List<List<CliOutput.Cell>> rows = new java.util.ArrayList<>();
+              for (ModelMemoryFit.KvCacheFit cache : fit.kvCache()) {
+                for (ModelMemoryFit.ContextTotal context : cache.contexts()) {
+                  rows.add(
+                      List.of(
+                          CliOutput.Cell.text(cache.type()),
+                          CliOutput.Cell.text(CliOutput.humanBytes(cache.bytesPerToken())),
+                          CliOutput.Cell.text(String.valueOf(context.contextTokens())),
+                          CliOutput.Cell.text(CliOutput.humanBytes(context.totalBytes()))));
+                }
+              }
+              out.table(columns, rows);
+              List<CliOutput.Column> budgetColumns =
+                  List.of(
+                      CliOutput.Column.left("KV", 4, 4),
+                      CliOutput.Column.right("BUDGET", 6, 9),
+                      CliOutput.Column.right("MAX CONTEXT", 11, 11),
+                      CliOutput.Column.left("LIMITED BY", 10, 14));
+              List<List<CliOutput.Cell>> budgetRows = new java.util.ArrayList<>();
+              for (ModelMemoryFit.KvCacheFit cache : fit.kvCache()) {
+                for (ModelMemoryFit.BudgetFit budget : cache.budgets()) {
+                  budgetRows.add(
+                      List.of(
+                          CliOutput.Cell.text(cache.type()),
+                          CliOutput.Cell.text(CliOutput.humanBytes(budget.budgetBytes())),
+                          CliOutput.Cell.text(String.valueOf(budget.maxContextTokens())),
+                          CliOutput.Cell.text(
+                              budget.maxContextTokens() == 0
+                                  ? "does not fit"
+                                  : budget.limitedBy())));
+                }
+              }
+              out.table(budgetColumns, budgetRows);
+              if (fit.kvCache().stream()
+                  .anyMatch(cache -> cache.slidingWindowBytesPerToken() > 0)) {
+                out.hint(
+                    "  KV/TOKEN covers full-attention layers; sliding-window layers are charged at"
+                        + " most "
+                        + fit.slidingWindow().orElse(0)
+                        + " tokens");
+              }
+              fit.notes().forEach(note -> out.hint("  " + note));
+            });
+  }
+
+  private static void sampling(
+      Map<String, Object> values, ModelGenerationProfile generation, String label, String key) {
+    Double value = generation.sampling().get(key);
+    if (value == null) {
+      return;
+    }
+    String text =
+        value == Math.rint(value) && !key.equals("temperature") && !key.equals("repetitionPenalty")
+            ? String.valueOf(value.longValue())
+            : String.valueOf(value);
+    List<String> sources = generation.provenance().getOrDefault("sampling." + key, List.of());
+    values.put(label, sources.isEmpty() ? text : text + " (" + String.join(", ", sources) + ")");
+  }
+
+  private static String abbreviate(String revision) {
+    return revision.length() > 12 ? revision.substring(0, 12) : revision;
   }
 
   @Command(

@@ -6409,7 +6409,7 @@
       "sourceUri": "https://github.com/ModelJars/activated-adapters",
       "downloadUri": "https://github.com/ModelJars/activated-adapters/releases/download/granite-4.1-3b-answerability-alora-integrallis-v1/adapter_model.safetensors",
       "revision": "1614e0d667d9a29d6aa8b56c49966b87351ef2ef",
-      "markerCoordinate": "org.modeljars.github:modeljars.activated-adapters.granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.1",
+      "markerCoordinate": "org.modeljars.github:modeljars.activated-adapters.granite-4.1-3b-answerability-alora-integrallis.f32:1.0.0-f32.2",
       "modelVersion": "1.0.0",
       "variant": "f32",
       "format": "safetensors",
@@ -6456,7 +6456,7 @@
         }
       ],
       "backends": {
-        "pure-java": true
+        "rust-ffm": true
       },
       "domains": [
         "rag",

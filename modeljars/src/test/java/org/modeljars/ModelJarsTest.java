@@ -63,6 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.modeljars.catalog.Cactus_Compute_Needle2_Cact_Cq2_Mixed;
 import org.modeljars.catalog.Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7;
+import org.modeljars.catalog.Ibm_Granite_Granite_4_1_3b_Gguf_Q4_K_M;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 import org.modeljars.catalog.Qwen3_1_7b_Q8_0;
 import org.modeljars.catalog.Qwen_Qwen3_Embedding_0_6b_Gguf_Q8_0;
@@ -76,6 +77,7 @@ class ModelJarsTest {
   private static final ModelJar MINILM_RERANKER =
       Cstr_Ms_Marco_Minilm_L6_V2_Gguf_Q4_K_Imatrix_G7c_F7.MODEL;
   private static final ModelJar SMOLLM = Smollm2_360m_Instruct_Q8_0.MODEL;
+  private static final ModelJar GRANITE = Ibm_Granite_Granite_4_1_3b_Gguf_Q4_K_M.MODEL;
 
   @Test
   void opensAQualifiedModelWithoutExposingItsInstalledPath() {
@@ -453,6 +455,31 @@ class ModelJarsTest {
           "-Djdk.graal.MaximumInliningSize=10000",
           launchDecision.settings().get("missing-jvm-arguments"));
     }
+  }
+
+  @Test
+  void opensThePublishedGraniteQualificationWithTheRuntimeGraniteTemplate() {
+    // Regression: the bundled Granite 4.1 3B qualification records the RAG harness's
+    // granite-documents envelope, which is not a runtime chat template id. ModelJars 0.1.40 to
+    // 0.1.42 passed it straight to ChatTemplate.parse, so opening the published model failed after
+    // the backend had already loaded.
+    StubBackend backend = new StubBackend();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("verified-model.gguf"),
+            (backendName, path, configuration) -> backend,
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    try (var runtime = loader.loadRuntime(GRANITE, ModelLoadOptions.defaults())) {
+      assertEquals("granite-documents", runtime.qualification().promptTemplate());
+      assertEquals(ChatTemplate.GRANITE, runtime.chatTemplate());
+      assertFalse(backend.closed());
+    }
+    assertTrue(backend.closed());
   }
 
   @Test

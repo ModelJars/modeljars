@@ -46,6 +46,15 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
   );
 });
 
+test("requires qualification manifest changes to advance generatedAt in CI", async () => {
+  const validateWorkflow = await read(".github/workflows/validate.yml");
+
+  assert.match(
+    validateWorkflow,
+    /node tools\/qualification-generation-gate\.mjs --base "\$\{COMPARISON\}"/,
+  );
+});
+
 test("runs the qualified mxbai Safetensors bundle through the public API in CI", async () => {
   const validateWorkflow = await read(".github/workflows/validate.yml");
 

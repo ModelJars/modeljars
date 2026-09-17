@@ -32,10 +32,6 @@ import org.modeljars.cli.SpringIntegration.Flavor;
 import org.modeljars.cli.SpringIntegration.Kind;
 
 class SpringIntegrationTest {
-  /** Qualified catalog templates the pinned Models version does not recognize (see PR notes). */
-  private static final java.util.Map<String, String> KNOWN_UNPARSEABLE_TEMPLATES =
-      java.util.Map.of("ibm_granite_granite_4_1_3b_gguf_q4_k_m", "granite-documents");
-
   @Test
   void classifiesEveryAdapterBackedCapabilityForSpringAi() {
     assertEquals(Kind.CHAT, SpringIntegration.kind(SpringFixtures.chat(), Flavor.SPRING_AI));
@@ -99,13 +95,14 @@ class SpringIntegrationTest {
   }
 
   @Test
-  void resolvesAParseableQualifiedChatTemplateForEveryQualifiedCatalogChatModel() {
+  void resolvesARuntimeChatTemplateForEveryQualifiedCatalogChatModel() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
     ModelRagQualificationRegistry rag = ModelRagQualificationRegistry.fromClasspath();
     ModelToolQualificationRegistry tools = ModelToolQualificationRegistry.fromClasspath();
     SpringIntegration.ChatTemplates templates = SpringIntegration.ChatTemplates.fromClasspath();
 
     int checked = 0;
+    boolean graniteChecked = false;
     for (ModelJarDescriptor descriptor : registry.descriptors()) {
       boolean qualified =
           rag.qualificationsFor(descriptor).stream().anyMatch(q -> q.productionUsable())
@@ -117,16 +114,17 @@ class SpringIntegrationTest {
           templates
               .templateFor(descriptor)
               .orElseThrow(() -> new AssertionError("no template for " + descriptor.alias()));
-      if (template.equals(KNOWN_UNPARSEABLE_TEMPLATES.get(descriptor.alias()))) {
-        // Recorded gap: the qualification names a template the pinned Models release cannot parse,
-        // so the runtime (plain or Spring) rejects this model. Fails once Models learns it.
-        assertThrows(IllegalArgumentException.class, () -> ChatTemplate.parse(template));
-        continue;
-      }
+      // Spring Boot configuration hands this id to ChatTemplate.parse, so it must be a runtime id.
       assertEquals(template, ChatTemplate.parse(template).id(), descriptor.alias());
+      if (descriptor.alias().equals("ibm_granite_granite_4_1_3b_gguf_q4_k_m")) {
+        // The qualification records the RAG harness's granite-documents envelope.
+        assertEquals("granite", template);
+        graniteChecked = true;
+      }
       checked++;
     }
     assertTrue(checked > 0, "the shipped catalog must contain qualified chat models");
+    assertTrue(graniteChecked, "the shipped catalog must contain the qualified Granite 4.1 3B");
   }
 
   @Test

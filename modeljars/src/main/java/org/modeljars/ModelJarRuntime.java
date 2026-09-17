@@ -45,7 +45,7 @@ public final class ModelJarRuntime implements AutoCloseable {
     this.descriptor = Objects.requireNonNull(descriptor, "descriptor");
     this.qualification = Objects.requireNonNull(qualification, "qualification");
     try {
-      chatTemplate = ChatTemplate.parse(qualification.promptTemplate());
+      chatTemplate = QualifiedChatTemplates.resolve(qualification.promptTemplate());
     } catch (IllegalArgumentException failure) {
       try {
         pipeline.close();
@@ -194,6 +194,10 @@ public final class ModelJarRuntime implements AutoCloseable {
 
   /**
    * Returns the Models chat template proven by the selected qualification.
+   *
+   * <p>The recorded prompt template is resolved through {@link QualifiedChatTemplates}, so a
+   * harness-only variant such as {@code granite-documents} yields the runtime template that renders
+   * the same conversation turns.
    *
    * @return qualified chat template
    */

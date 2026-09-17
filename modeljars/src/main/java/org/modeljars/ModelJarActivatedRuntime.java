@@ -53,7 +53,7 @@ public final class ModelJarActivatedRuntime implements AutoCloseable {
       throw failure;
     }
     try {
-      chatTemplate = ChatTemplate.parse(baseQualification.promptTemplate());
+      chatTemplate = QualifiedChatTemplates.resolve(baseQualification.promptTemplate());
     } catch (IllegalArgumentException failure) {
       try {
         model.close();

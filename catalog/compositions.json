@@ -1,4 +1,78 @@
 {
   "schemaVersion": 1,
-  "compositions": []
+  "compositions": [
+    {
+      "id": "granite_4_1_3b_answerability_hybrid",
+      "kind": "hybrid",
+      "specialistKind": "first-party-rag-specialist",
+      "name": "Granite 4.1 3B answerability hybrid",
+      "description": "The qualified Granite 4.1 3B Q4_K_M base and the Integrallis-trained answerability activated-LoRA specialist as one hybrid: the base weights load once and the ordinary-chat and answerability branches fork from the same physical KV prefix.",
+      "sourceId": "modeljars://granite-answerability",
+      "sourceUri": "https://github.com/ModelJars/modeljars/tree/b5c1f69b0d220e0d80849a05d348f3bd92d834d4/modeljars-composite-granite-answerability",
+      "downloadUri": "https://repo1.maven.org/maven2/org/modeljars/composite/granite-answerability/0.1.48/granite-answerability-0.1.48.jar",
+      "revision": "b5c1f69b0d220e0d80849a05d348f3bd92d834d4",
+      "markerCoordinate": "org.modeljars.composite:granite-answerability:0.1.48",
+      "modelVersion": "0.1.48",
+      "variant": "answerability",
+      "format": "composite",
+      "architecture": "hybrid",
+      "quantization": "MIXED",
+      "compositionSha256": "973263058380edf62403409cd718655342688a902dbe6926bfdd0f6a0450a8a7",
+      "requiredWeightBytes": 2224108583,
+      "license": "Apache-2.0",
+      "licenseUri": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "catalogPublishedAt": "2026-09-17T21:57:58Z",
+      "domains": [
+        "rag",
+        "retrieval"
+      ],
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "answerability-classification"
+      ],
+      "features": [
+        "activated-lora-adapter",
+        "exact-kv-block-sharing",
+        "shared-physical-prefix",
+        "first-party-specialist",
+        "frozen-answerability-window-v2"
+      ],
+      "backends": {
+        "rust-ffm": true
+      },
+      "dimensions": {
+        "parameterCount": 3402836480,
+        "contextLength": 131072
+      },
+      "members": [
+        {
+          "role": "base",
+          "modelId": "ibm_granite_granite_4_1_3b_gguf_q4_k_m"
+        },
+        {
+          "role": "answerability",
+          "modelId": "modeljars_granite_4_1_3b_answerability_alora_integrallis_f32"
+        }
+      ],
+      "compositionQualifications": [
+        {
+          "qualified": true,
+          "unresolvedRequiredWork": [],
+          "useCaseTier": "HYBRID_COMPOSITION",
+          "backend": "rust-ffm",
+          "backendVersion": "models-0.3.42",
+          "workload": "granite-answerability-window-v2-4k-crossover",
+          "controlMedianMillis": 546645.771745,
+          "compositeMedianMillis": 272353.958604,
+          "latencyImprovement": 0.5017724956792532,
+          "peakRssBytes": 10477772800,
+          "sharedUniqueStateBytes": 676496640,
+          "recomputedUniqueStateBytes": 2013757440,
+          "reportUri": "https://raw.githubusercontent.com/integrallis/models/3ca004e894832e46e937c03c3a86a820d4f76015/benchmark-results/2026-09-16-granite-answerability-alora/release-pilot2/composition-report/composition-qualification.json",
+          "reportSha256": "27555047b570bff7ce2d844b830d301181e685cc14b48fbc23ee6d0dac5b9469"
+        }
+      ]
+    }
+  ]
 }

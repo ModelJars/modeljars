@@ -115,6 +115,18 @@ and rejects tuned properties or any failed attempt. Existing evidence is
 grandfathered until it changes; tuned benchmark success cannot override a
 failed default-configuration smoke.
 
+### Tool-calling template round trip
+
+Every tool-qualified entry in `catalog/tool-qualifications.json` must survive a model-free round
+trip through the chat template the runtime selects for it (the tool qualification's template and
+that of any production RAG qualification for the same artifact). `ToolCallTemplateRoundTripTest`
+in the `modeljars` module renders a conversation that declares a tool and contains an assistant
+tool call through the Models `ChatTemplate`, scans the rendered assistant turn back with the same
+template's `ToolSyntax` and `ToolCallScanner`, and requires the call name and JSON arguments to be
+recovered exactly, including nested, escaped, and non-ASCII values. It runs in `./gradlew test`.
+A template whose rendered calls its own scanner cannot recover invalidates every tool-calling
+measurement taken through it, so a failing entry is not qualified.
+
 ### Embedding artifacts
 
 We test that an embedding model produces the same vectors as llama.cpp. The harness is

@@ -75,6 +75,9 @@ modeljars demo qwen-0.6b "What is the capital of France? Reply with only the cit
 modeljars demo embeddinggemma "Public transit schedule"
 modeljars demo minilm-reranker "How many people live in Berlin?"
 modeljars demo soprano-q8 "The JVM can speak for itself."
+modeljars demo smollm-360m --spring-ai
+modeljars demo smollm-360m --spring-boot
+modeljars coordinates smollm-360m --spring-boot --tool gradle-kotlin
 modeljars ls
 modeljars info
 modeljars snippet ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m --tool maven
@@ -491,6 +494,112 @@ For a packaged application, place the option before `-jar`:
 ```bash
 java --add-modules=jdk.incubator.vector -jar application.jar
 ```
+
+## Spring AI and Spring Boot
+
+The CLI prints the complete Spring setup for a qualified model and generates runnable Spring
+programs. `--spring-ai` targets the `models-spring-ai` adapters directly; `--spring-boot` targets
+`models-spring-boot-starter`. Both use the Models version the CLI's own JVM Runtime was built with,
+Spring AI 2.0.0, and Spring Boot 4.1.0. Chat, tool-calling, embedding, and reranking models are
+supported; speech models and qualified hybrids have no Models Spring adapter and fail with a message
+pointing at the plain `modeljars demo`. Needle 2 works with `--spring-ai`, which registers typed
+tool-result renderers, but not with `--spring-boot`, because the starter's auto-configured chat
+model cannot register them.
+
+```bash
+modeljars coordinates smollm-360m --spring-boot --tool gradle-kotlin
+```
+
+```text
+GRADLE-KOTLIN
+implementation(platform("org.springframework.boot:spring-boot-dependencies:4.1.0"))
+implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0"))
+implementation("org.springframework.boot:spring-boot-starter")
+implementation("org.springframework.ai:spring-ai-client-chat")
+implementation("com.integrallis:models-spring-boot-starter:$modelsVersion")
+implementation("org.modeljars:modeljars:$modeljarsVersion")
+implementation("org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1")
+
+APPLICATION.YAML
+integrallis:
+  models:
+    chat-template: chatml
+    sampling:
+      temperature: 0.0
+      max-tokens: 256
+
+JAVA
+import com.integrallis.models.api.TextGenerationModel;
+import org.modeljars.ModelJars;
+import org.springframework.context.annotation.Bean;
+
+@Bean(destroyMethod = "close")
+TextGenerationModel localModel() {
+    return ModelJars.open("org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1");
+}
+
+The Models starter adapts the TextGenerationModel bean into the Spring AI ChatModel bean 'modelsChatModel' using the qualified chat template 'chatml'.
+Run on Java 25+ with --add-modules=jdk.incubator.vector; for bootRun or spring-boot:run also disable Spring Boot's optimized launch (C1-only).
+```
+
+The CLI prints the released versions; `$modelsVersion` and `$modeljarsVersion` stand in for them
+here. The starter's `integrallis.models.chat-template` defaults to `raw`, so the CLI writes the
+template recorded by the model's qualification, the same one `ModelJars.openRuntime` selects. Add
+`--config properties` for `application.properties`, or `--tool maven`, `gradle`, or `jbang` for
+other builds; Maven output imports both BOMs in `<dependencyManagement>`. The starter
+auto-configures only the chat model, so embedding and reranking setups print the adapter bean to
+declare instead of configuration properties:
+
+```bash
+modeljars coordinates minilm-embedding --spring-ai --tool gradle-kotlin
+```
+
+```text
+GRADLE-KOTLIN
+implementation(platform("org.springframework.ai:spring-ai-bom:2.0.0"))
+implementation("org.springframework.ai:spring-ai-model")
+implementation("com.integrallis:models-spring-ai:$modelsVersion")
+implementation("org.modeljars:modeljars:$modeljarsVersion")
+implementation("org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.2")
+
+JAVA
+import com.integrallis.models.spring.ai.ModelsSpringAiEmbeddingModel;
+import io.micrometer.observation.ObservationRegistry;
+import org.modeljars.ModelJars;
+
+float[] embed(String text) {
+    try (var model = new ModelsSpringAiEmbeddingModel(
+            ModelJars.openEmbedding("org.modeljars.huggingface:second-state.all-minilm-l6-v2-embedding-gguf.q4_k_m:2.0.0-q4_k_m.2"),
+            "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_m",
+            ObservationRegistry.NOOP)) {
+        return model.embed(text);
+    }
+}
+
+Run on Java 25+ with --add-modules=jdk.incubator.vector.
+```
+
+`modeljars demo <model> --spring-ai` writes a JBang program that calls Spring AI's `ChatClient` over
+`ModelsSpringAiChatModel`, built with the runtime's qualified template and capabilities. For a
+tool-calling model it registers a typed `@Tool` weather callback; for Needle 2, a smart-home
+`@Tool` class with typed result renderers. Embedding and reranking demos use
+`ModelsSpringAiEmbeddingModel` and `ModelsSpringAiDocumentReranker`. `--spring-boot` writes a
+single-file Boot application: `@EnableAutoConfiguration` with the Models starter, a
+`TextGenerationModel` bean, and a `CommandLineRunner` that injects `modelsChatModel`. Without a flag,
+`demo` still generates the plain Java program.
+
+```bash
+modeljars demo smollm-360m --spring-boot
+jbang smollm2-360m-instruct-spring-boot-chat-demo.java
+```
+
+```text
+Input:  What is the capital of France? Reply with only the city name.
+Output: Paris
+```
+
+The CLI's tests compile every generated Spring program and printed snippet against the real
+ModelJars, Models, Spring AI, and Spring Boot jars.
 
 ## RAG framework dependencies
 

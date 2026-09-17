@@ -308,6 +308,15 @@ try (var runtime = ModelJars.openRuntime(selected)) {
               For low-level inference, <code>runtime.pipeline()</code> exposes the tokenizer,
               metadata, active context, structured prefill, logits, reset, checkpoint, and rewind.
             </p>
+            <p class="guide-runtime-note guide-spring-note">
+              Using Spring AI or Spring Boot? Run
+              <code>modeljars coordinates &lt;model&gt; --spring-boot</code> for the BOMs, Models
+              starter, qualified <code>application.yaml</code> chat template, and model bean, or
+              <code>modeljars demo &lt;model&gt; --spring-ai</code> for a runnable
+              <code>ChatClient</code> program. <code>--spring-ai</code> and
+              <code>--spring-boot</code> work with both commands for chat, tool-calling, embedding,
+              and reranking models.
+            </p>
           </div>
         </div>
       </section>

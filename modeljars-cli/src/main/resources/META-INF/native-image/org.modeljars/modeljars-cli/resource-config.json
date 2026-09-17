@@ -3,6 +3,9 @@
     "includes": [
       {
         "pattern": "META-INF/modeljars/.*"
+      },
+      {
+        "pattern": "org/modeljars/cli/spring-integration\\.properties"
       }
     ]
   }

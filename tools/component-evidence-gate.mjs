@@ -312,8 +312,10 @@ async function requireCleanHostRun(
     run.command.length === 0 ||
     run.command.some((part) => typeof part !== "string" || part.length === 0) ||
     !SHA256.test(run.resolvedClasspathSha256 ?? "") ||
+    // Any 40-hex integrallis/models commit is immutable; the bytes are verified below. The log
+    // cannot be pinned to evidenceRevision itself because the report at that commit embeds this
+    // URI, which would make the commit hash depend on its own contents.
     logLocation === null ||
-    logLocation[1] !== evidenceRevision ||
     !SHA256.test(outputLog?.sha256 ?? "") ||
     !requirePositiveInteger(outputLog?.sizeBytes)
   ) {

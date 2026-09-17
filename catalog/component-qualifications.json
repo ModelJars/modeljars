@@ -1,10 +1,53 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-13T13:00:00Z",
+  "generatedAt": "2026-09-17T17:06:42Z",
   "policyVersion": "activated-adapter-component-v1",
-  "modelsRevision": "8fff7574fc1539ba908889e469bb59d8fc575b56",
-  "evidenceRevision": "8fff7574fc1539ba908889e469bb59d8fc575b56",
-  "qualifiedModels": 0,
+  "modelsRevision": "6063076e476ba7a477e3f6dd966a77b571352d29",
+  "evidenceRevision": "0dbd64e2957219205648d2dd814dcdeea41252ed",
+  "qualifiedModels": 1,
   "rejectedModels": 0,
-  "entries": []
+  "entries": [
+    {
+      "modelId": "modeljars_granite_4_1_3b_answerability_alora_integrallis_f32",
+      "specialistKind": "first-party-rag-specialist",
+      "baseModelId": "ibm_granite_granite_4_1_3b_gguf_q4_k_m",
+      "baseArtifactSha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
+      "baseArtifactSizeBytes": 2099501664,
+      "artifactSha256": "67533dff14cd0cfa9ae0d00e83a9955226426ff1f98f1fd28790b2fd8757eea6",
+      "artifactSizeBytes": 124593064,
+      "artifactFiles": [
+        {
+          "path": "adapter_model.safetensors",
+          "role": "adapter-weights",
+          "sha256": "67533dff14cd0cfa9ae0d00e83a9955226426ff1f98f1fd28790b2fd8757eea6",
+          "sizeBytes": 124593064
+        },
+        {
+          "path": "models-activated-lora.json",
+          "role": "adapter-configuration",
+          "sha256": "27de22cf55ca941832bb3d5d6e0ce46de570edfc85f00ea33a11c30b2d33ccd3",
+          "sizeBytes": 1976
+        },
+        {
+          "path": "NOTICE",
+          "role": "attribution-notice",
+          "sha256": "4d3b1f70e77411b1d51ba33215dfe2bd7d1f4090d384725b7f1820df7a8937b1",
+          "sizeBytes": 1095
+        },
+        {
+          "path": "LICENSE",
+          "role": "license",
+          "sha256": "f3b8149a65f7ae0e2fe55de40d52b98dd8965e6b213b7c441a9596ba670c2e64",
+          "sizeBytes": 10784
+        }
+      ],
+      "artifactBundleSizeBytes": 124606919,
+      "artifactBundleSha256": "c3e388797c3a7cfda2cf9e05f8c63e42d52b12d0095e2930dec66eb6cfd20101",
+      "minimumSharedPrefixTokens": 256,
+      "qualified": true,
+      "unresolvedRequiredWork": [],
+      "reportUri": "https://raw.githubusercontent.com/integrallis/models/0dbd64e2957219205648d2dd814dcdeea41252ed/benchmark-results/2026-09-16-granite-answerability-alora/release-pilot2/component-report/component-qualification.json",
+      "reportSha256": "32d209bf1fcc1c0428b2e4c1d09113c741f2d8cc4114319b1bdbcae3a9ea9709"
+    }
+  ]
 }

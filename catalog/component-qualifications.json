@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "TODO-COMPONENT-GENERATED-AT",
+  "generatedAt": "2026-09-17T20:13:58Z",
   "policyVersion": "activated-adapter-component-v1",
   "modelsRevision": "6063076e476ba7a477e3f6dd966a77b571352d29",
-  "evidenceRevision": "TODO-COMPONENT-EVIDENCE-REVISION",
+  "evidenceRevision": "bbd0903f1120aec49c093e6cf97a9a8af233e4c0",
   "qualifiedModels": 1,
   "rejectedModels": 0,
   "entries": [
@@ -47,8 +47,8 @@
       "minimumSharedPrefixTokens": 256,
       "qualified": true,
       "unresolvedRequiredWork": [],
-      "reportUri": "TODO-COMPONENT-REPORT-URI",
-      "reportSha256": "TODO-COMPONENT-REPORT-SHA256"
+      "reportUri": "https://raw.githubusercontent.com/integrallis/models/bbd0903f1120aec49c093e6cf97a9a8af233e4c0/benchmark-results/2026-09-16-granite-answerability-alora/release-pilot2/component-report-rust/component-qualification.json",
+      "reportSha256": "c649c346e2a29d138f6fad80c0b03cffd3bff765684790a87758a5848444a4f4"
     }
   ]
 }

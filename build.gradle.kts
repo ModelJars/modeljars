@@ -2366,10 +2366,13 @@ componentQualifications?.entries?.forEach { qualification ->
             "evidence but its marker does not advertise that backend"
     }
     // The base must also advertise the component's evidence backend, otherwise the pair can never
-    // be opened. That gate is not enforced here yet: the published answerability component binds
-    // pure-java evidence to a base qualified on rust-ffm only, which is exactly the pairing this
-    // change makes the runtime reject at open() time with a precise message. Enable the gate below
-    // together with the rust-bound component marker that replaces it.
+    // be opened: the runtime selects the base's qualified backend and then rejects a component
+    // whose evidence binds a different one. Catch that at catalog time instead of at open() time.
+    require(baseEntry.backends[qualification.backend] == true) {
+        "Component qualification ${qualification.modelId} binds ${qualification.backend} " +
+            "evidence but its base ${qualification.baseModelId} does not advertise that " +
+            "backend, so the pair can never be opened"
+    }
 }
 val qualifiedComponentIds =
     qualifiedComponentQualifications.map(CatalogComponentQualification::modelId).toSet()

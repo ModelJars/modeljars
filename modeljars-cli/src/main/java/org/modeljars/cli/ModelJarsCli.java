@@ -54,7 +54,6 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.terminal.impl.DumbTerminal;
-import org.modeljars.KvCachePrecision;
 import org.modeljars.ModelDimensions;
 import org.modeljars.ModelGenerationProfile;
 import org.modeljars.ModelInstallProgress;
@@ -67,6 +66,7 @@ import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelMemoryFit;
 import org.modeljars.ModelProfile;
 import org.modeljars.ModelProfileRegistry;
+import org.modeljars.ModelRepetitionLoopMeasurement;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -1398,20 +1398,62 @@ public final class ModelJarsCli implements Callable<Integer> {
       if (!isComposite(descriptor) && parent.cached(descriptor)) {
         local.put("Modified", MODIFIED_TIME.format(modified(cachePath)));
       }
-      int context = Math.min(4096, descriptor.dimensions().contextLength().orElse(4096));
-      descriptor
-          .estimateMemory(context, KvCachePrecision.FLOAT16)
-          .ifPresent(
-              estimate ->
-                  local.put(
-                      "Memory floor",
-                      CliOutput.humanBytes(estimate.minimumBytes())
-                          + " at "
-                          + context
-                          + " tokens (runtime overhead excluded)"));
+      parent
+          .profiles
+          .profileFor(descriptor)
+          .flatMap(ModelProfile::memoryFit)
+          .flatMap(ModelJarsCli::planningMemory)
+          .ifPresent(value -> local.put("Computed memory", value));
       out.section("Local");
       out.properties(local);
     }
+  }
+
+  /**
+   * Summarizes the computed memory fit at the planning context: the smaller of 4,096 tokens and the
+   * advertised context, with an f16 KV cache. The value is read from the catalog memory fit (see
+   * {@code tools/model-profiles.mjs}); it is never recomputed here from descriptor dimensions,
+   * which lack sliding-window and per-layer KV-head data.
+   */
+  static Optional<String> planningMemory(ModelMemoryFit fit) {
+    int context = Math.min(4096, fit.contextLength());
+    return fit.contextTotal("f16", context)
+        .map(
+            total ->
+                CliOutput.humanBytes(total.totalBytes())
+                    + " at "
+                    + total.contextTokens()
+                    + " tokens (f16 KV cache + "
+                    + CliOutput.humanBytes(fit.fixedOverheadBytes())
+                    + " assumed runtime overhead; computed, not measured"
+                    + (fit.upperBound() ? "; upper bound" : "")
+                    + ")");
+  }
+
+  /** Measured repetition-loop stop rates; "not measured" when no run is recorded. */
+  static String repetitionLoop(List<ModelRepetitionLoopMeasurement> measurements) {
+    if (measurements.isEmpty()) {
+      return "not measured";
+    }
+    return String.join(
+            "; ",
+            measurements.stream()
+                .map(
+                    measurement ->
+                        String.format(
+                            Locale.ROOT,
+                            "%.1f%% (%d/%d) %s, %s workload, Models %s, detector %d/%d/%d",
+                            measurement.stopRate() * 100.0,
+                            measurement.stops(),
+                            measurement.generations(),
+                            measurement.backend(),
+                            measurement.workload(),
+                            measurement.modelsVersion(),
+                            measurement.maxSpan(),
+                            measurement.minRepeats(),
+                            measurement.minLoopTokens()))
+                .toList())
+        + "; measured at the documented sampling";
   }
 
   static void renderProfile(ModelProfile profile, CliOutput out) {
@@ -1451,6 +1493,7 @@ public final class ModelJarsCli implements Callable<Integer> {
               generation
                   .thinkingDefault()
                   .ifPresent(value -> values.put("Thinking by default", value ? "yes" : "no"));
+              values.put("Repetition-loop stops", repetitionLoop(profile.repetitionLoop()));
               values.put(
                   "Sources",
                   String.join(

@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.modeljars.ClasspathModelJarRegistry;
 import org.modeljars.ModelArtifactFile;
 import org.modeljars.ModelDimensions;
 import org.modeljars.ModelInstallProgress;
@@ -45,6 +46,7 @@ import org.modeljars.ModelJarCache;
 import org.modeljars.ModelJarCoordinate;
 import org.modeljars.ModelJarDescriptor;
 import org.modeljars.ModelJarRegistry;
+import org.modeljars.ModelMemoryFit;
 import org.modeljars.ModelProfileRegistry;
 import org.modeljars.ModelVersion;
 
@@ -256,6 +258,46 @@ class ModelJarsCliTest {
     assertTrue(shown.output().contains("16875"), shown.output());
     assertTrue(shown.output().contains("6.24 GiB"), shown.output());
     assertFalse(shown.output().contains("Top-p"), shown.output());
+    assertTrue(
+        shown.output().matches("(?s).*Repetition-loop stops\\s+not measured.*"), shown.output());
+
+    properties.load(
+        new java.io.StringReader(
+            String.join(
+                "\n",
+                prefix + "repetitionLoop.count=1",
+                prefix + "repetitionLoop.000.backend=pure-java",
+                prefix + "repetitionLoop.000.workload=general",
+                prefix + "repetitionLoop.000.modelsVersion=0.3.41",
+                prefix + "repetitionLoop.000.modelsRevision=" + "e".repeat(40),
+                prefix + "repetitionLoop.000.detector.maxSpan=32",
+                prefix + "repetitionLoop.000.detector.minRepeats=4",
+                prefix + "repetitionLoop.000.detector.minLoopTokens=16",
+                prefix + "repetitionLoop.000.generations=27",
+                prefix + "repetitionLoop.000.stops=3",
+                prefix + "repetitionLoop.000.report=benchmark-results/loops.json",
+                prefix + "repetitionLoop.000.reportSha256=" + "f".repeat(64))));
+    Result measured =
+        run(
+            new ModelJarsCli(
+                ModelJarRegistry.of(List.of(descriptor)),
+                (selected, destination, progress) -> destination,
+                ModelJarsCliTest::snapshot,
+                request -> {
+                  throw new UnsupportedOperationException();
+                },
+                Clock.systemUTC(),
+                new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
+                ModelProfileRegistry.fromProperties(properties)),
+            "show",
+            descriptor.alias());
+    assertTrue(
+        measured
+            .output()
+            .contains(
+                "11.1% (3/27) pure-java, general workload, Models 0.3.41, detector 32/4/16;"
+                    + " measured at the documented sampling"),
+        measured.output());
   }
 
   @Test
@@ -342,6 +384,105 @@ class ModelJarsCliTest {
   }
 
   @Test
+  void showsTheProfileMemoryFitRatherThanTheLegacyFloorForBundledModels() {
+    ModelJarsCli cli =
+        new ModelJarsCli(
+            ClasspathModelJarRegistry.load(),
+            (selected, destination, progress) -> destination,
+            ModelJarsCliTest::snapshot,
+            request -> {
+              throw new UnsupportedOperationException();
+            },
+            Clock.systemUTC(),
+            new ModelAliasStore(temporaryDirectory.resolve("aliases.properties")),
+            ModelProfileRegistry.fromClasspath());
+    ModelProfileRegistry profiles = ModelProfileRegistry.fromClasspath();
+    ModelJarRegistry registry = ClasspathModelJarRegistry.load();
+
+    // Hand-computed at 4,096 tokens with an f16 KV cache (2 bytes per element):
+    // total = GGUF bytes + 1 GiB stated overhead + sum over layers of tokens * kvHeads * (k + v) *
+    // 2.
+    //
+    // Gemma 4 26B A4B: 25 sliding-window layers charged min(4096, 1024) tokens with 8 KV heads of
+    // 256 + 256, and 5 full-attention layers with 2 KV heads of 512 + 512.
+    //   25 * 1024 * 8 * 512 * 2 + 5 * 4096 * 2 * 1024 * 2 = 209,715,200 + 83,886,080 = 293,601,280
+    //   16,796,015,136 + 1,073,741,824 + 293,601,280 = 18,163,358,240 (16.9 GiB)
+    // The legacy floor charged 30 layers * 16 attention heads * (512 + 512) and no overhead:
+    //   16,796,015,136 + 4096 * 30 * 16 * 1024 * 2 = 20,822,546,976 (19.4 GiB).
+    assertComputedMemory(
+        cli,
+        registry,
+        profiles,
+        "ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m",
+        18_163_358_240L,
+        "16.9 GiB",
+        "19.4 GiB");
+    // Qwen3 8B: 36 layers * 4096 * 8 KV heads * (128 + 128) * 2 = 603,979,776
+    //   5,027,783,488 + 1,073,741,824 + 603,979,776 = 6,705,505,088 (6.24 GiB); legacy 5.24 GiB.
+    assertComputedMemory(
+        cli, registry, profiles, "qwen3_8b_q4_k_m", 6_705_505_088L, "6.24 GiB", "5.24 GiB");
+    // Gemma 3 1B: 26 layers * 4096 * 1 KV head * (256 + 256) * 2 = 109,051,904. The header declares
+    // a 512-token window without a per-layer pattern, so every layer is charged full attention and
+    // the value is an upper bound.
+    //   806,058,496 + 1,073,741,824 + 109,051,904 = 1,988,852,224 (1.85 GiB); legacy 872.7 MiB.
+    Result gemma3 =
+        assertComputedMemory(
+            cli,
+            registry,
+            profiles,
+            "bartowski_google_gemma_3_1b_it_gguf_q4_k_m",
+            1_988_852_224L,
+            "1.85 GiB",
+            "872.7 MiB");
+    assertTrue(gemma3.output().contains("upper bound"), gemma3.output());
+  }
+
+  @Test
+  void bundledProfilesCarryTheTurnTerminatorReadFromTheChatTemplate() {
+    ModelProfileRegistry profiles = ModelProfileRegistry.fromClasspath();
+    ModelJarDescriptor gemma3 =
+        ClasspathModelJarRegistry.load().descriptors().stream()
+            .filter(
+                descriptor ->
+                    descriptor.alias().equals("bartowski_google_gemma_3_1b_it_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+    var generation = profiles.profileFor(gemma3).orElseThrow().generation().orElseThrow();
+
+    assertEquals(List.of(1, 106), generation.eosTokenIds());
+    assertEquals(
+        List.of("gguf:tokenizer.chat_template(<end_of_turn>)"),
+        generation.provenance().get("eosTokenId.106"));
+  }
+
+  private static Result assertComputedMemory(
+      ModelJarsCli cli,
+      ModelJarRegistry registry,
+      ModelProfileRegistry profiles,
+      String alias,
+      long expectedTotalBytes,
+      String expected,
+      String legacy) {
+    ModelJarDescriptor descriptor =
+        registry.descriptors().stream()
+            .filter(candidate -> candidate.alias().equals(alias))
+            .findFirst()
+            .orElseThrow();
+    ModelMemoryFit fit = profiles.profileFor(descriptor).orElseThrow().memoryFit().orElseThrow();
+    assertEquals(
+        expectedTotalBytes, fit.contextTotal("f16", 4096).orElseThrow().totalBytes(), alias);
+
+    Result shown = run(cli, "show", alias);
+    assertEquals(0, shown.status(), shown.error());
+    assertFalse(shown.output().contains("Memory floor"), shown.output());
+    assertTrue(
+        shown.output().contains(expected + " at 4096 tokens (f16 KV"), alias + shown.output());
+    assertTrue(shown.output().contains("computed, not measured"), shown.output());
+    assertFalse(shown.output().contains(legacy + " at 4096"), shown.output());
+    return shown;
+  }
+
+  @Test
   void showsReadableAndExactPinnedArtifactMetadata() {
     ModelJarDescriptor descriptor = descriptor();
     ModelJarsCli cli = cli(descriptor);
@@ -352,7 +493,8 @@ class ModelJarsCliTest {
 
     assertEquals(0, human.status());
     assertTrue(human.output().contains("PROVENANCE"));
-    assertTrue(human.output().contains("Memory floor"));
+    assertFalse(human.output().contains("Memory floor"));
+    assertFalse(human.output().contains("Computed memory"), "no catalog memory fit, no value");
     assertTrue(human.output().contains("Run 'modeljars coordinates"));
     assertFalse(human.output().contains("Capabilities"));
     assertFalse(human.output().contains("Backends"));

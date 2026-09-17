@@ -53,7 +53,13 @@ gated repositories) and checked with `npm run catalog:profiles:check`.
   thinking by default are read only from files at the pinned revision: the repository's
   `generation_config.json` and the GGUF header (`general.sampling.*`, `tokenizer.ggml.eos_token_id`
   / `eot_token_id` / `eom_token_id`, the vocabulary, and recognised `tokenizer.chat_template`
-  idioms). Every value names its source file, revision, SHA-256, and key. A value the pinned files
+  idioms). When the GGUF chat template ends an assistant turn with a special token the header does
+  not declare as end-of-sequence (Gemma 3 `<end_of_turn>`, MiniCPM5 `<|im_end|>`), that token is
+  added to the end-of-sequence IDs with `tokenizer.chat_template` provenance and the token text. It
+  is read by rendering the template itself (pinned `@huggingface/jinja`) on a user and assistant
+  turn and taking the special token that immediately follows the assistant content; a template that
+  does not render, or does not place a special token there, records "not determined" in the
+  coverage and adds nothing. Every value names its source file, revision, SHA-256, and key. A value the pinned files
   do not publish is left absent; it is never guessed or copied from a different repository. When
   sources disagree, the `generation_config.json` value is recorded and the disagreement is kept.
 - **Memory fit.** For GGUF generators the file records KV bytes per token at f16 and q8_0, the total
@@ -66,6 +72,41 @@ gated repositories) and checked with `npm run catalog:profiles:check`.
 Profiles are deliberately outside `catalog/models.json`: they ship in the aggregate catalog, the
 website, and the CLI, never inside a marker JAR, so adding or correcting one never requires a new
 marker coordinate.
+
+## Repetition-Loop Stop Rate
+
+`catalog/generation-safety.json` holds one optional measured metric per exact artifact, backend,
+and workload: the repetition-loop stop rate at the model's documented generation profile. Every
+entry is absent until a run is recorded, and the website and `modeljars show` display "not
+measured" until then. It is never computed, estimated, or defaulted to zero. The manifest's
+`repetitionLoopMethod` is fixed by `tools/generation-safety.mjs`, which `npm test` validates.
+
+How a value is measured:
+
+1. Use Models 0.3.41 or later, the first release with the detector. Enable it with
+   `SamplingOptions.repetitionLoopDetection(new RepetitionLoopDetection(maxSpan, minRepeats,
+   minLoopTokens))`. It is off by default.
+2. Apply every sampling value that `catalog/model-profiles.json` documents for the exact artifact
+   (temperature, top-p, top-k, min-p, repetition penalty), using exactly those values. A model
+   whose profile documents no sampling value has no documented generation profile and cannot carry
+   this metric. Today that includes the Qwen3 GGUF artifacts, whose pinned files publish no
+   sampling settings.
+3. Generate once per workload case with fresh model state on the recorded backend. `stops` is the
+   delta of `RuntimeTextGenerationModel.repetitionLoopStops()` (or `GenerationLoop` /
+   `ContinuousBatchingMetrics`) across the run, cross-checked against each generation's
+   `StopReason.REPETITION_LOOP`. `generations` counts completed generations, and
+   `stopRate = stops / generations`.
+4. Record the detector thresholds, the sampling actually applied, the Models version and commit,
+   the workload, and the raw report path and SHA-256. The rate depends on the thresholds, so it
+   is never compared across different detector settings.
+
+What it cannot show: the detector stops only exactly periodic output. Instructed or legitimately
+repeated output counts as a stop, and a loop whose tokens drift is not caught. A zero rate on a
+workload that never elicits loops is no data about loops, not evidence that they are absent.
+
+The manifest lives outside `catalog/qualifications.json` on purpose. Qualification entries are
+embedded in marker JARs, so a metric added after publication would force a new marker coordinate.
+Like model profiles, it ships only in the aggregate catalog, the website, and the CLI.
 
 ## Qualification
 
@@ -108,6 +149,18 @@ the declared Models commit, verifies its SHA-256 and exact artifact/backend,
 and rejects tuned properties or any failed attempt. Existing evidence is
 grandfathered until it changes; tuned benchmark success cannot override a
 failed default-configuration smoke.
+
+### Tool-calling template round trip
+
+Every tool-qualified entry in `catalog/tool-qualifications.json` must survive a model-free round
+trip through the chat template the runtime selects for it (the tool qualification's template and
+that of any production RAG qualification for the same artifact). `ToolCallTemplateRoundTripTest`
+in the `modeljars` module renders a conversation that declares a tool and contains an assistant
+tool call through the Models `ChatTemplate`, scans the rendered assistant turn back with the same
+template's `ToolSyntax` and `ToolCallScanner`, and requires the call name and JSON arguments to be
+recovered exactly, including nested, escaped, and non-ASCII values. It runs in `./gradlew test`.
+A template whose rendered calls its own scanner cannot recover invalidates every tool-calling
+measurement taken through it, so a failing entry is not qualified.
 
 ### Embedding artifacts
 

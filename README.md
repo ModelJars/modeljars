@@ -694,8 +694,10 @@ Optional<ModelMemoryEstimate> baseline =
 Descriptors also expose display name, description, domains, upstream and download links, license
 link, exact artifact byte size, parameter count, context length, embedding width, total and
 attention block counts, attention/KV heads, feed-forward width, and MoE dimensions when present.
-Memory estimates are deliberately limited to model-file bytes plus the requested KV cache. Backend
-workspace, tensor repacking, allocator overhead, the JVM, and the operating system are excluded.
+`estimateMemory` is a descriptor-only baseline: it charges every attention block the full context,
+assumes one KV head per attention head when no scalar KV-head count is recorded, and excludes all
+runtime overhead, so it overstates sliding-window and per-layer grouped-query models. For planning,
+use the computed memory fit below, which is what `modeljars show` and ModelJARs.org display.
 
 Generation profiles and computed memory fit ship in the aggregate `modeljars-catalog` registry (not
 in marker JARs) and bind to the exact artifact SHA-256:

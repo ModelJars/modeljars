@@ -343,6 +343,69 @@ export function detectReasoningMarkers(tokens, template) {
   return { open: { text: "<think>", id: open }, close: { text: "</think>", id: close } };
 }
 
+// GGUF tokenizer.ggml.token_type values that mark a vocabulary entry as a special token rather
+// than text: CONTROL (3) and USER_DEFINED (4).
+const SPECIAL_TOKEN_TYPES = new Set([3, 4]);
+const TURN_TERMINATOR_PROBE = Object.freeze({
+  user: "ModelJarsProbeUserTurn",
+  assistant: "ModelJarsProbeAssistantTurn",
+});
+
+// Reads the token that ends an assistant turn by rendering the model's own chat template.
+//
+// A two-turn conversation (user, then assistant) is rendered without a generation prompt. The
+// terminator is the longest special vocabulary token (CONTROL or USER_DEFINED) that the rendering
+// places immediately after the assistant content, allowing only whitespace in between. Nothing is
+// inferred from the model family: a template that does not render, does not contain the assistant
+// content, or follows it with plain text yields "not determined".
+export function detectTurnTerminator(
+  { template, tokens, tokenTypes, bosToken = "", eosToken = "" } = {},
+  render,
+) {
+  const notDetermined = (reason) => ({ status: "not determined", reason });
+  if (typeof template !== "string" || template.length === 0) {
+    return notDetermined("no tokenizer.chat_template");
+  }
+  if (!Array.isArray(tokens) || !Array.isArray(tokenTypes)) {
+    return notDetermined("vocabulary token types unavailable");
+  }
+  let rendered;
+  try {
+    rendered = render(template, {
+      messages: [
+        { role: "user", content: TURN_TERMINATOR_PROBE.user },
+        { role: "assistant", content: TURN_TERMINATOR_PROBE.assistant },
+      ],
+      add_generation_prompt: false,
+      bos_token: bosToken ?? "",
+      eos_token: eosToken ?? "",
+    });
+  } catch (failure) {
+    return notDetermined(`chat template did not render: ${failure.message}`);
+  }
+  const at = typeof rendered === "string" ? rendered.lastIndexOf(TURN_TERMINATOR_PROBE.assistant) : -1;
+  if (at < 0) {
+    return notDetermined("rendered template does not contain the assistant content");
+  }
+  const following = rendered.slice(at + TURN_TERMINATOR_PROBE.assistant.length).replace(/^[ \t\r\n]*/, "");
+  let match = null;
+  tokens.forEach((text, id) => {
+    if (
+      typeof text === "string" &&
+      text.length > 0 &&
+      SPECIAL_TOKEN_TYPES.has(tokenTypes[id]) &&
+      following.startsWith(text) &&
+      (match === null || text.length > match.text.length)
+    ) {
+      match = { text, id };
+    }
+  });
+  if (match === null) {
+    return notDetermined("no special token follows the assistant content");
+  }
+  return { status: "detected", text: match.text, id: match.id };
+}
+
 const SAMPLING_KEYS = Object.freeze([
   ["temperature", "temperature", "general.sampling.temp"],
   ["topP", "top_p", "general.sampling.top_p"],
@@ -357,7 +420,7 @@ const GGUF_EOS_KEYS = Object.freeze([
   "tokenizer.ggml.eom_token_id",
 ]);
 
-export function generationProfile({ gguf, generationConfig } = {}) {
+export function generationProfile({ gguf, generationConfig, turnTerminator } = {}) {
   const sources = [];
   if (gguf) sources.push({ id: "gguf", ...gguf.source });
   if (generationConfig) sources.push({ id: "generation-config", ...generationConfig.source });
@@ -407,6 +470,13 @@ export function generationProfile({ gguf, generationConfig } = {}) {
     for (const id of Array.isArray(configured) ? configured : [configured]) {
       addEos(id, "generation-config", "eos_token_id");
     }
+  }
+  // An assistant turn that the chat template ends with a token the header does not declare would
+  // otherwise run past the end of the turn. Only a token read from the rendered template is added.
+  if (gguf && turnTerminator?.status === "detected" && !eos.has(turnTerminator.id)) {
+    eos.set(turnTerminator.id, [
+      { source: "gguf", key: "tokenizer.chat_template", token: turnTerminator.text },
+    ]);
   }
   const eosTokenIds = [...eos].map(([id, provenance]) => ({ id, provenance }));
 

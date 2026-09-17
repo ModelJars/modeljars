@@ -16,11 +16,13 @@ import process from "node:process";
 
 import { createRetryingFetch } from "./catalog-enrichment.mjs";
 import { inspectGguf } from "./gguf-inspector.mjs";
+import { renderChatTemplate } from "./chat-template-render.mjs";
 import { assertGgufIdentity } from "./gguf-metadata.mjs";
 import {
   MEMORY_FIT_METHOD,
   PROFILE_SCHEMA_VERSION,
   computeMemoryFit,
+  detectTurnTerminator,
   generationProfile,
   kvLayoutFromGguf,
   validateModelProfiles,
@@ -85,6 +87,7 @@ async function inspectHeader(model) {
     additionalFetchHeaders: userAgent,
     retainMetadataArrays: [
       "tokenizer.ggml.tokens",
+      "tokenizer.ggml.token_type",
       `${architecture}.attention.head_count`,
       `${architecture}.attention.head_count_kv`,
       `${architecture}.attention.sliding_window_pattern`,
@@ -117,7 +120,22 @@ async function profile(model) {
 
   if (generates) {
     const config = await fetchGenerationConfig(model);
+    const tokens = header?.metadata["tokenizer.ggml.tokens"];
+    const tokenId = (key) => header?.metadata[key];
+    const turnTerminator = header
+      ? detectTurnTerminator(
+          {
+            template: header.metadata["tokenizer.chat_template"],
+            tokens,
+            tokenTypes: header.metadata["tokenizer.ggml.token_type"],
+            bosToken: tokens?.[tokenId("tokenizer.ggml.bos_token_id")],
+            eosToken: tokens?.[tokenId("tokenizer.ggml.eos_token_id")],
+          },
+          renderChatTemplate,
+        )
+      : null;
     const generation = generationProfile({
+      turnTerminator,
       gguf: header
         ? {
             source: header.source,
@@ -137,6 +155,20 @@ async function profile(model) {
     if (!generation?.reasoning?.thinkingDefault) missing.push("thinkingDefault");
     coverage.generationConfig = config.status;
     coverage.ggufHeader = header ? "read" : "not a GGUF artifact";
+    if (turnTerminator) {
+      coverage.turnTerminator =
+        turnTerminator.status === "detected"
+          ? `${turnTerminator.text} (${turnTerminator.id}) ${
+              generation?.eosTokenIds?.some(
+                (token) =>
+                  token.id === turnTerminator.id &&
+                  token.provenance.some((reference) => reference.key !== "tokenizer.chat_template"),
+              )
+                ? "already declared"
+                : "added from tokenizer.chat_template"
+            }`
+          : `not determined: ${turnTerminator.reason}`;
+    }
     coverage.unsourced = missing;
   } else {
     coverage.generation = "not applicable: no text-generation capability";

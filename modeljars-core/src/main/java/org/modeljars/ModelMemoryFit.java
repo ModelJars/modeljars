@@ -68,6 +68,22 @@ public record ModelMemoryFit(
   }
 
   /**
+   * Returns the computed total at one catalog context point.
+   *
+   * <p>Only the context points recorded in the catalog are available; nothing is interpolated.
+   *
+   * @param type KV element type, such as {@code f16} or {@code q8_0}
+   * @param contextTokens context length recorded in the table
+   * @return weights plus overhead plus KV cache, when recorded for this type and context
+   */
+  public Optional<ContextTotal> contextTotal(String type, int contextTokens) {
+    return kvCache(type).stream()
+        .flatMap(fit -> fit.contexts().stream())
+        .filter(context -> context.contextTokens() == contextTokens)
+        .findFirst();
+  }
+
+  /**
    * Memory fit for one KV element type.
    *
    * @param type KV element type

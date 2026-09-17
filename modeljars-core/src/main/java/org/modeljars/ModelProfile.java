@@ -15,6 +15,7 @@
  */
 package org.modeljars;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,17 +29,37 @@ import java.util.Optional;
  * @param artifactSha256 SHA-256 of the artifact the profile describes
  * @param generation vendor-published generation settings, when any were found
  * @param memoryFit computed memory fit, when the artifact is a GGUF generator
+ * @param repetitionLoop measured repetition-loop stop rates at the documented generation profile;
+ *     empty when no run is recorded ("not measured")
  */
 public record ModelProfile(
     String modelAlias,
     String artifactSha256,
     Optional<ModelGenerationProfile> generation,
-    Optional<ModelMemoryFit> memoryFit) {
+    Optional<ModelMemoryFit> memoryFit,
+    List<ModelRepetitionLoopMeasurement> repetitionLoop) {
   /** Rejects null components. */
   public ModelProfile {
     Objects.requireNonNull(modelAlias, "modelAlias");
     Objects.requireNonNull(artifactSha256, "artifactSha256");
     generation = Objects.requireNonNull(generation, "generation");
     memoryFit = Objects.requireNonNull(memoryFit, "memoryFit");
+    repetitionLoop = List.copyOf(Objects.requireNonNull(repetitionLoop, "repetitionLoop"));
+  }
+
+  /**
+   * Creates a profile without repetition-loop measurements.
+   *
+   * @param modelAlias catalog model ID
+   * @param artifactSha256 SHA-256 of the artifact the profile describes
+   * @param generation vendor-published generation settings, when any were found
+   * @param memoryFit computed memory fit, when the artifact is a GGUF generator
+   */
+  public ModelProfile(
+      String modelAlias,
+      String artifactSha256,
+      Optional<ModelGenerationProfile> generation,
+      Optional<ModelMemoryFit> memoryFit) {
+    this(modelAlias, artifactSha256, generation, memoryFit, List.of());
   }
 }

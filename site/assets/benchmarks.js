@@ -162,13 +162,14 @@ function renderQualificationRows(qualifications, models) {
               <td>${escapeHtml(row.rawQuality)}</td>
               <td>${escapeHtml(row.finalQuality)}</td>
               <td>${escapeHtml(row.fallbackRate)}</td>
+              <td>${escapeHtml(row.loopStops)}</td>
               <td>${escapeHtml(row.peakRss)}</td>
               <td>${escapeHtml(row.attempts)}</td>
               <td class="evidence-cell">${evidenceCell(row.evidence)}</td>
             </tr>`,
         )
         .join("")
-    : '<tr><td colspan="12" class="table-loading">Qualification campaign pending.</td></tr>';
+    : '<tr><td colspan="13" class="table-loading">Qualification campaign pending.</td></tr>';
 }
 
 function renderEnvironment(benchmarks) {
@@ -225,7 +226,7 @@ async function loadBenchmarks() {
     elements.ragBody.innerHTML =
       `<tr><td colspan="12" class="table-error">${escapeHtml(error.message)}</td></tr>`;
     elements.qualificationBody.innerHTML =
-      `<tr><td colspan="12" class="table-error">${escapeHtml(error.message)}</td></tr>`;
+      `<tr><td colspan="13" class="table-error">${escapeHtml(error.message)}</td></tr>`;
     elements.status.textContent = "Benchmark evidence is unavailable.";
   }
 }

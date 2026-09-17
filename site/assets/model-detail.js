@@ -1,7 +1,11 @@
 import { formatDuration } from "./benchmark-data.js";
 import { gradleSnippet, mavenSnippet } from "./dependency-snippets.js";
-import { primaryQualification, qualificationLabel } from "./qualification-data.js";
-import { estimateMemory, formatBytes, formatParameters } from "./resource-profile.js";
+import {
+  primaryQualification,
+  qualificationLabel,
+  repetitionLoopText,
+} from "./qualification-data.js";
+import { formatBytes, formatParameters } from "./resource-profile.js";
 import { relatedModels, sizeTier, verificationProfile } from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
 
@@ -316,7 +320,12 @@ const SAMPLING_LABELS = [
 ];
 
 function provenanceText(provenance = []) {
-  return provenance.map((reference) => `${reference.source}: ${reference.key}`).join(" · ");
+  return provenance
+    .map(
+      (reference) =>
+        `${reference.source}: ${reference.key}${reference.token ? ` ${reference.token}` : ""}`,
+    )
+    .join(" · ");
 }
 
 function profileRow(label, value, provenance, extra = "") {
@@ -324,7 +333,18 @@ function profileRow(label, value, provenance, extra = "") {
   return `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}${note}${extra}</dd></div>`;
 }
 
-export function renderGenerationProfile(generation) {
+function repetitionLoopRow(measurements = []) {
+  const values = measurements.length
+    ? measurements.map(
+        (measurement) =>
+          `${repetitionLoopText(measurement)} ${measurement.backend}, ${measurement.workload} workload, Models ${measurement.modelsVersion}, detector span ${measurement.detector.maxSpan} / repeats ${measurement.detector.minRepeats} / min tokens ${measurement.detector.minLoopTokens}`,
+      )
+    : ["not measured"];
+  const note = measurements.length ? " · measured at the documented sampling" : "";
+  return `<div><dt>Repetition-loop stops</dt><dd>${escapeHtml(values.join("; ") + note)}</dd></div>`;
+}
+
+export function renderGenerationProfile(generation, repetitionLoopMeasurements = []) {
   if (!generation) return "";
   const rows = [];
   for (const [key, label] of SAMPLING_LABELS) {
@@ -370,6 +390,7 @@ export function renderGenerationProfile(generation) {
       ),
     );
   }
+  rows.push(repetitionLoopRow(repetitionLoopMeasurements));
   const sources = (generation.sources || [])
     .map(
       (source) => `<li><code>${escapeHtml(source.id)}</code> <a href="${safeExternalUrl(source.uri)}">${escapeHtml(source.file)}</a>
@@ -382,7 +403,7 @@ export function renderGenerationProfile(generation) {
           <h2 id="generation-profile-title">Generation profile</h2>
           <dl class="dimension-grid profile-grid">${rows.join("")}</dl>
           <ul class="profile-sources">${sources}</ul>
-          <p class="resource-note">Read only from files at the pinned revision. Settings that are absent are not published in the pinned files; ModelJars does not fill them in.</p>
+          <p class="resource-note">Read only from files at the pinned revision. Settings that are absent are not published in the pinned files; ModelJars does not fill them in. The repetition-loop stop rate is the only measured value here: the share of generations the Models repetition-loop detector stopped when run at these settings, shown only once such a run is recorded.</p>
         </section>`;
 }
 
@@ -491,7 +512,7 @@ export function resourceMemoryNote(model) {
     return "The member weights remain independently mapped and each member keeps its own prompt and KV state. The measured peak-memory tradeoff is shown in the qualification evidence.";
   }
   if (isGenerationModel(model)) {
-    return "Memory baseline includes mapped weights and a full-precision KV cache. Backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.";
+    return "Computed memory is the GGUF weights, an f16 KV cache for one sequence, and a stated runtime-overhead allowance, derived from header metadata (computed, not measured). The memory fit below gives other contexts, KV types, and budgets.";
   }
   const purpose = (model.capabilities || []).includes("reranking")
     ? "Reranking"
@@ -501,8 +522,36 @@ export function resourceMemoryNote(model) {
   return `Memory baseline covers the complete artifact bytes. ${purpose} working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.`;
 }
 
-function dimensionRows(model, memory, downloadBytes, generationModel) {
+// The memory figure for a generation model is read from the catalog memory fit, which
+// tools/model-profiles.mjs computes from the GGUF header (sliding windows, per-layer KV heads, and a
+// stated overhead included). It is never re-derived here from descriptor dimensions.
+export function planningMemory(model) {
+  const fit = model?.modelProfile?.memoryFit;
+  if (!fit?.layout || !Array.isArray(fit.kvCache)) return null;
+  const contextTokens = Math.min(4_096, fit.layout.contextLength);
+  const context = fit.kvCache
+    .find((cache) => cache.type === "f16")
+    ?.contexts?.find((entry) => entry.contextTokens === contextTokens);
+  if (!context) return null;
+  return {
+    contextTokens,
+    totalBytes: context.totalBytes,
+    kvCacheType: "f16",
+    fixedOverheadBytes: fit.fixedOverheadBytes,
+    upperBound: Boolean(fit.upperBound),
+  };
+}
+
+function descriptorDownloadBytes(model) {
+  return model.kind === "hybrid"
+    ? Number(model.requiredWeightBytes || 0)
+    : artifactDownloadBytes(model);
+}
+
+export function descriptorRows(model) {
   const dimensions = model.dimensions || {};
+  const downloadBytes = descriptorDownloadBytes(model);
+  const memory = isGenerationModel(model) ? planningMemory(model) : null;
   const rows = [
     ["Parameters", formatParameters(dimensions.parameterCount)],
     ["Download", formatBytes(downloadBytes)],
@@ -511,12 +560,14 @@ function dimensionRows(model, memory, downloadBytes, generationModel) {
     ["Layers", dimensions.blockCount?.toLocaleString("en-US")],
     ["Attention heads", dimensions.attentionHeadCount?.toLocaleString("en-US")],
     ["KV heads", dimensions.keyValueHeadCount?.toLocaleString("en-US")],
-    [
-      "Memory baseline",
-      memory
-        ? `>= ${formatBytes(memory.minimumBytes)}${generationModel ? " at 4,096 tokens" : ""}`
-        : null,
-    ],
+    isGenerationModel(model)
+      ? [
+          "Computed memory",
+          memory
+            ? `${formatBytes(memory.totalBytes)} at ${memory.contextTokens.toLocaleString("en-US")} tokens (${memory.kvCacheType} KV cache + ${formatBytes(memory.fixedOverheadBytes)} assumed overhead; computed, not measured${memory.upperBound ? "; upper bound" : ""})`
+            : null,
+        ]
+      : ["Memory baseline", `>= ${formatBytes(downloadBytes)}`],
   ].filter(([, value]) => value && !String(value).startsWith("undefined"));
 
   return rows
@@ -835,14 +886,6 @@ function renderRelated(model, catalog) {
 function renderModel(model, catalog) {
   const target = document.querySelector("#model-detail");
   const profile = verificationProfile(model);
-  const planningContext = Math.min(4_096, model.dimensions?.contextLength || 4_096);
-  const generationModel = isGenerationModel(model);
-  const downloadBytes = model.kind === "hybrid"
-    ? Number(model.requiredWeightBytes || 0)
-    : artifactDownloadBytes(model);
-  const memory = generationModel
-    ? estimateMemory(model, planningContext, 2)
-    : { minimumBytes: downloadBytes };
   const tags = [
     ...(model.domains || []),
     ...(model.capabilities || []),
@@ -932,13 +975,13 @@ function renderModel(model, catalog) {
         <section class="detail-section" aria-labelledby="contents-title">
           <p class="eyebrow">Descriptor</p>
           <h2 id="contents-title">What is inside</h2>
-          <dl class="dimension-grid">${dimensionRows(model, memory, downloadBytes, generationModel)}</dl>
+          <dl class="dimension-grid">${descriptorRows(model)}</dl>
           <p class="resource-note">
             ${escapeHtml(resourceMemoryNote(model))}
           </p>
         </section>
 
-        ${renderGenerationProfile(model.modelProfile?.generation)}
+        ${renderGenerationProfile(model.modelProfile?.generation, model.repetitionLoopMeasurements)}
 
         ${renderMemoryFit(model.modelProfile?.memoryFit)}
 

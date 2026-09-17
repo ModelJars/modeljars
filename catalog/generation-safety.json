@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-17T00:00:00Z",
+  "repetitionLoopMethod": {
+    "status": "measured; absent until a run is recorded",
+    "metric": "stopRate = stops / generations: the fraction of completed generations that the Models repetition-loop detector stopped with StopReason.REPETITION_LOOP",
+    "generationProfile": "sampling must apply every value catalog/model-profiles.json documents for the exact artifact (temperature, top-p, top-k, min-p, repetition penalty) with exactly the documented values; settings the profile does not document keep the runtime defaults and are recorded as applied when set; a model whose profile documents no sampling value has no documented generation profile and cannot carry this metric",
+    "detector": "SamplingOptions.repetitionLoopDetection(new RepetitionLoopDetection(maxSpan, minRepeats, minLoopTokens)), enabled (maxSpan > 0, minRepeats >= 2); the thresholds are recorded with the value because the rate depends on them",
+    "counter": "stops is the delta of RuntimeTextGenerationModel.repetitionLoopStops() (or GenerationLoop.repetitionLoopStops() / ContinuousBatchingMetrics.repetitionLoopStops()) across the run, cross-checked against the per-generation stop reasons in the report",
+    "run": "one generation per workload case with a fresh model state, on the recorded backend and Models version (0.3.41 or later, the first release with the detector); the raw report is published in integrallis/models at modelsRevision and bound by reportSha256",
+    "limits": "exact periodicity only: instructed or legitimately repeated output (a zero-filled array, a table rule) also counts as a stop, and a loop whose tokens drift is not detected; a rate of zero on a workload that never elicits loops is no data about loops, not evidence of their absence"
+  },
+  "entries": []
+}

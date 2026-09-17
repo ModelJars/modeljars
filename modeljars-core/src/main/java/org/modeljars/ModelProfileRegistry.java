@@ -164,7 +164,35 @@ public final class ModelProfileRegistry {
         alias,
         reader.required("artifactSha256"),
         reader.has("generation.") ? Optional.of(generation(reader)) : Optional.empty(),
-        reader.has("memory.") ? Optional.of(memoryFit(reader)) : Optional.empty());
+        reader.has("memory.") ? Optional.of(memoryFit(reader)) : Optional.empty(),
+        repetitionLoop(reader));
+  }
+
+  private static List<ModelRepetitionLoopMeasurement> repetitionLoop(Reader reader) {
+    int count = reader.optionalInt("repetitionLoop.count").orElse(0);
+    return IntStream.range(0, count)
+        .mapToObj(
+            index -> {
+              String entry = "repetitionLoop.%03d.".formatted(index);
+              try {
+                return new ModelRepetitionLoopMeasurement(
+                    reader.required(entry + "backend"),
+                    reader.required(entry + "workload"),
+                    reader.required(entry + "modelsVersion"),
+                    reader.required(entry + "modelsRevision"),
+                    reader.requiredInt(entry + "detector.maxSpan"),
+                    reader.requiredInt(entry + "detector.minRepeats"),
+                    reader.requiredInt(entry + "detector.minLoopTokens"),
+                    reader.requiredInt(entry + "generations"),
+                    reader.requiredInt(entry + "stops"),
+                    reader.required(entry + "report"),
+                    reader.required(entry + "reportSha256"));
+              } catch (IllegalArgumentException e) {
+                throw new ModelJarException(
+                    "Invalid repetition-loop measurement " + reader.prefix() + entry, e);
+              }
+            })
+        .toList();
   }
 
   private static ModelGenerationProfile generation(Reader reader) {

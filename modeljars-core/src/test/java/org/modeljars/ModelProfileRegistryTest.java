@@ -113,6 +113,45 @@ class ModelProfileRegistryTest {
   }
 
   @Test
+  void repetitionLoopStopsAreAbsentUnlessAMeasuredRunIsRecorded() throws IOException {
+    assertTrue(
+        ModelProfileRegistry.fromProperties(properties())
+            .profiles()
+            .getFirst()
+            .repetitionLoop()
+            .isEmpty());
+
+    Properties measured = properties();
+    measured.setProperty(PREFIX + "repetitionLoop.count", "1");
+    measured.setProperty(PREFIX + "repetitionLoop.000.backend", "pure-java");
+    measured.setProperty(PREFIX + "repetitionLoop.000.workload", "general");
+    measured.setProperty(PREFIX + "repetitionLoop.000.modelsVersion", "0.3.41");
+    measured.setProperty(PREFIX + "repetitionLoop.000.modelsRevision", "e".repeat(40));
+    measured.setProperty(PREFIX + "repetitionLoop.000.detector.maxSpan", "32");
+    measured.setProperty(PREFIX + "repetitionLoop.000.detector.minRepeats", "4");
+    measured.setProperty(PREFIX + "repetitionLoop.000.detector.minLoopTokens", "16");
+    measured.setProperty(PREFIX + "repetitionLoop.000.generations", "27");
+    measured.setProperty(PREFIX + "repetitionLoop.000.stops", "3");
+    measured.setProperty(PREFIX + "repetitionLoop.000.report", "benchmark-results/loops.json");
+    measured.setProperty(PREFIX + "repetitionLoop.000.reportSha256", "f".repeat(64));
+
+    ModelRepetitionLoopMeasurement measurement =
+        ModelProfileRegistry.fromProperties(measured)
+            .profiles()
+            .getFirst()
+            .repetitionLoop()
+            .getFirst();
+    assertEquals("pure-java", measurement.backend());
+    assertEquals(3, measurement.stops());
+    assertEquals(27, measurement.generations());
+    assertEquals(3.0 / 27.0, measurement.stopRate());
+    assertEquals(32, measurement.maxSpan());
+
+    measured.setProperty(PREFIX + "repetitionLoop.000.stops", "28");
+    assertThrows(ModelJarException.class, () -> ModelProfileRegistry.fromProperties(measured));
+  }
+
+  @Test
   void bindsAProfileOnlyToTheExactArtifact() throws IOException {
     ModelProfileRegistry registry = ModelProfileRegistry.fromProperties(properties());
 

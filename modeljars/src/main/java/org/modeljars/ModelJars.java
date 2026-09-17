@@ -81,6 +81,7 @@ public final class ModelJars {
       ArtifactInstaller installer,
       BackendLoader backendLoader,
       ActivatedBackendLoader activatedBackendLoader,
+      ModelComponentQualificationRegistry componentQualifications,
       Supplier<Map<String, String>> runtimeEnvironment) {
     this(
         models,
@@ -89,8 +90,9 @@ public final class ModelJars {
         installer,
         backendLoader,
         activatedBackendLoader,
-        ModelComponentQualificationRegistry.fromClasspath(),
-        runtimeEnvironment);
+        componentQualifications,
+        runtimeEnvironment,
+        () -> ManagementFactory.getRuntimeMXBean().getInputArguments());
   }
 
   ModelJars(
@@ -101,7 +103,8 @@ public final class ModelJars {
       BackendLoader backendLoader,
       ActivatedBackendLoader activatedBackendLoader,
       ModelComponentQualificationRegistry componentQualifications,
-      Supplier<Map<String, String>> runtimeEnvironment) {
+      Supplier<Map<String, String>> runtimeEnvironment,
+      Supplier<List<String>> jvmArguments) {
     this(
         models,
         qualifications,
@@ -118,7 +121,7 @@ public final class ModelJars {
         ModelJars::loadRerankingModel,
         ModelJars::loadSpeechModel,
         runtimeEnvironment,
-        () -> ManagementFactory.getRuntimeMXBean().getInputArguments());
+        jvmArguments);
   }
 
   ModelJars(
@@ -431,6 +434,10 @@ public final class ModelJars {
    * branches fork from the same physical KV-cache prefix; the adapter is a composition component,
    * not a second standalone model.
    *
+   * <p>The composition runs on a backend the base is qualified for: pure Java when the base is
+   * qualified on it, otherwise the base's qualified native backend. The component's evidence must
+   * bind that same backend.
+   *
    * @param baseModel qualified base-model marker
    * @param adapter activated-adapter component marker
    * @return lifecycle-owning activated runtime
@@ -442,11 +449,15 @@ public final class ModelJars {
 
   /**
    * Opens one qualified base model with a verified Activated-LoRA tool specialist and explicit
-   * cache controls.
+   * backend, cache, and network controls.
+   *
+   * <p>{@link ModelBackend#AUTO} prefers pure Java when the base is qualified on it and otherwise
+   * selects the base's qualified native backend. An explicitly requested backend must be qualified
+   * for the base and bound by the component's evidence, or the call fails without loading anything.
    *
    * @param baseModel qualified base-model marker
    * @param adapter activated-adapter component marker
-   * @param options cache and network controls; activated adapters require the Java backend
+   * @param options backend, cache, and network controls
    * @return lifecycle-owning activated runtime
    */
   public static ModelJarActivatedRuntime openActivatedToolRuntime(
@@ -752,9 +763,6 @@ public final class ModelJars {
     Objects.requireNonNull(baseModel, "baseModel");
     Objects.requireNonNull(adapter, "adapter");
     Objects.requireNonNull(options, "options");
-    if (options.backend() == ModelBackend.NATIVE) {
-      throw new ModelJarException("Activated-LoRA compositions require the pure-Java backend");
-    }
 
     ModelJarDescriptor baseDescriptor =
         models
@@ -765,19 +773,22 @@ public final class ModelJars {
             .resolve(adapter)
             .orElseThrow(
                 () -> new ModelJarException("No activated-adapter component matched " + adapter));
-    ModelComponentQualificationRegistry.Entry componentQualification =
-        requireActivatedAdapter(baseDescriptor, adapterDescriptor);
 
     ModelExecutionQualification qualification =
-        selectQualification(baseDescriptor, ModelBackend.JAVA);
+        selectActivatedQualification(baseDescriptor, options.backend());
+    String selectedBackend = qualification.backend();
+    ModelComponentQualificationRegistry.Entry componentQualification =
+        requireActivatedAdapter(baseDescriptor, adapterDescriptor, selectedBackend);
+
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
+    requireNativeAccess(selectedBackend, activeJvmArguments);
     Path baseArtifact = installer.install(baseDescriptor, options);
     Path adapterDirectory = installer.install(adapterDescriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
         configuration(baseDescriptor, qualification, runtime, activeJvmArguments);
     SharedPrefixInferenceBackend backend =
-        activatedBackendLoader.load(baseArtifact, adapterDirectory, configuration);
+        activatedBackendLoader.load(selectedBackend, baseArtifact, adapterDirectory, configuration);
     ActivatedToolCallingModel model = null;
     try {
       model =
@@ -799,29 +810,62 @@ public final class ModelJars {
   }
 
   private ModelComponentQualificationRegistry.Entry requireActivatedAdapter(
-      ModelJarDescriptor baseDescriptor, ModelJarDescriptor descriptor) {
+      ModelJarDescriptor baseDescriptor, ModelJarDescriptor descriptor, String selectedBackend) {
     boolean valid =
         descriptor.format().equals("safetensors")
             && !descriptor.files().isEmpty()
             && descriptor.capabilities().contains("composition-component")
             && descriptor.features().contains("multi-file-artifact")
-            && descriptor.features().contains("activated-lora-adapter")
-            && descriptor.supportsBackend(JAVA_BACKEND);
+            && descriptor.features().contains("activated-lora-adapter");
     if (!valid) {
       throw new ModelJarException(
           "ModelJar "
               + descriptor.markerCoordinate()
               + " is not an activated-lora-adapter composition component");
     }
-    return componentQualifications
-        .qualificationFor(descriptor, baseDescriptor)
-        .orElseThrow(
-            () ->
-                new ModelJarException(
-                    "ModelJar "
-                        + descriptor.markerCoordinate()
-                        + " has no qualified component evidence bound to base "
-                        + baseDescriptor.markerCoordinate()));
+    ModelComponentQualificationRegistry.Entry componentQualification =
+        componentQualifications
+            .qualificationFor(descriptor, baseDescriptor)
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "ModelJar "
+                            + descriptor.markerCoordinate()
+                            + " has no qualified component evidence bound to base "
+                            + baseDescriptor.markerCoordinate()));
+    if (!componentQualification.backend().equals(selectedBackend)) {
+      throw new ModelJarException(
+          "Activated component "
+              + descriptor.markerCoordinate()
+              + " binds "
+              + componentQualification.backend()
+              + " evidence, but base "
+              + baseDescriptor.markerCoordinate()
+              + " was selected on "
+              + selectedBackend
+              + "; a component and its base must be qualified on the same backend");
+    }
+    if (!descriptor.supportsBackend(selectedBackend)) {
+      throw new ModelJarException(
+          "Activated component "
+              + descriptor.markerCoordinate()
+              + " does not advertise "
+              + selectedBackend
+              + " support required by base "
+              + baseDescriptor.markerCoordinate()
+              + "; it advertises "
+              + advertisedBackends(descriptor));
+    }
+    return componentQualification;
+  }
+
+  private static String advertisedBackends(ModelJarDescriptor descriptor) {
+    List<String> advertised =
+        Stream.of(JAVA_BACKEND, NATIVE_BACKEND)
+            .filter(descriptor::supportsBackend)
+            .sorted()
+            .toList();
+    return advertised.isEmpty() ? "no execution backend" : String.join(", ", advertised);
   }
 
   private ModelJarRuntime loadRuntimeConfigured(
@@ -947,14 +991,58 @@ public final class ModelJars {
     }
   }
 
+  private List<ModelExecutionQualification> productionQualifications(
+      ModelJarDescriptor descriptor) {
+    return Stream.<ModelExecutionQualification>concat(
+            qualifications.qualificationsFor(descriptor).stream(),
+            toolQualifications.qualificationsFor(descriptor).stream())
+        .filter(ModelExecutionQualification::productionUsable)
+        .toList();
+  }
+
+  private static String qualifiedBackends(List<ModelExecutionQualification> candidates) {
+    List<String> backends =
+        candidates.stream().map(ModelExecutionQualification::backend).distinct().sorted().toList();
+    return backends.isEmpty() ? "none" : String.join(", ", backends);
+  }
+
+  /**
+   * Selects the qualification an activated composition runs on.
+   *
+   * <p>An explicit backend must be qualified for the base. Automatic selection prefers pure Java
+   * when the base is qualified on it and otherwise uses the qualified native backend; it never
+   * falls back to an unqualified backend.
+   */
+  private ModelExecutionQualification selectActivatedQualification(
+      ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
+    if (requestedBackend != ModelBackend.AUTO) {
+      return selectQualification(descriptor, requestedBackend);
+    }
+    List<ModelExecutionQualification> candidates = productionQualifications(descriptor);
+    return candidates.stream()
+        .filter(candidate -> JAVA_BACKEND.equals(candidate.backend()))
+        .findFirst()
+        .or(
+            () ->
+                candidates.stream()
+                    .filter(candidate -> NATIVE_BACKEND.equals(candidate.backend()))
+                    .findFirst())
+        .orElseThrow(
+            () ->
+                new ModelJarException(
+                    "ModelJar "
+                        + descriptor.markerCoordinate()
+                        + " has no qualified "
+                        + JAVA_BACKEND
+                        + " or "
+                        + NATIVE_BACKEND
+                        + " execution for an activated composition; qualified backends: "
+                        + qualifiedBackends(candidates)));
+  }
+
   private ModelExecutionQualification selectQualification(
       ModelJarDescriptor descriptor, ModelBackend requestedBackend) {
-    List<ModelExecutionQualification> candidates =
-        Stream.<ModelExecutionQualification>concat(
-                qualifications.qualificationsFor(descriptor).stream(),
-                toolQualifications.qualificationsFor(descriptor).stream())
-            .filter(ModelExecutionQualification::productionUsable)
-            .toList();
+    List<ModelExecutionQualification> candidates = productionQualifications(descriptor);
     if (requestedBackend != ModelBackend.AUTO) {
       String backend = requestedBackend.backendId();
       return candidates.stream()
@@ -967,7 +1055,8 @@ public final class ModelJars {
                           + descriptor.markerCoordinate()
                           + " has no qualified "
                           + backend
-                          + " execution"));
+                          + " execution; qualified backends: "
+                          + qualifiedBackends(candidates)));
     }
     return candidates.stream()
         .min(
@@ -1229,8 +1318,19 @@ public final class ModelJars {
   }
 
   private static SharedPrefixInferenceBackend loadActivatedBackend(
-      Path baseArtifact, Path adapterDirectory, BackendConfiguration configuration) {
-    return PureJavaBackend.loadActivatedAdapter(baseArtifact, adapterDirectory, configuration);
+      String backend,
+      Path baseArtifact,
+      Path adapterDirectory,
+      BackendConfiguration configuration) {
+    return switch (backend) {
+      case JAVA_BACKEND ->
+          PureJavaBackend.loadActivatedAdapter(baseArtifact, adapterDirectory, configuration);
+      case NATIVE_BACKEND ->
+          RustFfmBackend.loadActivatedAdapter(baseArtifact, adapterDirectory, configuration);
+      default ->
+          throw new ModelJarException(
+              "Unsupported Models activated-composition backend: " + backend);
+    };
   }
 
   private static EmbeddingBackend loadEmbeddingBackend(
@@ -1327,7 +1427,10 @@ public final class ModelJars {
   @FunctionalInterface
   interface ActivatedBackendLoader {
     SharedPrefixInferenceBackend load(
-        Path baseArtifact, Path adapterDirectory, BackendConfiguration configuration);
+        String backend,
+        Path baseArtifact,
+        Path adapterDirectory,
+        BackendConfiguration configuration);
   }
 
   @FunctionalInterface

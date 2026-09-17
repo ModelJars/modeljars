@@ -523,6 +523,7 @@ data class CatalogComponentQualification(
     val reportSha256: String,
     val qualified: Boolean,
     val specialistKind: String,
+    val backend: String,
     val raw: Map<String, Any?>,
 )
 
@@ -1081,6 +1082,7 @@ fun CatalogComponentQualifications.registryProperties(
             appendLine("${prefix}reportSha256=${entry.reportSha256}")
             appendLine("${prefix}qualified=${entry.qualified}")
             appendLine("${prefix}specialistKind=${propertyValue(entry.specialistKind)}")
+            appendLine("${prefix}backend=${propertyValue(entry.backend)}")
             appendLine("${prefix}artifactFile.count=${entry.artifactFiles.size}")
             entry.artifactFiles.forEachIndexed { index, artifactFile ->
                 val filePrefix = "${prefix}artifactFile.${index.toString().padStart(3, '0')}."
@@ -2255,6 +2257,12 @@ val componentQualifications =
                                     "component qualification $modelId.specialistKind is unsupported: $it"
                                 }
                             },
+                        backend =
+                            (raw["backend"] as? String ?: "pure-java").also {
+                                require(it in setOf("pure-java", "rust-ffm")) {
+                                    "component qualification $modelId.backend is unsupported: $it"
+                                }
+                            },
                         raw = raw,
                     )
                 }
@@ -2353,6 +2361,15 @@ componentQualifications?.entries?.forEach { qualification ->
     require(baseEntry.sizeBytes == qualification.baseArtifactSizeBytes) {
         "Component qualification base size does not match ${qualification.baseModelId}"
     }
+    require(entry.backends[qualification.backend] == true) {
+        "Component qualification ${qualification.modelId} binds ${qualification.backend} " +
+            "evidence but its marker does not advertise that backend"
+    }
+    // The base must also advertise the component's evidence backend, otherwise the pair can never
+    // be opened. That gate is not enforced here yet: the published answerability component binds
+    // pure-java evidence to a base qualified on rust-ffm only, which is exactly the pairing this
+    // change makes the runtime reject at open() time with a precise message. Enable the gate below
+    // together with the rust-bound component marker that replaces it.
 }
 val qualifiedComponentIds =
     qualifiedComponentQualifications.map(CatalogComponentQualification::modelId).toSet()
@@ -5487,6 +5504,12 @@ tasks.register("verifyCatalog") {
                             qualification.artifactSha256,
                     ) {
                         "Component qualification artifact SHA-256 mismatch in $markerJar"
+                    }
+                    require(
+                        componentProperties.getProperty("${prefix}backend") ==
+                            qualification.backend,
+                    ) {
+                        "Component qualification backend mismatch in $markerJar"
                     }
                     require(
                         componentProperties.getProperty("${prefix}artifactSizeBytes") ==

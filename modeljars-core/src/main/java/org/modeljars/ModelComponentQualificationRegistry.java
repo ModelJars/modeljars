@@ -66,6 +66,14 @@ public final class ModelComponentQualificationRegistry {
   private static final Set<String> SPECIALIST_KINDS =
       Set.of(TRAINED_TOOL_SPECIALIST, UPSTREAM_RAG_SPECIALIST, FIRST_PARTY_RAG_SPECIALIST);
 
+  /** Backend identifier of the Java Vector API kernels. */
+  public static final String JAVA_BACKEND = "pure-java";
+
+  /** Backend identifier of the Models-owned Rust FFM kernels. */
+  public static final String NATIVE_BACKEND = "rust-ffm";
+
+  private static final Set<String> BACKENDS = Set.of(JAVA_BACKEND, NATIVE_BACKEND);
+
   private final Instant generatedAt;
   private final String policyVersion;
   private final String modelsRevision;
@@ -323,7 +331,8 @@ public final class ModelComponentQualificationRegistry {
         URI.create(required(properties, prefix + "reportUri")),
         required(properties, prefix + "reportSha256"),
         bool(properties, prefix + "qualified"),
-        properties.getProperty(prefix + "specialistKind", TRAINED_TOOL_SPECIALIST));
+        properties.getProperty(prefix + "specialistKind", TRAINED_TOOL_SPECIALIST),
+        properties.getProperty(prefix + "backend", JAVA_BACKEND));
   }
 
   private static SourcedEntry newestEntry(SourcedEntry first, SourcedEntry other) {
@@ -391,6 +400,7 @@ public final class ModelComponentQualificationRegistry {
    * @param reportSha256 lowercase SHA-256 of the evidence report
    * @param qualified whether the component satisfies the policy
    * @param specialistKind kind of specialist the evidence was gated as
+   * @param backend execution backend the component evidence was measured on
    */
   public record Entry(
       String modelId,
@@ -406,7 +416,8 @@ public final class ModelComponentQualificationRegistry {
       URI reportUri,
       String reportSha256,
       boolean qualified,
-      String specialistKind) {
+      String specialistKind,
+      String backend) {
     /** Validates a complete component evidence binding. */
     public Entry {
       modelId = requireText(modelId, "modelId");
@@ -449,6 +460,11 @@ public final class ModelComponentQualificationRegistry {
       specialistKind = requireText(specialistKind, "specialistKind");
       if (!SPECIALIST_KINDS.contains(specialistKind)) {
         throw new IllegalArgumentException("unsupported specialistKind: " + specialistKind);
+      }
+      backend = requireText(backend, "backend");
+      if (!BACKENDS.contains(backend)) {
+        throw new IllegalArgumentException(
+            "unsupported component qualification backend: " + backend);
       }
     }
 

@@ -203,6 +203,7 @@ class ModelJarsTest {
     var installed = new java.util.ArrayList<ModelJarDescriptor>();
     var loadedBase = new AtomicReference<Path>();
     var loadedAdapter = new AtomicReference<Path>();
+    var loadedBackend = new AtomicReference<String>();
     var backend =
         new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow());
     ModelJars loader =
@@ -215,7 +216,8 @@ class ModelJarsTest {
               return descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root");
             },
             (backendName, path, configuration) -> new StubBackend(),
-            (basePath, adapterPath, configuration) -> {
+            (backendName, basePath, adapterPath, configuration) -> {
+              loadedBackend.set(backendName);
               loadedBase.set(basePath);
               loadedAdapter.set(adapterPath);
               return backend;
@@ -230,6 +232,8 @@ class ModelJarsTest {
       assertEquals(base, runtime.baseDescriptor());
       assertEquals(adapter, runtime.adapterDescriptor());
       assertEquals(ChatTemplate.CHATML_NO_THINK, runtime.chatTemplate());
+      assertEquals("pure-java", loadedBackend.get());
+      assertEquals("pure-java", runtime.baseQualification().backend());
       assertEquals("verified-base.gguf", loadedBase.get().toString());
       assertEquals("adapter-root", loadedAdapter.get().toString());
       assertEquals(List.of(base, adapter), installed);
@@ -237,6 +241,216 @@ class ModelJarsTest {
     }
 
     assertTrue(backend.closed());
+  }
+
+  @Test
+  void opensAnActivatedHybridOnTheNativeBackendItsBaseIsQualifiedFor() {
+    // Regression: the Granite 4.1 3B Q4_K_M base is qualified on rust-ffm only, so the activated
+    // path's hard-coded ModelBackend.JAVA selection made the published hybrid impossible to open.
+    ModelJarRegistry classpath = ModelJarRegistry.fromClasspath();
+    ModelJarDescriptor base = classpath.resolve(GRANITE).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base, Map.of("rust-ffm", true));
+    var loadedBackend = new AtomicReference<String>();
+    var backend =
+        new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow());
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) ->
+                descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) -> {
+              loadedBackend.set(backendName);
+              return backend;
+            },
+            componentQualificationRegistry(adapter, base, true, "rust-ffm"),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    try (var runtime =
+        loader.loadActivatedToolRuntime(
+            GRANITE,
+            ModelJar.of(adapter.markerCoordinate().toString()),
+            ModelLoadOptions.defaults())) {
+      assertEquals("rust-ffm", loadedBackend.get());
+      assertEquals("rust-ffm", runtime.baseQualification().backend());
+      assertEquals(ChatTemplate.GRANITE, runtime.chatTemplate());
+    }
+
+    assertTrue(backend.closed());
+  }
+
+  @Test
+  void refusesAnActivatedHybridOnAJavaBackendItsBaseIsNotQualifiedFor() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(GRANITE).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base, Map.of("rust-ffm", true));
+    var installs = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installs.incrementAndGet();
+              return Path.of("unexpected");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, true, "rust-ffm"),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    GRANITE,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.builder().backend(ModelBackend.JAVA).build()));
+
+    assertTrue(failure.getMessage().contains(base.markerCoordinate().toString()));
+    assertTrue(failure.getMessage().contains("no qualified pure-java execution"));
+    assertTrue(failure.getMessage().contains("qualified backends: rust-ffm"));
+    assertEquals(0, installs.get());
+  }
+
+  @Test
+  void refusesAnActivatedHybridOnANativeBackendItsBaseIsNotQualifiedFor() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("unexpected"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, true),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    QWEN,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.builder().backend(ModelBackend.NATIVE).build()));
+
+    assertTrue(failure.getMessage().contains(base.markerCoordinate().toString()));
+    assertTrue(failure.getMessage().contains("no qualified rust-ffm execution"));
+    assertTrue(failure.getMessage().contains("qualified backends: pure-java"));
+  }
+
+  @Test
+  void prefersPureJavaWhenTheActivatedBaseIsQualifiedOnBothBackends() {
+    // qwen3_1_7b_q8_0 carries a rust-ffm RAG qualification and a pure-java tool qualification.
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(QWEN_TOOLS).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base);
+    var loadedBackend = new AtomicReference<String>();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) ->
+                descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) -> {
+              loadedBackend.set(backendName);
+              return new StubSharedBackend(
+                  base.sha256().orElseThrow(), adapter.sha256().orElseThrow());
+            },
+            componentQualificationRegistry(adapter, base, true),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    try (var runtime =
+        loader.loadActivatedToolRuntime(
+            QWEN_TOOLS,
+            ModelJar.of(adapter.markerCoordinate().toString()),
+            ModelLoadOptions.defaults())) {
+      assertEquals("pure-java", loadedBackend.get());
+      assertEquals("pure-java", runtime.baseQualification().backend());
+    }
+  }
+
+  @Test
+  void refusesAnActivatedComponentWhoseEvidenceBindsAnotherBackendThanTheSelectedBase() {
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(GRANITE).orElseThrow();
+    ModelJarDescriptor adapter =
+        activatedAdapterDescriptor(base, Map.of("pure-java", true, "rust-ffm", true));
+    var installs = new java.util.concurrent.atomic.AtomicInteger();
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> {
+              installs.incrementAndGet();
+              return Path.of("unexpected");
+            },
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, true, "pure-java"),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    GRANITE,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains(adapter.markerCoordinate().toString()));
+    assertTrue(failure.getMessage().contains(base.markerCoordinate().toString()));
+    assertTrue(failure.getMessage().contains("binds pure-java evidence"));
+    assertTrue(failure.getMessage().contains("rust-ffm"));
+    assertEquals(0, installs.get());
+  }
+
+  @Test
+  void refusesAnActivatedComponentThatDoesNotAdvertiseTheSelectedBackend() {
+    // The published answerability component marker advertises pure-java only, so it cannot be
+    // opened against a base selected on rust-ffm until a rust-bound marker is published.
+    ModelJarDescriptor base = ModelJarRegistry.fromClasspath().resolve(GRANITE).orElseThrow();
+    ModelJarDescriptor adapter = activatedAdapterDescriptor(base, Map.of("pure-java", true));
+    ModelJars loader =
+        new ModelJars(
+            new InMemoryModelJarRegistry(List.of(base, adapter)),
+            ModelRagQualificationRegistry.fromClasspath(),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (descriptor, options) -> Path.of("unexpected"),
+            (backendName, path, configuration) -> new StubBackend(),
+            (backendName, basePath, adapterPath, configuration) ->
+                new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
+            componentQualificationRegistry(adapter, base, true, "rust-ffm"),
+            Map::of,
+            () -> List.of("--enable-native-access=ALL-UNNAMED"));
+
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                loader.loadActivatedToolRuntime(
+                    GRANITE,
+                    ModelJar.of(adapter.markerCoordinate().toString()),
+                    ModelLoadOptions.defaults()));
+
+    assertTrue(failure.getMessage().contains(adapter.markerCoordinate().toString()));
+    assertTrue(failure.getMessage().contains("does not advertise rust-ffm"));
+    assertTrue(failure.getMessage().contains("pure-java"));
   }
 
   @Test
@@ -254,7 +468,7 @@ class ModelJarsTest {
               return Path.of("unexpected");
             },
             (backendName, path, configuration) -> new StubBackend(),
-            (basePath, adapterPath, configuration) ->
+            (backendName, basePath, adapterPath, configuration) ->
                 new StubSharedBackend(base.sha256().orElseThrow(), adapter.sha256().orElseThrow()),
             componentQualificationRegistry(adapter, base, false),
             Map::of);
@@ -285,8 +499,9 @@ class ModelJarsTest {
               return Path.of("unexpected");
             },
             (backendName, path, configuration) -> new StubBackend(),
-            (basePath, adapterPath, configuration) ->
+            (backendName, basePath, adapterPath, configuration) ->
                 new StubSharedBackend("0".repeat(64), "1".repeat(64)),
+            ModelComponentQualificationRegistry.fromClasspath(),
             Map::of);
 
     ModelJarException failure =
@@ -311,7 +526,7 @@ class ModelJarsTest {
             (descriptor, options) ->
                 descriptor == base ? Path.of("verified-base.gguf") : Path.of("adapter-root"),
             (backendName, path, configuration) -> new StubBackend(),
-            (basePath, adapterPath, configuration) -> backend,
+            (backendName, basePath, adapterPath, configuration) -> backend,
             componentQualificationRegistry(adapter, base, true),
             Map::of);
 
@@ -932,6 +1147,11 @@ class ModelJarsTest {
   }
 
   private static ModelJarDescriptor activatedAdapterDescriptor(ModelJarDescriptor base) {
+    return activatedAdapterDescriptor(base, Map.of("pure-java", true));
+  }
+
+  private static ModelJarDescriptor activatedAdapterDescriptor(
+      ModelJarDescriptor base, Map<String, Boolean> backendSupport) {
     String weightsSha = "a".repeat(64);
     String manifestSha = "b".repeat(64);
     return new ModelJarDescriptor(
@@ -967,7 +1187,7 @@ class ModelJarsTest {
                 URI.create("https://example.invalid/adapter-manifest.json"),
                 manifestSha,
                 512L)),
-        Map.of("pure-java", true),
+        Map.copyOf(backendSupport),
         Optional.of("Qwen3 1.7B tool adapter r32"),
         Optional.of("Activated-LoRA composition component for " + base.alias()),
         Optional.empty(),
@@ -977,6 +1197,11 @@ class ModelJarsTest {
 
   private static ModelComponentQualificationRegistry componentQualificationRegistry(
       ModelJarDescriptor adapter, ModelJarDescriptor base, boolean qualified) {
+    return componentQualificationRegistry(adapter, base, qualified, "pure-java");
+  }
+
+  private static ModelComponentQualificationRegistry componentQualificationRegistry(
+      ModelJarDescriptor adapter, ModelJarDescriptor base, boolean qualified, String backend) {
     Properties properties = new Properties();
     properties.setProperty("modeljars.componentQualifications.schemaVersion", "1");
     properties.setProperty("modeljars.componentQualifications.generatedAt", "2026-09-13T16:00:00Z");
@@ -1006,6 +1231,7 @@ class ModelJarsTest {
         "https://raw.githubusercontent.com/integrallis/models/" + "2".repeat(40) + "/report.json");
     properties.setProperty(prefix + "reportSha256", "3".repeat(64));
     properties.setProperty(prefix + "qualified", Boolean.toString(qualified));
+    properties.setProperty(prefix + "backend", backend);
     properties.setProperty(prefix + "artifactFile.count", Integer.toString(adapter.files().size()));
     for (int index = 0; index < adapter.files().size(); index++) {
       ModelArtifactFile file = adapter.files().get(index);

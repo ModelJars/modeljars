@@ -170,6 +170,32 @@ class ModelComponentQualificationRegistryTest {
   }
 
   @Test
+  void defaultsEvidenceToTheJavaBackendAndReadsAnExplicitNativeBinding() {
+    ModelComponentQualificationRegistry implied =
+        ModelComponentQualificationRegistry.fromProperties(properties(true));
+    assertEquals(
+        ModelComponentQualificationRegistry.JAVA_BACKEND, implied.entries().getFirst().backend());
+
+    Properties nativeBound = properties(true);
+    nativeBound.setProperty("componentQualification.adapter.backend", "rust-ffm");
+    assertEquals(
+        ModelComponentQualificationRegistry.NATIVE_BACKEND,
+        ModelComponentQualificationRegistry.fromProperties(nativeBound)
+            .entries()
+            .getFirst()
+            .backend());
+  }
+
+  @Test
+  void rejectsComponentEvidenceBoundToAnUnknownBackend() {
+    Properties unknown = properties(true);
+    unknown.setProperty("componentQualification.adapter.backend", "llama.cpp");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ModelComponentQualificationRegistry.fromProperties(unknown));
+  }
+
+  @Test
   void readsAFirstPartySpecialistKind() throws Exception {
     Properties firstParty = properties(true);
     firstParty.setProperty(

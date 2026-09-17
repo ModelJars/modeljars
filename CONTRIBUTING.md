@@ -230,7 +230,9 @@ before any composition can name it. Three component shapes exist, declared per e
 All three shapes require real-weight JVM mechanics (physical storage identity, exact base continuation,
 disabled-adapter no-op), the fixed 4,096-token long-context retention gate, the 256/1,024/4,096
 prefix-sharing crossover with complete memory accounting, released Maven Central Models artifacts,
-and a clean-host Java 25 run.
+and a clean-host Java 25 run. The clean-host output log is pinned by a raw `integrallis/models` URL at
+any 40-hex commit and byte-verified by its recorded sha256 and size; it is usually an earlier commit
+than `evidenceRevision`, because the report at `evidenceRevision` embeds the log's URI.
 
 The public [qualification and submission guide](https://modeljars.org/contribute/) explains the
 acceptance gates and pull request contents. “Not yet qualified” means the controlled run has not

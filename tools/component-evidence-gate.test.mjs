@@ -717,6 +717,61 @@ test("rejects an absent or inconsistent clean-host run", async () => {
   );
 });
 
+test("accepts a clean-host log pinned to an earlier immutable Models commit", async () => {
+  // The report embeds the log URI, so the log cannot be pinned to the commit that also holds the
+  // report: that commit's hash would depend on its own contents. The log is immutable by its
+  // 40-hex commit pin plus the recorded sha256 and size, which the gate byte-verifies.
+  const good = report();
+  const earlierRevision = "e".repeat(40);
+  const earlierLog = {
+    ...cleanHostOutput,
+    uri:
+      `https://raw.githubusercontent.com/integrallis/models/${earlierRevision}/` +
+      "benchmark-results/alora/clean-host.log",
+  };
+  const earlier = report({
+    evaluation: {
+      ...good.evaluation,
+      gates: {
+        ...good.evaluation.gates,
+        cleanHostRun: { ...good.evaluation.gates.cleanHostRun, outputLog: earlierLog },
+      },
+    },
+  });
+  const { bytes, document } = qualificationDocument(earlier);
+  const loader = async ({ evidence }) => {
+    if (evidence.uri !== earlierLog.uri) {
+      throw new Error("Unknown immutable evidence file");
+    }
+    return cleanHostOutputBytes;
+  };
+  assert.deepEqual(await validate(document, bytes, { loadEvidenceFile: loader }), ["adapter"]);
+});
+
+test("rejects a clean-host log that is not an immutable integrallis/models commit URL", async () => {
+  const good = report();
+  for (const uri of [
+    "https://raw.githubusercontent.com/integrallis/models/main/benchmark-results/alora/clean-host.log",
+    "https://raw.githubusercontent.com/someone/models/" + "e".repeat(40) + "/clean-host.log",
+    "https://example.com/clean-host.log",
+  ]) {
+    const mutable = report({
+      evaluation: {
+        ...good.evaluation,
+        gates: {
+          ...good.evaluation.gates,
+          cleanHostRun: {
+            ...good.evaluation.gates.cleanHostRun,
+            outputLog: { ...cleanHostOutput, uri },
+          },
+        },
+      },
+    });
+    const { bytes, document } = qualificationDocument(mutable);
+    await assert.rejects(validate(document, bytes), /completed immutable clean-host Java 25 run/);
+  }
+});
+
 test("rejects a clean-host output hash mismatch", async () => {
   const good = report();
   const invalid = report({

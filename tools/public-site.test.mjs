@@ -253,7 +253,7 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(apple, /Apple Foundation Models from Java/);
   assert.match(apple, /not a downloadable ModelJAR/);
   assert.match(apple, /LangChain4J and Spring AI/);
-  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.40/);
+  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.41/);
   assert.match(apple, /AppleFoundationModels\.create/);
   assert.match(apple, /client\.availability/);
   assert.match(

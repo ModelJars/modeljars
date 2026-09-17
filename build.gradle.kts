@@ -2244,7 +2244,14 @@ val componentQualifications =
                                 ),
                         specialistKind =
                             (raw["specialistKind"] as? String ?: "trained-tool-specialist").also {
-                                require(it in setOf("trained-tool-specialist", "upstream-rag-specialist")) {
+                                require(
+                                    it in
+                                        setOf(
+                                            "trained-tool-specialist",
+                                            "upstream-rag-specialist",
+                                            "first-party-rag-specialist",
+                                        ),
+                                ) {
                                     "component qualification $modelId.specialistKind is unsupported: $it"
                                 }
                             },

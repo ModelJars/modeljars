@@ -198,10 +198,10 @@ release workflows. Documentation or catalog metrics cannot substitute for the un
 ### Activated specialist components
 
 A hybrid's hidden adapter component is qualified separately by `tools/component-evidence-gate.mjs`
-before any composition can name it. Two component shapes exist, declared per entry by
+before any composition can name it. Three component shapes exist, declared per entry by
 `specialistKind`:
 
-- `trained-tool-specialist` (the default): an adapter we trained. Provenance binds the frozen
+- `trained-tool-specialist` (the default): a tool-calling adapter we trained. Provenance binds the frozen
   evaluation selection, training manifest, formatter, and trainer; task correctness is the fixed
   300-case tool window; real-weight plain Java, Spring AI, and LangChain4j tool loops are required.
 - `upstream-rag-specialist`: a publisher-trained adapter that Models runs unchanged. Provenance
@@ -212,8 +212,22 @@ before any composition can name it. Two component shapes exist, declared per ent
   proven identical to the publisher's chat template. A window run on a native kernel arm must
   also bind token identity with pure Java on at least ten cases per suite and arm. The component
   claims no Spring AI or LangChain4j surface; it is usable through the Models Java activated API.
+- `first-party-rag-specialist`: a RAG adapter Integrallis trained itself. It is not upstream, so
+  its report says `upstream: false` and must not borrow the upstream fields. Provenance names the
+  publisher, the training repository, and the 40-hex commit holding the trainer, data preparation,
+  and manifests; the training manifest and prepared-data manifest are pinned as raw GitHub URLs at
+  that commit and byte-verified by the gate, and the adapter weights and configuration must be the
+  files the training manifest recorded (and the weights must be the file the catalog publishes).
+  Provenance also binds the model card, adapter license, tokenizer files, and a license for every
+  training dataset. Every task-correctness, conformance, mechanics, long-context, and sharing
+  requirement of `upstream-rag-specialist` applies unchanged, with one tightening: a fine-tune is
+  admitted only if it beats its base, so every suite must be strictly better than the unadapted
+  base. A suite scored on confirmed rather than dataset labels (`labelSource: confirmed`) must bind
+  the label set's `labelsSha256` and keep its dataset-label `originalBalancedAccuracy` beside it.
+  ModelJars checks these numbers are present and consistent; it does not re-score the window, and
+  the training data and trainer are evidence to inspect, not something the gate re-runs.
 
-Both shapes require real-weight JVM mechanics (physical storage identity, exact base continuation,
+All three shapes require real-weight JVM mechanics (physical storage identity, exact base continuation,
 disabled-adapter no-op), the fixed 4,096-token long-context retention gate, the 256/1,024/4,096
 prefix-sharing crossover with complete memory accounting, released Maven Central Models artifacts,
 and a clean-host Java 25 run.

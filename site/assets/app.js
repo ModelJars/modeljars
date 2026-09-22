@@ -4,7 +4,7 @@ import { copyDependencySnippet } from "./dependency-snippets.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { primaryQualification } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
-import { buildFacets, sizeTier, verificationProfile } from "./taxonomy.js";
+import { buildFacets, kindProfile, sizeTier, verificationProfile } from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
 
 const catalog = [];
@@ -67,6 +67,7 @@ function renderEntry(model) {
     ? `${numberFormat.format(dimensions.contextLength)} ctx`
     : null;
   const profile = verificationProfile(model);
+  const kind = kindProfile(model);
   const tags = [
     ...(model.domains || []),
     ...(model.capabilities || []).slice(0, 2),
@@ -77,34 +78,42 @@ function renderEntry(model) {
   const downloadBytes = model.kind === "hybrid" ? model.requiredWeightBytes : model.sizeBytes;
 
   return `
-    <article class="catalog-entry">
-      ${renderDependencyCopyActions(model)}
-      <div class="entry-main">
-        <div class="entry-title-row">
-          <div>
-            <a class="entry-title" href="${detailPath(model)}">${escapeHtml(model.name)}</a>
-            <span class="publisher">by ${escapeHtml(publisher(model))}</span>
-          </div>
+    <details class="catalog-entry">
+      <summary class="entry-summary">
+        <span class="entry-identity">
+          <a class="entry-title" href="${detailPath(model)}">${escapeHtml(model.name)}</a>
+          <span class="publisher">by ${escapeHtml(publisher(model))}</span>
+        </span>
+        <span class="entry-pills">
+          ${kind ? `<span class="kind-badge ${escapeHtml(kind.kind)}">${escapeHtml(kind.label)}</span>` : ""}
           <span class="verification-badge ${escapeHtml(profile.level)}">${escapeHtml(profile.label)}</span>
+        </span>
+        <span class="entry-coordinate-row">
+          <code class="entry-coordinate">${escapeHtml(model.markerCoordinate || "")}</code>
+          ${renderDependencyCopyActions(model)}
+        </span>
+      </summary>
+      <div class="entry-body">
+        <div class="entry-main">
+          <p class="entry-description">${escapeHtml(model.description)}</p>
+          <div class="entry-tags">
+            ${tags.map((tag) => `<button type="button" data-search="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}
+          </div>
         </div>
-        <p class="entry-description">${escapeHtml(model.description)}</p>
-        <div class="entry-tags">
-          ${tags.map((tag) => `<button type="button" data-search="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}
+        <div class="entry-facts" aria-label="Model properties">
+          ${evidenceMetrics.map(({ label, value }) => metric(label, value)).join("")}
+          ${metric("parameters", formatParameters(dimensions.parameterCount))}
+          ${metric(model.kind === "hybrid" ? "member weights" : "download", formatBytes(downloadBytes))}
+          ${metric("", context)}
+          ${metric("", model.quantization)}
+        </div>
+        <div class="entry-runtime">
+          <span>${escapeHtml(model.architecture)}</span>
+          ${modelsBackend ? `<span class="runtime-label">Models ${escapeHtml(modelsBackend)}</span>` : ""}
+          <a class="entry-arrow" href="${detailPath(model)}" aria-label="View ${escapeHtml(model.name)}">&#8594;</a>
         </div>
       </div>
-      <div class="entry-facts" aria-label="Model properties">
-        ${evidenceMetrics.map(({ label, value }) => metric(label, value)).join("")}
-        ${metric("parameters", formatParameters(dimensions.parameterCount))}
-        ${metric(model.kind === "hybrid" ? "member weights" : "download", formatBytes(downloadBytes))}
-        ${metric("", context)}
-        ${metric("", model.quantization)}
-      </div>
-      <div class="entry-runtime">
-        <span>${escapeHtml(model.architecture)}</span>
-        ${modelsBackend ? `<span class="runtime-label">Models ${escapeHtml(modelsBackend)}</span>` : ""}
-        <a class="entry-arrow" href="${detailPath(model)}" aria-label="View ${escapeHtml(model.name)}">&#8594;</a>
-      </div>
-    </article>`;
+    </details>`;
 }
 
 function activeFilterCount() {
@@ -205,6 +214,20 @@ function bindControls() {
     const open = elements.advanced.hidden;
     elements.advanced.hidden = !open;
     elements.filterToggle.setAttribute("aria-expanded", String(open));
+  });
+
+  // A catalog row is a disclosure, and its summary carries a link to the detail page and the two
+  // dependency copy buttons. Activating either must do its own job, not toggle the row open.
+  document.addEventListener("click", (event) => {
+    const summary = event.target.closest(".entry-summary");
+    if (!summary) return;
+    if (event.target.closest("a, button")) {
+      event.preventDefault();
+      const link = event.target.closest("a");
+      if (link && !event.target.closest("button")) {
+        window.location.href = link.href;
+      }
+    }
   });
 
   document.addEventListener("click", async (event) => {

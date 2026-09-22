@@ -124,6 +124,20 @@ function hasCompleteMetadata(model) {
   );
 }
 
+/**
+ * The model's kind, as its own pill.
+ *
+ * Kind and verification were previously one badge, so a hybrid that missed any of its three
+ * checks rendered as "Cataloged" and the word hybrid disappeared entirely. They are orthogonal:
+ * a hybrid is a hybrid whether or not it is fully qualified.
+ */
+export function kindProfile(model) {
+  if (model.kind === "hybrid") {
+    return { kind: "hybrid", label: "Hybrid" };
+  }
+  return null;
+}
+
 export function verificationProfile(model) {
   if (model.kind === "hybrid") {
     const qualification = primaryQualification(model);
@@ -134,7 +148,7 @@ export function verificationProfile(model) {
     if (model.backends?.["pure-java"] === true) checks.push("Pure Java executed");
     return {
       level: checks.length === 3 ? "qualified" : "cataloged",
-      label: checks.length === 3 ? "Qualified hybrid" : "Cataloged",
+      label: checks.length === 3 ? "Qualified" : "Cataloged",
       checks,
     };
   }

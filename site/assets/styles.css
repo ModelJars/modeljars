@@ -136,7 +136,9 @@ a {
 
 code,
 pre {
-  font-family: var(--mono);
+  /* Code is Monaspace Krypton, not the IBM Plex Mono used for eyebrows and small labels: it is
+     the face integrallis.com sets code in, and its texture is what makes a coordinate scannable. */
+  font-family: var(--tech);
 }
 
 h1,
@@ -1003,7 +1005,7 @@ select {
   overflow: hidden;
   min-width: 0;
   color: var(--muted);
-  font-family: var(--mono);
+  font-family: var(--tech);
   font-size: 0.7rem;
   text-overflow: ellipsis;
   white-space: nowrap;

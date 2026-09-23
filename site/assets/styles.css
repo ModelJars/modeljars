@@ -999,6 +999,21 @@ select {
   gap: 8px;
 }
 
+/* Says once, per row, what the group prefix used to repeat. */
+.source-badge {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .entry-coordinate {
   overflow: hidden;
   min-width: 0;

@@ -1,6 +1,7 @@
 import { qualificationMetrics } from "./catalog-entry-metrics.js";
 import { renderDependencyCopyActions } from "./catalog-entry-actions.js";
 import { copyDependencySnippet } from "./dependency-snippets.js";
+import { describeCoordinate } from "./coordinate.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { primaryQualification } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
@@ -68,6 +69,9 @@ function renderEntry(model) {
     : null;
   const profile = verificationProfile(model);
   const kind = kindProfile(model);
+  // The badge carries the group; the coordinate then shows only what differs row to row. The copy
+  // buttons still emit the full coordinate, because a shortened one does not resolve in a build.
+  const coordinate = describeCoordinate(model.markerCoordinate);
   const tags = [
     ...(model.domains || []),
     ...(model.capabilities || []).slice(0, 2),
@@ -89,7 +93,8 @@ function renderEntry(model) {
           <span class="verification-badge ${escapeHtml(profile.level)}">${escapeHtml(profile.label)}</span>
         </span>
         <span class="entry-coordinate-row">
-          <code class="entry-coordinate">${escapeHtml(model.markerCoordinate || "")}</code>
+          ${coordinate.label ? `<span class="source-badge">${escapeHtml(coordinate.label)}</span>` : ""}
+          <code class="entry-coordinate" title="${escapeHtml(coordinate.full)}">${escapeHtml(coordinate.short)}</code>
           ${renderDependencyCopyActions(model)}
         </span>
       </summary>

@@ -53,7 +53,7 @@ public final class Harriet {
 
   /** Exact qualified base marker. The weights are frozen and are not ours. */
   public static final ModelJar BASE =
-      ModelJar.of("org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1");
+      ModelJar.of("org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.2");
 
   private Harriet() {}
 

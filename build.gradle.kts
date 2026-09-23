@@ -6133,6 +6133,14 @@ val releasePublicationTasks =
             )
         } else {
             emptyList()
+        } +
+        if (harrietQualified) {
+            listOf(
+                ":modeljars-composite-harriet:" +
+                    "publishMavenPublicationToReleaseBundleRepository",
+            )
+        } else {
+            emptyList()
         }
 val modeljarsMarkerIds =
     providers

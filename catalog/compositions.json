@@ -138,7 +138,7 @@
           "basisVerdict": "QUALIFIED",
           "basisPerformanceTier": "USABLE",
           "basisArtifactSha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
-          "reportUri": "https://raw.githubusercontent.com/integrallis/models/9c7acb5c12a4f412980bf1cef66e35effb5ab43f/benchmark-results/certified-20260923/rag/qwen3.5-4b-q4_k_m/qualification.json",
+          "reportUri": "https://raw.githubusercontent.com/integrallis/models/4fc77eb794ae154aea95858407081dd23e00f11f/benchmark-results/certified-20260923/rag/qwen3.5-4b-q4_k_m/qualification.json",
           "reportSha256": "1f02d116c6f99d516829280c6e5f6249b5f19d3ac991c2ce88f772124d955706"
         }
       ]

@@ -161,11 +161,31 @@ test("publishes qualified hybrid compositions with qualified models or qualified
   assert.equal(compositions.schemaVersion, 1);
   assert.ok(Array.isArray(compositions.compositions));
   for (const composition of compositions.compositions) {
-    assert.equal(composition.kind, "hybrid");
     assert.ok(
-      composition.compositionQualifications.some((entry) => entry.qualified),
-      `${composition.id} must carry qualification evidence`,
+      composition.kind === "hybrid" || composition.kind === "recipe",
+      `${composition.id} must declare a known kind, got ${composition.kind}`,
     );
+    if (composition.kind === "hybrid") {
+      // A hybrid composes two sets of weights, so it must carry evidence that the composition
+      // itself was qualified, not just that its members were.
+      assert.ok(
+        composition.compositionQualifications.some((entry) => entry.qualified),
+        `${composition.id} must carry qualification evidence`,
+      );
+    } else {
+      // A recipe is one frozen base plus a readout. There is no second artifact to compose, so
+      // there is no composition to qualify; what it stands on is the pinned base and a published,
+      // reproducible measurement.
+      assert.equal(
+        composition.members.length,
+        1,
+        `${composition.id} is a recipe and must name exactly its base`,
+      );
+      assert.ok(
+        typeof composition.sourceUri === "string" && composition.sourceUri.length > 0,
+        `${composition.id} must publish where its evidence lives`,
+      );
+    }
     for (const member of composition.members) {
       assert.ok(
         qualifiedIds.has(member.modelId) || qualifiedComponentIds.has(member.modelId),

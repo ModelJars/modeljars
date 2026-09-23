@@ -487,6 +487,47 @@ public final class ModelJars {
   }
 
   /**
+   * Opens a ModelJar for typed decisions rather than generation.
+   *
+   * <p>A decision is answered in one forward pass, reading the logits of the declared options and
+   * normalising over just those. Nothing is generated, so there is no JSON to repair and no
+   * decoding loop to bound.
+   *
+   * @param model the marker to resolve, verify and install
+   * @return a lifecycle-owning decision runtime
+   */
+  public static ModelJarDecisionRuntime openDecisionRuntime(ModelJar model) {
+    return classpathLoader().loadDecisionRuntime(model, ModelLoadOptions.defaults(), 1.0);
+  }
+
+  /**
+   * Opens a ModelJar for typed decisions with explicit load options and a calibration temperature.
+   *
+   * <p>The temperature is applied to the option logits. It belongs to the decision, not to the
+   * weights: a temperature fitted on one corpus does not transfer to another, and one fitted on an
+   * evaluation set is not a measurement of anything.
+   *
+   * @param model the marker to resolve, verify and install
+   * @param options backend selection and installation options
+   * @param temperature calibration temperature, 1.0 for none
+   * @return a lifecycle-owning decision runtime
+   */
+  public static ModelJarDecisionRuntime openDecisionRuntime(
+      ModelJar model, ModelLoadOptions options, double temperature) {
+    return classpathLoader().loadDecisionRuntime(model, options, temperature);
+  }
+
+  /**
+   * Opens a ModelJar for typed decisions from its marker coordinate.
+   *
+   * @param markerCoordinate the exact marker coordinate
+   * @return a lifecycle-owning decision runtime
+   */
+  public static ModelJarDecisionRuntime openDecisionRuntime(String markerCoordinate) {
+    return openDecisionRuntime(ModelJar.of(markerCoordinate));
+  }
+
+  /**
    * Opens a qualified embedding model using its marker-owned pooling and normalization policy.
    *
    * @param model immutable model selector or generated catalog reference
@@ -902,6 +943,35 @@ public final class ModelJars {
       throw failure;
     }
     return new ModelJarRuntime(pipeline, descriptor, qualification);
+  }
+
+  ModelJarDecisionRuntime loadDecisionRuntime(
+      ModelJar model, ModelLoadOptions options, double temperature) {
+    Objects.requireNonNull(model, "model");
+    Objects.requireNonNull(options, "options");
+    ModelJarDescriptor descriptor =
+        models
+            .resolve(model)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
+    String backend = qualification.backend();
+    List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
+    requireNativeAccess(backend, activeJvmArguments);
+    Path artifact = installer.install(descriptor, options);
+    Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
+    BackendConfiguration configuration =
+        configuration(descriptor, qualification, runtime, activeJvmArguments);
+    InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
+    try {
+      return new ModelJarDecisionRuntime(loadedBackend, descriptor, qualification, temperature);
+    } catch (RuntimeException | Error failure) {
+      try {
+        loadedBackend.close();
+      } catch (RuntimeException | Error closeFailure) {
+        failure.addSuppressed(closeFailure);
+      }
+      throw failure;
+    }
   }
 
   EmbeddingBackend loadEmbedding(ModelJar model, ModelLoadOptions options) {

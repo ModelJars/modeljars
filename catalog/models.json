@@ -1487,6 +1487,7 @@
       "localPath": "${user.home}/.jvllm/models/Qwen3.5-4B-Q4_K_M.gguf",
       "sha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
       "sizeBytes": 2740937888,
+      "catalogPublishedAt": "2026-09-23T19:30:00Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-generation",
@@ -1500,7 +1501,8 @@
       ],
       "backends": {
         "pure-java": false,
-        "llama.cpp": true
+        "llama.cpp": true,
+        "rust-ffm": true
       },
       "domains": [
         "general"

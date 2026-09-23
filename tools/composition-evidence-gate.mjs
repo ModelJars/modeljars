@@ -82,6 +82,29 @@ function requireCompleteEvidence(composition, qualification) {
   }
 }
 
+const RECIPE_POLICY_ID = "production-rag-model-contribution-v6";
+
+function requireRecipeEvidence(composition, report) {
+  const label = `${composition.id} recipe evidence`;
+  if (report.policyId !== RECIPE_POLICY_ID) {
+    throw new Error(`${label} must be assessed under ${RECIPE_POLICY_ID}`);
+  }
+  const verdict = report.qualification;
+  if (verdict?.qualified !== true || verdict?.verdict !== "QUALIFIED") {
+    throw new Error(`${label} must record a QUALIFIED verdict for the pinned base`);
+  }
+  const base = composition.members?.[0]?.modelId;
+  if (verdict.modelId !== base) {
+    throw new Error(`${label} must qualify the base this recipe names: ${base}`);
+  }
+  if (verdict.artifactSha256 !== composition.compositionSha256) {
+    throw new Error(`${label} must be measured on the artifact bytes this recipe pins`);
+  }
+  if (!Array.isArray(verdict.qualifyingComparators) || verdict.qualifyingComparators.length === 0) {
+    throw new Error(`${label} must name at least one qualifying comparator`);
+  }
+}
+
 function parseReport(composition, bytes) {
   try {
     return JSON.parse(Buffer.from(bytes).toString("utf8"));
@@ -585,6 +608,13 @@ export async function validateCompositionEvidence({
       }
 
       const report = parseReport(composition, bytes);
+      if (composition.kind === "recipe") {
+        // A recipe composes nothing: one frozen base plus a readout. Its evidence is therefore the
+        // base's own production qualification, not a composition report, and what has to hold is
+        // that the verdict is real and that it was reached on exactly the bytes this recipe pins.
+        requireRecipeEvidence(composition, report);
+        continue;
+      }
       if (report.evaluation?.qualified !== true || report.evaluation?.correctnessPassed !== true) {
         throw new Error(`${composition.id} evidence report must pass correctness and qualification`);
       }

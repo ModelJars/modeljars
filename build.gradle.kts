@@ -1242,8 +1242,9 @@ val catalogCompositions =
             ?: error("Composition catalog must contain a compositions array"))
         .map { value ->
             val raw = value.stringKeyMap("Every catalog composition")
-            require(raw.requiredString("kind") == "hybrid") {
-                "Catalog compositions must declare kind=hybrid"
+            val compositionKind = raw.requiredString("kind")
+            require(compositionKind == "hybrid" || compositionKind == "recipe") {
+                "Catalog compositions must declare kind=hybrid or kind=recipe"
             }
             val coordinate = raw.requiredString("markerCoordinate").split(':')
             require(coordinate.size == 3) {
@@ -1259,8 +1260,18 @@ val catalogCompositions =
                             modelId = member.requiredString("modelId"),
                         )
                     }
-            require(members.size >= 2 && members.map { it.role }.distinct().size == members.size) {
-                "A hybrid composition must contain at least two uniquely named roles"
+            require(members.map { it.role }.distinct().size == members.size) {
+                "A composition must name each role once"
+            }
+            if (compositionKind == "recipe") {
+                // A recipe is one frozen base plus a readout. There is no second artifact to
+                // compose, so there is no composition to qualify: what it stands on is the pinned
+                // base and that base's own published qualification.
+                require(members.size == 1) { "A recipe composition must name exactly its base" }
+            } else {
+                require(members.size >= 2) {
+                    "A hybrid composition must contain at least two uniquely named roles"
+                }
             }
             val compositionSha256 = raw.requiredString("compositionSha256")
             require(compositionSha256.matches(Regex("[a-f0-9]{64}"))) {
@@ -1292,7 +1303,7 @@ val catalogCompositions =
                 (raw["compositionQualifications"] as? List<*>)
                     ?: error("A composition must contain qualification evidence")
             require(qualifications.any { it.stringKeyMap("Composition qualification")["qualified"] == true }) {
-                "A public hybrid composition must contain qualified evidence"
+                "A public composition must contain qualified evidence"
             }
             CatalogComposition(
                 id = raw.requiredString("id"),
@@ -1321,6 +1332,8 @@ val catalogCompositions =
         }
 val qwenChatToolsQualified =
     catalogCompositions.any { it.id == "qwen3_chat_tools_composite" }
+val harrietQualified = catalogCompositions.any { it.id == "harriet_qwen3_5_4b_decisions" }
+
 val graniteAnswerabilityQualified =
     catalogCompositions.any { it.id == "granite_4_1_3b_answerability_hybrid" }
 
@@ -4042,6 +4055,7 @@ project(":modeljars") {
         api("com.integrallis:backend-java:$modelsVersion")
         api("com.integrallis:backend-native:$modelsVersion")
         api("com.integrallis:models-audio:$modelsVersion")
+        api("com.integrallis:models-decisions:$modelsVersion")
         testImplementation(project(":modeljars-catalog"))
         // The Jackson line the Models runtime already resolves; compares tool-call arguments as
         // JSON values in the chat-template round-trip gate.
@@ -4175,6 +4189,38 @@ project(":modeljars-composite-qwen3-chat-tools") {
         jvmArgs("--add-modules", "jdk.incubator.vector")
         maxHeapSize = "4g"
         outputs.upToDateWhen { false }
+    }
+}
+
+project(":modeljars-composite-harriet") {
+    group = "org.modeljars.composite"
+    description = "Harriet: typed, calibrated decisions from a frozen Qwen3.5-4B, in one pass"
+
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        onlyIf { harrietQualified }
+    }
+
+    publishing {
+        publications.named<MavenPublication>("maven") {
+            artifactId = "harriet"
+        }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    dependencies {
+        api(project(":modeljars"))
+        runtimeOnly(
+            "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+        )
+    }
+
+    tasks.named<Test>("test") {
+        exclude("**/*IntegrationIT.class")
     }
 }
 
@@ -4330,8 +4376,9 @@ val verifyJvmRuntimePublication =
             }
 
             val dependencies = document.getElementsByTagName("dependency")
-            require(dependencies.length == 5) {
-                "JVM Runtime must publish ModelJars Core, Models, both execution backends, and audio support"
+            require(dependencies.length == 6) {
+                "JVM Runtime must publish ModelJars Core, Models, Decisions, both execution " +
+                    "backends, and audio support"
             }
 
             fun dependency(artifactId: String): Element =

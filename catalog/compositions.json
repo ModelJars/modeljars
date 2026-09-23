@@ -73,6 +73,75 @@
           "reportSha256": "27555047b570bff7ce2d844b830d301181e685cc14b48fbc23ee6d0dac5b9469"
         }
       ]
+    },
+    {
+      "id": "harriet_qwen3_5_4b_decisions",
+      "kind": "recipe",
+      "name": "Harriet",
+      "description": "Typed, calibrated decisions from a frozen Qwen3.5-4B in one forward pass: evidence, a criterion and a closed set of outcomes in, a probability over exactly those outcomes out. Nothing is generated, so there is no JSON to repair and no decoding loop to bound. The weights are not ours and are not modified.",
+      "sourceId": "modeljars://harriet",
+      "sourceUri": "https://github.com/integrallis/harriet",
+      "downloadUri": "https://repo1.maven.org/maven2/org/modeljars/composite/harriet/0.1.48/harriet-0.1.48.jar",
+      "markerCoordinate": "org.modeljars.composite:harriet:0.1.48",
+      "modelVersion": "0.1.48",
+      "variant": "decisions",
+      "format": "composite",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "license": "Apache-2.0",
+      "licenseUri": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+      "domains": [
+        "decisions",
+        "classification"
+      ],
+      "capabilities": [
+        "typed-decision",
+        "calibrated-probability",
+        "binary-judgment",
+        "categorical-choice",
+        "ordinal-score"
+      ],
+      "features": [
+        "single-forward-pass",
+        "no-generation",
+        "answer-space-contract",
+        "shared-physical-prefix",
+        "native-option-logits",
+        "frozen-base"
+      ],
+      "backends": {
+        "rust-ffm": true
+      },
+      "dimensions": {
+        "parameterCount": 4022468096,
+        "contextLength": 262144
+      },
+      "members": [
+        {
+          "role": "base",
+          "modelId": "unsloth_qwen3_5_4b_gguf_q4_k_m"
+        }
+      ],
+      "revision": "c9cee89f76d3d9b2e345766e439da54635228508",
+      "compositionSha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+      "requiredWeightBytes": 2740937888,
+      "catalogPublishedAt": "2026-09-23T19:30:00Z",
+      "compositionQualifications": [
+        {
+          "qualified": true,
+          "unresolvedRequiredWork": [],
+          "useCaseTier": "RECIPE_PINNED_BASE",
+          "backend": "rust-ffm",
+          "backendVersion": "models-0.3.43",
+          "workload": "general",
+          "basisModelId": "unsloth_qwen3_5_4b_gguf_q4_k_m",
+          "basisVerdict": "QUALIFIED",
+          "basisPerformanceTier": "USABLE",
+          "basisArtifactSha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
+          "reportUri": "https://raw.githubusercontent.com/integrallis/models/9c7acb5c12a4f412980bf1cef66e35effb5ab43f/benchmark-results/certified-20260923/rag/qwen3.5-4b-q4_k_m/qualification.json",
+          "reportSha256": "1f02d116c6f99d516829280c6e5f6249b5f19d3ac991c2ce88f772124d955706"
+        }
+      ]
     }
   ]
 }

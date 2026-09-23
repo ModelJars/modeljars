@@ -1478,7 +1478,7 @@
       "sourceUri": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF",
       "downloadUri": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/e87f176479d0855a907a41277aca2f8ee7a09523/Qwen3.5-4B-Q4_K_M.gguf",
       "revision": "e87f176479d0855a907a41277aca2f8ee7a09523",
-      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+      "markerCoordinate": "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.2",
       "modelVersion": "3.5.0",
       "variant": "q4_k_m",
       "format": "gguf",

@@ -4215,7 +4215,7 @@ project(":modeljars-composite-harriet") {
     dependencies {
         api(project(":modeljars"))
         runtimeOnly(
-            "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.1",
+            "org.modeljars.huggingface:unsloth.qwen3.5-4b-gguf.q4_k_m:3.5.0-q4_k_m.2",
         )
     }
 

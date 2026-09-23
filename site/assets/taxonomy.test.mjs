@@ -7,6 +7,7 @@ import {
   modelTerms,
   relatedModels,
   sizeTier,
+  kindProfile,
   verificationProfile,
 } from "./taxonomy.js";
 
@@ -266,4 +267,36 @@ test("facets and describes tool-calling conformance evidence", () => {
     checks: ["Pinned artifact", "Complete metadata", "13-case tool-calling qualification"],
   });
   assert.ok(modelTerms(toolModel).includes("needle2-upstream-playground-v1"));
+});
+
+test("a hybrid carries its kind in its own pill, not in the verification label", () => {
+  const hybrid = {
+    kind: "hybrid",
+    members: [{ role: "base" }, { role: "specialist" }],
+    backends: { "pure-java": true },
+  };
+  assert.deepEqual(kindProfile(hybrid), { kind: "hybrid", label: "Hybrid" });
+});
+
+test("an unqualified hybrid is still labelled a hybrid", () => {
+  // Regression: kind and verification were one badge, so a hybrid missing any check rendered as
+  // "Cataloged" and stopped being identifiable as a hybrid at all.
+  const partial = { kind: "hybrid", members: [{ role: "base" }] };
+  assert.equal(kindProfile(partial).label, "Hybrid");
+  assert.equal(verificationProfile(partial).label, "Cataloged");
+});
+
+test("a fully qualified hybrid reads Qualified, with the kind carried separately", () => {
+  const qualified = {
+    kind: "hybrid",
+    members: [{ role: "base" }, { role: "specialist" }],
+    backends: { "pure-java": true },
+    ragQualifications: [{ qualified: true }],
+  };
+  assert.equal(kindProfile(qualified).label, "Hybrid");
+  assert.equal(verificationProfile(qualified).level, "qualified");
+});
+
+test("an ordinary model has no kind pill", () => {
+  assert.equal(kindProfile({ name: "Qwen3.5 4B" }), null);
 });

@@ -55,14 +55,20 @@
           <div>
             <p class="eyebrow">Community model registry</p>
             <h1 id="catalog-title">Find qualified models</h1>
-            <p class="lede">
-              Discover the power of small and medium-sized models for local, in-JVM inference.
-              ModelJARs are versioned JAR files that make AI models available to the
-              <a href="https://integrallis.github.io/models/">Models</a> JVM inference library.
-              Think of WebJars, but for AI models: standard dependency coordinates,
-              immutable metadata, and measured runtime support across GGUF, Safetensors, and CACT
-              model formats.
-            </p>
+            <details class="lede-disclosure" open>
+              <summary>
+                <span class="lede-summary-text">
+                  Discover the power of small and medium-sized models for local, in-JVM inference.
+                </span>
+              </summary>
+              <p class="lede">
+                ModelJARs are versioned JAR files that make AI models available to the
+                <a href="https://integrallis.github.io/models/">Models</a> JVM inference library.
+                Think of WebJars, but for AI models: standard dependency coordinates,
+                immutable metadata, and measured runtime support across GGUF, Safetensors, and CACT
+                model formats.
+              </p>
+            </details>
             <div class="catalog-actions" aria-label="Get started">
               <a class="primary-button" href="#modeljars-cli">Install the native CLI</a>
               <a class="secondary-button" href="#using-modeljars">Use from Java</a>

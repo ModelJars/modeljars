@@ -16,10 +16,12 @@
 package org.modeljars;
 
 import com.integrallis.models.api.InferenceBackend;
+import com.integrallis.models.api.ResumableInferenceBackend;
 import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.decisions.AnswerSpace;
 import com.integrallis.models.decisions.LetterLogitScorer;
 import com.integrallis.models.decisions.Verdict;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,6 +56,28 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     this.scorer = new LetterLogitScorer(temperature);
   }
 
+  /** The evidence tokens the current resumption point was captured after, if any. */
+  private int[] evidenceTokens;
+
+  /** The position to return to before reading a new criterion over the same evidence. */
+  private ResumableInferenceBackend.Resumption evidencePoint;
+
+  /**
+   * The part of the prompt that precedes the lettered options: the evidence, then the criterion.
+   *
+   * <p>The criterion has to be here. Without {@code space.question()} every question about one
+   * piece of evidence produced a byte-identical prompt, so the same probability came back for all
+   * of them -- measured 0.233783 for five different questions about one contract, with nothing
+   * failing, because a runtime that ignores the question still returns a well-formed distribution.
+   *
+   * @param space the declared answer space, whose question is the criterion
+   * @param state the evidence the decision is made against
+   * @return the prompt text up to but excluding the lettered options
+   */
+  static String evidencePrefix(AnswerSpace space, String state) {
+    return state + "\n" + space.question() + "\n";
+  }
+
   /**
    * Answers one decision in a single forward pass.
    *
@@ -62,8 +86,8 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * be one exact round-trip token first; a slot that merges with neighbouring text would read the
    * wrong logit and fail silently rather than loudly.
    *
-   * @param space the declared answer space
-   * @param state the evidence and criterion the decision is made against
+   * @param space the declared answer space, whose question is the criterion
+   * @param state the evidence the decision is made against
    * @return a probability over exactly the declared options
    */
   public Verdict decide(AnswerSpace space, String state) {
@@ -72,21 +96,55 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     List<String> labels = space.labels();
     Tokenizer tokenizer = backend.tokenizer();
 
-    int[] prompt = tokenizer.encode(state + "\n" + LetterLogitScorer.renderOptions(labels));
+    String evidenceText = evidencePrefix(space, state);
+    int[] prompt = tokenizer.encode(evidenceText + LetterLogitScorer.renderOptions(labels));
     int[] letterTokens = new int[labels.size()];
     for (int index = 0; index < labels.size(); index++) {
       int[] encoded = tokenizer.encode(" " + (char) ('A' + index));
       letterTokens[index] = encoded[encoded.length - 1];
     }
 
-    int last = prompt.length - 1;
-    if (last > 0) {
-      int[] head = new int[last];
-      System.arraycopy(prompt, 0, head, 0, last);
-      backend.prefill(head, 0);
+    // Each decision is independent: one state, one closed answer space, one forward pass. The
+    // backend carries sequence state from whatever ran before it, so without returning it to a
+    // known position a second decision prefills at position 0 against a session already past it
+    // and fails with "position must be sequential". A runtime callable once is not a runtime.
+    //
+    // The evidence is usually the same across a batch of questions and the options are not, so the
+    // evidence is read once and resumed, and only the options are read per decision. On a backend
+    // that cannot resume this falls back to reading the whole prompt every time, which is correct
+    // and slower.
+    int[] evidence = tokenizer.encode(state);
+    int[] optionTokens = Arrays.copyOfRange(prompt, evidence.length, prompt.length);
+    boolean resumable =
+        backend instanceof ResumableInferenceBackend resumableBackend
+            && resumableBackend.supportsResumption()
+            && optionTokens.length > 0
+            && Arrays.equals(evidence, Arrays.copyOf(prompt, evidence.length));
+
+    if (!resumable) {
+      backend.reset();
+      int last = prompt.length - 1;
+      if (last > 0) {
+        backend.prefill(Arrays.copyOf(prompt, last), 0);
+      }
+      return scorer.score(space, backend.forward(prompt[last], last), letterTokens);
     }
-    float[] logits = backend.forward(prompt[last], last);
-    return scorer.score(space, logits, letterTokens);
+
+    ResumableInferenceBackend resumableBackend = (ResumableInferenceBackend) backend;
+    if (evidencePoint == null || !Arrays.equals(evidence, evidenceTokens)) {
+      backend.reset();
+      backend.prefill(evidence, 0);
+      evidenceTokens = evidence;
+      evidencePoint = resumableBackend.capture();
+    } else {
+      resumableBackend.resume(evidencePoint);
+    }
+
+    int last = prompt.length - 1;
+    if (optionTokens.length > 1) {
+      backend.prefill(Arrays.copyOf(optionTokens, optionTokens.length - 1), evidence.length);
+    }
+    return scorer.score(space, backend.forward(prompt[last], last), letterTokens);
   }
 
   /**

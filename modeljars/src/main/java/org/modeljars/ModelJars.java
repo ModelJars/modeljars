@@ -72,6 +72,24 @@ public final class ModelJars {
    */
   private static final String DECISION_DECODE_PROPERTY = "models.native.quantizedDecode";
 
+  /**
+   * The Gated DeltaNet recurrence, on the native chunked scan rather than token by token in Java.
+   *
+   * <p>This kernel was written, tested and shipped, and nothing ever turned it on. It is off by
+   * default because it was evaluated for generation, where a decode step advances one token and a
+   * chunked scan has nothing to chunk. A decision is the opposite shape: it prefills its whole
+   * question in one batch, and the scan then reads and writes each layer's 4 MiB of recurrent state
+   * once for the batch instead of once per token.
+   *
+   * <p>MEASURED 2026-09-24 on the shipped Qwen3.5-4B. A forward pass over an 18-token question
+   * falls from 19.9 to 14.5 ms a token, and a whole decision from 0.540 s to 0.357 s over shared
+   * evidence and from 1.135 s to 0.740 s when every case carries its own document -- about 1.5x
+   * either way. Over 120 JevBench items it costs one of them: accuracy 0.9000 to 0.8917,
+   * Intelligence 88.9 to 88.0, which is this cohort's noise floor, while Calibration improves from
+   * 71.7 to 73.0. A deployment setting still wins over this.
+   */
+  private static final String DECISION_RECURRENCE_PROPERTY = "models.native.gatedDeltaNet";
+
   private static final String JAVA_BACKEND = "pure-java";
   private static final String NATIVE_BACKEND = "rust-ffm";
 
@@ -1265,6 +1283,7 @@ public final class ModelJars {
     recommendations.putIfAbsent(
         DECISION_CONTEXT_PROPERTY, Integer.toString(DECISION_CONTEXT_LENGTH));
     recommendations.putIfAbsent(DECISION_DECODE_PROPERTY, "true");
+    recommendations.putIfAbsent(DECISION_RECURRENCE_PROPERTY, "true");
     if (recommendations.equals(configuration.recommendations())) {
       return configuration;
     }

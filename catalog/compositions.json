@@ -132,7 +132,7 @@
           "unresolvedRequiredWork": [],
           "useCaseTier": "RECIPE_PINNED_BASE",
           "backend": "rust-ffm",
-          "backendVersion": "models-0.3.43",
+          "backendVersion": "models-0.3.44",
           "workload": "general",
           "basisModelId": "unsloth_qwen3_5_4b_gguf_q4_k_m",
           "basisVerdict": "QUALIFIED",

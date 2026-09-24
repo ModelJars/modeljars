@@ -74,6 +74,21 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    */
   static final String MINIMUM_GROUP_SIZE_PROPERTY = "modeljars.decisions.minimumGroupSize";
 
+  /**
+   * Allows grouping on a backend where it does not give bit-identical answers.
+   *
+   * <p>Grouping is meant to be a scheduling choice. On a backend whose single-row and multi-row
+   * kernels are separate code, it is not: MEASURED 2026-09-24 on Harriet's native backend, a
+   * grouped answer and the same question asked alone differ by 0.03 to 0.10 of probability, because
+   * one reads its answer out of a batch of one row and the other out of a batch of many, and those
+   * round differently in a way a 32-layer model amplifies about a hundred thousand times.
+   *
+   * <p>So by default a group is only taken when the backend states the two agree exactly. A caller
+   * who wants the throughput and accepts a second decimal place that moves can set this, but it has
+   * to be said out loud -- the failure is silent, well-formed, and looks exactly like an answer.
+   */
+  static final String ALLOW_INEXACT_GROUPING_PROPERTY = "modeljars.decisions.allowInexactGrouping";
+
   /** The evidence tokens the current resumption point was captured after, if any. */
   private int[] evidenceTokens;
 
@@ -132,7 +147,7 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
   }
 
   /**
-   * Answers the group in one weight sweep, or returns null if this backend cannot.
+   * Answers the group in lockstep, or returns null if that is not worth it on this backend.
    *
    * <p>MEASURED 2026-09-24, Harriet on a Hetzner CCX33: twenty questions cost 8.95 s one at a time
    * and 8.63 s together, which is inside the run-to-run band. Batched prefill on that box is
@@ -142,14 +157,16 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * that step is already cheap. Without it the same grouping is worth 1.69x, which is why the
    * backend and not this method decides whether to take this path.
    *
-   * <p>Answers also differ slightly between the two paths, by up to 0.04 of probability. That is
-   * not this method's doing: a question prefilled as one batch already disagrees with the same
-   * question fed a token at a time by as much, because the two take different matrix kernels. A
-   * caller that needs bit-identical answers must pick one path and stay on it.
+   * <p>Grouping must not change an answer, and on some backends it does. A group reads its answer
+   * out of a batch of rows and a lone question reads its answer out of a batch of one; where those
+   * are separate kernels they round differently, and MEASURED 2026-09-24 on Harriet's native
+   * backend that comes to 0.03 to 0.10 of probability. So this path is only taken when the backend
+   * states the two agree exactly, unless {@link #ALLOW_INEXACT_GROUPING_PROPERTY} says otherwise.
    */
   private List<Verdict> decideGroupedIfSupported(List<AnswerSpace> spaces, String state) {
     if (!(backend instanceof GroupedDecisionBackend groupedBackend)
         || !groupedBackend.supportsGroupedDecisions()
+        || !groupingIsAnswerPreserving(groupedBackend)
         || spaces.size() < minimumGroupSize(groupedBackend)
         || spaces.size() > groupedBackend.maximumGroupSize()) {
       return null;
@@ -207,6 +224,12 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
       verdicts.add(scorer.score(spaces.get(index), logits[index], letterTokens.get(index)));
     }
     return List.copyOf(verdicts);
+  }
+
+  /** Whether grouping on this backend is guaranteed to return the same answers. */
+  private static boolean groupingIsAnswerPreserving(GroupedDecisionBackend backend) {
+    return backend.groupedDecisionsMatchSingleDecisions()
+        || Boolean.getBoolean(ALLOW_INEXACT_GROUPING_PROPERTY);
   }
 
   /** The smallest group worth answering together, from the backend unless overridden. */

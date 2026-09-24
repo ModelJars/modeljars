@@ -93,6 +93,48 @@ final class ModelJarDecisionRuntimeGroupingTest {
     assertEquals(0, backend.groupedCalls, "the backend said grouping never pays");
   }
 
+  /**
+   * GROUPING MUST NOT CHANGE AN ANSWER.
+   *
+   * <p>MEASURED 2026-09-24 on the shipped Qwen3.5-4B: on the native backend a grouped answer and
+   * the same question asked alone differ by 0.03 to 0.10 of probability, and on one of four
+   * questions the winner itself changed. The cause is not the grouping logic -- a lone question
+   * reads its answer out of a batch of one row and a group reads its out of a batch of many, and on
+   * that backend those are separate kernels. The pure Java decoder, whose batched projection
+   * computes each row exactly as its single-row projection would, is bit-identical. So a backend
+   * that cannot promise this must not be grouped, however profitable grouping would be.
+   */
+  @Test
+  void aBackendWhoseGroupedAnswersDifferIsNotGrouped() {
+    StubBackend backend = new StubBackend(2, false);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+
+    assertEquals(20, runtime.decideAll(spaces(20), EVIDENCE).size());
+    assertEquals(
+        0,
+        backend.groupedCalls,
+        "grouping was profitable here and still must not be taken: it changes answers");
+  }
+
+  /** The caller may accept an answer that moves, but only by saying so. */
+  @Test
+  void inexactGroupingCanBeAskedForExplicitly() {
+    StubBackend backend = new StubBackend(2, false);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+    String previous = System.getProperty(ModelJarDecisionRuntime.ALLOW_INEXACT_GROUPING_PROPERTY);
+    System.setProperty(ModelJarDecisionRuntime.ALLOW_INEXACT_GROUPING_PROPERTY, "true");
+    try {
+      assertEquals(4, runtime.decideAll(spaces(4), EVIDENCE).size());
+      assertEquals(1, backend.groupedCalls);
+    } finally {
+      if (previous == null) {
+        System.clearProperty(ModelJarDecisionRuntime.ALLOW_INEXACT_GROUPING_PROPERTY);
+      } else {
+        System.setProperty(ModelJarDecisionRuntime.ALLOW_INEXACT_GROUPING_PROPERTY, previous);
+      }
+    }
+  }
+
   @Test
   void theThresholdIsConfigurableBecauseItIsAPropertyOfTheMachine() {
     StubBackend backend = new StubBackend(Integer.MAX_VALUE);
@@ -152,13 +194,19 @@ final class ModelJarDecisionRuntimeGroupingTest {
       implements ResumableInferenceBackend, GroupedDecisionBackend {
     private static final int VOCABULARY = 256;
     private final int breakEven;
+    private final boolean exact;
     private int position;
     private int groupedCalls;
     private int evidencePrefills;
     private int resumes;
 
     private StubBackend(int breakEven) {
+      this(breakEven, true);
+    }
+
+    private StubBackend(int breakEven, boolean exact) {
       this.breakEven = breakEven;
+      this.exact = exact;
     }
 
     @Override
@@ -264,6 +312,11 @@ final class ModelJarDecisionRuntimeGroupingTest {
     @Override
     public int groupedDecisionBreakEven() {
       return breakEven;
+    }
+
+    @Override
+    public boolean groupedDecisionsMatchSingleDecisions() {
+      return exact;
     }
 
     @Override

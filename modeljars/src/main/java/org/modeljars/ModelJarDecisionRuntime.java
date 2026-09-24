@@ -179,7 +179,9 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
       AnswerSpace space = spaces.get(index);
       List<String> labels = space.labels();
       int[] prompt =
-          tokenizer.encode(evidencePrefix(space, state) + LetterLogitScorer.renderOptions(labels));
+          tokenizer.encode(
+              evidencePrefix(space, state)
+                  + LetterLogitScorer.renderOptions(labels, space.criteria()));
       if (prompt.length <= evidence.length
           || !Arrays.equals(evidence, Arrays.copyOf(prompt, evidence.length))) {
         // Tokenising the evidence alone did not reproduce the prompt's leading tokens, so the
@@ -265,7 +267,8 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     Tokenizer tokenizer = backend.tokenizer();
 
     String evidenceText = evidencePrefix(space, state);
-    int[] prompt = tokenizer.encode(evidenceText + LetterLogitScorer.renderOptions(labels));
+    int[] prompt =
+        tokenizer.encode(evidenceText + LetterLogitScorer.renderOptions(labels, space.criteria()));
     int[] letterTokens = new int[labels.size()];
     for (int index = 0; index < labels.size(); index++) {
       int[] encoded = tokenizer.encode(" " + (char) ('A' + index));

@@ -21,6 +21,7 @@ import com.integrallis.models.decisions.Noul;
 import com.integrallis.models.decisions.Score;
 import com.integrallis.models.decisions.Verdict;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.modeljars.ModelJar;
 import org.modeljars.ModelJarDecisionRuntime;
@@ -123,6 +124,73 @@ public final class Harriet {
       ModelJarDecisionRuntime runtime, String question, List<String> levels, String state) {
     Objects.requireNonNull(runtime, "runtime");
     return runtime.decide(new Score(question, levels), state);
+  }
+
+  /**
+   * A proposition with a written rule for each outcome.
+   *
+   * <p>A label is a token, not an explanation, and this is what lets the rule reach the model.
+   * MEASURED 2026-09-24 over 120 JevBench items, the same model and kernel, the only difference
+   * being whether a rubric reaches the prompt: accuracy 0.8917 with it and 0.7500 without.
+   *
+   * @param runtime the decision runtime holding the frozen base
+   * @param question the statement being judged
+   * @param whenTrue what must hold for it to be true
+   * @param whenFalse what makes it false
+   * @param state the evidence it is judged against
+   * @return a probability over exactly true and false
+   */
+  public static Verdict noul(
+      ModelJarDecisionRuntime runtime,
+      String question,
+      String whenTrue,
+      String whenFalse,
+      String state) {
+    Objects.requireNonNull(runtime, "runtime");
+    return runtime.decide(new Noul(question, whenTrue, whenFalse), state);
+  }
+
+  /**
+   * A categorical decision whose options each carry a rule saying what they cover.
+   *
+   * @param runtime the decision runtime holding the frozen base
+   * @param question the question being answered
+   * @param options the outcomes, in declaration order
+   * @param criteria what each option covers, keyed by option; any subset
+   * @param state the evidence the question is asked against
+   * @return a probability over exactly the declared options
+   */
+  public static Verdict choice(
+      ModelJarDecisionRuntime runtime,
+      String question,
+      List<String> options,
+      Map<String, String> criteria,
+      String state) {
+    Objects.requireNonNull(runtime, "runtime");
+    return runtime.decide(new Choice(question, options, criteria), state);
+  }
+
+  /**
+   * An ordinal decision whose levels each carry a rule saying what they mean.
+   *
+   * <p>Ordinal spaces need this most. MEASURED 2026-09-24, this family scored 0.9167 with a rubric
+   * and 0.2500 without, which is what a bare "3" means to a reader never told what 3 is.
+   *
+   * @param runtime the decision runtime holding the frozen base
+   * @param question the question being answered
+   * @param levels the ordered levels, lowest first
+   * @param criteria what each level means, keyed by level; any subset
+   * @param state the evidence the question is asked against
+   * @return a probability over exactly the declared levels
+   */
+  public static Verdict score(
+      ModelJarDecisionRuntime runtime,
+      String question,
+      List<String> levels,
+      Map<String, String> criteria,
+      String state) {
+    Objects.requireNonNull(runtime, "runtime");
+    return runtime.decide(new Score(question, levels, criteria), state);
   }
 
   /**

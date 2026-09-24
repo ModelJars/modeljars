@@ -93,6 +93,12 @@ final class DemoScriptGenerator {
   }
 
   private static Type typeFor(ModelJarDescriptor descriptor) {
+    // Capability decides before shape. A recipe is a composition -- it resolves through its
+    // members like any other -- but what a caller does with it is a typed decision, not a chat
+    // turn, so the composite template would hand them a chat API the model does not have.
+    if (descriptor.capabilities().stream().anyMatch(DECISION_CAPABILITIES::contains)) {
+      return Type.DECISION;
+    }
     if (descriptor.format().equals("composite")
         && descriptor.features().contains("virtual-model")) {
       return Type.COMPOSITE;

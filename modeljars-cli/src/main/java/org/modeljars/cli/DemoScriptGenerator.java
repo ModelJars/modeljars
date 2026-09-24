@@ -30,10 +30,18 @@ final class DemoScriptGenerator {
   private static final Set<String> RERANKING_CAPABILITIES = Set.of("reranking", "text-ranking");
   private static final Set<String> SPEECH_CAPABILITIES =
       Set.of("text-to-speech", "audio-generation");
+  private static final Set<String> DECISION_CAPABILITIES =
+      Set.of(
+          "typed-decision",
+          "calibrated-probability",
+          "binary-judgment",
+          "categorical-choice",
+          "ordinal-score");
 
   enum Type {
     CHAT,
     COMPOSITE,
+    DECISION,
     EMBEDDING,
     RERANKING,
     SPEECH,
@@ -74,6 +82,7 @@ final class DemoScriptGenerator {
         switch (type) {
           case CHAT -> chatSource(descriptor, input);
           case COMPOSITE -> compositeSource(descriptor, input);
+          case DECISION -> decisionSource(descriptor, input);
           case EMBEDDING -> embeddingSource(descriptor, input);
           case RERANKING -> rerankingSource(descriptor, input);
           case SPEECH -> speechSource(descriptor, input);
@@ -91,6 +100,9 @@ final class DemoScriptGenerator {
     Set<String> capabilities = descriptor.capabilities();
     if (capabilities.contains("tool-calling") && descriptor.architecture().equals("needle2")) {
       return Type.TOOLS;
+    }
+    if (capabilities.stream().anyMatch(DECISION_CAPABILITIES::contains)) {
+      return Type.DECISION;
     }
     if (capabilities.stream().anyMatch(EMBEDDING_CAPABILITIES::contains)) {
       return Type.EMBEDDING;
@@ -113,6 +125,7 @@ final class DemoScriptGenerator {
   private static String input(Type type) {
     return switch (type) {
       case CHAT -> "What is the capital of France? Reply with only the city name.";
+      case DECISION -> "I was charged twice for my September subscription and no refund arrived.";
       case COMPOSITE -> "Name one JVM language.";
       case EMBEDDING -> "Public transit connects people and cities.";
       case RERANKING -> "How many people live in Berlin?";
@@ -125,6 +138,7 @@ final class DemoScriptGenerator {
     return switch (type) {
       case CHAT -> "chat";
       case COMPOSITE -> "hybrid";
+      case DECISION -> "decisions";
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
       case SPEECH -> "speech";
@@ -242,6 +256,59 @@ final class DemoScriptGenerator {
               System.out.println("Route:  " + answer.taskType());
               System.out.println("Output: " + answer.content());
             }
+          }
+
+          private static void quietLibraries() {
+            Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+            Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+          }
+        }
+        """
+            .formatted(javaString(defaultInput));
+  }
+
+  private String decisionSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import com.integrallis.models.decisions.Verdict;
+        import java.util.List;
+        import java.util.logging.Level;
+        import java.util.logging.Logger;
+        import org.modeljars.composite.harriet.Harriet;
+
+        class ModelJarsDemo {
+          public static void main(String... args) {
+            quietLibraries();
+            var evidence = args.length == 0 ? "%s" : String.join(" ", args);
+
+            System.out.println("Evidence: " + evidence);
+            System.out.println();
+            try (var harriet = Harriet.open()) {
+              // One closed answer space per question. Nothing is generated, so there is no JSON to
+              // repair and no decoding loop to bound: each answer is one forward pass.
+              report("billing?", Harriet.noul(harriet, "Is this ticket about billing?", evidence));
+              report(
+                  "queue",
+                  Harriet.choice(
+                      harriet,
+                      "Which queue should handle this?",
+                      List.of("billing", "technical", "shipping"),
+                      evidence));
+              report(
+                  "urgency",
+                  Harriet.score(
+                      harriet,
+                      "How urgent is this ticket?",
+                      List.of("can wait", "this week", "today"),
+                      evidence));
+            }
+          }
+
+          private static void report(String label, Verdict verdict) {
+            System.out.printf(
+                "  %%-10s %%-12s p=%%.3f  confidence=%%.2f%%n",
+                label, verdict.winner(), verdict.probabilityOf(verdict.winner()),
+                verdict.confidence());
           }
 
           private static void quietLibraries() {

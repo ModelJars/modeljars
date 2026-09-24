@@ -96,7 +96,31 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
   private ResumableInferenceBackend.Resumption evidencePoint;
 
   /**
-   * The part of the prompt that precedes the lettered options: the evidence, then the criterion.
+   * The part of the prompt that does not vary between questions: the evidence, then the rubric.
+   *
+   * <p>This is prefilled once and resumed for every question about the same evidence and answer
+   * space, so what is in it is paid for once and what follows it is paid for per question. MEASURED
+   * 2026-09-24 the tokens after it cost 18.5 ms each, so the split is the whole of the per-question
+   * latency.
+   *
+   * <p>The rubric belongs here and the lettered options do not, and that is measured rather than
+   * reasoned. Over 120 JevBench items: rubric and letters both after the criterion scored
+   * Intelligence 86.1, both before it 79.6, and the rubric before with the letters after
+   * <b>88.9</b> -- the best of the four and also the cheapest, because the rubric is most of the
+   * added tokens. A model wants the letter-to-label mapping after the question it answers, and is
+   * content to have read what the labels mean beforehand.
+   *
+   * @param space the declared answer space, whose rubric is shared across criteria
+   * @param state the evidence the decision is made against
+   * @return the prompt text every question about this evidence and space begins with
+   */
+  static String sharedPrefix(AnswerSpace space, String state) {
+    String criteria = LetterLogitScorer.renderCriteria(space.labels(), space.criteria());
+    return criteria.isEmpty() ? state : state + "\n" + criteria;
+  }
+
+  /**
+   * The part of the prompt that varies: the criterion, then the lettered options and the cue.
    *
    * <p>The criterion has to be here. Without {@code space.question()} every question about one
    * piece of evidence produced a byte-identical prompt, so the same probability came back for all
@@ -104,11 +128,10 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * failing, because a runtime that ignores the question still returns a well-formed distribution.
    *
    * @param space the declared answer space, whose question is the criterion
-   * @param state the evidence the decision is made against
-   * @return the prompt text up to but excluding the lettered options
+   * @return the prompt text that follows the shared prefix
    */
-  static String evidencePrefix(AnswerSpace space, String state) {
-    return state + "\n" + space.question() + "\n";
+  static String questionSuffix(AnswerSpace space) {
+    return "\n" + space.question() + "\n" + LetterLogitScorer.renderOptions(space.labels());
   }
 
   /**
@@ -172,19 +195,24 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
       return null;
     }
     Tokenizer tokenizer = backend.tokenizer();
-    int[] evidence = tokenizer.encode(state);
+    // Every space in the group must share one prefix, so a group of mixed rubrics cannot be
+    // grouped. Falling back is correct and the caller sees the same answers either way.
+    String shared = sharedPrefix(spaces.get(0), state);
+    for (AnswerSpace space : spaces) {
+      if (!shared.equals(sharedPrefix(space, state))) {
+        return null;
+      }
+    }
+    int[] evidence = tokenizer.encode(shared);
     int[][] suffixes = new int[spaces.size()][];
     List<int[]> letterTokens = new ArrayList<>(spaces.size());
     for (int index = 0; index < spaces.size(); index++) {
       AnswerSpace space = spaces.get(index);
       List<String> labels = space.labels();
-      int[] prompt =
-          tokenizer.encode(
-              evidencePrefix(space, state)
-                  + LetterLogitScorer.renderOptions(labels, space.criteria()));
+      int[] prompt = tokenizer.encode(shared + questionSuffix(space));
       if (prompt.length <= evidence.length
           || !Arrays.equals(evidence, Arrays.copyOf(prompt, evidence.length))) {
-        // Tokenising the evidence alone did not reproduce the prompt's leading tokens, so the
+        // Tokenising the shared prefix alone did not reproduce the prompt's leading tokens, so the
         // split is not safe to make. Fall back rather than answer a prompt nobody asked for.
         return null;
       }
@@ -266,9 +294,8 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     List<String> labels = space.labels();
     Tokenizer tokenizer = backend.tokenizer();
 
-    String evidenceText = evidencePrefix(space, state);
-    int[] prompt =
-        tokenizer.encode(evidenceText + LetterLogitScorer.renderOptions(labels, space.criteria()));
+    String shared = sharedPrefix(space, state);
+    int[] prompt = tokenizer.encode(shared + questionSuffix(space));
     int[] letterTokens = new int[labels.size()];
     for (int index = 0; index < labels.size(); index++) {
       int[] encoded = tokenizer.encode(" " + (char) ('A' + index));
@@ -280,11 +307,11 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     // known position a second decision prefills at position 0 against a session already past it
     // and fails with "position must be sequential". A runtime callable once is not a runtime.
     //
-    // The evidence is usually the same across a batch of questions and the options are not, so the
-    // evidence is read once and resumed, and only the options are read per decision. On a backend
-    // that cannot resume this falls back to reading the whole prompt every time, which is correct
-    // and slower.
-    int[] evidence = tokenizer.encode(state);
+    // The evidence and the rubric are the same across a batch of questions about one space and the
+    // criterion is not, so the shared part is read once and resumed and only the criterion and the
+    // letters are read per decision. On a backend that cannot resume this falls back to reading the
+    // whole prompt every time, which is correct and slower.
+    int[] evidence = tokenizer.encode(shared);
     int[] optionTokens = Arrays.copyOfRange(prompt, evidence.length, prompt.length);
     boolean resumable =
         backend instanceof ResumableInferenceBackend resumableBackend
@@ -294,11 +321,7 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
 
     if (!resumable) {
       backend.reset();
-      int last = prompt.length - 1;
-      if (last > 0) {
-        backend.prefill(Arrays.copyOf(prompt, last), 0);
-      }
-      return scorer.score(space, backend.forward(prompt[last], last), letterTokens);
+      return scorer.score(space, backend.prefill(prompt, 0), letterTokens);
     }
 
     ResumableInferenceBackend resumableBackend = (ResumableInferenceBackend) backend;
@@ -311,11 +334,16 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
       resumableBackend.resume(evidencePoint);
     }
 
-    int last = prompt.length - 1;
-    if (optionTokens.length > 1) {
-      backend.prefill(Arrays.copyOf(optionTokens, optionTokens.length - 1), evidence.length);
-    }
-    return scorer.score(space, backend.forward(prompt[last], last), letterTokens);
+    // The whole suffix in one prefill, reading the answer off its final position, rather than
+    // prefilling all but the last token and then stepping the last one on its own.
+    //
+    // The step that was removed is a single token read through every one of the 2.55 GiB of
+    // weights:
+    // MEASURED 2026-09-24 at 67 ms, and flat in thread count past two because it is bandwidth and
+    // not arithmetic. As one more row of a batch that is already compute bound it costs 18.5 ms.
+    // The
+    // answer is read from the same position either way.
+    return scorer.score(space, backend.prefill(optionTokens, evidence.length), letterTokens);
   }
 
   /**

@@ -126,6 +126,24 @@ public final class Harriet {
   }
 
   /**
+   * Answers several questions about one piece of evidence, reading the evidence once.
+   *
+   * <p>One state, many criteria, which is the shape a batch of decisions actually has. The evidence
+   * is prefilled once and resumed per question, so its cost is paid once rather than once per
+   * question.
+   *
+   * @param runtime the decision runtime holding the frozen base
+   * @param spaces the declared answer spaces, answered in order
+   * @param state the evidence every question is asked against
+   * @return one verdict per space, in the order given
+   */
+  public static List<Verdict> decideAll(
+      ModelJarDecisionRuntime runtime, List<AnswerSpace> spaces, String state) {
+    Objects.requireNonNull(runtime, "runtime");
+    return runtime.decideAll(spaces, state);
+  }
+
+  /**
    * Scores an answer space built by the caller, for spaces the named helpers do not cover.
    *
    * @param runtime the decision runtime holding the frozen base

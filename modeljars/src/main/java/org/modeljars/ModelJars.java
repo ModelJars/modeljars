@@ -61,6 +61,17 @@ public final class ModelJars {
   /** Long enough for a document and a criterion, short of a cache no decision ever fills. */
   private static final int DECISION_CONTEXT_LENGTH = 8192;
 
+  /**
+   * A decision runs exactly one decode step, and that step reads every weight in the model.
+   *
+   * <p>Profiled on an 8-vCPU EPYC-Milan box: the final forward pass and its vocabulary projection
+   * were 47% of a decision's wall time, not because of arithmetic -- it is about 8.6 GFLOP -- but
+   * because a single-token pass is bandwidth-bound and streams all 2.55 GiB of weights at roughly
+   * 6.4 GB/s. On the native quantized path the same step costs 0.066 s instead of 0.407 s, and a
+   * decision falls from 0.849 s to 0.457 s. A deployment setting still wins over this.
+   */
+  private static final String DECISION_DECODE_PROPERTY = "models.native.quantizedDecode";
+
   private static final String JAVA_BACKEND = "pure-java";
   private static final String NATIVE_BACKEND = "rust-ffm";
 
@@ -1250,11 +1261,13 @@ public final class ModelJars {
    * did. A deployment setting still wins, because this is a recommendation.
    */
   private static BackendConfiguration decisionConfiguration(BackendConfiguration configuration) {
-    if (configuration.recommendations().containsKey(DECISION_CONTEXT_PROPERTY)) {
+    Map<String, String> recommendations = new LinkedHashMap<>(configuration.recommendations());
+    recommendations.putIfAbsent(
+        DECISION_CONTEXT_PROPERTY, Integer.toString(DECISION_CONTEXT_LENGTH));
+    recommendations.putIfAbsent(DECISION_DECODE_PROPERTY, "true");
+    if (recommendations.equals(configuration.recommendations())) {
       return configuration;
     }
-    Map<String, String> recommendations = new LinkedHashMap<>(configuration.recommendations());
-    recommendations.put(DECISION_CONTEXT_PROPERTY, Integer.toString(DECISION_CONTEXT_LENGTH));
     return new BackendConfiguration(
         configuration.environment(), recommendations, configuration.optimizations());
   }

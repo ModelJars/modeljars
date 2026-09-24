@@ -15,12 +15,14 @@
  */
 package org.modeljars;
 
+import com.integrallis.models.api.GroupedDecisionBackend;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.ResumableInferenceBackend;
 import com.integrallis.models.api.Tokenizer;
 import com.integrallis.models.decisions.AnswerSpace;
 import com.integrallis.models.decisions.LetterLogitScorer;
 import com.integrallis.models.decisions.Verdict;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -56,6 +58,22 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     this.scorer = new LetterLogitScorer(temperature);
   }
 
+  /**
+   * Overrides the smallest group worth answering together rather than one question at a time.
+   *
+   * <p>Unset, the backend is asked, because the answer is a property of the backend and not of this
+   * runtime: grouping replaces the single-token step that ends each question with one step for the
+   * whole group, so it is worth exactly what that step costs. See {@link
+   * GroupedDecisionBackend#groupedDecisionBreakEven()} for the measurements.
+   *
+   * <p>MEASURED 2026-09-24, Harriet on a Hetzner CCX33 (8 vCPU, EPYC Milan, 4 physical cores) over
+   * a 143-token contract, twenty questions: 8.95 s one at a time against 8.63 s grouped with the
+   * native decode kernel on -- inside the +-5% run-to-run band at every group size from ten to
+   * thirty. With that kernel off the same grouping is worth 1.69x. Set this to force either way and
+   * measure; a box with more cores, a smaller model or a slower decode moves the answer.
+   */
+  static final String MINIMUM_GROUP_SIZE_PROPERTY = "modeljars.decisions.minimumGroupSize";
+
   /** The evidence tokens the current resumption point was captured after, if any. */
   private int[] evidenceTokens;
 
@@ -76,6 +94,133 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    */
   static String evidencePrefix(AnswerSpace space, String state) {
     return state + "\n" + space.question() + "\n";
+  }
+
+  /**
+   * Answers several questions about one piece of evidence, reading the evidence once.
+   *
+   * <p>This is the shape a batch of decisions actually has: one state, many criteria. The evidence
+   * is prefilled once and resumed for each question, so the cost of the evidence is paid once
+   * rather than once per question, and only the criterion and its options are read per answer.
+   *
+   * <p>MEASURED 2026-09-24 on a Hetzner CCX33 over a 143-token contract: the first question costs a
+   * full read of the evidence, 2.68 s, and each one after it costs 0.45 s. Answers are
+   * bit-identical to asking each question against a cold prefill.
+   *
+   * <p>A backend that says grouping pays off at this size answers the group in lockstep instead;
+   * see {@link #MINIMUM_GROUP_SIZE_PROPERTY} for the measurements and how to force either path.
+   *
+   * @param spaces the declared answer spaces, answered in order
+   * @param state the evidence every question is asked against
+   * @return one verdict per space, in the order given
+   */
+  public List<Verdict> decideAll(List<AnswerSpace> spaces, String state) {
+    Objects.requireNonNull(spaces, "spaces");
+    Objects.requireNonNull(state, "state");
+    if (spaces.isEmpty()) {
+      throw new IllegalArgumentException("spaces must not be empty");
+    }
+    List<Verdict> grouped = decideGroupedIfSupported(spaces, state);
+    if (grouped != null) {
+      return grouped;
+    }
+    List<Verdict> verdicts = new ArrayList<>(spaces.size());
+    for (AnswerSpace space : spaces) {
+      verdicts.add(decide(space, state));
+    }
+    return List.copyOf(verdicts);
+  }
+
+  /**
+   * Answers the group in one weight sweep, or returns null if this backend cannot.
+   *
+   * <p>MEASURED 2026-09-24, Harriet on a Hetzner CCX33: twenty questions cost 8.95 s one at a time
+   * and 8.63 s together, which is inside the run-to-run band. Batched prefill on that box is
+   * compute bound -- 18.5 ms per token, linear, saturating at four threads -- so the group does the
+   * same arithmetic either way. What it saves is the bandwidth-bound single-token step that ends
+   * each question, one per group rather than one per question, and with the native decode kernel
+   * that step is already cheap. Without it the same grouping is worth 1.69x, which is why the
+   * backend and not this method decides whether to take this path.
+   *
+   * <p>Answers also differ slightly between the two paths, by up to 0.04 of probability. That is
+   * not this method's doing: a question prefilled as one batch already disagrees with the same
+   * question fed a token at a time by as much, because the two take different matrix kernels. A
+   * caller that needs bit-identical answers must pick one path and stay on it.
+   */
+  private List<Verdict> decideGroupedIfSupported(List<AnswerSpace> spaces, String state) {
+    if (!(backend instanceof GroupedDecisionBackend groupedBackend)
+        || !groupedBackend.supportsGroupedDecisions()
+        || spaces.size() < minimumGroupSize(groupedBackend)
+        || spaces.size() > groupedBackend.maximumGroupSize()) {
+      return null;
+    }
+    Tokenizer tokenizer = backend.tokenizer();
+    int[] evidence = tokenizer.encode(state);
+    int[][] suffixes = new int[spaces.size()][];
+    List<int[]> letterTokens = new ArrayList<>(spaces.size());
+    for (int index = 0; index < spaces.size(); index++) {
+      AnswerSpace space = spaces.get(index);
+      List<String> labels = space.labels();
+      int[] prompt =
+          tokenizer.encode(evidencePrefix(space, state) + LetterLogitScorer.renderOptions(labels));
+      if (prompt.length <= evidence.length
+          || !Arrays.equals(evidence, Arrays.copyOf(prompt, evidence.length))) {
+        // Tokenising the evidence alone did not reproduce the prompt's leading tokens, so the
+        // split is not safe to make. Fall back rather than answer a prompt nobody asked for.
+        return null;
+      }
+      suffixes[index] = Arrays.copyOfRange(prompt, evidence.length, prompt.length);
+      int[] letters = new int[labels.size()];
+      for (int slot = 0; slot < labels.size(); slot++) {
+        int[] encoded = tokenizer.encode(" " + (char) ('A' + slot));
+        letters[slot] = encoded[encoded.length - 1];
+      }
+      letterTokens.add(letters);
+    }
+
+    // The same evidence capture the one-at-a-time path uses. MEASURED 2026-09-24 on an 8-vCPU
+    // EPYC-Milan box: re-reading 143 tokens of evidence costs 2.68 s, against 0.32 s for a
+    // 17-token question, so a group that re-read its evidence paid more for the evidence than for
+    // every question in it -- and discarding the capture made the next one-at-a-time decision pay
+    // it again.
+    ResumableInferenceBackend resumable =
+        backend instanceof ResumableInferenceBackend candidate && candidate.supportsResumption()
+            ? candidate
+            : null;
+    if (resumable == null) {
+      backend.reset();
+      backend.prefill(evidence, 0);
+      evidenceTokens = null;
+      evidencePoint = null;
+    } else if (evidencePoint == null || !Arrays.equals(evidence, evidenceTokens)) {
+      backend.reset();
+      backend.prefill(evidence, 0);
+      evidenceTokens = evidence;
+      evidencePoint = resumable.capture();
+    } else {
+      resumable.resume(evidencePoint);
+    }
+    float[][] logits = groupedBackend.decideGrouped(suffixes);
+
+    List<Verdict> verdicts = new ArrayList<>(spaces.size());
+    for (int index = 0; index < spaces.size(); index++) {
+      verdicts.add(scorer.score(spaces.get(index), logits[index], letterTokens.get(index)));
+    }
+    return List.copyOf(verdicts);
+  }
+
+  /** The smallest group worth answering together, from the backend unless overridden. */
+  private static int minimumGroupSize(GroupedDecisionBackend backend) {
+    String configured = System.getProperty(MINIMUM_GROUP_SIZE_PROPERTY);
+    if (configured == null || configured.isBlank()) {
+      return Math.max(2, backend.groupedDecisionBreakEven());
+    }
+    try {
+      return Math.max(2, Integer.parseInt(configured.trim()));
+    } catch (NumberFormatException failure) {
+      throw new IllegalArgumentException(
+          MINIMUM_GROUP_SIZE_PROPERTY + " must be an integer: " + configured, failure);
+    }
   }
 
   /**

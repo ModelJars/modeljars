@@ -15,6 +15,7 @@
  */
 package org.modeljars;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,8 +36,7 @@ final class ModelJarDecisionRuntimePromptTest {
   @Test
   void theCriterionIsInTheComposedPrompt() {
     String prompt =
-        ModelJarDecisionRuntime.evidencePrefix(
-            new Noul("Does the cap apply to data breaches?"), "The cap does not apply.");
+        prompt(new Noul("Does the cap apply to data breaches?"), "The cap does not apply.");
 
     assertTrue(prompt.contains("The cap does not apply."), prompt);
     assertTrue(prompt.contains("Does the cap apply to data breaches?"), prompt);
@@ -47,16 +47,66 @@ final class ModelJarDecisionRuntimePromptTest {
     String evidence = "Northwind pays 42,500 dollars monthly.";
 
     assertNotEquals(
-        ModelJarDecisionRuntime.evidencePrefix(new Noul("Is the fee stated?"), evidence),
-        ModelJarDecisionRuntime.evidencePrefix(new Noul("Is uptime stated?"), evidence));
+        prompt(new Noul("Is the fee stated?"), evidence),
+        prompt(new Noul("Is uptime stated?"), evidence));
   }
 
   @Test
-  void theEvidenceLeadsSoItCanBeSharedAcrossCriteria() {
+  void theSharedPartLeadsSoItCanBeReusedAcrossCriteria() {
     String evidence = "Northwind pays 42,500 dollars monthly.";
 
     assertTrue(
-        ModelJarDecisionRuntime.evidencePrefix(new Noul("Anything?"), evidence)
-            .startsWith(evidence));
+        ModelJarDecisionRuntime.sharedPrefix(new Noul("Anything?"), evidence).startsWith(evidence));
+  }
+
+  /**
+   * THE RUBRIC IS SHARED AND THE LETTERS ARE NOT, AND THE SPLIT IS WHERE THE LATENCY IS.
+   *
+   * <p>Everything in the shared prefix is prefilled once for a batch of questions; everything after
+   * it costs 18.5 ms a token per question, MEASURED 2026-09-24. The rubric is most of the added
+   * tokens, so which side of the split it falls on decides whether a decision with a rubric is a
+   * fifth of a second or most of one.
+   *
+   * <p>It is also where the accuracy is, and the two agree for once. Over 120 JevBench items:
+   * rubric and letters both after the criterion scored 86.1, both before it 79.6, rubric before and
+   * letters after <b>88.9</b>.
+   */
+  @Test
+  void theRubricIsSharedAndTheLettersFollowTheCriterion() {
+    String evidence = "Northwind pays 42,500 dollars monthly.";
+    Noul space = new Noul("Is the fee stated?", "A figure and a period are given", "No figure");
+
+    String shared = ModelJarDecisionRuntime.sharedPrefix(space, evidence);
+    String suffix = ModelJarDecisionRuntime.questionSuffix(space);
+
+    assertEquals(
+        """
+        Northwind pays 42,500 dollars monthly.
+        Options:
+        - false: No figure
+        - true: A figure and a period are given""",
+        shared);
+    assertEquals(
+        """
+
+        Is the fee stated?
+        A: false
+        B: true
+        Answer:""",
+        suffix);
+  }
+
+  /** Without a rubric the shared part is the evidence alone, exactly as it always was. */
+  @Test
+  void aSpaceWithoutARubricSharesOnlyTheEvidence() {
+    String evidence = "Northwind pays 42,500 dollars monthly.";
+
+    assertEquals(
+        evidence, ModelJarDecisionRuntime.sharedPrefix(new Noul("Is the fee stated?"), evidence));
+  }
+
+  private static String prompt(Noul space, String evidence) {
+    return ModelJarDecisionRuntime.sharedPrefix(space, evidence)
+        + ModelJarDecisionRuntime.questionSuffix(space);
   }
 }

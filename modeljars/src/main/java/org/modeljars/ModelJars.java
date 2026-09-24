@@ -54,6 +54,13 @@ import java.util.stream.Stream;
  * <p>Returned models and runtimes own their inference backend and must be closed.
  */
 public final class ModelJars {
+
+  /** The context a decision session is sized for, unless a deployment asks for another. */
+  private static final String DECISION_CONTEXT_PROPERTY = "models.purejava.maxContextLength";
+
+  /** Long enough for a document and a criterion, short of a cache no decision ever fills. */
+  private static final int DECISION_CONTEXT_LENGTH = 8192;
+
   private static final String JAVA_BACKEND = "pure-java";
   private static final String NATIVE_BACKEND = "rust-ffm";
 
@@ -960,7 +967,8 @@ public final class ModelJars {
     Path artifact = installer.install(descriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
-        configuration(descriptor, qualification, runtime, activeJvmArguments);
+        decisionConfiguration(
+            configuration(descriptor, qualification, runtime, activeJvmArguments));
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
     try {
       return new ModelJarDecisionRuntime(loadedBackend, descriptor, qualification, temperature);
@@ -1231,6 +1239,24 @@ public final class ModelJars {
                         + (requestedBackend == ModelBackend.AUTO
                             ? "speech execution"
                             : requestedBackend.backendId() + " speech execution")));
+  }
+
+  /**
+   * Sizes a decision session for evidence and a criterion rather than for the model's own maximum.
+   *
+   * <p>A decision reads a document and a question; it never fills a long-context window. Left at
+   * Qwen3.5's 262,144 tokens the key and value cache alone is about 17 GB, so opening the runtime
+   * on a default heap dies before the first answer -- which is what the CLI's own generated demo
+   * did. A deployment setting still wins, because this is a recommendation.
+   */
+  private static BackendConfiguration decisionConfiguration(BackendConfiguration configuration) {
+    if (configuration.recommendations().containsKey(DECISION_CONTEXT_PROPERTY)) {
+      return configuration;
+    }
+    Map<String, String> recommendations = new LinkedHashMap<>(configuration.recommendations());
+    recommendations.put(DECISION_CONTEXT_PROPERTY, Integer.toString(DECISION_CONTEXT_LENGTH));
+    return new BackendConfiguration(
+        configuration.environment(), recommendations, configuration.optimizations());
   }
 
   private BackendConfiguration configuration(

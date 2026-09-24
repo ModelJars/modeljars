@@ -208,6 +208,7 @@ export function qualificationLabel(qualification) {
   if (qualification.useCaseTier === "SECOND_STAGE_RERANKING") return "Second-stage reranking";
   if (qualification.useCaseTier === "TEXT_TO_SPEECH") return "Text-to-speech";
   if (qualification.useCaseTier === "HYBRID_COMPOSITION") return "Qualified hybrid";
+  if (qualification.useCaseTier === "RECIPE_PINNED_BASE") return "Typed decisions";
   return "Guarded RAG";
 }
 

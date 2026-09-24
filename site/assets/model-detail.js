@@ -169,8 +169,30 @@ export function isCompositionEvidence(qualification) {
   return qualification?.useCaseTier === "HYBRID_COMPOSITION";
 }
 
+/**
+ * A recipe composes nothing, so it has no control to compare a composite against and no latency
+ * of its own. What it stands on is the verdict its pinned base earned, on the bytes it pins.
+ */
+export function isRecipeEvidence(qualification) {
+  return qualification?.useCaseTier === "RECIPE_PINNED_BASE";
+}
+
 export function qualificationSummary(qualification) {
   if (!qualification) return null;
+  if (isRecipeEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      workload: qualification.workload,
+      basisModelId: qualification.basisModelId,
+      basisVerdict: qualification.basisVerdict,
+      basisPerformanceTier: qualification.basisPerformanceTier,
+      basisArtifactSha256: qualification.basisArtifactSha256,
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
+    };
+  }
   if (isCompositionEvidence(qualification)) {
     return {
       label: qualificationLabel(qualification),

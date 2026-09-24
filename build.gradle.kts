@@ -212,8 +212,15 @@ data class CatalogComposition(
             appendLine("${prefix}domains=${domains.joinToString(",")}")
             appendLine("${prefix}catalogPublishedAt=$catalogPublishedAt")
             appendLine("${prefix}capabilities=${capabilities.joinToString(",")}")
+            // virtual-model is what marks this descriptor as something to resolve through its
+            // members rather than download as one file. Without it the CLI treated every
+            // composition as an ordinary model artifact and `pull` failed with "Marker has no
+            // download URI", because a composition has no single file to fetch -- its weights are
+            // its members'. Only test fixtures ever set it, so no published composition was
+            // pullable.
             val compositionFeatures =
                 features +
+                    listOf("virtual-model") +
                     members.map { "composition-member:${it.modelId}" } +
                     members.map { "composition-role:${it.role}=${it.modelId}" }
             appendLine("${prefix}features=${compositionFeatures.joinToString(",")}")
@@ -5494,6 +5501,31 @@ tasks.register("verifyCatalog") {
     dependsOn(verifyComponentEvidence)
     dependsOn(verifyCompositionEvidence)
     doLast {
+        // A PUBLISHED COMPOSITION MUST BE PULLABLE.
+        //
+        // MEASURED 2026-09-23: `modeljars pull harriet` and `modeljars pull granite-answerability`
+        // both failed with "Marker has no download URI". The CLI decides a descriptor is a
+        // composition from format=composite AND a virtual-model feature, and then resolves it
+        // through its members; without the feature it asked for a single file a composition does
+        // not have. virtual-model appeared only in the CLI's own test fixtures, so the composite
+        // pull path was covered and still broken for every published composition.
+        catalogCompositions.forEach { composition ->
+            val generated = composition.registryProperties()
+            val declared =
+                generated
+                    .lineSequence()
+                    .first { it.startsWith("model.${composition.id}.features=") }
+                    .substringAfter('=')
+                    .split(",")
+            require(declared.contains("virtual-model")) {
+                "Composition ${composition.id} must declare virtual-model or the CLI cannot pull it"
+            }
+            composition.members.forEach { member ->
+                require(declared.contains("composition-role:${member.role}=${member.modelId}")) {
+                    "Composition ${composition.id} must name its ${member.role} member"
+                }
+            }
+        }
         catalogEntries.zip(markerJarTasks).forEach { (entry, markerTask) ->
             val markerJar = markerTask.get().archiveFile.get().asFile
             require(markerJar.isFile) { "Marker JAR was not generated: $markerJar" }

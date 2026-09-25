@@ -131,8 +131,21 @@ function activeFilterCount() {
   ].filter(Boolean).length;
 }
 
+// Categories the catalogue leads with regardless of how many entries carry them. The domain facet
+// is ordered by count and then cut to nine, which is right for discovering what the catalogue is
+// mostly made of and wrong for a category that exists on purpose: System One has two entries and
+// would sort below "translation". A deliberate category that nobody can see is not a category.
+const FEATURED_DOMAINS = ["system-1"];
+
 function renderDomainFilters(facets) {
-  const visibleDomains = facets.domains.slice(0, 9);
+  const byCount = facets.domains.slice(0, 9);
+  const featured = FEATURED_DOMAINS.flatMap((value) => {
+    const facet = facets.domains.find((candidate) => candidate.value === value);
+    // Absent from the catalogue entirely means nothing to filter, so show nothing rather than a
+    // button that returns an empty list.
+    return facet && !byCount.some((shown) => shown.value === value) ? [facet] : [];
+  });
+  const visibleDomains = [...featured, ...byCount];
   elements.domains.innerHTML = [
     { value: "", count: catalog.length, label: "All" },
     ...visibleDomains.map((facet) => ({ ...facet, label: facet.value })),

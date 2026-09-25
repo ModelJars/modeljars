@@ -9,10 +9,10 @@
       "description": "The qualified Granite 4.1 3B Q4_K_M base and the Integrallis-trained answerability activated-LoRA specialist as one hybrid: the base weights load once and the ordinary-chat and answerability branches fork from the same physical KV prefix.",
       "sourceId": "modeljars://granite-answerability",
       "sourceUri": "https://github.com/ModelJars/modeljars/tree/b5c1f69b0d220e0d80849a05d348f3bd92d834d4/modeljars-composite-granite-answerability",
-      "downloadUri": "https://repo1.maven.org/maven2/org/modeljars/composite/granite-answerability/0.1.48/granite-answerability-0.1.48.jar",
+      "downloadUri": "https://repo1.maven.org/maven2/org/modeljars/composite/granite-answerability/0.1.53/granite-answerability-0.1.53.jar",
       "revision": "b5c1f69b0d220e0d80849a05d348f3bd92d834d4",
-      "markerCoordinate": "org.modeljars.composite:granite-answerability:0.1.48",
-      "modelVersion": "0.1.48",
+      "markerCoordinate": "org.modeljars.composite:granite-answerability:0.1.53",
+      "modelVersion": "0.1.53",
       "variant": "answerability",
       "format": "composite",
       "architecture": "hybrid",
@@ -23,6 +23,7 @@
       "licenseUri": "https://www.apache.org/licenses/LICENSE-2.0.txt",
       "catalogPublishedAt": "2026-09-17T21:57:58Z",
       "domains": [
+        "system-1",
         "rag",
         "retrieval"
       ],
@@ -91,6 +92,7 @@
       "license": "Apache-2.0",
       "licenseUri": "https://www.apache.org/licenses/LICENSE-2.0.txt",
       "domains": [
+        "system-1",
         "decisions",
         "classification"
       ],

@@ -195,8 +195,7 @@ final class ModelJarDecisionRuntimeGroupingTest {
     questions.put("urgency", new Noul("Is this urgent?"));
     questions.put("billing", new Noul("Is this about an invoice?"));
 
-    Map<String, Verdict> answers =
-        runtime(new StubBackend(2)).systemOne(questions, EVIDENCE);
+    Map<String, Verdict> answers = runtime(new StubBackend(2)).systemOne(questions, EVIDENCE);
 
     assertEquals(questions.keySet(), answers.keySet(), "every name must be answered");
 
@@ -204,8 +203,7 @@ final class ModelJarDecisionRuntimeGroupingTest {
     // through the positional call must produce the same distributions, or one of the two paths is
     // doing something the other is not.
     List<Verdict> positional =
-        runtime(new StubBackend(2))
-            .decideAll(new ArrayList<>(questions.values()), EVIDENCE);
+        runtime(new StubBackend(2)).decideAll(new ArrayList<>(questions.values()), EVIDENCE);
     int index = 0;
     for (String name : questions.keySet()) {
       Verdict mapped = answers.get(name);

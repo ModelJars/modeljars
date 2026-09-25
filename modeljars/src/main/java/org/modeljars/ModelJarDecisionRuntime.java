@@ -175,11 +175,11 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
   /**
    * Answers named questions about one state, the shape a System One API call already has.
    *
-   * <p>A caller coming from a hosted System One sends a state and a map of named questions and reads
-   * answers back by the same names. {@link #decideAll(List, String)} is positional, so porting that
-   * caller means flattening a map into a list, remembering the order, and zipping the results back
-   * -- restructuring that has nothing to do with the decision. This is the same call with the same
-   * shape, so the surrounding code carries over.
+   * <p>A caller coming from a hosted System One sends a state and a map of named questions and
+   * reads answers back by the same names. {@link #decideAll(List, String)} is positional, so
+   * porting that caller means flattening a map into a list, remembering the order, and zipping the
+   * results back -- restructuring that has nothing to do with the decision. This is the same call
+   * with the same shape, so the surrounding code carries over.
    *
    * <p>Identical work to {@link #decideAll(List, String)}: the state is prefilled once and resumed
    * per question, so its cost is paid once rather than once per question. Iteration order of the

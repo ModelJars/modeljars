@@ -212,6 +212,38 @@ public final class Harriet {
   }
 
   /**
+   * Answers named questions about one state, the shape a System One call already has.
+   *
+   * <p>For a caller arriving from a hosted System One: state in, named questions in, answers out
+   * under the same names. {@link #decideAll(ModelJarDecisionRuntime, List, String)} is positional,
+   * so porting means flattening a map, tracking the order and zipping results back. This keeps the
+   * shape, so the code around the call does not move.
+   *
+   * <pre>{@code
+   * try (ModelJarDecisionRuntime runtime = Harriet.open()) {
+   *   Map<String, Verdict> answers = Harriet.systemOne(runtime, Map.of(
+   *       "urgency", new Noul("Is this urgent?"),
+   *       "department", new Choice("Which team handles this?", List.of("billing", "technical"))),
+   *       "my invoice was charged twice and nobody answers the phone");
+   *   double urgent = answers.get("urgency").probabilityOfTrue();
+   * }
+   * }</pre>
+   *
+   * <p>The evidence is prefilled once and resumed per question, so a second question about the same
+   * state costs a fraction of the first.
+   *
+   * @param runtime the decision runtime holding the frozen base
+   * @param questions the declared answer spaces, by the name each answer is read back under
+   * @param state the evidence every question is asked against
+   * @return one verdict per question, under the name the question was given
+   */
+  public static Map<String, Verdict> systemOne(
+      ModelJarDecisionRuntime runtime, Map<String, AnswerSpace> questions, String state) {
+    Objects.requireNonNull(runtime, "runtime");
+    return runtime.systemOne(questions, state);
+  }
+
+  /**
    * Scores an answer space built by the caller, for spaces the named helpers do not cover.
    *
    * @param runtime the decision runtime holding the frozen base

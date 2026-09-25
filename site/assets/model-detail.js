@@ -905,7 +905,7 @@ function renderRelated(model, catalog) {
     </section>`;
 }
 
-function renderModel(model, catalog) {
+export function renderModel(model, catalog) {
   const target = document.querySelector("#model-detail");
   const profile = verificationProfile(model);
   const tags = [
@@ -1034,7 +1034,7 @@ function renderModel(model, catalog) {
           <h2>Model facts</h2>
           <dl class="sidebar-facts">
             <div><dt>Parameters</dt><dd>${escapeHtml(formatParameters(model.dimensions?.parameterCount))}</dd></div>
-            <div><dt>Download</dt><dd>${escapeHtml(formatBytes(downloadBytes))}</dd></div>
+            <div><dt>Download</dt><dd>${escapeHtml(formatBytes(descriptorDownloadBytes(model)))}</dd></div>
             <div><dt>Size class</dt><dd>${escapeHtml(sizeTier(model).replace("-", " "))}</dd></div>
             <div><dt>Architecture</dt><dd>${escapeHtml(model.architecture)}</dd></div>
             <div><dt>Version</dt><dd>${escapeHtml(model.modelVersion)}</dd></div>

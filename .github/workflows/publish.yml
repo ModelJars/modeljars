@@ -28,7 +28,11 @@ on:
       - modeljars-catalog/**
       - modeljars-cli/**
       - modeljars-core/**
-      - modeljars-composite-qwen3-chat-tools/**
+      # Every composite, not an enumeration of them. This listed only qwen3-chat-tools while
+      # modeljars-composite-harriet and modeljars-composite-granite-answerability also existed, so a
+      # change to either never triggered a publish. Granite's catalogue pin sat at 0.1.48 while
+      # Central had 0.1.53, which is what that looks like from the outside.
+      - modeljars-composite-*/**
       - tools/**
       - build.gradle.kts
       - gradle.properties

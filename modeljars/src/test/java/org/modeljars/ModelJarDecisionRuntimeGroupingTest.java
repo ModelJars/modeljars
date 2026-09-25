@@ -178,6 +178,57 @@ final class ModelJarDecisionRuntimeGroupingTest {
     return List.copyOf(spaces);
   }
 
+  /**
+   * A CALLER ARRIVING FROM A HOSTED SYSTEM ONE MUST NOT HAVE TO RESTRUCTURE ITS CODE.
+   *
+   * <p>A System One call is a state plus named questions, answered back under the same names.
+   * {@code decideAll} is positional, so porting such a caller meant flattening a map, tracking the
+   * order and zipping the results back -- work that has nothing to do with the decision and that
+   * the caller gets wrong silently when the two lists drift apart.
+   *
+   * <p>So {@code systemOne} has to answer every name, answer it with that name's own question, and
+   * do no more work than the positional call it delegates to.
+   */
+  @Test
+  void answersNamedQuestionsUnderTheirOwnNames() {
+    Map<String, AnswerSpace> questions = new java.util.LinkedHashMap<>();
+    questions.put("urgency", new Noul("Is this urgent?"));
+    questions.put("billing", new Noul("Is this about an invoice?"));
+
+    Map<String, Verdict> answers =
+        runtime(new StubBackend(2)).systemOne(questions, EVIDENCE);
+
+    assertEquals(questions.keySet(), answers.keySet(), "every name must be answered");
+
+    // The map form is a shape, not a second implementation. Same questions in the same order
+    // through the positional call must produce the same distributions, or one of the two paths is
+    // doing something the other is not.
+    List<Verdict> positional =
+        runtime(new StubBackend(2))
+            .decideAll(new ArrayList<>(questions.values()), EVIDENCE);
+    int index = 0;
+    for (String name : questions.keySet()) {
+      Verdict mapped = answers.get(name);
+      Verdict listed = positional.get(index++);
+      assertEquals(
+          listed.space().labels(), mapped.space().labels(), name + " must keep its own outcomes");
+      for (String label : listed.space().labels()) {
+        assertEquals(
+            listed.probabilityOf(label),
+            mapped.probabilityOf(label),
+            name + " must be the same decision either way");
+      }
+    }
+  }
+
+  /** An empty map is a caller mistake, not a zero-answer success. */
+  @Test
+  void refusesAnEmptyQuestionMap() {
+    ModelJarDecisionRuntime runtime = runtime(new StubBackend(Integer.MAX_VALUE));
+    org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException.class, () -> runtime.systemOne(Map.of(), "evidence"));
+  }
+
   private static ModelJarDecisionRuntime runtime(StubBackend backend) {
     return new ModelJarDecisionRuntime(backend, descriptor(), qualification(), 1.0);
   }

@@ -24,7 +24,10 @@ import com.integrallis.models.decisions.LetterLogitScorer;
 import com.integrallis.models.decisions.Verdict;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -167,6 +170,48 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
       verdicts.add(decide(space, state));
     }
     return List.copyOf(verdicts);
+  }
+
+  /**
+   * Answers named questions about one state, the shape a System One API call already has.
+   *
+   * <p>A caller coming from a hosted System One sends a state and a map of named questions and reads
+   * answers back by the same names. {@link #decideAll(List, String)} is positional, so porting that
+   * caller means flattening a map into a list, remembering the order, and zipping the results back
+   * -- restructuring that has nothing to do with the decision. This is the same call with the same
+   * shape, so the surrounding code carries over.
+   *
+   * <p>Identical work to {@link #decideAll(List, String)}: the state is prefilled once and resumed
+   * per question, so its cost is paid once rather than once per question. Iteration order of the
+   * returned map follows the order given, so a caller that does depend on order still gets it.
+   *
+   * @param questions the declared answer spaces, by the name each answer is read back under
+   * @param state the evidence every question is asked against
+   * @return one verdict per question, under the name the question was given
+   * @throws IllegalArgumentException if {@code questions} is empty
+   */
+  public Map<String, Verdict> systemOne(Map<String, AnswerSpace> questions, String state) {
+    Objects.requireNonNull(questions, "questions");
+    Objects.requireNonNull(state, "state");
+    if (questions.isEmpty()) {
+      throw new IllegalArgumentException("questions must not be empty");
+    }
+    // LinkedHashMap over the entry order so the answers iterate the way the questions were given;
+    // a map is unordered to the type system but callers read output in the order they wrote input.
+    List<String> names = new ArrayList<>(questions.size());
+    List<AnswerSpace> spaces = new ArrayList<>(questions.size());
+    for (Map.Entry<String, AnswerSpace> question : questions.entrySet()) {
+      Objects.requireNonNull(question.getKey(), "question name");
+      Objects.requireNonNull(question.getValue(), "question space");
+      names.add(question.getKey());
+      spaces.add(question.getValue());
+    }
+    List<Verdict> verdicts = decideAll(spaces, state);
+    Map<String, Verdict> answers = new LinkedHashMap<>(questions.size());
+    for (int index = 0; index < names.size(); index++) {
+      answers.put(names.get(index), verdicts.get(index));
+    }
+    return Collections.unmodifiableMap(answers);
   }
 
   /**

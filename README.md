@@ -122,10 +122,20 @@ family and adds only the semantic details needed to remain unambiguous, such as 
 loaded, so newly published models receive names without a CLI release or local configuration. A
 name can become more specific when a new model would otherwise collide; the full catalog ID and
 marker coordinate remain stable selectors. `modeljars alias list` shows the complete mapping.
-When a virtual model clears the complete composition gates, it will appear in the same search
-results with `hybrid` architecture and `composite` format. Pulling it will verify each member
-artifact in the shared cache rather than create a duplicate synthetic weight file. No virtual model
-is currently published in the qualified catalog.
+Composed models appear in the same search results, and pulling one verifies each member artifact in
+the shared cache rather than creating a duplicate synthetic weight file. Two are published in the
+qualified catalog today, and they do not look alike:
+
+| catalog ID | `kind` | `architecture` | `format` | members |
+|---|---|---|---|---|
+| `granite_4_1_3b_answerability_hybrid` | `hybrid` | `hybrid` | `composite` | base + answerability adapter |
+| `harriet_qwen3_5_4b_decisions` | `recipe` | `qwen35` | `composite` | base only |
+
+A **hybrid** combines a base with an adapter that shares its prefix state physically, so it reports
+`hybrid` as its architecture. A **recipe** defines a behaviour over a frozen base without training
+anything, so it keeps the base's own architecture — `qwen35` for Harriet — and only its `format` and
+`kind` mark it as composed. Filter on `kind`, not on `architecture`, when you want every composed
+entry.
 
 Tab completion includes generated short names, full catalog IDs, and optional user-defined aliases
 for every model-taking command. Create a persistent custom alias with

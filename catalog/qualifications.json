@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-30T18:08:57Z",
+  "generatedAt": "2026-09-30T18:57:38Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "4fc77eb794ae154aea95858407081dd23e00f11f",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 42,
+  "qualifiedModels": 43,
   "rejectedModels": 1,
   "entries": [
     {
@@ -1978,6 +1978,50 @@
         "vmName": "OpenJDK 64-Bit Server VM"
       },
       "report": "benchmark-results/certified-20260930/rag/lmstudio-community-gemma-4-e2b-it-gguf-q4_k_m/lmstudio-community-gemma-4-e2b-it-gguf-q4_k_m-rust-ffm-grounded.json"
+    },
+    {
+      "modelId": "deepreinforce_ai_ornith_1_0_9b_gguf_q4_k_m",
+      "model": "Ornith-1.0-9B GGUF Q4_K_M",
+      "backend": "rust-ffm",
+      "backendVersion": "models@0.3.50+v22-542a98fa2290",
+      "workload": "general",
+      "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+      "promptTemplate": "chatml",
+      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v22",
+      "artifactSha256": "5720d1f671b4996481274fffe01868c3c36e87c135cc8538471cc7bd6087b106",
+      "artifactSizeBytes": 5629108704,
+      "reportSha256": "f2c9fc13943ce05fe5db7076c44af894aba40d6475d2a7fefa47f6b367fc8f48",
+      "performanceTier": "PERFORMANCE_REDUCED",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "attempts": 27,
+      "p95RetrievalMillis": 1.8477001,
+      "p95TtftMillis": 6493.9343227,
+      "p95TpotMillis": 153.18772317446079,
+      "p95EndToEndMillis": 44571.9893629,
+      "p50PrefillTokensPerSecond": 29.16868109761432,
+      "p50DecodeTokensPerSecond": 6.648564927739027,
+      "peakRssBytes": 6091943936,
+      "correctAnswerRate": 1.0,
+      "rawCorrectAnswerRate": 0.8888888888888888,
+      "abstentionAccuracy": 1.0,
+      "modelAnswerRate": 0.3333333333333333,
+      "modelAnswerCorrectRate": 1.0,
+      "extractiveFallbackRate": 0.5555555555555556,
+      "environment": {
+        "hostname": "ip-172-31-13-119",
+        "osName": "Linux",
+        "osVersion": "7.0.0-1013-aws",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC 7R13 Processor",
+        "availableProcessors": 16,
+        "totalMemoryBytes": 65971662848,
+        "maxHeapBytes": 16500391936,
+        "javaVersion": "25.0.4.1",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "report": "benchmark-results/certified-20260930/rag/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m-rust-ffm-grounded.json"
     }
   ]
 }

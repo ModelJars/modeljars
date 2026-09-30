@@ -9,6 +9,7 @@ on:
       - catalog/**
       - media/icons/**
       - tools/verify-central-catalog.mjs
+      - tools/verify-site-version.mjs
       - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:

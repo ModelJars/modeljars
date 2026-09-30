@@ -14,22 +14,43 @@ import path from "node:path";
 
 const SNIPPET = /org\.modeljars:modeljars:(\d+\.\d+\.\d+)/g;
 
+// Both sources: the static page and the script that generates the copy-paste snippets. Fixing only
+// index.html left assets/dependency-snippets.js still emitting the old version, which is what the
+// site actually serves into the snippet boxes.
+const SOURCES = ["index.html", "assets/dependency-snippets.js"];
+
 export async function verifySiteVersion(siteRoot, released) {
-  const indexPath = path.join(siteRoot, "index.html");
-  const html = await readFile(indexPath, "utf8");
-  const found = [...html.matchAll(SNIPPET)].map((match) => match[1]);
-  if (found.length === 0) {
-    throw new Error(`${indexPath} declares no org.modeljars:modeljars coordinate to check`);
+  let checked = 0;
+  const stale = new Map();
+  for (const relative of SOURCES) {
+    const target = path.join(siteRoot, relative);
+    let text;
+    try {
+      text = await readFile(target, "utf8");
+    } catch {
+      continue; // a source the built site does not contain is not a failure
+    }
+    const found = [...text.matchAll(SNIPPET)].map((match) => match[1]);
+    checked += found.length;
+    for (const version of found) {
+      if (version !== released) {
+        stale.set(`${relative}:${version}`, version);
+      }
+    }
   }
-  const stale = found.filter((version) => version !== released);
-  if (stale.length > 0) {
+  if (checked === 0) {
     throw new Error(
-      `${indexPath} advertises org.modeljars:modeljars ${[...new Set(stale)].join(", ")} ` +
-        `but the newest release is ${released}. Update the snippet, or the page hands visitors ` +
-        `a dependency that is not the current one.`,
+      `none of ${SOURCES.join(", ")} under ${siteRoot} declares an org.modeljars:modeljars coordinate`,
     );
   }
-  return { checked: found.length, released };
+  if (stale.size > 0) {
+    throw new Error(
+      `the site advertises org.modeljars:modeljars at ${[...stale.keys()].join(", ")} ` +
+        `but the newest release is ${released}. Update them, or the page hands visitors a ` +
+        `dependency that is not the current one.`,
+    );
+  }
+  return { checked, released };
 }
 
 function newestReleasedVersion() {

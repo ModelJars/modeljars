@@ -1439,6 +1439,7 @@
       "localPath": "${user.home}/.jvllm/models/Qwen3.5-2B-Q4_K_M.gguf",
       "sha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
       "sizeBytes": 1280835840,
+      "catalogPublishedAt": "2026-09-30T15:43:03Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-generation",
@@ -1452,6 +1453,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -2928,6 +2930,7 @@
       "localPath": "${user.home}/.jvllm/models/google_gemma-3-4b-it-Q4_K_M.gguf",
       "sha256": "4996030242583a40aa151ff93f49ed787ac8c25e4120c3ae4588b2e2a7d1ae94",
       "sizeBytes": 2489758112,
+      "catalogPublishedAt": "2026-09-30T15:43:03Z",
       "license": "LicenseRef-Gemma",
       "capabilities": [
         "text-generation",
@@ -2942,6 +2945,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [

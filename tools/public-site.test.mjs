@@ -280,7 +280,11 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
     apple,
     /integrallis\.github\.io\/models\/docs\/models\/current\/apple-foundation-models\.html/,
   );
-  assert.match(index, /org\.modeljars:modeljars:0\.1\.39/);
+  // Shape, not a specific version. This assertion previously pinned 0.1.39, which is how the site
+  // kept advertising 0.1.39 while 0.1.54 was on Central: the test locked in the stale value, so
+  // updating the release never failed anything. Currency is checked by
+  // tools/verify-site-version.mjs against the newest v* tag, which is where it belongs.
+  assert.match(index, /org\.modeljars:modeljars:\d+\.\d+\.\d+/);
   assert.match(index, /brew install integrallis\/tap\/modeljars/);
   assert.match(index, /modeljars pull/);
   assert.match(index, /revision-pinned upstream URL/);

@@ -9485,7 +9485,8 @@
         "valueLength": 128,
         "feedForwardLength": 9728,
         "attentionBlockCount": 36
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T21:05:04Z"
     },
     {
       "id": "janhq_jan_v3_5_4b_gguf_q4_k_s",
@@ -10325,7 +10326,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -10340,7 +10341,8 @@
         "keyValueHeadCount": 2,
         "feedForwardLength": 8960,
         "attentionBlockCount": 28
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T21:05:05Z"
     },
     {
       "id": "king3djbl_nexus_legal_gguf_q5_k_s",
@@ -13159,6 +13161,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -13175,7 +13178,8 @@
         "valueLength": 128,
         "feedForwardLength": 9728,
         "attentionBlockCount": 36
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T21:05:04Z"
     },
     {
       "id": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_s",
@@ -14423,7 +14427,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -14439,7 +14443,8 @@
       "domains": [
         "coding",
         "general"
-      ]
+      ],
+      "catalogPublishedAt": "2026-09-30T21:05:05Z"
     },
     {
       "id": "qwen2_5_coder_1_5b_instruct_q5_0",

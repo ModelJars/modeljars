@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-30T18:57:38Z",
+  "generatedAt": "2026-09-30T19:02:39Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "4fc77eb794ae154aea95858407081dd23e00f11f",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 43,
+  "qualifiedModels": 44,
   "rejectedModels": 1,
   "entries": [
     {
@@ -2022,6 +2022,50 @@
         "vmName": "OpenJDK 64-Bit Server VM"
       },
       "report": "benchmark-results/certified-20260930/rag/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m-rust-ffm-grounded.json"
+    },
+    {
+      "modelId": "granite_4_1_8b_q4_k_m",
+      "model": "IBM Granite 4.1 8B GGUF Q4_K_M",
+      "backend": "rust-ffm",
+      "backendVersion": "models@0.3.50+g4answer-4d2395dd0680",
+      "workload": "general",
+      "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+      "promptTemplate": "granite",
+      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v21",
+      "artifactSha256": "ed902ac9eb6adce5a90c6a08c8ea201b50e23fdc5976d1cd0362006afac5309e",
+      "artifactSizeBytes": 5347914400,
+      "reportSha256": "2af2933124bf10fc333f773a0e53bdff7779fcc4c982387d437bd0217d067e2f",
+      "performanceTier": "PERFORMANCE_REDUCED",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "attempts": 27,
+      "p95RetrievalMillis": 2.0022319,
+      "p95TtftMillis": 2479.0004672,
+      "p95TpotMillis": 146.85577999999998,
+      "p95EndToEndMillis": 9935.556074600001,
+      "p50PrefillTokensPerSecond": 32.47205426434603,
+      "p50DecodeTokensPerSecond": 6.933807041339008,
+      "peakRssBytes": 5763334144,
+      "correctAnswerRate": 1.0,
+      "rawCorrectAnswerRate": 0.6666666666666666,
+      "abstentionAccuracy": 1.0,
+      "modelAnswerRate": 0.3333333333333333,
+      "modelAnswerCorrectRate": 1.0,
+      "extractiveFallbackRate": 0.5555555555555556,
+      "environment": {
+        "hostname": "ip-172-31-14-254",
+        "osName": "Linux",
+        "osVersion": "7.0.0-1013-aws",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC 7R13 Processor",
+        "availableProcessors": 16,
+        "totalMemoryBytes": 65971658752,
+        "maxHeapBytes": 16500391936,
+        "javaVersion": "25.0.4.1",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "report": "benchmark-results/certified-20260930/rag/ibm-granite-granite-4-1-8b-gguf-q4_k_m/ibm-granite-granite-4-1-8b-gguf-q4_k_m-rust-ffm-grounded.json"
     }
   ]
 }

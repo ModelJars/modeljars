@@ -856,6 +856,7 @@
       ],
       "backends": {
         "pure-java": true,
+        "rust-ffm": true,
         "llama.cpp": true,
         "ollama": true
       },
@@ -873,7 +874,8 @@
         "general",
         "healthcare",
         "reasoning"
-      ]
+      ],
+      "catalogPublishedAt": "2026-09-30T18:08:56Z"
     },
     {
       "id": "minicpm5_1b_q4_k_m",
@@ -2596,6 +2598,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -2611,7 +2614,8 @@
         "keyLength": 512,
         "valueLength": 512,
         "attentionBlockCount": 35
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T18:08:57Z"
     },
     {
       "id": "unsloth_gemma_4_12b_it_gguf_q4_k_m",
@@ -3246,6 +3250,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -3260,7 +3265,8 @@
         "keyValueHeadCount": 8,
         "feedForwardLength": 14336,
         "attentionBlockCount": 32
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T18:08:56Z"
     },
     {
       "id": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_m",
@@ -3292,6 +3298,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -3306,7 +3313,8 @@
         "keyValueHeadCount": 8,
         "feedForwardLength": 14336,
         "attentionBlockCount": 32
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T18:08:56Z"
     },
     {
       "id": "bartowski_mistral_nemo_instruct_2407_gguf_q4_k_m",
@@ -4209,6 +4217,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -4223,7 +4232,8 @@
         "keyValueHeadCount": 8,
         "feedForwardLength": 14336,
         "attentionBlockCount": 32
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T18:08:56Z"
     },
     {
       "id": "unsloth_gpt_oss_20b_gguf_q4_k_m",

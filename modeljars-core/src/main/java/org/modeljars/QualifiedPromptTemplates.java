@@ -29,8 +29,11 @@ import java.util.Map;
  *
  * <ul>
  *   <li>{@code granite-documents} is the Granite 4.x documents request used by the RAG harness
- *       ({@code GraniteDocumentsPrompt} in Models). Its user and assistant turns, role markers,
- *       turn terminators, and closing assistant marker are those of the runtime {@code granite}
+ *   <li>{@code gemma4-answer} is the Gemma 4 envelope with the answer channel prefilled by the RAG
+ *       harness. The envelope itself is unchanged -- the prefill only stops the model opening with
+ *       a prose reasoning preamble -- so the runtime renders it as {@code gemma4} ({@code
+ *       GraniteDocumentsPrompt} in Models). Its user and assistant turns, role markers, turn
+ *       terminators, and closing assistant marker are those of the runtime {@code granite}
  *       template; the only difference is the system turn, where the harness places retrieved
  *       evidence in the {@code <documents>} block. A runtime conversation carries no harness
  *       evidence, so it renders through {@code granite}.
@@ -42,7 +45,7 @@ import java.util.Map;
  */
 public final class QualifiedPromptTemplates {
   private static final Map<String, String> HARNESS_VARIANTS =
-      Map.of("granite-documents", "granite");
+      Map.of("granite-documents", "granite", "gemma4-answer", "gemma4");
 
   private QualifiedPromptTemplates() {}
 

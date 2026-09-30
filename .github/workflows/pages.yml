@@ -65,6 +65,9 @@ jobs:
       - name: Smoke-test the rendered catalog
         run: node tools/site-smoke.mjs build/site
 
+      - name: Verify the advertised dependency version is the newest release
+        run: node tools/verify-site-version.mjs build/site
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

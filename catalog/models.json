@@ -1351,6 +1351,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -1367,7 +1368,8 @@
         "valueLength": 256,
         "feedForwardLength": 14336,
         "attentionBlockCount": 42
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T19:51:46Z"
     },
     {
       "id": "bartowski_gemma_2_9b_it_gguf_q4_k_s",
@@ -3832,6 +3834,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -3848,7 +3851,8 @@
         "valueLength": 128,
         "feedForwardLength": 12288,
         "attentionBlockCount": 36
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T19:51:45Z"
     },
     {
       "id": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_s",
@@ -11515,8 +11519,7 @@
       "licenseUri": "https://www.llama.com/llama3_1/license/",
       "capabilities": [
         "text-generation",
-        "chat",
-        "tool-calling"
+        "chat"
       ],
       "features": [
         "community-conversion",
@@ -11531,6 +11534,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true,
         "ollama": true
       },
@@ -11546,7 +11550,8 @@
       },
       "domains": [
         "general"
-      ]
+      ],
+      "catalogPublishedAt": "2026-09-30T19:51:45Z"
     },
     {
       "id": "llama_3_1_8b_instruct_q4_k_s",
@@ -16042,7 +16047,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -16057,7 +16062,8 @@
         "keyValueHeadCount": 2,
         "feedForwardLength": 4864,
         "attentionBlockCount": 24
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T19:51:46Z"
     },
     {
       "id": "qwen_qwen2_5_0_5b_instruct_gguf_q8_0",
@@ -20901,7 +20907,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -20918,7 +20924,8 @@
         "valueLength": 256,
         "feedForwardLength": 3584,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T19:51:46Z"
     },
     {
       "id": "unsloth_qwen3_5_0_8b_gguf_q5_k_s",
@@ -20999,7 +21006,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -21016,7 +21023,8 @@
         "valueLength": 256,
         "feedForwardLength": 3584,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T19:51:46Z"
     },
     {
       "id": "unsloth_qwen3_5_0_8b_gguf_q8_0",

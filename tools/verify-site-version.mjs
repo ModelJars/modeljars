@@ -9,7 +9,6 @@
 // The tag is the source of truth on purpose: publish.yml derives the release version from it, so this
 // checks the page against the same thing the release does rather than against a second hand-kept copy.
 import { readFile } from "node:fs/promises";
-import { execFileSync } from "node:child_process";
 import path from "node:path";
 
 const SNIPPET = /org\.modeljars:modeljars:(\d+\.\d+\.\d+)/g;
@@ -53,13 +52,22 @@ export async function verifySiteVersion(siteRoot, released) {
   return { checked, released };
 }
 
-function newestReleasedVersion() {
-  const tag = execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v*"], {
-    encoding: "utf8",
-  }).trim();
-  const match = /^v(\d+\.\d+\.\d+)$/.exec(tag);
+// Maven Central is the source of truth for "the newest release", and it needs no git state. The first
+// version of this read `git describe --tags`, which fails under actions/checkout: the deploy clone is
+// shallow and carries no tags, so the gate meant to keep the site current is what stopped the site
+// deploying at all. Central is also what the neighbouring verify-central-catalog step already queries.
+const METADATA_URL =
+  "https://repo1.maven.org/maven2/org/modeljars/modeljars/maven-metadata.xml";
+
+async function newestReleasedVersion() {
+  const response = await fetch(METADATA_URL);
+  if (!response.ok) {
+    throw new Error(`could not read ${METADATA_URL}: HTTP ${response.status}`);
+  }
+  const xml = await response.text();
+  const match = /<release>(\d+\.\d+\.\d+)<\/release>/.exec(xml);
   if (!match) {
-    throw new Error(`newest v* tag is not a release version: ${tag}`);
+    throw new Error(`${METADATA_URL} declares no <release> version`);
   }
   return match[1];
 }
@@ -71,7 +79,7 @@ if (invokedDirectly) {
     console.error("usage: node tools/verify-site-version.mjs <site-root> [released-version]");
     process.exit(2);
   }
-  const released = process.argv[3] || newestReleasedVersion();
+  const released = process.argv[3] || (await newestReleasedVersion());
   const result = await verifySiteVersion(siteRoot, released);
   console.log(`site version gate: ${result.checked} coordinate(s) match ${result.released}`);
 }

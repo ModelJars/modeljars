@@ -1853,7 +1853,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -1870,7 +1870,8 @@
         "valueLength": 256,
         "feedForwardLength": 6912,
         "attentionBlockCount": 26
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T20:07:26Z"
     },
     {
       "id": "bartowski_google_gemma_3_27b_it_gguf_q4_k_m",
@@ -2887,7 +2888,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -2904,7 +2905,8 @@
         "valueLength": 64,
         "feedForwardLength": 8192,
         "attentionBlockCount": 16
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T20:07:26Z"
     },
     {
       "id": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_m",
@@ -2987,7 +2989,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -3004,7 +3006,8 @@
         "valueLength": 64,
         "feedForwardLength": 8192,
         "attentionBlockCount": 16
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T20:07:26Z"
     },
     {
       "id": "bartowski_llama_3_2_1b_instruct_gguf_q6_k",

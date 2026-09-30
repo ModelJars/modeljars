@@ -5674,8 +5674,7 @@
         "text-generation",
         "chat",
         "code-completion",
-        "reasoning",
-        "tool-calling"
+        "reasoning"
       ],
       "features": [
         "pinned-revision",
@@ -5684,6 +5683,7 @@
       ],
       "backends": {
         "pure-java": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -5701,7 +5701,8 @@
         "valueLength": 256,
         "feedForwardLength": 12288,
         "attentionBlockCount": 8
-      }
+      },
+      "catalogPublishedAt": "2026-09-30T18:57:38Z"
     },
     {
       "id": "deepseek_coder_1_3b_instruct_q4_0",

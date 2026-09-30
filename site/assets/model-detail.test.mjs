@@ -30,10 +30,17 @@ test("extracts generated model route identifiers", () => {
 });
 
 test("renders build-tool snippets from marker coordinates", () => {
-  assert.equal(
+  // The runtime coordinate's version is asserted by shape, not by value: pinning it here is what let
+  // the site advertise 0.1.39 while 0.1.54 was released, because shipping a release never failed a
+  // test. tools/verify-site-version.mjs checks the value against the newest v* tag at deploy time.
+  // The marker coordinate below IS pinned, because it comes from this test's own fixture.
+  assert.match(
     gradleSnippet(coordinate),
-    'implementation("org.modeljars:modeljars:0.1.39")\n' +
-      'implementation("org.modeljars.huggingface:qwen.qwen3.q4_k_m:3.0.0-q4_k_m.1")',
+    /^implementation\("org\.modeljars:modeljars:\d+\.\d+\.\d+"\)\n/,
+  );
+  assert.match(
+    gradleSnippet(coordinate),
+    /implementation\("org\.modeljars\.huggingface:qwen\.qwen3\.q4_k_m:3\.0\.0-q4_k_m\.1"\)$/,
   );
   assert.match(mavenSnippet(coordinate), /<groupId>org\.modeljars<\/groupId>/);
   assert.match(mavenSnippet(coordinate), /<artifactId>modeljars<\/artifactId>/);

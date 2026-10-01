@@ -93,16 +93,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
-        "report": "benchmark-results/certified-20260930/rag/qwen3-1.7b-q8_0/default-correctness/models-rust-ffm.json",
-        "reportSha256": "b4f9090feced748ba9f00fe33689867e93fe1c496658ab72d22aadba40b6b37e",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -147,16 +137,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "e1a77721fa97d412f121878223eec81fb4ae6f271e18f922d746711f67b344d1",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-coder-0.5b-q8_0/default-correctness/models-rust-ffm.json",
-        "reportSha256": "e2dd8e2cce274c99385b700d34eab63cb56e31ed7aa04fe73e9893955e8780c0",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -245,16 +225,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "9739055e046d62a937e5b7879012209ef40ebea8a1569a96028de491f3f091d5",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-coder-0.5b-q4_0/default-correctness/models-rust-ffm.json",
-        "reportSha256": "09268665c491d5d8f8623b7a2a6f3f92b66ae87c78a39095f0af34ef52ef9924",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -431,16 +401,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-0.5b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "17dd0bbadbc3b7c973cae0494dcfc3bef55bc28b93f648d692252bfd7940477c",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -539,16 +499,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "1bb088951ea4bd3f57864e3a5f9356accf27f32e66e646b58c5785f154a11e21",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -637,16 +587,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
-        "report": "benchmark-results/certified-20260930/rag/minicpm5-1b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "9f918a7ef3894bcb28a3cda4ad625f71f83a0abd8a786891fd451651bd0e5c5a",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -691,16 +631,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "12bf0fff8815d5f73a3c9b586bd8fee8e7b248c935de70dec367679873d0f29d",
-        "report": "benchmark-results/certified-20260930/rag/gemma-3-1b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "b6a5e7927d608b168f24ca62a6fabb57787cbc4a49bd97e493bff4e299ca8487",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -745,16 +675,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
-        "report": "benchmark-results/certified-20260930/rag/llama-3.2-1b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "f02ac1843c5b744de0d98752156e2b5af3739616016caf92e8edfa64b1177750",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -843,16 +763,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "1741e5b2d062b07acf048bf0d2c514dadf2a48f94e2b4aa0cfe069af3838ee2f",
-        "report": "benchmark-results/certified-20260930/rag/deepseek-r1-distill-qwen-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "e0628dd5c606894dba8344fe065ed63de785ca30e5b893f4171f934a49d78c70",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -897,16 +807,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "9614a50f03c897028920ca0dc4365da570bf587f9ee7768261216fe370b37e8e",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-math-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "789e5d29bcad714a2fbc2eb8171199446a385395f709ca9a555c3cd07d76a9da",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -951,16 +851,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
-        "report": "benchmark-results/certified-20260930/rag/llama-3.2-3b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "89984b6c4851ae5c21aec9096686f8d599ce4bdf3feee356c909fd3e69374fb8",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1005,16 +895,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "04cebb6fafa40ae628cf6bfeb76032ec792852f54020c559ad0a56b9f2839118",
-        "report": "benchmark-results/certified-20260930/rag/deepseek-coder-1.3b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "4fdcc8ac5e6de4da9bb160acb9b355d7d8d3f8f1d3db6e624ab6c0b0a5dc2908",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1059,16 +939,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
-        "report": "benchmark-results/certified-20260930/rag/smollm3-3b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "6597a179a80b551675114348605a84fa33c9ac4e617e97277d5bfd6f25709086",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1113,16 +983,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
-        "report": "benchmark-results/certified-20260930/rag/tinyllama-1.1b-q4_0/default-correctness/models-rust-ffm.json",
-        "reportSha256": "335fc70d1f23c3d556e71ff4959dc7085f11cdbaf75f9bb7b9b177ee2de32539",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1167,16 +1027,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
-        "report": "benchmark-results/certified-20260930/rag/nexus-finance-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "11fdd2d228b0b7036201fb825a5d2a57841587bafed7f4695eef10d5a1c3496e",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1221,16 +1071,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "309437dc5aa980fd7025fc29b3a25740564244e124a0d806967ee05ed01b6d93",
-        "report": "benchmark-results/certified-20260930/rag/nexus-legal-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "24ee1996c96d0bbff8b86e0a0422858bffc9433ae3a15a375aed52f3db2a9ac4",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1275,16 +1115,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "f26138b8e049e91a3e006f215a3618e3da0fef28755f73fe83bea19f73c700ea",
-        "report": "benchmark-results/certified-20260930/rag/nexus-medical-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "fb6b8613454be76f1d69c96307488ad0a976a969eeec3b4584d47825a0b3271b",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1373,16 +1203,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "6a303ee6b94a961aa43e48eb11629e933c4438fae5e6db336318a5d33fe57d79",
-        "report": "benchmark-results/certified-20260930/rag/h2o-danube2-1.8b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "7bee30375408530415bb8850f7a2f2f89bd77c82f7038aede3fa9f349c954c28",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1427,16 +1247,6 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
-        "report": "benchmark-results/certified-20260930/rag/yi-coder-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "1c01b4bcb1a283cf78b7a309ef8fb75f376911bcf36478a24bd9ea1248c0e58f",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
       }
     },
     {
@@ -1459,8 +1269,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "88f4a13b0bb95f031a7fad973e10854122fb67ebc34d214d39a2f65053046abc",
-        "report": "benchmark-results/certified-20260930/rag/gemma4-26b-a4b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "15c5d4c6cfe6d9e1fa21779f2b2c30d24feefde91f224a726f3552ed5247588e",
+        "report": "benchmark-results/certified-20260825/rag/gemma4-26b-a4b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "22474b52204f9ffc0086d992c64bb23b5bef8f3a3d31eb040c9078b0352cac3c",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1567,8 +1377,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
-        "report": "benchmark-results/certified-20260930/rag/qwen2.5-3b-instruct-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "87bc2f95a6d3e5ed0ce79ab8f136cf180a273e317eefca8921fd7f50295d52a8",
+        "report": "benchmark-results/certified-20260830/rag/qwen2.5-3b-instruct-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "5b7227303ff0cf341f0906ada78bbe78e24d9248ec89c18394fca01ccc2cbf03",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1621,8 +1431,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
-        "report": "benchmark-results/certified-20260930/rag/qwen3.5-0.8b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "3fc471e07d9e8432ef56cc89d254b47b0e50123c74d096d2d05165571d209cad",
+        "report": "benchmark-results/certified-20260830/rag/qwen3.5-0.8b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "803f6cb0b90365897f32731225b66024a407b35126e588e807b87b40cdc4c4fc",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1729,8 +1539,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
-        "report": "benchmark-results/certified-20260930/rag/granite-4.1-3b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "61f4604a4019d02725a078a0c42cadcf8b9e4c14b41c8a34340450f5ede78ea2",
+        "report": "benchmark-results/certified-20260916/rag/granite-4.1-3b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "3e1ae2222fba784e02943f430ef13f683682373cc97455380ce24e601111bb92",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1783,8 +1593,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
-        "report": "benchmark-results/certified-20260930/rag/qwen3.5-4b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "4e013ae3325e438e00c8ef7b143ec1333e43ff039d0e0f7b16dbfa75608ea7e5",
+        "report": "benchmark-results/certified-20260923/rag/qwen3.5-4b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "5ad0114021c745e1daa057fa50fc2862ac42b261f76be08f77345986444203d8",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []

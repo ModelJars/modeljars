@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "generatedAt": "2026-09-30T21:05:05Z",
   "policyVersion": "production-rag-model-contribution-v6",
-  "modelsRevision": "4fc77eb794ae154aea95858407081dd23e00f11f",
+  "modelsRevision": "c8110bb55267946d9909fe7eff58c6672c7b215a",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 65,
+  "qualifiedModels": 64,
   "rejectedModels": 1,
   "entries": [
     {
@@ -93,6 +93,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "061b54daade076b5d3362dac252678d17da8c68f07560be70818cace6590cb1a",
+        "report": "benchmark-results/certified-20260930/rag/qwen3-1.7b-q8_0/default-correctness/models-rust-ffm.json",
+        "reportSha256": "b4f9090feced748ba9f00fe33689867e93fe1c496658ab72d22aadba40b6b37e",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -137,6 +147,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "e1a77721fa97d412f121878223eec81fb4ae6f271e18f922d746711f67b344d1",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-coder-0.5b-q8_0/default-correctness/models-rust-ffm.json",
+        "reportSha256": "e2dd8e2cce274c99385b700d34eab63cb56e31ed7aa04fe73e9893955e8780c0",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -225,6 +245,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "9739055e046d62a937e5b7879012209ef40ebea8a1569a96028de491f3f091d5",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-coder-0.5b-q4_0/default-correctness/models-rust-ffm.json",
+        "reportSha256": "09268665c491d5d8f8623b7a2a6f3f92b66ae87c78a39095f0af34ef52ef9924",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -401,6 +431,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-0.5b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "17dd0bbadbc3b7c973cae0494dcfc3bef55bc28b93f648d692252bfd7940477c",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -499,6 +539,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "1bb088951ea4bd3f57864e3a5f9356accf27f32e66e646b58c5785f154a11e21",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -587,6 +637,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "81b64d05a23b17b34c475f42b3e72fbde62d4b92cc34541f7a8031d0752deafa",
+        "report": "benchmark-results/certified-20260930/rag/minicpm5-1b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "9f918a7ef3894bcb28a3cda4ad625f71f83a0abd8a786891fd451651bd0e5c5a",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -631,6 +691,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "12bf0fff8815d5f73a3c9b586bd8fee8e7b248c935de70dec367679873d0f29d",
+        "report": "benchmark-results/certified-20260930/rag/gemma-3-1b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "b6a5e7927d608b168f24ca62a6fabb57787cbc4a49bd97e493bff4e299ca8487",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -675,6 +745,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
+        "report": "benchmark-results/certified-20260930/rag/llama-3.2-1b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "f02ac1843c5b744de0d98752156e2b5af3739616016caf92e8edfa64b1177750",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -763,6 +843,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "1741e5b2d062b07acf048bf0d2c514dadf2a48f94e2b4aa0cfe069af3838ee2f",
+        "report": "benchmark-results/certified-20260930/rag/deepseek-r1-distill-qwen-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "e0628dd5c606894dba8344fe065ed63de785ca30e5b893f4171f934a49d78c70",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -807,6 +897,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "9614a50f03c897028920ca0dc4365da570bf587f9ee7768261216fe370b37e8e",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-math-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "789e5d29bcad714a2fbc2eb8171199446a385395f709ca9a555c3cd07d76a9da",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -851,6 +951,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "6c1a2b41161032677be168d354123594c0e6e67d2b9227c84f296ad037c728ff",
+        "report": "benchmark-results/certified-20260930/rag/llama-3.2-3b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "89984b6c4851ae5c21aec9096686f8d599ce4bdf3feee356c909fd3e69374fb8",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -895,6 +1005,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "04cebb6fafa40ae628cf6bfeb76032ec792852f54020c559ad0a56b9f2839118",
+        "report": "benchmark-results/certified-20260930/rag/deepseek-coder-1.3b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "4fdcc8ac5e6de4da9bb160acb9b355d7d8d3f8f1d3db6e624ab6c0b0a5dc2908",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -939,6 +1059,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "GraalVM Community",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
+        "report": "benchmark-results/certified-20260930/rag/smollm3-3b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "6597a179a80b551675114348605a84fa33c9ac4e617e97277d5bfd6f25709086",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -983,6 +1113,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "da3087fb14aede55fde6eb81a0e55e886810e43509ec82ecdc7aa5d62a03b556",
+        "report": "benchmark-results/certified-20260930/rag/tinyllama-1.1b-q4_0/default-correctness/models-rust-ffm.json",
+        "reportSha256": "335fc70d1f23c3d556e71ff4959dc7085f11cdbaf75f9bb7b9b177ee2de32539",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1027,6 +1167,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "a849ca49f91889b614518e9242ceec6e24034289de0f3f8621784f3e1b77bb60",
+        "report": "benchmark-results/certified-20260930/rag/nexus-finance-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "11fdd2d228b0b7036201fb825a5d2a57841587bafed7f4695eef10d5a1c3496e",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1071,6 +1221,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "309437dc5aa980fd7025fc29b3a25740564244e124a0d806967ee05ed01b6d93",
+        "report": "benchmark-results/certified-20260930/rag/nexus-legal-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "24ee1996c96d0bbff8b86e0a0422858bffc9433ae3a15a375aed52f3db2a9ac4",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1115,6 +1275,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "f26138b8e049e91a3e006f215a3618e3da0fef28755f73fe83bea19f73c700ea",
+        "report": "benchmark-results/certified-20260930/rag/nexus-medical-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "fb6b8613454be76f1d69c96307488ad0a976a969eeec3b4584d47825a0b3271b",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1203,6 +1373,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "6a303ee6b94a961aa43e48eb11629e933c4438fae5e6db336318a5d33fe57d79",
+        "report": "benchmark-results/certified-20260930/rag/h2o-danube2-1.8b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "7bee30375408530415bb8850f7a2f2f89bd77c82f7038aede3fa9f349c954c28",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1247,6 +1427,16 @@
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "61c72ab3dd56a15b8a3aee30f55e180675daa87d04219e8afc32e8852c175f32",
+        "report": "benchmark-results/certified-20260930/rag/yi-coder-1.5b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "1c01b4bcb1a283cf78b7a309ef8fb75f376911bcf36478a24bd9ea1248c0e58f",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
       }
     },
     {
@@ -1269,8 +1459,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "88f4a13b0bb95f031a7fad973e10854122fb67ebc34d214d39a2f65053046abc",
-        "report": "benchmark-results/certified-20260825/rag/gemma4-26b-a4b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "22474b52204f9ffc0086d992c64bb23b5bef8f3a3d31eb040c9078b0352cac3c",
+        "report": "benchmark-results/certified-20260930/rag/gemma4-26b-a4b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "15c5d4c6cfe6d9e1fa21779f2b2c30d24feefde91f224a726f3552ed5247588e",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1377,8 +1567,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
-        "report": "benchmark-results/certified-20260830/rag/qwen2.5-3b-instruct-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "5b7227303ff0cf341f0906ada78bbe78e24d9248ec89c18394fca01ccc2cbf03",
+        "report": "benchmark-results/certified-20260930/rag/qwen2.5-3b-instruct-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "87bc2f95a6d3e5ed0ce79ab8f136cf180a273e317eefca8921fd7f50295d52a8",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1431,8 +1621,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "bd258782e35f7f458f8aced1adc053e6e92e89bc735ba3be89d38a06121dc517",
-        "report": "benchmark-results/certified-20260830/rag/qwen3.5-0.8b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "803f6cb0b90365897f32731225b66024a407b35126e588e807b87b40cdc4c4fc",
+        "report": "benchmark-results/certified-20260930/rag/qwen3.5-0.8b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "3fc471e07d9e8432ef56cc89d254b47b0e50123c74d096d2d05165571d209cad",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1539,8 +1729,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29",
-        "report": "benchmark-results/certified-20260916/rag/granite-4.1-3b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "3e1ae2222fba784e02943f430ef13f683682373cc97455380ce24e601111bb92",
+        "report": "benchmark-results/certified-20260930/rag/granite-4.1-3b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "61f4604a4019d02725a078a0c42cadcf8b9e4c14b41c8a34340450f5ede78ea2",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1593,8 +1783,8 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4",
-        "report": "benchmark-results/certified-20260923/rag/qwen3.5-4b-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "5ad0114021c745e1daa057fa50fc2862ac42b261f76be08f77345986444203d8",
+        "report": "benchmark-results/certified-20260930/rag/qwen3.5-4b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "4e013ae3325e438e00c8ef7b143ec1333e43ff039d0e0f7b16dbfa75608ea7e5",
         "totalAttempts": 9,
         "successfulAttempts": 9,
         "tuningSystemProperties": []
@@ -1669,7 +1859,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/qwen3.5-2b-q4_k_m/qwen3.5-2b-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/qwen3.5-2b-q4_k_m/qwen3.5-2b-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "aaf42c8b7c3cab2bf3d69c355048d4a0ee9973d48f16c731c0520ee914699223",
+        "report": "benchmark-results/certified-20260930/rag/qwen3.5-2b-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "0ac936a6a52cf2ca537596dce937a85c0d417fcc48101d2e51001460bbcfc051",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_google_gemma_3_4b_it_gguf_q4_k_m",
@@ -1713,7 +1913,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/gemma-3-4b-it-q4_k_m/gemma-3-4b-it-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/gemma-3-4b-it-q4_k_m/gemma-3-4b-it-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "4996030242583a40aa151ff93f49ed787ac8c25e4120c3ae4588b2e2a7d1ae94",
+        "report": "benchmark-results/certified-20260930/rag/gemma-3-4b-it-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "705b7a96b723fc1d20b0fdeb3a2b651742d8a960397b2cd1a7a84420a1bb57ad",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_mathstral_7b_v0_1_gguf_q4_k_m",
@@ -1757,7 +1967,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-mathstral-7b-v0-1-gguf-q4_k_m/bartowski-mathstral-7b-v0-1-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-mathstral-7b-v0-1-gguf-q4_k_m/bartowski-mathstral-7b-v0-1-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "2c7fbe11db4f1381a19601880bd51daab9c097965860817d892d7e98988ab61d",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-mathstral-7b-v0-1-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "8db0dd70c4d626b2f9bf981c779fa34f13a4b3a6be19dda7575bc212484a8354",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_m",
@@ -1801,7 +2021,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-mistral-7b-instruct-v0-3-gguf-q4_k_m/maziyarpanahi-mistral-7b-instruct-v0-3-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-mistral-7b-instruct-v0-3-gguf-q4_k_m/maziyarpanahi-mistral-7b-instruct-v0-3-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "14850c84ff9f06e9b51d505d64815d5cc0cea0257380353ac0b3d21b21f6e024",
+        "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-mistral-7b-instruct-v0-3-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "e8ae1bed97f5bf71ce1028c08543e67bbc0d52214707397541f751c554f8143c",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "huatuogpt_o1_7b_q4_k_m",
@@ -1845,7 +2075,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-huatuogpt-o1-7b-gguf-q4_k_m/bartowski-huatuogpt-o1-7b-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-huatuogpt-o1-7b-gguf-q4_k_m/bartowski-huatuogpt-o1-7b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "4643521a184cb26df0f7c57da9aead0c632b286a9aff103c9f9dca4dc059abd7",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-huatuogpt-o1-7b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "2b5c77766f09b4e16df39b4a39fb1cb7951d58293ba59800a0128a54009a4b9e",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q4_k_m",
@@ -1889,7 +2129,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-meta-llama-3-8b-instruct-gguf-q4_k_m/maziyarpanahi-meta-llama-3-8b-instruct-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-meta-llama-3-8b-instruct-gguf-q4_k_m/maziyarpanahi-meta-llama-3-8b-instruct-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "4903067381e3753e2629f9d20c52df0e43b675bed2735bc3efea351c7d07454d",
+        "report": "benchmark-results/certified-20260930/rag/maziyarpanahi-meta-llama-3-8b-instruct-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "3fca4cac65af7b479c65fcc374a2a3cf08e3d86b929189d28601cde96ec2fad8",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "qwen3_8b_q4_k_m",
@@ -1933,51 +2183,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/qwen-qwen3-8b-gguf-q4_k_m/qwen-qwen3-8b-gguf-q4_k_m-rust-ffm-grounded.json"
-    },
-    {
-      "modelId": "lmstudio_community_gemma_4_e2b_it_gguf_q4_k_m",
-      "model": "gemma-4-E2B-it GGUF Q4_K_M",
-      "backend": "rust-ffm",
-      "backendVersion": "models@0.3.50+v22-542a98fa2290",
-      "workload": "general",
-      "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
-      "promptTemplate": "gemma4-answer",
-      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v22",
-      "artifactSha256": "6c950d754366dd8b372fd17a40497ba5f130a46d833b4c5bccc9f6bb6382ce1e",
-      "artifactSizeBytes": 3427877696,
-      "reportSha256": "997593557748fdbdf11173c422b801889b680a6ea3188db48d8f737bf921bedf",
-      "performanceTier": "PERFORMANCE_REDUCED",
-      "verdict": "QUALIFIED",
-      "qualified": true,
-      "attempts": 27,
-      "p95RetrievalMillis": 2.2692319,
-      "p95TtftMillis": 3333.4056325,
-      "p95TpotMillis": 57.10500465827957,
-      "p95EndToEndMillis": 14504.542261100001,
-      "p50PrefillTokensPerSecond": 25.96789208062591,
-      "p50DecodeTokensPerSecond": 18.647329128360795,
-      "peakRssBytes": 2246955008,
-      "correctAnswerRate": 1.0,
-      "rawCorrectAnswerRate": 0.5555555555555556,
-      "abstentionAccuracy": 1.0,
-      "modelAnswerRate": 0.5555555555555556,
-      "modelAnswerCorrectRate": 1.0,
-      "extractiveFallbackRate": 0.3333333333333333,
-      "environment": {
-        "hostname": "ip-172-31-7-157",
-        "osName": "Linux",
-        "osVersion": "7.0.0-1013-aws",
-        "architecture": "amd64",
-        "cpuModel": "AMD EPYC 7R13 Processor",
-        "availableProcessors": 16,
-        "totalMemoryBytes": 65971654656,
-        "maxHeapBytes": 16500391936,
-        "javaVersion": "25.0.4.1",
-        "javaVendor": "Eclipse Adoptium",
-        "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "report": "benchmark-results/certified-20260930/rag/lmstudio-community-gemma-4-e2b-it-gguf-q4_k_m/lmstudio-community-gemma-4-e2b-it-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/qwen-qwen3-8b-gguf-q4_k_m/qwen-qwen3-8b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+        "report": "benchmark-results/certified-20260930/rag/qwen-qwen3-8b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "d3fc60a525da50f6d9bee690d20fec791b39ba83f0c58ebd007f6ea621dd02ae",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "deepreinforce_ai_ornith_1_0_9b_gguf_q4_k_m",
@@ -2021,7 +2237,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "5720d1f671b4996481274fffe01868c3c36e87c135cc8538471cc7bd6087b106",
+        "report": "benchmark-results/certified-20260930/rag/deepreinforce-ai-ornith-1-0-9b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "bb8c7bfebe371281a563e26aa8a83ab734dced46f5bc36cc0fe133fc9a749279",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "granite_4_1_8b_q4_k_m",
@@ -2065,7 +2291,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/ibm-granite-granite-4-1-8b-gguf-q4_k_m/ibm-granite-granite-4-1-8b-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/ibm-granite-granite-4-1-8b-gguf-q4_k_m/ibm-granite-granite-4-1-8b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "ed902ac9eb6adce5a90c6a08c8ea201b50e23fdc5976d1cd0362006afac5309e",
+        "report": "benchmark-results/certified-20260930/rag/ibm-granite-granite-4-1-8b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "f251a54d1ab82eec3832409ed19d2c668d1d1bd3d4b03c84cbc3371127ef2b4a",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_m",
@@ -2109,7 +2345,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-ministral-8b-instruct-2410-gguf-q4_k_m/bartowski-ministral-8b-instruct-2410-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-ministral-8b-instruct-2410-gguf-q4_k_m/bartowski-ministral-8b-instruct-2410-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "bbe8d91c196491b1802b20aba121d2ef38945a8e6c6c6a8710bfd2ef393fe73f",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-ministral-8b-instruct-2410-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "abe719c312d66296fc7338b45377b18c74eba8ff8d509f637b5e0c16f8711e63",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "llama_3_1_8b_instruct_q4_k_m",
@@ -2153,7 +2399,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-meta-llama-3-1-8b-instruct-gguf-q4_k_m/bartowski-meta-llama-3-1-8b-instruct-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-meta-llama-3-1-8b-instruct-gguf-q4_k_m/bartowski-meta-llama-3-1-8b-instruct-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "7b064f5842bf9532c91456deda288a1b672397a54fa729aa665952863033557c",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-meta-llama-3-1-8b-instruct-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "ee4b1600aa2390b8aeb6df6e5d0f357143851069cb7ad6e082ba1195886c51e5",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_gemma_2_9b_it_gguf_q4_k_m",
@@ -2197,7 +2453,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-gemma-2-9b-it-gguf-q4_k_m/bartowski-gemma-2-9b-it-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-gemma-2-9b-it-gguf-q4_k_m/bartowski-gemma-2-9b-it-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "13b2a7b4115bbd0900162edcebe476da1ba1fc24e718e8b40d32f6e300f56dfe",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-gemma-2-9b-it-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "ebfea654eb85249a25a7d5e965729d5d43609bb4f9b46cb4b170d54e81718bd1",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q6_k",
@@ -2241,7 +2507,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-0-5b-instruct-gguf-q6_k/qwen-qwen2-5-0-5b-instruct-gguf-q6_k-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-0-5b-instruct-gguf-q6_k/qwen-qwen2-5-0-5b-instruct-gguf-q6_k-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "2f82233630c349ccf6b8daccf48f9a7865713d9f08a2eadfa456cebe9b97c7f5",
+        "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-0-5b-instruct-gguf-q6_k/default-correctness/models-rust-ffm.json",
+        "reportSha256": "12c06e2087c7a41387fd18f4a816fe0de6c176f613a2a742636a1482aed997d5",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "unsloth_qwen3_5_0_8b_gguf_q5_k_m",
@@ -2285,7 +2561,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q5_k_m/unsloth-qwen3-5-0-8b-gguf-q5_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q5_k_m/unsloth-qwen3-5-0-8b-gguf-q5_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "c3ef5827b322c4be08a3a26ce424460d8b37daf593356c2cc1f4e40a7ab0581b",
+        "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "7533df7725deebe9b668a14f8099a4b15d14bad72e33f088204ddeb3b3e515d1",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "unsloth_qwen3_5_0_8b_gguf_q6_k",
@@ -2329,7 +2615,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q6_k/unsloth-qwen3-5-0-8b-gguf-q6_k-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q6_k/unsloth-qwen3-5-0-8b-gguf-q6_k-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "8408c5c222111cec253682b49eece2a02ed641ded68490001ec4ee160e71098e",
+        "report": "benchmark-results/certified-20260930/rag/unsloth-qwen3-5-0-8b-gguf-q6_k/default-correctness/models-rust-ffm.json",
+        "reportSha256": "c375828f176478c66feca54f150ee7b4652dacaa4c057106f4ad9bf61175d757",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_s",
@@ -2373,7 +2669,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q4_k_s/bartowski-llama-3-2-1b-instruct-gguf-q4_k_s-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q4_k_s/bartowski-llama-3-2-1b-instruct-gguf-q4_k_s-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "00f6255d497c05015cf8102ed73b93017a91072c21bfc98fef34b4f3c10850eb",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q4_k_s/default-correctness/models-rust-ffm.json",
+        "reportSha256": "72cf1a752ff0514712468e69211396414e38962605be0c19fb150871ca10246e",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_s",
@@ -2417,7 +2723,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_s/bartowski-llama-3-2-1b-instruct-gguf-q5_k_s-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_s/bartowski-llama-3-2-1b-instruct-gguf-q5_k_s-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "89638abe2ac92951103431b554c61811e796ead6c3d789387c875d860eaa0b0e",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_s/default-correctness/models-rust-ffm.json",
+        "reportSha256": "9a445140f28bd8f2aed887fda07e6e8eb4bc1c972f7b9543d0135def6315b65e",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
@@ -2461,7 +2777,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-1b-it-gguf-q8_0/bartowski-google-gemma-3-1b-it-gguf-q8_0-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-1b-it-gguf-q8_0/bartowski-google-gemma-3-1b-it-gguf-q8_0-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "375e12a4a18929a641f9744b060d4a7cf4e279530750555828ec0c117870bc96",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-1b-it-gguf-q8_0/default-correctness/models-rust-ffm.json",
+        "reportSha256": "3f648e51ea3df4c35accbbc741bae63f6ab31b7b643eec54799dab376cbed1b3",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_google_gemma_3_12b_it_gguf_q4_k_m",
@@ -2505,7 +2831,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-12b-it-gguf-q4_k_m/bartowski-google-gemma-3-12b-it-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-12b-it-gguf-q4_k_m/bartowski-google-gemma-3-12b-it-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "fc57f67efa46d711c346e587cbef7d049e95f3df8db2eb2271153343ef0acc7b",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-google-gemma-3-12b-it-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "9e492182f2889461df9d61fad7f18f6762160669b5057e5b2a1d66af2ea778c8",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_mistral_nemo_instruct_2407_gguf_q4_k_m",
@@ -2549,7 +2885,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-mistral-nemo-instruct-2407-gguf-q4_k_m/bartowski-mistral-nemo-instruct-2407-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-mistral-nemo-instruct-2407-gguf-q4_k_m/bartowski-mistral-nemo-instruct-2407-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "7c1a10d202d8788dbe5628dc962254d10654c853cae6aaeca0618f05490d4a46",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-mistral-nemo-instruct-2407-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "b77ae82088dd4eb3dcc20f5f8b53bcb6db0e28f632681c66a3ea58767fc5f7a3",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "unsloth_gemma_4_12b_it_gguf_q4_k_m",
@@ -2593,7 +2939,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/unsloth-gemma-4-12b-it-gguf-q4_k_m/unsloth-gemma-4-12b-it-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/unsloth-gemma-4-12b-it-gguf-q4_k_m/unsloth-gemma-4-12b-it-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "43fec98c5102b1c446b4ddd0a9439f1db3a2e1f2e0b8cd143ce1ea619a9403d6",
+        "report": "benchmark-results/certified-20260930/rag/unsloth-gemma-4-12b-it-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "f9e9d7c26a7fdfefd0817a5faca2fe3a0af4ccc497d92c7f5c20c86fd887b0c4",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q4_k_m",
@@ -2637,7 +2993,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-phi-3-5-mini-instruct-gguf-q4_k_m/bartowski-phi-3-5-mini-instruct-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-phi-3-5-mini-instruct-gguf-q4_k_m/bartowski-phi-3-5-mini-instruct-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "e4165e3a71af97f1b4820da61079826d8752a2088e313af0c7d346796c38eff5",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-phi-3-5-mini-instruct-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "8aad3daff9d85279e7e96e23ed38aebc890a9df699191166c04371d09b94d79d",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "ministral_3_3b_instruct_2512_q4_k_m",
@@ -2681,7 +3047,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/mistralai-ministral-3-3b-instruct-2512-gguf-q4_k_m/mistralai-ministral-3-3b-instruct-2512-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/mistralai-ministral-3-3b-instruct-2512-gguf-q4_k_m/mistralai-ministral-3-3b-instruct-2512-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "9ed150d4367e68df0ac8e1540f6ddc65b42d0ee26378329d1ecbca60f93fc5f8",
+        "report": "benchmark-results/certified-20260930/rag/mistralai-ministral-3-3b-instruct-2512-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "32b0e274e625527838ed5cf68c99685ee32d12897c6ae31e9a86b8f46d4364f5",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_m",
@@ -2725,7 +3101,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_m/bartowski-llama-3-2-1b-instruct-gguf-q5_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_m/bartowski-llama-3-2-1b-instruct-gguf-q5_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "4f22f95fb1679ef8e2fd6f1659d23f06cd1dbedb79ff291db7413a7ae509e2a9",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-llama-3-2-1b-instruct-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "f788bc0ea339bfe2a11f73021afaa8a66b444e30e4b49e6672ac60c02e1d80d9",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_s",
@@ -2769,7 +3155,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/bartowski-deepseek-r1-distill-qwen-1-5b-gguf-q4_k_s/bartowski-deepseek-r1-distill-qwen-1-5b-gguf-q4_k_s-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/bartowski-deepseek-r1-distill-qwen-1-5b-gguf-q4_k_s/bartowski-deepseek-r1-distill-qwen-1-5b-gguf-q4_k_s-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "843e1b28b613872cf9f04e5c6d92493b32cfb6b4b9f4682bea2c57e14dbfec05",
+        "report": "benchmark-results/certified-20260930/rag/bartowski-deepseek-r1-distill-qwen-1-5b-gguf-q4_k_s/default-correctness/models-rust-ffm.json",
+        "reportSha256": "c2e6730d83279d77a25e3e863c72f95db4e21996dcd7749f9d61115425ecfb27",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "king3djbl_nexus_finance_gguf_q5_k_s",
@@ -2813,7 +3209,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-finance-gguf-q5_k_s/king3djbl-nexus-finance-gguf-q5_k_s-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-finance-gguf-q5_k_s/king3djbl-nexus-finance-gguf-q5_k_s-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "4e6335f12e87da5b88f67f4d38fc2ee8184f9ad8bcd5690b21fd08b1c14f9468",
+        "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-finance-gguf-q5_k_s/default-correctness/models-rust-ffm.json",
+        "reportSha256": "74bf069a51832414fbb9f8f785fba3e43e565a16893d10d8601e9c67432c5d44",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "janhq_jan_v3_5_4b_gguf_q4_k_m",
@@ -2857,7 +3263,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/janhq-jan-v3-5-4b-gguf-q4_k_m/janhq-jan-v3-5-4b-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/janhq-jan-v3-5-4b-gguf-q4_k_m/janhq-jan-v3-5-4b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "2f5305d93100ad9105eeb47c45ef1af99ba6d568c734fc267b0628b3be41c07a",
+        "report": "benchmark-results/certified-20260930/rag/janhq-jan-v3-5-4b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "6033b61db1f3235bcf18549b83e6c94eed2e0c271ef25f6e471d5f817ace8097",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_m",
@@ -2901,7 +3317,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/mradermacher-popit-qwen3-4b-medical-sft-1128-gguf-q4_k_m/mradermacher-popit-qwen3-4b-medical-sft-1128-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/mradermacher-popit-qwen3-4b-medical-sft-1128-gguf-q4_k_m/mradermacher-popit-qwen3-4b-medical-sft-1128-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "07b3cc6981e8d7b1185169def28fb8f951028dd237e40d50d0c03a450502e7d8",
+        "report": "benchmark-results/certified-20260930/rag/mradermacher-popit-qwen3-4b-medical-sft-1128-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "7a503c2a0ddbb4a4db61969e714aaf7ab3d571848df52b4f9b949d7506cb49fc",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "qwen2_5_coder_1_5b_instruct_q4_k_m",
@@ -2945,7 +3371,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-coder-1-5b-instruct-gguf-q4_k_m/qwen-qwen2-5-coder-1-5b-instruct-gguf-q4_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-coder-1-5b-instruct-gguf-q4_k_m/qwen-qwen2-5-coder-1-5b-instruct-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "cc324af070c2ecbfd324a30884d2f951a7ff756aba85cb811a6ec436933bb046",
+        "report": "benchmark-results/certified-20260930/rag/qwen-qwen2-5-coder-1-5b-instruct-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "e089e241dd9e6937bdbd9cf39262ac8e7cc2ec30ee8ce97c4796ee18b20b85e9",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     },
     {
       "modelId": "king3djbl_nexus_legal_gguf_q5_k_m",
@@ -2989,7 +3425,17 @@
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
       },
-      "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-legal-gguf-q5_k_m/king3djbl-nexus-legal-gguf-q5_k_m-rust-ffm-grounded.json"
+      "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-legal-gguf-q5_k_m/king3djbl-nexus-legal-gguf-q5_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "656e708221c2c705d3e07b897186790130af21626b3b6e7fa11bd26f308b4d51",
+        "report": "benchmark-results/certified-20260930/rag/king3djbl-nexus-legal-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "81dc8374c17ba2c7c0c19978f8e520d6137cf5000bbd6efda6680cb89719261b",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      }
     }
   ]
 }

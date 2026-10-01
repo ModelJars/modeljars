@@ -5605,7 +5605,7 @@
         "search"
       ],
       "dimensions": {
-        "parameterCount": 22713601,
+        "parameterCount": 22565761,
         "contextLength": 512,
         "embeddingLength": 384,
         "blockCount": 6,
@@ -9814,7 +9814,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -9956,7 +9956,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10050,7 +10050,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10192,7 +10192,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10287,7 +10287,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10382,7 +10382,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10523,7 +10523,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10665,7 +10665,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,
@@ -10759,7 +10759,7 @@
       ],
       "dimensions": {
         "parameterCount": 1543714304,
-        "contextLength": 32768,
+        "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,
         "attentionHeadCount": 12,

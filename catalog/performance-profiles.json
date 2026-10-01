@@ -539,7 +539,7 @@
         "candidateMetrics": {
           "loadMillis": 138.590999,
           "p95TtftMillis": 1299.085687,
-          "prefillTokensPerSecond": 122.260080,
+          "prefillTokensPerSecond": 122.26008,
           "decodeTokensPerSecond": 44.703344,
           "peakRssBytes": 847527936
         },
@@ -1054,7 +1054,7 @@
         "baselineMetrics": {
           "loadMillis": 234.363324,
           "p95TtftMillis": 8502.339585,
-          "prefillTokensPerSecond": 17.798940,
+          "prefillTokensPerSecond": 17.79894,
           "decodeTokensPerSecond": 13.080167,
           "peakRssBytes": 948834304
         },

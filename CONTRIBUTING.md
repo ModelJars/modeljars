@@ -248,3 +248,101 @@ Core API changes require approval from `@modeljars/core-maintainers`.
 
 Publishing is performed by GitHub Actions from `main` through the protected `maven-central`
 environment. Contributors should not publish ModelJars artifacts from local machines.
+
+### Publishing newly qualified models, step by step
+
+Follow these in order. Every step below exists because skipping it has already cost a failed
+publication, and several of them fail in ways that look like a broken model rather than a skipped
+step.
+
+**0. Run the gates locally first.** All of them finish in under a minute each, and each one
+corresponds to a required check. Running them here instead of discovering them in CI is the
+difference between one push and five:
+
+```bash
+npm test
+npm run catalog:verify-components
+npm run catalog:verify-compositions
+npm run catalog:profiles:check          # regenerate with: npm run catalog:profiles
+npm run catalog:enrich -- --changed-from=origin/main    # add --write to refresh stale GGUF profiles
+./gradlew test
+node tools/qualification-smoke-gate.mjs \
+  --previous <catalog/qualifications.json from origin/main> \
+  --current catalog/qualifications.json --catalog catalog/models.json --verify-remote
+node tools/plan-model-publications.mjs ...              # see .github/workflows/model-artifacts.yml
+```
+
+`plan-model-publications.mjs` is the one most easily forgotten and the one that blocks hardest: a
+marker jar embeds the model entry, its performance profiles **and** its qualification manifests, so
+qualifying a model that already existed as a candidate changes its marker and the planner demands a
+new `markerCoordinate`. Bump only the trailing publication revision (`…-q4_k_m.1` ->
+`…-q4_k_m.2`); the groupId and artifactId must never change. Repoint any
+`catalog/performance-profiles.json` entry that cites the old coordinate.
+
+Changing the qualification of a model that is **already published** has a second consequence: if that
+model is a member of a composition, the composition's measured evidence report names its members by
+coordinate, and bumping the member makes that evidence disagree with the catalogue. Do not edit the
+report to match — re-measure the composition in the same pass, or leave that model's qualification
+alone for this publish.
+
+**1. Merge the catalog to `main`.** This repository allows **rebase merges only** — not merge
+commits, not squash. `gh pr merge <n> --rebase`.
+
+**2. Let the push-triggered `Model artifacts` run finish.** A push to `main` publishes markers to
+**GitHub Packages only**. Its `maven-central` job is guarded by `inputs.target` and never runs on a
+push, so nothing has reached Central yet.
+
+**3. Run `Model artifacts` with `target=verify` before publishing anything.** This is the documented
+precondition for either publication target and it reports what is publishable without touching
+Central.
+
+**4. Dispatch `Model artifacts` with `target=maven-central` and the EXACT ids.** The reserved value
+`all` **bootstraps a complete catalogue** and must not be used for an incremental publish: Central
+refuses to republish a component that already exists, so every already-published marker in the batch
+fails validation and `Finalize Central deployments` then refuses the whole batch. Pass only the
+qualified models whose coordinate is genuinely absent from Central. To compute that set, probe each
+coordinate rather than assuming:
+
+```bash
+# for each qualified entry's markerCoordinate group:artifact:version
+curl -s -o /dev/null -w '%{http_code}' \
+  "https://repo1.maven.org/maven2/${group//.//}/${artifact}/${version}/${artifact}-${version}.pom"
+```
+
+Intersect "qualified" with "404 from repo1". Compositions
+(`granite_4_1_3b_answerability_hybrid`, `harriet_qwen3_5_4b_decisions`) are not in
+`catalog/models.json` and publish through their own `modeljars-composite-*` modules — exclude them
+from `model_ids`. The resulting count should equal the number of publications
+`plan-model-publications.mjs` reports; if it does not, stop and find out why.
+
+**5. Approve the `maven-central` environment.** Both the staging run and the finalize run pause in
+GitHub's `waiting` state for this approval. `waiting` is not a failure — do not treat it as one.
+
+**6. Wait for every `Stage …` job to reach a terminal state, polling the JOBS and not the run.**
+GitHub has been observed reporting a run `completed/success` while one matrix job was still
+`in_progress`. Gate on
+`gh api repos/ModelJars/modeljars/actions/runs/<id>/jobs?per_page=100` and count conclusions.
+
+**7. Dispatch `Finalize Central deployments` with both required inputs.** Staging uploads each marker
+as a USER_MANAGED deployment named `modeljars-<model-id>-<run-id>`, so:
+
+- `deployment_name_filter` = the staging run id
+- `expected_count` = the number of successful `Stage …` jobs in that run
+
+The workflow refuses to publish unless the count matches, which is what stops a half-staged batch
+going out. Never finalize a partial batch.
+
+**8. Verify the artifacts on `repo1.maven.org`, never the workflow status.** `Model artifacts` and
+`publish` can both report failure while the deployment is still `PUBLISHING` on Sonatype's side and
+succeeds minutes later; conversely a green workflow is not proof a jar resolves. Use
+`node tools/verify-central-catalog.mjs build/site/catalog.json` and wait for it to pass.
+
+**9. Only then dispatch `pages`.** The site deploy hard-verifies every marker's POM and JAR against
+`repo1`. Dispatching it before Central has synchronized fails the deploy on a 404 that looks like a
+missing model but is only a missing publication step.
+
+**If a release workflow fails waiting for `PUBLISHED`,** do not re-run it. A second deployment of the
+same version collides with the one already in flight. Check
+<https://central.sonatype.com/publishing/deployments>, and if the artifact later appears on `repo1`,
+finish the release by hand — for `models` that means creating the tag and GitHub release, which the
+workflow does after the publish gate it never reached.

@@ -270,7 +270,12 @@ node tools/qualification-smoke-gate.mjs \
   --previous <catalog/qualifications.json from origin/main> \
   --current catalog/qualifications.json --catalog catalog/models.json --verify-remote
 node tools/plan-model-publications.mjs ...              # see .github/workflows/model-artifacts.yml
+node tools/qualification-generation-gate.mjs --base origin/main
 ```
+
+Advance `generatedAt` in any qualification manifest you change. The generation gate fails otherwise,
+and its reason is not cosmetic: markers published from the earlier content would conflict with the
+bundled catalogue at the same instant.
 
 `plan-model-publications.mjs` is the one most easily forgotten and the one that blocks hardest: a
 marker jar embeds the model entry, its performance profiles **and** its qualification manifests, so

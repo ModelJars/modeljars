@@ -33,9 +33,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 64;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 65;
   private static final String AGGREGATE_MODELS_REVISION =
-      "c8110bb55267946d9909fe7eff58c6672c7b215a";
+      "1955b55ba16f9a2cd90655be3ac7323f3efa452a";
 
   private static final String ARTIFACT_SHA =
       "da2572f16c06133561ce56accaa822216f2391ef4d37fba427801cd6736417d4";

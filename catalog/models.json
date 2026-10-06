@@ -11789,7 +11789,7 @@
       "sourceUri": "https://huggingface.co/lmstudio-community/gemma-4-E2B-it-GGUF",
       "downloadUri": "https://huggingface.co/lmstudio-community/gemma-4-E2B-it-GGUF/resolve/3155b2dec005f7b0a6f721198c26ab11492a38e4/gemma-4-E2B-it-Q4_K_M.gguf",
       "revision": "3155b2dec005f7b0a6f721198c26ab11492a38e4",
-      "markerCoordinate": "org.modeljars.huggingface:lmstudio-community.gemma-4-e2b-it-gguf.q4_k_m:4.0.0-q4_k_m.2",
+      "markerCoordinate": "org.modeljars.huggingface:lmstudio-community.gemma-4-e2b-it-gguf.q4_k_m:4.0.0-q4_k_m.3",
       "modelVersion": "4.0.0",
       "variant": "q4_k_m",
       "format": "gguf",

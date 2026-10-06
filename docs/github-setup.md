@@ -77,6 +77,15 @@ Central deployment. The `Model artifacts` workflow publishes accepted marker coo
 independently. Its `model_ids` input accepts exact comma-separated catalog IDs; the reserved `all`
 value bootstraps the complete accepted catalog. Use `verify` before either publication target.
 
+> **`all` is for bootstrapping an empty catalogue, never for an incremental publish.** Central
+> refuses to republish a component that already exists, so passing `all` once markers are live makes
+> every already-published marker in the batch fail validation, and `Finalize Central deployments`
+> then refuses the whole batch rather than publishing part of it. For an incremental publish, pass
+> only the qualified models whose coordinate is absent from `repo1.maven.org`. The full ordered
+> procedure — including the required `verify` run, the finalize inputs, and why the site deploy must
+> come last — is in **CONTRIBUTING.md, "Publishing newly qualified models, step by step"**. Read it
+> before dispatching anything; do not script around it.
+
 The JVM Runtime release contains these coordinates and transitive dependencies:
 
 ```text

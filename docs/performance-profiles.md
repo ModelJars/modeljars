@@ -28,6 +28,51 @@ duplicate IDs, empty selectors, profiles with neither recommendations nor launch
 launch arguments, invalid timestamps, and invalid metrics.
 Runtime matching requires every selector entry to match. Extra runtime facts are allowed.
 
+## A Recommendation Must Differ From The Library Default
+
+**A profile carries what a measurement found better *than the shipped default*, never a restatement
+of it.** Models 0.3.54 made ten of its eleven pure-Java plan optimizations enabled-when-unset and
+removed five native settings outright, after measuring that each faster route generates
+byte-identical tokens. **Forty-six recommendations across this catalogue became no-ops that day**,
+across 26 models:
+
+| recommendation | profiles | why it is a no-op |
+| --- | --- | --- |
+| `models.native.quantizedDecode` | 25 | setting removed |
+| `models.native.gatedDeltaNet` | 1 | setting removed |
+| `models.purejava.batchedAttentionValues` | 7 | recommended `true`, now the default |
+| `models.purejava.batchedAttentionScores` | 7 | recommended `true`, now the default |
+| `models.purejava.stagedQuantizedFfn` | 2 | recommended `true`, now the default |
+| `models.purejava.stagedQuantizedLayer` | 2 | recommended `true`, now the default |
+| `models.purejava.blockMajorQ8Activations` | 1 | recommended `true`, now the default |
+| `models.purejava.parallelQ8FfnPreparation` | 1 | recommended `true`, now the default |
+
+Models accepts and ignores a removed setting rather than failing, and records it under
+`native-ignored-removed-settings`, because a published marker embeds its profile and no catalogue
+edit can reach a marker already on Maven Central. Nothing breaks while they remain: all 46 profiles
+were replayed through `NativeKernelSettings.resolve` against 0.3.54 and 46 load, 0 fail, 25 record
+an ignored name.
+
+**They are not deleted yet, deliberately.** A marker jar embeds its profile, so dropping a
+recommendation requires a new `markerCoordinate` for every model it touches — here 26 — and
+`plan-model-publications.mjs` enforces that. Republishing 26 markers to Maven Central to delete text
+that has no effect is churn users would have to re-resolve for nothing. The deletion therefore rides
+with the catalogue-wide default-configuration smoke that `CAMPAIGN-RUNBOOK.md` already requires
+whenever the released library changes the decoder or the kernel: that run mints new marker revisions
+anyway, so the cleanup costs nothing extra there. Until then, treat every recommendation in the table
+above as dead text.
+
+Sixteen profiles still recommend `batchedAttentionScores=false` and `batchedAttentionValues=false`.
+Those were written when `false` *was* the default, and their evidence block compares
+`rust-ffm-v10-explicit-settings` against `rust-ffm-v10-modeljar-profile` — a bundle A/B that never
+isolated attention batching. They now override a default that measured byte-identical and faster, so
+they are **not** supported by their own evidence and are pending the catalogue-wide
+default-configuration smoke. Do not remove them before that run; do not treat them as a measured
+preference either.
+
+Before adding a recommendation, check what the shipped library already does with the setting unset.
+A profile that restates the default costs a reader the belief that it earned something.
+
 ## Java Launch Profiles
 
 Compiler and JVM startup options cannot be applied after the Java process starts. An optional

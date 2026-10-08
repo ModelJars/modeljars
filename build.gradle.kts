@@ -4067,7 +4067,6 @@ project(":modeljars") {
         // The Jackson line the Models runtime already resolves; compares tool-call arguments as
         // JSON values in the chat-template round-trip gate.
         testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
-        testImplementation("com.integrallis:backend-tornado:$modelsVersion")
         testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
         testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")
     }

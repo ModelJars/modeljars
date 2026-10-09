@@ -9117,7 +9117,42 @@
       "memoryFit": "computed (upper bound)"
     },
     {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_f16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_m",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_s",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_m",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_s",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q6_k",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
     },
@@ -9568,6 +9603,26 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_bf16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_f16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q4_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q8_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "llama_3_1_8b_instruct_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
@@ -9889,7 +9944,27 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "qwen_qwen3_embedding_0_6b_gguf_f16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q5_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_f16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q4_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
     },
@@ -9899,7 +9974,57 @@
       "memoryFit": "not applicable: no generation KV cache"
     },
     {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_s",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q5_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q6_k",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q8_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_f16",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_m",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_s",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q6_k",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
     },

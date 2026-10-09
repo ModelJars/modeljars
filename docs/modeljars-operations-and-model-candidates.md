@@ -197,6 +197,46 @@ Do not remove status checks, branch restrictions, conversation resolution, or
 linear-history requirements. Once a second maintainer can review PRs, this
 bootstrap exception is no longer necessary.
 
+## 2a. Triage a GGUF before deciding anything about it
+
+**Run this first, for every candidate, before writing a line of code or spending a byte of fleet
+budget.** It range-fetches the real header and answers the four questions that otherwise get
+guessed from a model card:
+
+```sh
+npm run catalog:triage -- <catalog-id>                 # something already listed
+npm run catalog:triage -- https://…/model.gguf          # something not listed yet
+npm run catalog:triage -- <id-or-url> --json            # for scripts
+```
+
+It reports:
+
+- **`general.architecture`** — the first question, because an unsupported architecture means runtime
+  work, not a catalog edit.
+- **Which non-text towers the file actually contains**, from the header namespaces (`clip.vision.*`,
+  `stt.*`, `clip.projector_type`) and then from tensor names. When the target is a catalog id it
+  **compares that against the entry's declared `capabilities` and prints `!!` on a mismatch**. This
+  is how `gemma_3n_e2b_it_q8_0` was found to claim `image-understanding`, `audio-understanding` and
+  `video-understanding` while its artifact carries 727 text-only tensors and the upstream repo
+  publishes no projector at all.
+- **Tensor-name roots**, which is what distinguishes a text stack (`blk`, `token_embd`,
+  `output_norm`) from a projector (`v`, `mm`) or an encoder/decoder pair (`enc`, `dec`,
+  `frontend`).
+- **Weight share per quantization**, with the token embedding excluded because it is read by lookup
+  rather than multiplied. This is how Q5_1 was found to be 65.5% of the matmul weights in
+  `all-MiniLM-L6-v2 Q5_K_S` — a type the loader could not read at all, in files the catalog already
+  listed.
+- **The full header**, with arrays summarized rather than dropped. A per-layer kv head count, a rope
+  section layout and a deepstack layer list are all arrays and all decide whether a file loads.
+
+The GGUF type table in `tools/gguf-triage.mjs` is generated from the library's own
+`GgufTensorType` enum rather than written by hand, so the tool and the loader cannot disagree about
+a block size. Regenerate it when that enum gains a type.
+
+Two rules learned by breaking them: **believe the header, not the model card**, and **believe the
+tensor list, not the header's own claims** — `inspectGguf` reads both and this tool prints both so
+they can be compared.
+
 ## 2. Current Java Runtime Boundaries
 
 The `projects/models` pure-Java backend is intentionally narrow today.

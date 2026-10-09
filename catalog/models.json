@@ -2293,6 +2293,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-f16.gguf",
       "sha256": "3fc99928632fcecad589c401ec33bbba86b51c457e9813e3a1cb801ff4106e21",
       "sizeBytes": 220974080,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -2340,6 +2341,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q4_0.gguf",
       "sha256": "67b954b5ad772c4d8011f70b59c60b1d72526cd4a341b23274224c2f6fa29027",
       "sizeBytes": 115711680,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -2575,6 +2577,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q6_K.gguf",
       "sha256": "2b5307c4a5159d1c4544f18d313a819cdcead55fa7a5639f5f5e449afdda1b63",
       "sizeBytes": 120163008,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -2622,6 +2625,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q8_0.gguf",
       "sha256": "15691dfe830257f569a1e3521977351d16eac18e48e414908dc98ed9b8455e07",
       "sizeBytes": 121020096,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17037,6 +17041,7 @@
       "localPath": "${user.home}/.jvllm/models/Qwen3-Embedding-0.6B-f16.gguf",
       "sha256": "421a27e58d165478cc7acb984a688c2aa41404968b0203e7cd743ece44c54340",
       "sizeBytes": 1197629632,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17183,6 +17188,7 @@
       "localPath": "${user.home}/.jvllm/models/Qwen3-Embedding-4B-Q5_0.gguf",
       "sha256": "15e65ad36896d269f0ece7e5ead453e860bcea9c208c436b992af89c7bd44c74",
       "sizeBytes": 2823134496,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17581,6 +17587,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-ggml-model-f16.gguf",
       "sha256": "797b70c4edf85907fe0a49eb85811256f65fa0f7bf52166b147fd16be2be4662",
       "sizeBytes": 45949216,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17628,6 +17635,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q4_0.gguf",
       "sha256": "8cb01a79a55e00a936ca17a07886302bbb005680afd4255d570787ba4b8c8c1d",
       "sizeBytes": 19699648,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17769,6 +17777,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q5_0.gguf",
       "sha256": "374ae99e7e3aeb042d3ed39a0c97ae24ff583eb46bb2b5e21194d2b74b8bbfd8",
       "sizeBytes": 21026752,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17910,6 +17919,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q6_K.gguf",
       "sha256": "e94635fd3ddb878b633f3cac7841a6ea734c6bedea57b5e26f0ff5eb3713382c",
       "sizeBytes": 24150976,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -17957,6 +17967,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q8_0.gguf",
       "sha256": "263215c3cadd6e16740741a7624ab4cbb6c8e777688bd5331ecfbf5681c2f8ed",
       "sizeBytes": 25008064,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -18762,6 +18773,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-f16.gguf",
       "sha256": "970aa74c0a90ef7482477cf803618e776e173c007bf957f635f1015bfcfef0e6",
       "sizeBytes": 274290656,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -18949,6 +18961,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q5_0.gguf",
       "sha256": "8b5b03f194d68f6ca4d27de603f30fcb9927507c9dbb11157e6ec132e14a1987",
       "sizeBytes": 98002112,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -18996,6 +19009,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q5_K_M.gguf",
       "sha256": "cb5a133f05aa0a52137f4d95450259706605a93a147f507badecce0a98f26432",
       "sizeBytes": 102702272,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -19043,6 +19057,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q5_K_S.gguf",
       "sha256": "2a3da0d1279c9ef2534aa21b1884a5b9a43991e79da21e0b52bd82a58d701ffd",
       "sizeBytes": 98002112,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -19090,6 +19105,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q6_K.gguf",
       "sha256": "eb493e4207527228c2febbca9476147fc260c5b15b14998608ee017f09e30e46",
       "sizeBytes": 113042624,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -19137,6 +19153,7 @@
       "localPath": "${user.home}/.jvllm/models/nomic-embed-text-v1.5-Q8_0.gguf",
       "sha256": "43d36b4cff72b36cfb081dbb2bf70ce1ce74f5875537d90343b69bc229f7d481",
       "sizeBytes": 146146528,
+      "catalogPublishedAt": "2026-10-09T10:18:17Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",

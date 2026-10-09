@@ -35,6 +35,32 @@ single-modality**, and that is the thing this roadmap exists to change.
 
 Phase 0 is hours, not weeks, and it is a correctness debt that is live in public.
 
+## Phase 0.5 — safety / moderation (no runtime work, cheapest remaining gap)
+
+Guardrails are an enterprise requirement and the catalog has **zero** coverage. Unlike ASR, vision
+and OCR, this one needs no new runtime: all three leading guardrail families are text classifiers on
+architectures already served, verified by triaging the real artifacts on 2026-10-09:
+
+| candidate | architecture | license | tensors |
+| --- | --- | --- | --- |
+| `granite-guardian-3.0-2b` Q4_K_M | `granite` | **apache-2.0** | 362 |
+| `Llama-Guard-3-1B` Q4_K_M | `llama` | llama3.2 | 148 |
+| `shieldgemma-2b` Q4_K_M | `gemma2` | gemma | 288 |
+
+All three report `towers: none found (text only)`, so they load on the existing decoders.
+
+| # | work | gate |
+| --- | --- | --- |
+| 0.5.1 | Catalog entries, smallest-first, preferring the Apache-2.0 one | triage prints no `!!`; digests pinned |
+| 0.5.2 | New policy `safety-classification-v1`. These emit a safety verdict, not an answer, so `correctAnswerRate` describes nothing here. | precision and recall against a committed labelled set, two arms on one host, with the false-negative rate reported separately because a missed unsafe prompt is the costly error |
+| 0.5.3 | Qualify | each with a released `backendVersion` |
+
+The same reasoning applies to **NER** (small BERT-family token classifiers would run on the existing
+`bert` encoder) and **text-to-SQL** (`sqlcoder_7b_2_q5_k_m` is already a catalog candidate on the
+supported `llama` architecture). Both are blocked on a metric rather than a runtime:
+`text-to-sql` needs query correctness against a schema, which the campaign runbook already says
+wants its own policy, and NER needs span-level F1. Neither is a decoder problem.
+
 ## Phase 1 — speech-to-text (first new modality)
 
 **Target:** `handy-computer/whisper-tiny-gguf`, Apache-2.0, 38M, `general.architecture = whisper`.

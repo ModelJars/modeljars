@@ -2436,6 +2436,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q4_K_S.gguf",
       "sha256": "3b157b9ecdf97f0ab345b0e4c2958087bc93b62142662d0bf5ea6a67cd86b99c",
       "sizeBytes": 116633280,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -2483,6 +2484,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q5_K_M.gguf",
       "sha256": "e539544b178d572c50bad6f1184f1722a0dfcf8a674613c9af47fb806ecfa152",
       "sizeBytes": 117729984,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -2530,6 +2532,7 @@
       "localPath": "${user.home}/.jvllm/models/granite-embedding-107m-multilingual-Q5_K_S.gguf",
       "sha256": "953845cdd9fb9da6909af413fe244a52c511c7af3b79f7f6cc56e1a277c3c827",
       "sizeBytes": 117481152,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",
@@ -11204,6 +11207,7 @@
       "localPath": "${user.home}/.jvllm/models/LFM2.5-Embedding-350M-BF16.gguf",
       "sha256": "c01a8eae5fcc937f098a84330419d8fc9da6322b2bb598572273fd2294f2eb1e",
       "sizeBytes": 711484160,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "LicenseRef-LFM-1.0",
       "capabilities": [
         "text-embedding",
@@ -11251,6 +11255,7 @@
       "localPath": "${user.home}/.jvllm/models/LFM2.5-Embedding-350M-F16.gguf",
       "sha256": "da715f5bbe2a91dd518ba92912ad3502bf6a06ecad1397a12719e4359743dc54",
       "sizeBytes": 711484160,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "LicenseRef-LFM-1.0",
       "capabilities": [
         "text-embedding",
@@ -11298,6 +11303,7 @@
       "localPath": "${user.home}/.jvllm/models/LFM2.5-Embedding-350M-Q4_0.gguf",
       "sha256": "08bb9bfdfb516146b7aeb6d51994206b38e8b31c9e6e66a7bdcebbbc0afa3cea",
       "sizeBytes": 219308800,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "LicenseRef-LFM-1.0",
       "capabilities": [
         "text-embedding",
@@ -11485,6 +11491,7 @@
       "localPath": "${user.home}/.jvllm/models/LFM2.5-Embedding-350M-Q8_0.gguf",
       "sha256": "6ec5f8e8750dbc8a0e40c431fd1b7b07a13688136b2244c5a1364b54d9032599",
       "sizeBytes": 379216640,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "LicenseRef-LFM-1.0",
       "capabilities": [
         "text-embedding",
@@ -17730,6 +17737,7 @@
       "localPath": "${user.home}/.jvllm/models/all-MiniLM-L6-v2-Q4_K_S.gguf",
       "sha256": "f578fb3eb4627880e86528f765c1024b73f1f41fc06a07a3dd1f449d10843ffe",
       "sizeBytes": 20694976,
+      "catalogPublishedAt": "2026-10-09T15:42:25Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-embedding",

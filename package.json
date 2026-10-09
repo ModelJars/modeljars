@@ -9,7 +9,9 @@
     "catalog:verify-components": "node tools/component-evidence-gate.mjs --qualifications catalog/component-qualifications.json --models catalog/models.json",
     "catalog:verify-compositions": "node tools/composition-evidence-gate.mjs --compositions catalog/compositions.json --models catalog/models.json",
     "catalog:profiles": "node tools/generate-model-profiles.mjs --write",
-    "catalog:profiles:check": "node tools/generate-model-profiles.mjs"
+    "catalog:profiles:check": "node tools/generate-model-profiles.mjs",
+    "catalog:embeddings": "node tools/generate-embedding-qualifications.mjs --write",
+    "catalog:embeddings:check": "node tools/generate-embedding-qualifications.mjs"
   },
   "devDependencies": {
     "@huggingface/jinja": "0.5.10"

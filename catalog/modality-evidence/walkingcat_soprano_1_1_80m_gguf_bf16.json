@@ -1,0 +1,13 @@
+{
+ "id": "walkingcat_soprano_1_1_80m_gguf_bf16",
+ "downloadUri": "https://huggingface.co/WalkingCat/Soprano-1.1-80M-GGUF/resolve/36c6f47cf91421b7f0cf3d862d28ae2e41aab3f2/Soprano-1.1-80M-GGUF/soprano-1.1-80m-bf16.gguf",
+ "sha256": "46c60cdf5b8e5a3b26bfd185c0870826c05b533979ea7c1d399a9ffb76a50a54",
+ "architecture": "audiocpp",
+ "tensorCount": 271,
+ "towers": {},
+ "declaredTasks": [
+  "tts"
+ ],
+ "recordedAt": "2026-10-09T22:58:30.974Z",
+ "recordedBy": "tools/modality-claim-gate.mjs --write"
+}

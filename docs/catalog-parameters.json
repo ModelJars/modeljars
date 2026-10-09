@@ -1,0 +1,711 @@
+{
+ "measuredAt": "2026-10-09",
+ "publishedEntries": 100,
+ "note": "parameters by method: gguf-tensor-count is summed from the artifact tensor shapes; upstream-published is the vendor index for non-GGUF formats and is a different denominator, not a re-measurement here.",
+ "models": [
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_f16",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF F16",
+   "parameters": 22565376,
+   "sizeBytes": 45949216,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q4_0",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q4_0",
+   "parameters": 22565376,
+   "sizeBytes": 19699648,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_m",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q4_K_M",
+   "parameters": 22565376,
+   "sizeBytes": 20999104,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_s",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q4_K_S",
+   "parameters": 22565376,
+   "sizeBytes": 20694976,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q5_0",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q5_0",
+   "parameters": 22565376,
+   "sizeBytes": 21026752,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q6_k",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q6_K",
+   "parameters": 22565376,
+   "sizeBytes": 24150976,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_all_minilm_l6_v2_embedding_gguf_q8_0",
+   "name": "All-MiniLM-L6-v2-Embedding GGUF Q8_0",
+   "parameters": 22565376,
+   "sizeBytes": 25008064,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "cstr_ms_marco_minilm_l6_v2_gguf_q4_k_imatrix_g7c_f7",
+   "name": "MS MARCO MiniLM L6 v2 reranker corrected Q4_K imatrix",
+   "parameters": 22713601,
+   "sizeBytes": 19986112,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "cactus_compute_needle2_cact_cq2_mixed",
+   "name": "Cactus Compute Needle 2 CACT CQ2 Mixed",
+   "parameters": 44900000,
+   "sizeBytes": 13737807,
+   "method": "upstream-published",
+   "source": "config.json total_parameters @ Cactus-Compute/needle2"
+  },
+  {
+   "id": "mixedbread_ai_mxbai_rerank_xsmall_v1_f16",
+   "name": "mxbai-rerank-xsmall-v1 F16",
+   "parameters": 70830337,
+   "sizeBytes": 141685186,
+   "method": "upstream-published",
+   "source": "HF safetensors index @ mixedbread-ai/mxbai-rerank-xsmall-v1"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_f16",
+   "name": "granite-embedding-107m-multilingual GGUF F16",
+   "parameters": 106845696,
+   "sizeBytes": 220974080,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q4_0",
+   "name": "granite-embedding-107m-multilingual GGUF Q4_0",
+   "parameters": 106845696,
+   "sizeBytes": 115711680,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_m",
+   "name": "granite-embedding-107m-multilingual GGUF Q4_K_M",
+   "parameters": 106845696,
+   "sizeBytes": 117011136,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_s",
+   "name": "granite-embedding-107m-multilingual GGUF Q4_K_S",
+   "parameters": 106845696,
+   "sizeBytes": 116633280,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_m",
+   "name": "granite-embedding-107m-multilingual GGUF Q5_K_M",
+   "parameters": 106845696,
+   "sizeBytes": 117729984,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_s",
+   "name": "granite-embedding-107m-multilingual GGUF Q5_K_S",
+   "parameters": 106845696,
+   "sizeBytes": 117481152,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q6_k",
+   "name": "granite-embedding-107m-multilingual GGUF Q6_K",
+   "parameters": 106845696,
+   "sizeBytes": 120163008,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_granite_embedding_107m_multilingual_gguf_q8_0",
+   "name": "granite-embedding-107m-multilingual GGUF Q8_0",
+   "parameters": 106845696,
+   "sizeBytes": 121020096,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "walkingcat_soprano_1_1_80m_gguf_bf16",
+   "name": "WalkingCat Soprano 1.1 80M GGUF BF16",
+   "parameters": 110068738,
+   "sizeBytes": 221809792,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "walkingcat_soprano_1_1_80m_gguf_q8_0",
+   "name": "WalkingCat Soprano 1.1 80M GGUF Q8_0",
+   "parameters": 110068738,
+   "sizeBytes": 123162336,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_f16",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF F16",
+   "parameters": 136727040,
+   "sizeBytes": 274290656,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_0",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF Q5_0",
+   "parameters": 136727040,
+   "sizeBytes": 98002112,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_m",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF Q5_K_M",
+   "parameters": 136727040,
+   "sizeBytes": 102702272,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_s",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF Q5_K_S",
+   "parameters": 136727040,
+   "sizeBytes": 98002112,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q6_k",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF Q6_K",
+   "parameters": 136727040,
+   "sizeBytes": 113042624,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_nomic_embed_text_v1_5_embedding_gguf_q8_0",
+   "name": "Nomic-embed-text-v1.5-Embedding GGUF Q8_0",
+   "parameters": 136727040,
+   "sizeBytes": 146146528,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "ggml_org_embeddinggemma_300m_gguf_q8_0",
+   "name": "embeddinggemma-300M GGUF Q8_0",
+   "parameters": 307581696,
+   "sizeBytes": 333590944,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "liquidai_lfm2_5_embedding_350m_gguf_bf16",
+   "name": "LFM2.5-Embedding-350M GGUF BF16",
+   "parameters": 354483968,
+   "sizeBytes": 711484160,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "liquidai_lfm2_5_embedding_350m_gguf_f16",
+   "name": "LFM2.5-Embedding-350M GGUF F16",
+   "parameters": 354483968,
+   "sizeBytes": 711484160,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "liquidai_lfm2_5_embedding_350m_gguf_q4_0",
+   "name": "LFM2.5-Embedding-350M GGUF Q4_0",
+   "parameters": 354483968,
+   "sizeBytes": 219308800,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "liquidai_lfm2_5_embedding_350m_gguf_q8_0",
+   "name": "LFM2.5-Embedding-350M GGUF Q8_0",
+   "parameters": 354483968,
+   "sizeBytes": 379216640,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "smollm2_360m_instruct_q8_0",
+   "name": "SmolLM2 360M Instruct GGUF Q8_0",
+   "parameters": 361821120,
+   "sizeBytes": 386404992,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen2_5_0_5b_instruct_bf16",
+   "name": "Qwen2.5-0.5B-Instruct BF16",
+   "parameters": 494032768,
+   "sizeBytes": 988097824,
+   "method": "upstream-published",
+   "source": "HF safetensors index @ Qwen/Qwen2.5-0.5B-Instruct"
+  },
+  {
+   "id": "qwen_qwen3_embedding_0_6b_gguf_f16",
+   "name": "Qwen3-Embedding-0.6B GGUF F16",
+   "parameters": 595776512,
+   "sizeBytes": 1197629632,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+   "name": "Qwen3-Embedding-0.6B GGUF Q8_0",
+   "parameters": 595776512,
+   "sizeBytes": 639150592,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_coder_0_5b_instruct_q4_0",
+   "name": "Qwen2.5-Coder 0.5B Instruct GGUF Q4_0",
+   "parameters": 630167424,
+   "sizeBytes": 428730240,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_coder_0_5b_instruct_q8_0",
+   "name": "Qwen2.5-Coder 0.5B Instruct GGUF Q8_0",
+   "parameters": 630167424,
+   "sizeBytes": 675710848,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
+   "name": "Qwen2.5-0.5B-Instruct GGUF Q4_K_M",
+   "parameters": 630167424,
+   "sizeBytes": 491400032,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen2_5_0_5b_instruct_gguf_q6_k",
+   "name": "Qwen2.5-0.5B-Instruct GGUF Q6_K",
+   "parameters": 630167424,
+   "sizeBytes": 650379104,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "facebook_mobilemoe_s_qat_int4_g32",
+   "name": "Meta MobileMoE-S QAT INT4 G32",
+   "parameters": 671614896,
+   "sizeBytes": 713916240,
+   "method": "upstream-published",
+   "source": "HF safetensors index @ facebook/MobileMoE-S-QAT"
+  },
+  {
+   "id": "qwen3_0_6b_q4_0",
+   "name": "Qwen3 0.6B GGUF Q4_0",
+   "parameters": 751632384,
+   "sizeBytes": 428970080,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_qwen3_5_0_8b_gguf_q4_k_m",
+   "name": "Qwen3.5-0.8B GGUF Q4_K_M",
+   "parameters": 752393024,
+   "sizeBytes": 532517120,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_qwen3_5_0_8b_gguf_q5_k_m",
+   "name": "Qwen3.5-0.8B GGUF Q5_K_M",
+   "parameters": 752393024,
+   "sizeBytes": 590057728,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_qwen3_5_0_8b_gguf_q6_k",
+   "name": "Qwen3.5-0.8B GGUF Q6_K",
+   "parameters": 752393024,
+   "sizeBytes": 639029504,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_google_gemma_3_1b_it_gguf_q4_k_m",
+   "name": "google gemma-3-1b-it GGUF Q4_K_M",
+   "parameters": 999885952,
+   "sizeBytes": 806058496,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
+   "name": "google gemma-3-1b-it GGUF Q8_0",
+   "parameters": 999885952,
+   "sizeBytes": 1069306624,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "minicpm5_1b_q4_k_m",
+   "name": "MiniCPM5 1B GGUF Q4_K_M",
+   "parameters": 1080632832,
+   "sizeBytes": 688065920,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "tinyllama_1_1b_chat_v1_0_q4_0",
+   "name": "TinyLlama 1.1B Chat v1.0 GGUF Q4_0",
+   "parameters": 1100048384,
+   "sizeBytes": 637699456,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_m",
+   "name": "Llama-3.2-1B-Instruct GGUF Q4_K_M",
+   "parameters": 1235814432,
+   "sizeBytes": 807694464,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_s",
+   "name": "Llama-3.2-1B-Instruct GGUF Q4_K_S",
+   "parameters": 1235814432,
+   "sizeBytes": 775647360,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_m",
+   "name": "Llama-3.2-1B-Instruct GGUF Q5_K_M",
+   "parameters": 1235814432,
+   "sizeBytes": 911503488,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_s",
+   "name": "Llama-3.2-1B-Instruct GGUF Q5_K_S",
+   "parameters": 1235814432,
+   "sizeBytes": 892563584,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "deepseek_coder_1_3b_instruct_q4_k_m",
+   "name": "DeepSeek-Coder 1.3B Instruct GGUF Q4_K_M",
+   "parameters": 1346471936,
+   "sizeBytes": 873582624,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
+   "name": "Yi-Coder 1.5B Chat GGUF Q4_K_M",
+   "parameters": 1476495360,
+   "sizeBytes": 963674304,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "king3djbl_nexus_finance_gguf_q4_k_m",
+   "name": "nexus-finance GGUF Q4_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 986045632,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "king3djbl_nexus_finance_gguf_q5_k_s",
+   "name": "nexus-finance GGUF Q5_K_S",
+   "parameters": 1543714304,
+   "sizeBytes": 1098726240,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "king3djbl_nexus_legal_gguf_q4_k_m",
+   "name": "nexus-legal GGUF Q4_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 986045472,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "king3djbl_nexus_legal_gguf_q5_k_m",
+   "name": "nexus-legal GGUF Q5_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 1125047328,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "king3djbl_nexus_medical_gguf_q4_k_m",
+   "name": "nexus-medical GGUF Q4_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 986045632,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_math_1_5b_instruct_q4_k_m",
+   "name": "Qwen2.5-Math 1.5B Instruct GGUF Q4_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 986048832,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "umarfarookm_umartransit_1b_q4_k_m",
+   "name": "UmarTransit-1B GGUF Q4_K_M",
+   "parameters": 1543714304,
+   "sizeBytes": 986048096,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "eurollm_1_7b_instruct_q4_k_m",
+   "name": "EuroLLM 1.7B Instruct GGUF Q4_K_M",
+   "parameters": 1656850432,
+   "sizeBytes": 1045157088,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m",
+   "name": "SmolLM2 1.7B Instruct GGUF Q4_K_M",
+   "parameters": 1711376384,
+   "sizeBytes": 1055609536,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen3_1_7b_q8_0",
+   "name": "Qwen3 1.7B GGUF Q8_0",
+   "parameters": 1720574976,
+   "sizeBytes": 1834426016,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m",
+   "name": "DeepSeek-R1-Distill-Qwen-1.5B GGUF Q4_K_M",
+   "parameters": 1777088000,
+   "sizeBytes": 1117320800,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_s",
+   "name": "DeepSeek-R1-Distill-Qwen-1.5B GGUF Q4_K_S",
+   "parameters": 1777088000,
+   "sizeBytes": 1071584864,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_coder_1_5b_instruct_q4_0",
+   "name": "Qwen2.5-Coder 1.5B Instruct GGUF Q4_0",
+   "parameters": 1777088000,
+   "sizeBytes": 1066227264,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_coder_1_5b_instruct_q4_k_m",
+   "name": "Qwen2.5-Coder 1.5B Instruct GGUF Q4_K_M",
+   "parameters": 1777088000,
+   "sizeBytes": 1117320768,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen2_5_coder_1_5b_instruct_q8_0",
+   "name": "Qwen2.5-Coder 1.5B Instruct GGUF Q8_0",
+   "parameters": 1777088000,
+   "sizeBytes": 1894532160,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
+   "name": "Qwen2.5-1.5B-Instruct GGUF Q4_K_M",
+   "parameters": 1777088000,
+   "sizeBytes": 1117320736,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m",
+   "name": "H2O Danube2 1.8B Chat GGUF Q4_K_M",
+   "parameters": 1831201280,
+   "sizeBytes": 1112145056,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_qwen3_5_2b_gguf_q4_k_m",
+   "name": "Qwen3.5-2B GGUF Q4_K_M",
+   "parameters": 1881825088,
+   "sizeBytes": 1280835840,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "smollm3_3b_q4_k_m",
+   "name": "SmolLM3 3B GGUF Q4_K_M",
+   "parameters": 3075098624,
+   "sizeBytes": 1915305312,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m",
+   "name": "Indian-Legal-Qwen2.5-3B GGUF Q4_K_M",
+   "parameters": 3085938688,
+   "sizeBytes": 1929902560,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_m",
+   "name": "Llama-3.2-3B-Instruct GGUF Q4_K_M",
+   "parameters": 3212749888,
+   "sizeBytes": 2019377696,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m",
+   "name": "Qwen2.5-3B-Instruct GGUF Q4_K_M",
+   "parameters": 3397103616,
+   "sizeBytes": 2104932768,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "ibm_granite_granite_4_1_3b_gguf_q4_k_m",
+   "name": "granite-4.1-3b GGUF Q4_K_M",
+   "parameters": 3402836480,
+   "sizeBytes": 2099501664,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "ministral_3_3b_instruct_2512_q4_k_m",
+   "name": "Ministral 3 3B Instruct 2512 GGUF Q4_K_M",
+   "parameters": 3429006336,
+   "sizeBytes": 2147023008,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_phi_3_5_mini_instruct_gguf_q4_k_m",
+   "name": "Phi-3.5-mini-instruct GGUF Q4_K_M",
+   "parameters": 3821079648,
+   "sizeBytes": 2393232672,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_google_gemma_3_4b_it_gguf_q4_k_m",
+   "name": "google gemma-3-4b-it GGUF Q4_K_M",
+   "parameters": 3880099328,
+   "sizeBytes": 2489758112,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen_qwen3_embedding_4b_gguf_q5_0",
+   "name": "Qwen3-Embedding-4B GGUF Q5_0",
+   "parameters": 4021774336,
+   "sizeBytes": 2823134496,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_m",
+   "name": "PopiT-Qwen3-4B-Medical-SFT-1128 GGUF Q4_K_M",
+   "parameters": 4022468096,
+   "sizeBytes": 2497282880,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_qwen3_5_4b_gguf_q4_k_m",
+   "name": "Qwen3.5-4B GGUF Q4_K_M",
+   "parameters": 4205751296,
+   "sizeBytes": 2740937888,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "janhq_jan_v3_5_4b_gguf_q4_k_m",
+   "name": "Jan-v3.5-4B GGUF Q4_K_M",
+   "parameters": 4411424256,
+   "sizeBytes": 2716066656,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "lmstudio_community_gemma_4_e2b_it_gguf_q4_k_m",
+   "name": "gemma-4-E2B-it GGUF Q4_K_M",
+   "parameters": 4647450147,
+   "sizeBytes": 3427877696,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m",
+   "name": "E5-Mistral-7B-Instruct-Embedding GGUF Q4_K_M",
+   "parameters": 7241732096,
+   "sizeBytes": 4368439520,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_mathstral_7b_v0_1_gguf_q4_k_m",
+   "name": "mathstral-7B-v0.1 GGUF Q4_K_M",
+   "parameters": 7248023552,
+   "sizeBytes": 4372811584,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_m",
+   "name": "Mistral-7B-Instruct-v0.3 GGUF Q4_K_M",
+   "parameters": 7248023552,
+   "sizeBytes": 4372811936,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "huatuogpt_o1_7b_q4_k_m",
+   "name": "HuatuoGPT-o1-7B GGUF Q4_K_M",
+   "parameters": 7615616512,
+   "sizeBytes": 4683074720,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_m",
+   "name": "Ministral-8B-Instruct-2410 GGUF Q4_K_M",
+   "parameters": 8019808256,
+   "sizeBytes": 4911500096,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q4_k_m",
+   "name": "Meta-Llama-3-8B-Instruct GGUF Q4_K_M",
+   "parameters": 8030261248,
+   "sizeBytes": 4921246944,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "llama_3_1_8b_instruct_q4_k_m",
+   "name": "Llama 3.1 8B Instruct GGUF Q4_K_M",
+   "parameters": 8030261312,
+   "sizeBytes": 4920739232,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "qwen3_8b_q4_k_m",
+   "name": "Qwen3 8B GGUF Q4_K_M",
+   "parameters": 8190735360,
+   "sizeBytes": 5027783488,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "granite_4_1_8b_q4_k_m",
+   "name": "IBM Granite 4.1 8B GGUF Q4_K_M",
+   "parameters": 8791592960,
+   "sizeBytes": 5347914400,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "deepreinforce_ai_ornith_1_0_9b_gguf_q4_k_m",
+   "name": "Ornith-1.0-9B GGUF Q4_K_M",
+   "parameters": 8953803264,
+   "sizeBytes": 5629108704,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_gemma_2_9b_it_gguf_q4_k_m",
+   "name": "gemma-2-9b-it GGUF Q4_K_M",
+   "parameters": 9241705984,
+   "sizeBytes": 5761057728,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_google_gemma_3_12b_it_gguf_q4_k_m",
+   "name": "google gemma-3-12b-it GGUF Q4_K_M",
+   "parameters": 11765788416,
+   "sizeBytes": 7300575264,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "unsloth_gemma_4_12b_it_gguf_q4_k_m",
+   "name": "gemma-4-12b-it GGUF Q4_K_M",
+   "parameters": 11907350576,
+   "sizeBytes": 7121860000,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "bartowski_mistral_nemo_instruct_2407_gguf_q4_k_m",
+   "name": "Mistral-Nemo-Instruct-2407 GGUF Q4_K_M",
+   "parameters": 12247782400,
+   "sizeBytes": 7477208192,
+   "method": "gguf-tensor-count"
+  },
+  {
+   "id": "ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m",
+   "name": "gemma-4-26B-A4B-it GGUF Q4_K_M",
+   "parameters": 25233142046,
+   "sizeBytes": 16796015136,
+   "method": "gguf-tensor-count"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "id": "gemma_3n_e2b_it_q8_0",
+ "downloadUri": "https://huggingface.co/ggml-org/gemma-3n-E2B-it-GGUF/resolve/989cffaba23976934324f5e3abfabe31b30eb73b/gemma-3n-E2B-it-Q8_0.gguf",
+ "sha256": "038a47c482e7af3009c462b56a7592e1ade3c7862540717aa1d9dee1760c337b",
+ "architecture": "gemma3n",
+ "tensorCount": 727,
+ "towers": {},
+ "declaredTasks": [],
+ "recordedAt": "2026-10-09T22:58:29.585Z",
+ "recordedBy": "tools/modality-claim-gate.mjs --write"
+}

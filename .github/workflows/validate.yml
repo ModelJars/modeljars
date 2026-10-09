@@ -93,6 +93,9 @@ jobs:
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
 
+      - name: Verify non-text modality claims against the artifacts
+        run: npm run catalog:modality
+
       - name: Verify qualification manifests advance generatedAt
         env:
           COMPARISON: ${{ steps.remote-catalog.outputs.comparison }}

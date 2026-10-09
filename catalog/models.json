@@ -7623,10 +7623,7 @@
       "licenseUri": "https://ai.google.dev/gemma/terms",
       "capabilities": [
         "text-generation",
-        "chat",
-        "image-understanding",
-        "audio-understanding",
-        "video-understanding"
+        "chat"
       ],
       "features": [
         "q8-0",

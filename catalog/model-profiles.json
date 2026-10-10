@@ -9720,6 +9720,11 @@
       "memoryFit": "not applicable: no generation KV cache"
     },
     {
+      "modelId": "modeljars_granite_4_1_3b_answerability_alora_integrallis_f32",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",

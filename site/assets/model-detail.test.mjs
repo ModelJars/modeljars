@@ -32,7 +32,7 @@ test("extracts generated model route identifiers", () => {
 test("renders build-tool snippets from marker coordinates", () => {
   // The runtime coordinate's version is asserted by shape, not by value: pinning it here is what let
   // the site advertise 0.1.39 while 0.1.54 was released, because shipping a release never failed a
-  // test. tools/verify-site-version.mjs checks the value against the newest v* tag at deploy time.
+  // test. tools/verify-site-version.mjs checks the value against Maven Central at deploy time.
   // The marker coordinate below IS pinned, because it comes from this test's own fixture.
   assert.match(
     gradleSnippet(coordinate),

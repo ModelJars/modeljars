@@ -120,6 +120,14 @@ jobs:
       - name: Install catalog tooling
         run: npm ci
 
+      - name: Test catalog and dependency guards
+        run: |
+          npm test
+          npm run catalog:profiles:check
+          python3 -m unittest discover -s tools/tests -p 'test_*.py'
+          python3 scripts/test-dependency-policy.py
+          python3 scripts/test-published-consumers.py
+
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions
 
@@ -139,6 +147,9 @@ jobs:
           verifyQwenChatToolsPublication
           verifyGraniteAnswerabilityPublication
           verifyCatalog
+          verifyQualificationRuntimeCompatibility
+          verifyReleaseTrain
+          verifyPublishedConsumerGraph
           verifyRemoteCatalogMetadata
           publishToMavenLocal
 

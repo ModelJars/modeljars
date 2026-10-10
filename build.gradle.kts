@@ -3430,6 +3430,9 @@ allprojects {
             .get()
 }
 
+val releaseDependencyPolicy = JsonSlurper().parse(file("gradle/dependency-policy.json")) as Map<*, *>
+val sharedJacksonVersion = releaseDependencyPolicy["jacksonBom"] as String
+
 val modelsVersion = providers.gradleProperty("modelsVersion").get()
 val springAiVersion = providers.gradleProperty("springAiVersion").get()
 val springBootVersion = providers.gradleProperty("springBootVersion").get()
@@ -3837,7 +3840,7 @@ project(":modeljars-cli") {
         implementation(project(":modeljars-core"))
         implementation("info.picocli:picocli:4.7.7")
         implementation("info.picocli:picocli-shell-jline3:4.7.7")
-        implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
+        implementation("com.fasterxml.jackson.core:jackson-databind:$sharedJacksonVersion")
         annotationProcessor("info.picocli:picocli-codegen:4.7.7")
         runtimeOnly(project(":modeljars-catalog"))
         // Generated Spring AI and Spring Boot programs are compiled in-test against the real
@@ -4066,7 +4069,7 @@ project(":modeljars") {
         testImplementation(project(":modeljars-catalog"))
         // The Jackson line the Models runtime already resolves; compares tool-call arguments as
         // JSON values in the chat-template round-trip gate.
-        testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.4")
+        testImplementation("com.fasterxml.jackson.core:jackson-databind:$sharedJacksonVersion")
         testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
         testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")
     }
@@ -6498,3 +6501,52 @@ tasks.register<Zip>("markerReleaseBundleZip") {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
 }
+
+// Catalog support is checked against resolved binaries, independently of sibling source trees.
+val runtimeSupportInput = layout.buildDirectory.file("reports/runtime-support/resolved.json")
+project(":modeljars") {
+    val writeRuntimeSupportInput by tasks.registering {
+        outputs.file(runtimeSupportInput)
+        outputs.upToDateWhen { false }
+        doLast {
+            val artifacts = configurations.getByName("runtimeClasspath")
+                .resolvedConfiguration.resolvedArtifacts.map {
+                    mapOf("group" to it.moduleVersion.id.group,
+                        "module" to it.moduleVersion.id.name,
+                        "version" to it.moduleVersion.id.version,
+                        "file" to it.file.absolutePath)
+                }
+            val output = runtimeSupportInput.get().asFile
+            output.parentFile.mkdirs()
+            output.writeText(JsonOutput.toJson(artifacts) + "\n")
+        }
+    }
+}
+val verifyQualificationRuntimeCompatibility by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Verify catalog capability requirements against the resolved Models artifacts"
+    dependsOn(":modeljars:writeRuntimeSupportInput")
+    commandLine("python3", "tools/runtime-support.py", "--resolved", runtimeSupportInput.get().asFile,
+        "--output", layout.buildDirectory.file("reports/runtime-support/verified.json").get().asFile)
+}
+tasks.named("check") { dependsOn(verifyQualificationRuntimeCompatibility) }
+tasks.named("verifyReleaseBundle") { dependsOn(verifyQualificationRuntimeCompatibility) }
+
+extra["javaAIFamily"] = "modeljars"
+extra["javaAIReleaseVersions"] = mapOf(
+    "vectors" to providers.gradleProperty("vectorsVersion").get(),
+    "models" to modelsVersion,
+    "modeljars" to project.version.toString()
+)
+extra["javaAIPublishedProjects"] = releasePublicationTasks.map { project(":" + it.split(':')[1]) }.distinct()
+apply(from = "gradle/dependency-policy.gradle")
+subprojects {
+    dependencyLocking { lockAllConfigurations() }
+}
+val verifyPublishedConsumerGraph by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Consume each release publication with clean Maven and Gradle graphs"
+    dependsOn("verifyReleaseTrain", releasePublicationTasks)
+    commandLine("python3", "scripts/verify-maven-runtime.py", "--repository", "build/central-repository")
+}
+tasks.named("verifyReleaseBundle") { dependsOn(verifyPublishedConsumerGraph) }

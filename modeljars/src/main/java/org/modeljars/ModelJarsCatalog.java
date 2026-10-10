@@ -32,9 +32,9 @@ import java.util.Set;
  * Reports the ModelJars a machine can actually run, so callers do not describe them by hand.
  *
  * <p>Every figure here was measured rather than declared. Throughput comes from the performance
- * profile whose selector matches this CPU, core count, JDK and vector width; quality comes from the
- * RAG qualification; size and context come from the artifact. A caller writing these out would be
- * guessing, and the guesses would be about somebody else's hardware.
+ * profile whose selector matches this CPU, core count, JDK and vector width; quality comes from
+ * task-specific qualifications; size and context come from the artifact. A caller writing these out
+ * would be guessing, and the guesses would be about somebody else's hardware.
  *
  * <p>Only cached artifacts are reported. A catalogued model that has not been downloaded could be
  * installed on demand, but a router picking one would trigger a multi-gigabyte download inside what
@@ -219,35 +219,12 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
   }
 
   /**
-   * Measured competence, applied to every task the model claims.
-   *
-   * <p>Reads {@code rawCorrectAnswerRate} rather than {@code correctAnswerRate}. The latter is
-   * policy-adjusted — a correct refusal to answer counts as correct — and is 1.0 for every model in
-   * the catalogue, so it cannot rank anything. The raw rate spreads from 0.0 to 0.78 across the
-   * same models, which is the difference between a quality dimension that discriminates and one
-   * that silently tells the router every model is perfect.
-   *
-   * <p>One RAG question-answering workload is a poor proxy for a code or SQL specialist, so this
-   * understates them. That is the safe direction: an understated model loses ties to models with
-   * genuinely measured per-task quality, where an overstated one would win work it cannot do. Real
-   * per-task figures need per-task qualification.
+   * Task-specific measurements only. RAG answer correctness does not measure general chat, coding,
+   * reasoning, SQL or translation, and is not transferred to those router task labels. Missing
+   * measurements remain absent so the router can distinguish unknown from measured zero.
    */
-  private Map<String, Double> qualityFor(ModelJarDescriptor descriptor, Set<String> tags) {
-    double best = 0.0;
-    for (ModelRagQualification qualification : qualifications.qualificationsFor(descriptor)) {
-      if (qualification.qualified()) {
-        best = Math.max(best, qualification.rawCorrectAnswerRate());
-      }
-    }
-    if (tags.isEmpty()) {
-      return Map.of();
-    }
+  Map<String, Double> qualityFor(ModelJarDescriptor descriptor, Set<String> tags) {
     Map<String, Double> quality = new HashMap<>();
-    if (best > 0.0) {
-      for (String tag : tags) {
-        quality.put(tag, best);
-      }
-    }
     if (tags.contains("tool-use")) {
       for (ModelToolQualification qualification :
           toolQualifications.qualificationsFor(descriptor)) {

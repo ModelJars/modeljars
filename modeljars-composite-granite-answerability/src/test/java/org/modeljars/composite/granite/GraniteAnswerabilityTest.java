@@ -65,9 +65,20 @@ class GraniteAnswerabilityTest {
   }
 
   @Test
-  void retainsNoCleanHostMeasurementsUntilTheCompositionRunHasHappened() {
-    // TODO-COMPOSITION-RUN: replace with the measured Qualification once the clean host has run.
+  void retainsExactCleanHostMeasurementsWithoutInventingPeakRss() {
+    // The legacy shape requires an RSS measurement this run did not record.
     assertTrue(GraniteAnswerability.QUALIFICATION.isEmpty());
+    var evidence = GraniteAnswerability.CLEAN_HOST_QUALIFICATION;
+    assertEquals("0.3.42", evidence.modelsVersion());
+    assertEquals("0.1.47", evidence.modeljarsVersion());
+    assertEquals(6, evidence.casesPerArm());
+    assertEquals(17897.5, evidence.controlMedianMillis());
+    assertEquals(11661.0, evidence.compositeMedianMillis());
+    assertEquals(131104000L, evidence.sharedUniqueStateBytes());
+    assertEquals(251719680L, evidence.recomputedUniqueStateBytes());
+    assertEquals(
+        "76e89e9b6056a80c9b475a508dc7abb92aab63220d812cf29c485947ed5123f8",
+        evidence.reportSha256());
   }
 
   @Test

@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "minimumModelsVersion": "0.3.56",
+  "basis": "Support floor for this catalog: includes LFM2 sequence encoding (0.3.55) and Q4_1 projections (0.3.56). Class availability is a structural check; numerical qualification remains separate.",
+  "workloads": {
+    "qualifications.json": {
+      "backends": [
+        "pure-java",
+        "rust-ffm"
+      ],
+      "classes": [
+        "backend-java:com.integrallis.models.backend.purejava.PureJavaBackend"
+      ],
+      "architectures": {
+        "gemma2": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "gemma3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "gemma4": [
+          "backend-java:com.integrallis.models.backend.purejava.gemma4.Gemma4ForwardPass"
+        ],
+        "granite": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "llama": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "mistral3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "mobilemoe": [
+          "backend-java:com.integrallis.models.backend.purejava.mobilemoe.MobileMoeForwardPass"
+        ],
+        "phi3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "qwen2": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "qwen3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "qwen35": [
+          "backend-java:com.integrallis.models.backend.purejava.qwen35.Qwen35ForwardPass"
+        ],
+        "smollm3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ]
+      }
+    },
+    "embedding-qualifications.json": {
+      "backends": [
+        "pure-java"
+      ],
+      "classes": [
+        "backend-java:com.integrallis.models.backend.purejava.GgufEmbeddingBackend"
+      ],
+      "architectures": {
+        "bert": [
+          "backend-java:com.integrallis.models.backend.purejava.bert.BertForwardPass"
+        ],
+        "gemma-embedding": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.EncoderForwardPass"
+        ],
+        "lfm2": [
+          "backend-java:com.integrallis.models.backend.purejava.lfm2.Lfm2SequenceEncoder"
+        ],
+        "llama": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "nomic-bert": [
+          "backend-java:com.integrallis.models.backend.purejava.bert.BertForwardPass"
+        ],
+        "qwen3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ]
+      }
+    },
+    "reranking-qualifications.json": {
+      "backends": [
+        "pure-java"
+      ],
+      "classes": [
+        "backend-java:com.integrallis.models.backend.purejava.GgufRerankingModel",
+        "backend-java:com.integrallis.models.backend.purejava.SafetensorsRerankingModel"
+      ],
+      "architectures": {
+        "bert": [
+          "backend-java:com.integrallis.models.backend.purejava.bert.BertForwardPass"
+        ],
+        "deberta-v2": [
+          "backend-java:com.integrallis.models.backend.purejava.deberta.DebertaV2ForwardPass"
+        ]
+      }
+    },
+    "tool-qualifications.json": {
+      "backends": [
+        "pure-java",
+        "rust-ffm"
+      ],
+      "classes": [
+        "backend-java:com.integrallis.models.backend.purejava.PureJavaBackend"
+      ],
+      "architectures": {
+        "needle2": [
+          "backend-java:com.integrallis.models.backend.purejava.cact.Needle2ForwardPass"
+        ],
+        "qwen3": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ]
+      }
+    },
+    "speech-qualifications.json": {
+      "backends": [
+        "pure-java",
+        "rust-ffm"
+      ],
+      "classes": [
+        "models-audio:com.integrallis.models.audio.SopranoTextToSpeechModel"
+      ],
+      "architectures": {
+        "soprano": []
+      }
+    },
+    "component-qualifications.json": {
+      "backends": [
+        "rust-ffm"
+      ],
+      "classes": [
+        "models-runtime:com.integrallis.models.runtime.ActivatedToolCallingModel"
+      ],
+      "architectures": {
+        "granite-alora": [
+          "backend-java:com.integrallis.models.backend.purejava.lora.ActivatedLoraAdapter"
+        ]
+      }
+    }
+  }
+}

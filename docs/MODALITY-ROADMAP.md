@@ -113,8 +113,9 @@ Projector, `general.architecture = clip`, 316 tensors, roots `v` (312) and `mm` 
 
 Once a vision tower and projector work, OCR is **a catalog entry and a metric**, not another
 runtime project. Verified available with projectors: `ggml-org/GLM-OCR-GGUF`
-(`mmproj-GLM-OCR-Q8_0.gguf`, 348 tensors, MIT), `datalab-to/surya-ocr-2-gguf`, and the LightOnOCR-3
-family whose 0.8B/4B use the Qwen3.5 VL architecture.
+(`mmproj-GLM-OCR-Q8_0.gguf`, 348 tensors, MIT) and `datalab-to/surya-ocr-2-gguf`.
+LightOnOCR-3 is also a candidate: its 0.8B/4B models use the Qwen3.5 VL architecture,
+but GGUF and projector availability remain unverified in this inventory.
 
 | # | work | gate |
 | --- | --- | --- |

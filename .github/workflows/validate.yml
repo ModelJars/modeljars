@@ -84,8 +84,19 @@ jobs:
       - name: Install catalog tooling
         run: npm ci
 
+      - name: Test runtime support rejection cases
+        run: python3 -m unittest discover -s tools/tests -p 'test_*.py'
+
+      - name: Test dependency policy rejection cases
+        run: |
+          python3 scripts/test-dependency-policy.py
+          python3 scripts/test-published-consumers.py
+
       - name: Test catalog tooling and site modules
         run: npm test
+
+      - name: Verify generated performance profiles match pinned evidence
+        run: npm run catalog:profiles:check
 
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions
@@ -111,7 +122,19 @@ jobs:
         run: >
           ./gradlew --no-daemon
           spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication
+          verifyQualificationRuntimeCompatibility verifyReleaseTrain verifyPublishedConsumerGraph
           verifyQwenChatToolsPublication verifyGraniteAnswerabilityPublication generateSite
+
+      - name: Retain dependency and consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-dependency-consumers
+          path: |
+            build/reports/release-dependencies/
+            build/reports/runtime-support/
+            build/published-consumers/
+          retention-days: 30
 
       - name: Exercise the qualified mxbai bundle through ModelJars
         run: >

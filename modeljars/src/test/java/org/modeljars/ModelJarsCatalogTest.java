@@ -88,14 +88,44 @@ class ModelJarsCatalogTest {
   }
 
   @Test
-  void qualityUsesTheRateThatActuallyDiscriminates() {
-    // correctAnswerRate is policy-adjusted and reads 1.0 for every model in the catalogue, so a
-    // catalog built on it would tell the router every model is perfect at everything it claims.
-    for (DiscoveredModel model : new ModelJarsCatalog().discover()) {
-      for (Double score : model.quality().values()) {
-        assertTrue(score > 0.0 && score <= 1.0, model.id() + " quality " + score);
+  void ragQualificationsDoNotInventUnrelatedTaskQuality() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+    ModelRagQualificationRegistry rag = ModelRagQualificationRegistry.fromClasspath();
+    ModelToolQualificationRegistry tools = ModelToolQualificationRegistry.fromClasspath();
+    ModelJarsCatalog catalog = new ModelJarsCatalog();
+    java.util.Set<String> unrelated =
+        java.util.Set.of("chat", "code", "math", "reasoning", "sql", "translation");
+    int measuredRagModels = 0;
+    int measuredToolModels = 0;
+    for (ModelJarDescriptor descriptor : registry.descriptors()) {
+      if (rag.qualificationsFor(descriptor).stream()
+          .anyMatch(q -> q.qualified() && q.rawCorrectAnswerRate() > 0)) {
+        measuredRagModels++;
+        assertTrue(catalog.qualityFor(descriptor, unrelated).isEmpty(), descriptor.alias());
+      }
+      var qualifiedTools =
+          tools.qualificationsFor(descriptor).stream()
+              .filter(ModelToolQualification::qualified)
+              .toList();
+      var quality = catalog.qualityFor(descriptor, java.util.Set.of("tool-use"));
+      if (qualifiedTools.isEmpty()) {
+        assertTrue(quality.isEmpty(), descriptor.alias());
+      } else {
+        measuredToolModels++;
+        double expected =
+            qualifiedTools.stream()
+                .mapToDouble(
+                    q ->
+                        Math.min(
+                            Math.min(q.toolSelectionExactRate(), q.schemaValidityRate()),
+                            Math.min(q.expectedArgumentAccuracy(), q.refusalAccuracy())))
+                .max()
+                .orElseThrow();
+        assertEquals(java.util.Map.of("tool-use", expected), quality, descriptor.alias());
       }
     }
+    assertTrue(measuredRagModels > 0, "test must exercise actual RAG qualifications");
+    assertTrue(measuredToolModels > 0, "test must exercise actual tool qualifications");
   }
 
   @Test

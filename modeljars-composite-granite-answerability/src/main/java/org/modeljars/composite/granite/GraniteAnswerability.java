@@ -21,6 +21,7 @@ import com.integrallis.models.runtime.ActivatedToolCallingModel;
 import com.integrallis.models.runtime.ActivatedToolTurn;
 import com.integrallis.models.runtime.TokenConstraint;
 import com.integrallis.models.runtime.chat.GraniteDocumentsPrompt;
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,14 +76,76 @@ public final class GraniteAnswerability {
       SamplingOptions.builder().temperature(0).maxTokens(MAX_COMPLETION_TOKENS).build();
 
   /**
-   * Controlled clean-host qualification evidence for this exact topology and artifact pair.
+   * Legacy measurement shape requiring whole-process peak RSS and integer millisecond medians.
    *
-   * <p>TODO-COMPOSITION-RUN: empty until the composition clean host has run. Fill it from {@code
-   * composition-clean-host-run.json} with exactly the numbers the catalog entry and the evidence
-   * report bind, and flip {@code retainsTheCleanHostMeasurements} in the module's tests from
-   * asserting absence to asserting those values.
+   * <p>The matching clean-host run exists, but did not measure peak RSS and reported a fractional
+   * control median. It cannot populate this shape without inventing or truncating evidence. Use
+   * {@link #CLEAN_HOST_QUALIFICATION} for its exact measurements. The larger 4K campaign advertised
+   * by the catalog is a different workload and must not supply the missing fields here.
    */
   public static final Optional<Qualification> QUALIFICATION = Optional.empty();
+
+  /**
+   * Historical clean-host evidence for these exact members and {@link #WINDOW_SHA256}. This records
+   * the tested releases; it does not claim a new run for the current library release.
+   */
+  public static final CleanHostQualification CLEAN_HOST_QUALIFICATION =
+      new CleanHostQualification(
+          "0.3.42",
+          "0.1.47",
+          6,
+          17897.5,
+          11661.0,
+          131104000L,
+          251719680L,
+          URI.create(
+              "https://raw.githubusercontent.com/integrallis/models/"
+                  + "3ca004e894832e46e937c03c3a86a820d4f76015/benchmark-results/"
+                  + "2026-09-16-granite-answerability-alora/release-pilot2/"
+                  + "composition-report/composition-clean-host-run.json"),
+          "76e89e9b6056a80c9b475a508dc7abb92aab63220d812cf29c485947ed5123f8");
+
+  /**
+   * Exact clean-host measurements, with absent whole-process RSS left unreported.
+   *
+   * @param modelsVersion released Models version exercised
+   * @param modeljarsVersion released ModelJars version exercised
+   * @param casesPerArm frozen-window cases in each arm
+   * @param controlMedianMillis control latency median in milliseconds
+   * @param compositeMedianMillis shared-prefix latency median in milliseconds
+   * @param sharedUniqueStateBytes median unique inference-state bytes with sharing
+   * @param recomputedUniqueStateBytes median unique inference-state bytes without sharing
+   * @param reportUri immutable report binding the window, members and configuration
+   * @param reportSha256 SHA-256 of the report bytes
+   */
+  public record CleanHostQualification(
+      String modelsVersion,
+      String modeljarsVersion,
+      int casesPerArm,
+      double controlMedianMillis,
+      double compositeMedianMillis,
+      long sharedUniqueStateBytes,
+      long recomputedUniqueStateBytes,
+      URI reportUri,
+      String reportSha256) {
+    /** Validates that the recorded measurements and provenance are complete. */
+    public CleanHostQualification {
+      Objects.requireNonNull(modelsVersion, "modelsVersion");
+      Objects.requireNonNull(modeljarsVersion, "modeljarsVersion");
+      Objects.requireNonNull(reportUri, "reportUri");
+      Objects.requireNonNull(reportSha256, "reportSha256");
+      if (casesPerArm <= 0
+          || !Double.isFinite(controlMedianMillis)
+          || !Double.isFinite(compositeMedianMillis)
+          || controlMedianMillis <= 0
+          || compositeMedianMillis <= 0
+          || sharedUniqueStateBytes <= 0
+          || recomputedUniqueStateBytes <= 0
+          || !reportSha256.matches("[a-f0-9]{64}")) {
+        throw new IllegalArgumentException("clean-host measurements and report hash must be valid");
+      }
+    }
+  }
 
   private GraniteAnswerability() {}
 

@@ -6066,9 +6066,10 @@ val verifyInferenceArchitecture =
             listOf(
                 file("modeljars/src/main/java"),
                 file("modeljars-core/src/main/java"),
-                file("modeljars-composite-qwen3-chat-tools/src/main/java"),
-                file("modeljars-composite-granite-answerability/src/main/java"),
-            )
+            ) +
+                subprojects
+                    .filter { it.name.startsWith("modeljars-composite-") }
+                    .map { it.file("src/main/java") }
         inputs.files(runtimeSourceDirectories)
 
         doLast {

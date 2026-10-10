@@ -12899,6 +12899,7 @@
       "localPath": "${user.home}/.modeljars/models/granite-4.1-3b-answerability-alora-integrallis/adapter_model.safetensors",
       "sha256": "67533dff14cd0cfa9ae0d00e83a9955226426ff1f98f1fd28790b2fd8757eea6",
       "sizeBytes": 124593064,
+      "catalogPublishedAt": "2026-09-17T20:38:28Z",
       "license": "Apache-2.0",
       "licenseUri": "https://raw.githubusercontent.com/integrallis/models/ec56bc99a04457df8274c84c1f4ff72dc4167d9d/benchmark-results/2026-09-16-granite-answerability-alora/release-pilot2/MODEL_CARD.md",
       "capabilities": [

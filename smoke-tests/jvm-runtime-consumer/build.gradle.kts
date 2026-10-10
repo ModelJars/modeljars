@@ -1,9 +1,16 @@
+import java.util.Properties
+
 plugins {
     application
 }
 
 val modeljarsVersion =
-    providers.gradleProperty("modeljarsVersion").orElse("0.1.39-SNAPSHOT")
+    providers.gradleProperty("modeljarsVersion").orElse(
+        providers.fileContents(layout.projectDirectory.file("../../gradle.properties")).asText.map {
+            Properties().apply { load(it.reader()) }.getProperty("modeljarsVersion")
+                ?: error("The repository must declare modeljarsVersion")
+        },
+    )
 
 dependencies {
     implementation("org.modeljars:modeljars:${modeljarsVersion.get()}")

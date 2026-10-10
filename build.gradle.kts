@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.zip.ZipFile
 import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.xpath.XPathConstants
+import javax.xml.xpath.XPathFactory
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.plugins.ExtensionAware
@@ -29,7 +31,9 @@ import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.plugins.signing.SigningExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
+import org.w3c.dom.Document
 import org.w3c.dom.Element
+import org.w3c.dom.NodeList
 
 plugins {
     `java-library`
@@ -42,6 +46,10 @@ val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
 val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v6"
 val PRODUCTION_TOOL_POLICY_VERSION = "needle2-tool-conformance-v2"
+
+fun directPomDependencies(document: Document): NodeList =
+    XPathFactory.newInstance().newXPath()
+        .evaluate("/project/dependencies/dependency", document, XPathConstants.NODESET) as NodeList
 
 fun isNormalizedRepositoryRelativePath(path: String): Boolean {
     if (
@@ -4318,7 +4326,7 @@ val verifyGraniteAnswerabilityPublication =
             require(projectElement.childText("version") == project.version.toString()) {
                 "Granite answerability composite version must match the ModelJars release"
             }
-            val dependencies = document.getElementsByTagName("dependency")
+            val dependencies = directPomDependencies(document)
             val coordinates =
                 (0 until dependencies.length)
                     .map { dependencies.item(it) as Element }
@@ -4384,7 +4392,7 @@ val verifyJvmRuntimePublication =
                 "JVM Runtime version must match the project version"
             }
 
-            val dependencies = document.getElementsByTagName("dependency")
+            val dependencies = directPomDependencies(document)
             require(dependencies.length == 6) {
                 "JVM Runtime must publish ModelJars Core, Models, Decisions, both execution " +
                     "backends, and audio support"
@@ -4415,6 +4423,17 @@ val verifyJvmRuntimePublication =
             }
             require(modelsDependency.childText("scope") == "compile") {
                 "JVM Runtime must expose Models in Maven compile scope"
+            }
+
+            val decisionsDependency = dependency("models-decisions")
+            require(decisionsDependency.childText("groupId") == "com.integrallis") {
+                "JVM Runtime decisions support must come from the Models project"
+            }
+            require(decisionsDependency.childText("version") == modelsVersion) {
+                "JVM Runtime decisions support and Models versions must match"
+            }
+            require(decisionsDependency.childText("scope") == "compile") {
+                "JVM Runtime must expose decisions support in Maven compile scope"
             }
 
             val javaBackendDependency = dependency("backend-java")
@@ -4479,7 +4498,7 @@ val verifyQwenChatToolsPublication =
             require(projectElement.childText("version") == project.version.toString()) {
                 "Qwen chat/tools composite version must match the ModelJars release"
             }
-            val dependencies = document.getElementsByTagName("dependency")
+            val dependencies = directPomDependencies(document)
             val coordinates =
                 (0 until dependencies.length)
                     .map { dependencies.item(it) as Element }

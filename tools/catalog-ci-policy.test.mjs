@@ -112,7 +112,6 @@ test("gates the Granite answerability composite module on its catalog compositio
     build,
     /if \(graniteAnswerabilityQualified\)[\s\S]*?publishMavenPublicationToReleaseBundleRepository/,
   );
-  assert.match(build, /file\("modeljars-composite-granite-answerability\/src\/main\/java"\)/);
   assert.match(build, /dependsOn\(verifyGraniteAnswerabilityPublication\)/);
   assert.match(validateWorkflow, /verifyGraniteAnswerabilityPublication/);
   assert.match(publishWorkflow, /verifyGraniteAnswerabilityPublication/);

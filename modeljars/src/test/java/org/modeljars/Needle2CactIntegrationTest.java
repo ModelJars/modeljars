@@ -104,7 +104,7 @@ class Needle2CactIntegrationTest {
   }
 
   @Test
-  void executesTheUsersWeatherToolThroughSpringAiChatClient() {
+  void returnsExplicitlyRequestedRawWeatherToolResultsThroughSpringAiChatClient() {
     String configured = System.getProperty(ARTIFACT_PROPERTY, "").trim();
     Assumptions.assumeFalse(configured.isEmpty(), () -> "Set -D" + ARTIFACT_PROPERTY);
     Path artifact = Path.of(configured).toAbsolutePath().normalize();
@@ -127,11 +127,12 @@ class Needle2CactIntegrationTest {
             MODEL, ModelLoadOptions.builder().backend(ModelBackend.JAVA).offline(true).build())) {
       var model =
           new ModelsSpringAiChatModel(
-              runtime.model(),
-              runtime.descriptor().alias(),
-              runtime.chatTemplate(),
-              defaults,
-              runtime.descriptor().capabilities());
+                  runtime.model(),
+                  runtime.descriptor().alias(),
+                  runtime.chatTemplate(),
+                  defaults,
+                  runtime.descriptor().capabilities())
+              .withRawToolResults();
       var chatClient =
           ChatClient.builder(model)
               .defaultTools(weatherTools)

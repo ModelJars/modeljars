@@ -15792,7 +15792,7 @@
       "sourceUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
       "downloadUri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/resolve/7ae557604adf67be50417f59c2c2f167def9a775/model.safetensors",
       "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
-      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct.bf16:2.5.0-bf16.1",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct.bf16:2.5.0-bf16.2",
       "modelVersion": "2.5.0",
       "variant": "bf16",
       "format": "safetensors",

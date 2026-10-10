@@ -229,7 +229,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/modeljars.rb
-          git commit -m "modeljars ${VERSION}" && git push || echo "No formula change"
+          if git diff --cached --quiet; then
+            echo "Formula already matches modeljars ${VERSION}"
+          else
+            git commit -m "modeljars ${VERSION}"
+            git push
+          fi
 
       - name: Publish Scoop manifest
         if: steps.context.outputs.ready == 'true'
@@ -245,7 +250,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add bucket/modeljars.json
-          git commit -m "modeljars ${VERSION}" && git push || echo "No manifest change"
+          if git diff --cached --quiet; then
+            echo "Manifest already matches modeljars ${VERSION}"
+          else
+            git commit -m "modeljars ${VERSION}"
+            git push
+          fi
 
   publish-github-package:
     name: Publish CLI JAR to GitHub Packages

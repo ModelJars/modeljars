@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-06T18:52:25Z",
+  "generatedAt": "2026-10-10T22:02:17Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "1955b55ba16f9a2cd90655be3ac7323f3efa452a",
   "targetQualifiedModels": 25,
@@ -2571,11 +2571,13 @@
         "configuration": "library-defaults",
         "backend": "pure-java",
         "artifactSha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
-        "report": "benchmark-results/certified-20260825/rag/qwen2.5-0.5b-instruct-bf16/default-correctness/models-pure-java.json",
-        "reportSha256": "a62d9b666c1e2b2ac81f1c35531af38d8b5eaaaaaaaf15c12d95ddd9b4d51871",
+        "report": "benchmark-results/2026-10-10-release-0357/qwen-bf16/default-correctness/models-pure-java.json",
+        "reportSha256": "0c32dbfdbf3857eb0cd5a897aa666bdcc68177d6f58527360fa10223a46fa266",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "9ca046e0d6eacb4aced8ece99307a3436d2bf260",
+        "backendVersion": "models@0.3.57+7bde1c2ef31c"
       },
       "attempts": 27,
       "p95RetrievalMillis": 1.7634085,

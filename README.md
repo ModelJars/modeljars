@@ -661,6 +661,11 @@ try (var runtime = ModelJars.openRuntime(MODEL)) {
 The current Apple Foundation Models bridge does not expose Apple's guided-generation or tool API,
 so registering framework tools with that backend is not yet supported.
 
+Needle 2 selects tools but cannot synthesize a conversational answer from their results. Configure
+`withToolResultRenderer(toolName, Result.class, renderer)` on its adapter to render each typed
+result, or explicitly choose `withRawToolResults()` for serialized machine-to-machine responses.
+The generated Needle 2 Spring AI demo includes typed result renderers.
+
 Use `GroundedRagPrompt.prepare(...)` to screen retrieved evidence and construct the canonical prompt.
 Place its `instructions()` in the framework system message and its `request()` in the user message,
 then render both with `runtime.chatTemplate()`.

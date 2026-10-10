@@ -6526,10 +6526,12 @@ tasks.register<Zip>("markerReleaseBundleZip") {
 val runtimeSupportInput = layout.buildDirectory.file("reports/runtime-support/resolved.json")
 project(":modeljars") {
     val writeRuntimeSupportInput by tasks.registering {
+        val runtimeClasspath = configurations.named("runtimeClasspath")
+        inputs.files(runtimeClasspath).withPropertyName("runtimeClasspath")
         outputs.file(runtimeSupportInput)
         outputs.upToDateWhen { false }
         doLast {
-            val artifacts = configurations.getByName("runtimeClasspath")
+            val artifacts = runtimeClasspath.get()
                 .resolvedConfiguration.resolvedArtifacts.map {
                     mapOf("group" to it.moduleVersion.id.group,
                         "module" to it.moduleVersion.id.name,

@@ -22473,6 +22473,149 @@
         "embeddings",
         "retrieval"
       ]
+    },
+    {
+      "id": "king3djbl_nexus_science_gguf_q4_k_m",
+      "name": "nexus-science GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for nexus-science, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://King3Djbl/nexus-science-GGUF",
+      "sourceUri": "https://huggingface.co/King3Djbl/nexus-science-GGUF",
+      "downloadUri": "https://huggingface.co/King3Djbl/nexus-science-GGUF/resolve/dfae41584b781258b4a71a2b364a99a30c2c7c51/nexus-science-q4_k_m.gguf",
+      "revision": "dfae41584b781258b4a71a2b364a99a30c2c7c51",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-science-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nexus-science-q4_k_m.gguf",
+      "sha256": "cca4894934188d8537e92cd3e3432fb38f2eb83f6771ad199aa1d2aac8b610dc",
+      "sizeBytes": 986045472,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "science"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "king3djbl_nexus_security_gguf_q4_k_m",
+      "name": "nexus-security GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for nexus-security, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://King3Djbl/nexus-security-GGUF",
+      "sourceUri": "https://huggingface.co/King3Djbl/nexus-security-GGUF",
+      "downloadUri": "https://huggingface.co/King3Djbl/nexus-security-GGUF/resolve/4070c50ee5efb5a7b1e0881dbb5f17096cad6d25/nexus-security-q4_k_m.gguf",
+      "revision": "4070c50ee5efb5a7b1e0881dbb5f17096cad6d25",
+      "markerCoordinate": "org.modeljars.huggingface:king3djbl.nexus-security-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/nexus-security-q4_k_m.gguf",
+      "sha256": "85b637c98c150cb7b80e606e7f31ec1719682fb5a8b2db88657d8048c1c33ca6",
+      "sizeBytes": 986045600,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "security"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 32768,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
+    },
+    {
+      "id": "mradermacher_mixture_summarizer_qwen3_5_2b_gguf_q4_k_m",
+      "name": "Mixture-Summarizer-Qwen3.5-2B GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Mixture-Summarizer-Qwen3.5-2B, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://mradermacher/Mixture-Summarizer-Qwen3.5-2B-GGUF",
+      "sourceUri": "https://huggingface.co/mradermacher/Mixture-Summarizer-Qwen3.5-2B-GGUF",
+      "downloadUri": "https://huggingface.co/mradermacher/Mixture-Summarizer-Qwen3.5-2B-GGUF/resolve/a52be4bdaae6bf2ed32fed4af19dfaf330fcb372/Mixture-Summarizer-Qwen3.5-2B.Q4_K_M.gguf",
+      "revision": "a52be4bdaae6bf2ed32fed4af19dfaf330fcb372",
+      "markerCoordinate": "org.modeljars.huggingface:mradermacher.mixture-summarizer-qwen3.5-2b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Mixture-Summarizer-Qwen3.5-2B.Q4_K_M.gguf",
+      "sha256": "ab10ae99794cdb461fb468c880fb354ba55d55d0b4bc1762364ac4715deef6a7",
+      "sizeBytes": 1274396864,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "summarization"
+      ],
+      "dimensions": {
+        "parameterCount": 1881825088,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 24,
+        "attentionHeadCount": 8,
+        "keyValueHeadCount": 2,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 6144,
+        "attentionBlockCount": 6
+      }
     }
   ]
 }

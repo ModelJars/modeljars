@@ -6,8 +6,8 @@
 // it because nothing compared the two -- the version is written by hand in site/index.html and the
 // release version comes from the newest v* tag, and no step read both.
 //
-// The tag is the source of truth on purpose: publish.yml derives the release version from it, so this
-// checks the page against the same thing the release does rather than against a second hand-kept copy.
+// Maven Central is the source of truth for a usable released version. A source tag alone does not
+// prove that visitors can resolve the dependency shown on the page.
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 

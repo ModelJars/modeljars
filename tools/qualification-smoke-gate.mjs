@@ -74,6 +74,14 @@ function assertSmokeMetadata(entry) {
   }
   requireNormalizedReportPath(smoke.report, `${label}.report`);
   requireSha(smoke.reportSha256, `${label}.reportSha256`);
+  if (smoke.modelsRevision !== undefined || smoke.backendVersion !== undefined) {
+    if (!GIT_REVISION.test(smoke.modelsRevision ?? "")) {
+      throw new Error(`${label}.modelsRevision must be a 40-character Git commit`);
+    }
+    if (typeof smoke.backendVersion !== "string" || smoke.backendVersion.trim().length === 0) {
+      throw new Error(`${label}.backendVersion is required with a separate smoke revision`);
+    }
+  }
   if (!Number.isSafeInteger(smoke.totalAttempts) || smoke.totalAttempts < 1) {
     throw new Error(`${label}.totalAttempts must be a positive integer`);
   }
@@ -116,12 +124,15 @@ function assertReport(entry, smoke, bytes) {
       `${qualificationKey(entry)} default smoke must use library defaults, exercise the prefix cache, and pass every attempt`,
     );
   }
+  if (smoke.backendVersion !== undefined && report.backendVersion !== smoke.backendVersion) {
+    throw new Error(`${qualificationKey(entry)} default smoke backendVersion does not match its binding`);
+  }
   if (
     entry.backend === "rust-ffm" &&
-    report.backendDiagnostics?.environment?.["native-quantized-decode"] !== "false"
+    report.backendDiagnostics?.environment?.["native-quantized-decode"] !== "true"
   ) {
     throw new Error(
-      `${qualificationKey(entry)} default smoke enabled models.native.quantizedDecode`,
+      `${qualificationKey(entry)} default smoke must use the current native-quantized-decode=true default`,
     );
   }
 }
@@ -147,13 +158,17 @@ export async function validateQualificationSmokeGate({
   for (const entry of currentQualifications.entries) {
     if (entry.qualified !== true || !catalogIds.has(entry.modelId)) continue;
     const prior = previous.get(qualificationKey(entry));
-    if (prior !== undefined && evidenceIdentity(prior) === evidenceIdentity(entry)) continue;
+    if (
+      prior !== undefined &&
+      previousQualifications.modelsRevision === currentQualifications.modelsRevision &&
+      evidenceIdentity(prior) === evidenceIdentity(entry)
+    ) continue;
 
     const smoke = assertSmokeMetadata(entry);
     if (loadReport !== undefined) {
       const bytes = await loadReport({
         entry,
-        revision: currentQualifications.modelsRevision,
+        revision: smoke.modelsRevision ?? currentQualifications.modelsRevision,
         report: smoke.report,
       });
       assertReport(entry, smoke, bytes);
@@ -210,7 +225,7 @@ async function main() {
   process.stdout.write(`Validated ${checked.length} new or changed default-configuration smoke(s)\n`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     await main();
   } catch (error) {

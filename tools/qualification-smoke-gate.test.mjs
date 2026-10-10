@@ -55,7 +55,7 @@ function defaultReport(overrides = {}) {
     },
     failures: [],
     backendDiagnostics: {
-      environment: { "native-quantized-decode": "false" },
+      environment: { "native-quantized-decode": "true" },
     },
     ...overrides,
   };
@@ -126,10 +126,10 @@ test("accepts immutable cached RAG evidence produced with library defaults", asy
   assert.deepEqual(checked, [`${modelId}/${backend}`]);
 });
 
-test("rejects smoke evidence that enabled the tuned native decode path", async () => {
+test("rejects smoke evidence from the obsolete non-native default", async () => {
   const report = defaultReport({
     backendDiagnostics: {
-      environment: { "native-quantized-decode": "true" },
+      environment: { "native-quantized-decode": "false" },
     },
   });
   const { qualification, bytes } = withSmoke(entry(), report);
@@ -140,7 +140,7 @@ test("rejects smoke evidence that enabled the tuned native decode path", async (
       currentCatalog: catalog(),
       loadReport: async () => bytes,
     }),
-    /enabled models.native.quantizedDecode/,
+    /current native-quantized-decode=true default/,
   );
 });
 
@@ -177,4 +177,60 @@ test("runs the smoke gate before planning changed model publications", async () 
   assert.ok(plan > gate);
   assert.match(workflow, /--verify-remote/);
   assert.match(workflow, /catalog\/qualifications\.json/);
+});
+
+
+test("a changed evidence revision cannot grandfather an unchanged entry", async () => {
+  const current = entry();
+  await assert.rejects(validateQualificationSmokeGate({
+    previousQualifications: qualifications([current]),
+    currentQualifications: { ...qualifications([current]), modelsRevision: "d".repeat(40) },
+    currentCatalog: catalog(),
+  }), /defaultConfigurationSmoke is required/);
+});
+
+test("fresh smoke has its own immutable revision without moving historical qualification", async () => {
+  const backendVersion = "models@0.3.57+release-source";
+  const { qualification, bytes } = withSmoke(entry(), defaultReport({ backendVersion }));
+  qualification.defaultConfigurationSmoke.modelsRevision = "d".repeat(40);
+  qualification.defaultConfigurationSmoke.backendVersion = backendVersion;
+  const loaded = [];
+  const checked = await validateQualificationSmokeGate({
+    previousQualifications: qualifications([entry()]),
+    currentQualifications: qualifications([qualification]),
+    currentCatalog: catalog(),
+    loadReport: async (input) => { loaded.push(input); return bytes; },
+  });
+  assert.deepEqual(checked, [`${modelId}/${backend}`]);
+  assert.equal(loaded[0].revision, "d".repeat(40));
+  assert.equal(qualification.backendVersion, "models@revision");
+});
+
+test("separate smoke revision requires a valid revision and runtime label", async () => {
+  for (const binding of [
+    { modelsRevision: "main", backendVersion: "models@0.3.57" },
+    { modelsRevision: "d".repeat(40) },
+    { backendVersion: "models@0.3.57" },
+  ]) {
+    const { qualification } = withSmoke(entry(), defaultReport());
+    Object.assign(qualification.defaultConfigurationSmoke, binding);
+    await assert.rejects(validateQualificationSmokeGate({
+      previousQualifications: qualifications([]),
+      currentQualifications: qualifications([qualification]),
+      currentCatalog: catalog(),
+    }), /modelsRevision|backendVersion/);
+  }
+});
+
+test("rejects a runtime label that disagrees with the hash-verified smoke report", async () => {
+  const { qualification, bytes } = withSmoke(entry(), defaultReport({ backendVersion: "models@0.3.54" }));
+  Object.assign(qualification.defaultConfigurationSmoke, {
+    modelsRevision: "d".repeat(40), backendVersion: "models@0.3.57",
+  });
+  await assert.rejects(validateQualificationSmokeGate({
+    previousQualifications: qualifications([]),
+    currentQualifications: qualifications([qualification]),
+    currentCatalog: catalog(),
+    loadReport: async () => bytes,
+  }), /backendVersion does not match/);
 });

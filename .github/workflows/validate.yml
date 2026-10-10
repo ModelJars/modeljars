@@ -124,7 +124,7 @@ jobs:
       - name: Validate build
         run: >
           ./gradlew --no-daemon
-          spotlessCheck test assemble verifyCatalog verifyJvmRuntimePublication
+          spotlessCheck test assemble verifyCatalog verifyLaunchQualifications verifyJvmRuntimePublication
           verifyQualificationRuntimeCompatibility verifyReleaseTrain verifyPublishedConsumerGraph
           verifyQwenChatToolsPublication verifyGraniteAnswerabilityPublication generateSite
 

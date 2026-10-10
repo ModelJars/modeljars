@@ -5994,8 +5994,84 @@ tasks.register("verifyCatalog") {
     }
 }
 
+fun verifyQualifiedRagEntry(entry: CatalogRagQualification) {
+    require(entry.verdict == "QUALIFIED") {
+        "Qualified entry has a non-qualified verdict: ${entry.modelId}"
+    }
+    val latency = listOf(entry.p95RetrievalMillis, entry.p95TtftMillis,
+        entry.p95TpotMillis, entry.p95EndToEndMillis)
+    require(latency.all { it.isFinite() && it >= 0 }) {
+        "Qualified entry has invalid latency evidence: ${entry.modelId}"
+    }
+    // Match Models RagPerformancePolicy: slower correct models remain qualified with their tier.
+    fun within(bounds: List<Double>) = latency.zip(bounds).all { (value, limit) -> value <= limit }
+    val measuredTier = when {
+        within(listOf(100.0, 1_000.0, 100.0, 5_000.0)) -> "PRODUCTION_READY"
+        within(listOf(250.0, 2_000.0, 200.0, 10_000.0)) -> "USABLE"
+        else -> "PERFORMANCE_REDUCED"
+    }
+    require(entry.performanceTier == measuredTier) {
+        "Qualified entry performance tier disagrees with measured latency: ${entry.modelId} " +
+            "(${entry.performanceTier} != $measuredTier)"
+    }
+    require(entry.attempts >= 27) {
+        "Qualification needs at least 27 measured requests: ${entry.modelId}"
+    }
+    require(entry.correctAnswerRate >= 0.9) {
+        "Qualification quality is below 90%: ${entry.modelId}"
+    }
+    require(entry.abstentionAccuracy == 1.0) {
+        "Qualification abstention accuracy must be 100%: ${entry.modelId}"
+    }
+    require(entry.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE) {
+        "Model-answer contribution is below one-third: ${entry.modelId}"
+    }
+    require(entry.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE) {
+        "Accepted model-answer correctness is below 90%: ${entry.modelId}"
+    }
+}
+
+val testRagLaunchQualificationPolicy = tasks.register("testRagLaunchQualificationPolicy") {
+    group = "verification"
+    description = "Exercise latency-tier classification and retain every RAG quality floor"
+    doLast {
+        val seed = requireNotNull(ragQualifications).entries.first { it.qualified }.copy(
+            performanceTier = "PRODUCTION_READY", p95RetrievalMillis = 100.0,
+            p95TtftMillis = 1_000.0, p95TpotMillis = 100.0, p95EndToEndMillis = 5_000.0)
+        verifyQualifiedRagEntry(seed)
+        verifyQualifiedRagEntry(seed.copy(performanceTier = "USABLE", p95RetrievalMillis = 250.0,
+            p95TtftMillis = 2_000.0, p95TpotMillis = 200.0, p95EndToEndMillis = 10_000.0))
+        verifyQualifiedRagEntry(seed.copy(performanceTier = "PERFORMANCE_REDUCED", p95TtftMillis = 2_000.1))
+        val rejected = listOf(
+            "non-qualified verdict" to seed.copy(verdict = "FAILED_RELATIVE_GATE"),
+            "performance tier" to seed.copy(performanceTier = "FAILED_RUNTIME"),
+            "performance tier" to seed.copy(performanceTier = "FAILED_QUALITY"),
+            "performance tier" to seed.copy(performanceTier = "OFFLINE"),
+            "performance tier" to seed.copy(performanceTier = "UNKNOWN"),
+            "performance tier" to seed.copy(p95TtftMillis = 2_001.0),
+            "invalid latency" to seed.copy(p95TtftMillis = Double.NaN),
+            "invalid latency" to seed.copy(p95TpotMillis = Double.POSITIVE_INFINITY),
+            "invalid latency" to seed.copy(p95RetrievalMillis = -1.0),
+            "27 measured requests" to seed.copy(attempts = 26),
+            "quality is below" to seed.copy(correctAnswerRate = 0.89),
+            "quality is below" to seed.copy(performanceTier = "PERFORMANCE_REDUCED",
+                p95TtftMillis = 5_000.0, correctAnswerRate = 0.89),
+            "abstention accuracy" to seed.copy(abstentionAccuracy = 0.9),
+            "contribution" to seed.copy(modelAnswerRate = 0.3),
+            "model-answer correctness" to seed.copy(modelAnswerCorrectRate = 0.89))
+        rejected.forEach { (message, entry) ->
+            val failure = runCatching { verifyQualifiedRagEntry(entry) }.exceptionOrNull()
+            require(failure is IllegalArgumentException && failure.message.orEmpty().contains(message)) {
+                "Qualification mutation must reject $message; got $failure"
+            }
+        }
+        println("Verified three accepted latency tiers and ${rejected.size} rejected qualification mutations")
+    }
+}
+
 val verifyLaunchQualifications =
     tasks.register("verifyLaunchQualifications") {
+        dependsOn(testRagLaunchQualificationPolicy)
         group = "verification"
         description =
             "Fail unless at least 25 distinct upstream models passed the production RAG policy"
@@ -6017,38 +6093,7 @@ val verifyLaunchQualifications =
                 "Launch qualifications must use $PRODUCTION_RAG_POLICY_VERSION"
             }
             val qualified = qualifications.entries.filter(CatalogRagQualification::qualified)
-            qualified.forEach { entry ->
-                require(entry.verdict == "QUALIFIED") {
-                    "Qualified entry has a non-qualified verdict: ${entry.modelId}"
-                }
-                require(entry.performanceTier in setOf("PRODUCTION_READY", "USABLE")) {
-                    "Qualified entry has an unusable performance tier: ${entry.modelId}"
-                }
-                require(entry.attempts >= 27) {
-                    "Qualification needs at least 27 measured requests: ${entry.modelId}"
-                }
-                require(entry.correctAnswerRate >= 0.9) {
-                    "Qualification quality is below 90%: ${entry.modelId}"
-                }
-                require(entry.abstentionAccuracy == 1.0) {
-                    "Qualification abstention accuracy must be 100%: ${entry.modelId}"
-                }
-                require(entry.modelAnswerRate >= MINIMUM_MODEL_ANSWER_RATE) {
-                    "Model-answer contribution is below one-third: ${entry.modelId}"
-                }
-                require(entry.modelAnswerCorrectRate >= MINIMUM_MODEL_ANSWER_CORRECT_RATE) {
-                    "Accepted model-answer correctness is below 90%: ${entry.modelId}"
-                }
-                require(entry.p95TtftMillis <= 2_000) {
-                    "Qualification TTFT is not interactively usable: ${entry.modelId}"
-                }
-                require(entry.p95TpotMillis <= 200) {
-                    "Qualification TPOT is not interactively usable: ${entry.modelId}"
-                }
-                require(entry.p95EndToEndMillis <= 10_000) {
-                    "Qualification end-to-end latency is not usable: ${entry.modelId}"
-                }
-            }
+            qualified.forEach(::verifyQualifiedRagEntry)
             val qualifiedModels =
                 qualified.map { qualification ->
                     catalogEntries.single { it.id == qualification.modelId }

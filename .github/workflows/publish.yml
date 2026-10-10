@@ -147,6 +147,7 @@ jobs:
           verifyQwenChatToolsPublication
           verifyGraniteAnswerabilityPublication
           verifyCatalog
+          verifyLaunchQualifications
           verifyQualificationRuntimeCompatibility
           verifyReleaseTrain
           verifyPublishedConsumerGraph

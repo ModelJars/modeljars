@@ -3854,6 +3854,7 @@ project(":modeljars-cli") {
         // Generated Spring AI and Spring Boot programs are compiled in-test against the real
         // adapters, so a renamed class or constructor fails the build instead of a user's demo.
         testImplementation(project(":modeljars"))
+        testImplementation(project(":modeljars-composite-granite-answerability"))
         testImplementation("com.integrallis:models-spring-ai:$modelsVersion")
         testImplementation("com.integrallis:models-spring-boot-starter:$modelsVersion")
         testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")

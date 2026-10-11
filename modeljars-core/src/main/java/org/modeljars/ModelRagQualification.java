@@ -55,6 +55,7 @@ import java.util.Objects;
  * @param extractiveFallbackRate fraction of attempts answered by extractive fallback
  * @param environment controlled host and JVM identity
  * @param policyVersion qualification policy applied to this entry
+ * @param contextLength tested session capacity; zero preserves defaults for legacy records
  */
 public record ModelRagQualification(
     String modelId,
@@ -88,7 +89,8 @@ public record ModelRagQualification(
     double modelAnswerCorrectRate,
     double extractiveFallbackRate,
     ModelQualificationEnvironment environment,
-    String policyVersion)
+    String policyVersion,
+    int contextLength)
     implements ModelExecutionQualification {
 
   public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
@@ -193,13 +195,15 @@ public record ModelRagQualification(
         modelAnswerCorrectRate,
         extractiveFallbackRate,
         environment,
-        "unspecified");
+        "unspecified",
+        0);
   }
 
   /** Validates immutable evidence, metrics, rates, and the production policy floor. */
   public ModelRagQualification {
     modelId = requireIdentifier(modelId);
     policyVersion = requireText(policyVersion, "policyVersion");
+    if (contextLength < 0) throw new IllegalArgumentException("contextLength must be nonnegative");
     model = requireText(model, "model");
     backend = requireText(backend, "backend").toLowerCase(Locale.ROOT);
     backendVersion = requireText(backendVersion, "backendVersion");

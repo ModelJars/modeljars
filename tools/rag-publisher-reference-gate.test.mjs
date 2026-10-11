@@ -29,7 +29,7 @@ function fixture(change = () => {}) {
   };
   const input = store("evidence/models.json",candidate), reference = store("evidence/publisher.json",comparator);
   const verdict = store("evidence/verdict.json",{schemaVersion:1, policyId:PUBLISHER_RAG_POLICY, candidate:input, comparators:[reference], qualification});
-  return {entry:{modelId, artifactSha256, artifactSizeBytes:5946648928, backend:"rust-ffm", backendVersion:"models@test", policyVersion:PUBLISHER_RAG_POLICY, report:input.path, reportSha256:input.sha256, qualificationEvidence:{report:verdict.path,reportSha256:verdict.sha256}},
+  return {entry:{modelId, artifactSha256, artifactSizeBytes:5946648928, contextLength:2048, backend:"rust-ffm", backendVersion:"models@test", policyVersion:PUBLISHER_RAG_POLICY, report:input.path, reportSha256:input.sha256, qualificationEvidence:{report:verdict.path,reportSha256:verdict.sha256}},
     loadReport:async ({report}) => files.get(report)};
 }
 

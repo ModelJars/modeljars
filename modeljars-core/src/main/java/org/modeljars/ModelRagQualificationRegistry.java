@@ -278,6 +278,12 @@ public final class ModelRagQualificationRegistry {
   private static ModelRagQualification qualification(String id, Properties properties) {
     String prefix = QUALIFICATION_PREFIX + id + ".";
     String environment = prefix + "environment.";
+    int contextLength = 0;
+    if (properties.containsKey(prefix + "contextLength")) {
+      contextLength = integer(properties, prefix + "contextLength");
+      if (contextLength <= 0)
+        throw new ModelJarException("Recorded contextLength must be positive");
+    }
     return new ModelRagQualification(
         id,
         required(properties, prefix + "model"),
@@ -322,7 +328,8 @@ public final class ModelRagQualificationRegistry {
             required(properties, environment + "javaVendor"),
             required(properties, environment + "vmName")),
         properties.getProperty(
-            prefix + "policyVersion", required(properties, ROOT_PREFIX + "policyVersion")));
+            prefix + "policyVersion", required(properties, ROOT_PREFIX + "policyVersion")),
+        contextLength);
   }
 
   private static SourcedQualification newestQualification(

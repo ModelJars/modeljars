@@ -32,7 +32,10 @@ policy. `ModelRagQualification.policyVersion()` and the generated site expose th
 A publisher-reference entry must bind its hashed verdict and both raw reports through
 `qualificationEvidence`. Publication checks the reviewed artifact, pinned publisher runtime,
 matched host and workload, model contribution, and the original relative-performance thresholds.
-Historical entries and marker metadata retain their existing policy and bytes.
+Historical entries and marker metadata retain their existing policy and bytes. A RAG entry may
+also record its tested `contextLength`; ModelJars uses that session capacity when loading it,
+instead of allocating the artifact's potentially much larger advertised maximum. Explicit runtime
+context settings take precedence. Legacy entries without a recorded context retain their defaults.
 
 Model identity has one source of truth, `catalog/models.json`; controlled performance evidence has
 the independent versioned source `catalog/performance-profiles.json`. Gradle generates the aggregate

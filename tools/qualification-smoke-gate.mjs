@@ -27,6 +27,7 @@ function evidenceIdentity(entry) {
   return JSON.stringify({
     qualified: entry.qualified,
     policyVersion: entry.policyVersion,
+    contextLength: entry.contextLength,
     qualificationEvidence: entry.qualificationEvidence,
     verdict: entry.verdict,
     artifactSha256: entry.artifactSha256,

@@ -1325,7 +1325,18 @@ public final class ModelJars {
     if (!launchBlockedProfiles.isEmpty()) {
       decisions.add(launchBlockedDecision(launchBlockedProfiles, activeJvmArguments));
     }
-    Map<String, String> recommendations = mergeRecommendations(applicableProfiles);
+    Map<String, String> recommendations =
+        new LinkedHashMap<>(mergeRecommendations(applicableProfiles));
+    if (qualification instanceof ModelRagQualification rag && rag.contextLength() > 0) {
+      recommendations.putIfAbsent(
+          "models.purejava.maxContextLength", Integer.toString(rag.contextLength()));
+      decisions.add(
+          new OptimizationDecision(
+              "qualified-session-context",
+              OptimizationStatus.ENABLED,
+              "size the session for its tested context; an explicit deployment setting takes precedence",
+              Map.of("contextLength", Integer.toString(rag.contextLength()))));
+    }
     decisions.add(
         profileSelectionDecision(safeProfiles, applicableProfiles, qualification.backend()));
     return new BackendConfiguration(environment, recommendations, decisions);

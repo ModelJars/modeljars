@@ -78,6 +78,11 @@ class DemoScriptGeneratorTest {
             Optional.empty());
 
     assertEquals(DemoScriptGenerator.Type.TOOLS, demo.type());
+    assertContains(
+        demo.source(),
+        "//DEPS com.fasterxml.jackson.core:jackson-databind:"
+            + System.getProperty("modeljars.test.jacksonVersion")
+            + "\n");
     assertEquals("example-tools-demo.java", demo.fileName());
     assertContains(
         demo.source(),

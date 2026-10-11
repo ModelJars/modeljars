@@ -3895,6 +3895,7 @@ project(":modeljars-cli") {
         dependsOn(generateSpringIntegrationVersions)
     }
     tasks.withType<Test>().configureEach {
+        systemProperty("modeljars.test.jacksonVersion", sharedJacksonVersion)
         systemProperty("modeljars.test.modelsVersion", modelsVersion)
         systemProperty("modeljars.test.springAiVersion", springAiVersion)
         systemProperty("modeljars.test.springBootVersion", springBootVersion)
@@ -4092,6 +4093,18 @@ project(":modeljars") {
     }
     tasks.named<Jar>("sourcesJar") {
         dependsOn(generateRuntimeQualificationResources)
+    }
+
+    tasks.register<Test>("lfm25EmbeddingIntegrationTest") {
+        description = "Verifies pinned LFM2.5 weights and CLS embedding through the public ModelJars API."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter { includeTestsMatching("org.modeljars.Lfm25EmbeddingIntegrationTest") }
+        systemProperty("modeljars.integration.lfm25.live", "true")
+        jvmArgs("--add-modules", "jdk.incubator.vector", "--enable-native-access=ALL-UNNAMED")
+        maxHeapSize = "4g"
+        outputs.upToDateWhen { false }
     }
 
     tasks.register<Test>("qwen25SafetensorsIntegrationTest") {

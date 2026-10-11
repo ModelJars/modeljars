@@ -180,7 +180,10 @@ final class DemoScriptGenerator {
           .append('\n');
     }
     if (json) {
-      source.append("//DEPS com.fasterxml.jackson.core:jackson-databind:2.22.2\n");
+      source
+          .append("//DEPS com.fasterxml.jackson.core:jackson-databind:")
+          .append(com.fasterxml.jackson.databind.cfg.PackageVersion.VERSION)
+          .append('\n');
     }
     return source.append('\n').toString();
   }

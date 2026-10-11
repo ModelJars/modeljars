@@ -351,3 +351,11 @@ same version collides with the one already in flight. Check
 <https://central.sonatype.com/publishing/deployments>, and if the artifact later appears on `repo1`,
 finish the release by hand — for `models` that means creating the tag and GitHub release, which the
 workflow does after the publish gate it never reached.
+
+For the gated MobileMoE released-runtime default smoke, dispatch `validate` with
+`models_smoke_revision` set to the full Models harness commit. The job uses this repository's
+`modelsVersion` and `vectorsVersion`, downloads every product JAR from Maven Central, and uses
+`HF_TOKEN` only for the normal CLI installer. It retains the nine-case RAG report, verified input
+hashes and classpath provenance; model weights and credentials are never uploaded as artifacts.
+The smoke uses no Models tuning properties, zero warmups and one iteration. A successful build
+without the retained passing report is not a successful smoke.

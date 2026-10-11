@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: "17 6 * * *"
   workflow_dispatch:
+    inputs:
+      models_smoke_revision:
+        description: Optional immutable Models harness revision for the gated MobileMoE default smoke.
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -17,6 +23,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gated-released-rag-smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.models_smoke_revision != ''
+    name: Released MobileMoE default RAG smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate immutable harness revision
+        env:
+          MODELS_REVISION: ${{ inputs.models_smoke_revision }}
+        run: '[[ "$MODELS_REVISION" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v7
+        with:
+          repository: integrallis/models
+          ref: ${{ inputs.models_smoke_revision }}
+          path: models-smoke-source
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Build the installer and measurement harness
+        run: |
+          ./gradlew --no-daemon :modeljars-cli:installDist
+          MODELS_VERSION=$(sed -n 's/^modelsVersion=//p' gradle.properties)
+          VECTORS_VERSION=$(sed -n 's/^vectorsVersion=//p' gradle.properties)
+          (cd models-smoke-source && ./gradlew --no-daemon -Pversion="$MODELS_VERSION" :models-rag-bench:installDist)
+          python3 models-smoke-source/benchmark-results/2026-10-11-bonsai-production/prepare-released-payload.py \
+            --models-version "$MODELS_VERSION" --vectors-version "$VECTORS_VERSION" \
+            --output "$RUNNER_TEMP/released-models"
+      - name: Install verified gated weights and measure released defaults
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python3 tools/released-rag-smoke.py --models-repo models-smoke-source \
+            --payload "$RUNNER_TEMP/released-models" \
+            --model-id facebook_mobilemoe_s_qat_int4_g32 --output "$RUNNER_TEMP/mobilemoe-smoke"
+      - name: Retain reports and exact inputs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: released-mobilemoe-default-smoke
+          path: |
+            ${{ runner.temp }}/mobilemoe-smoke/*.json
+            ${{ runner.temp }}/mobilemoe-smoke/*.log
+            ${{ runner.temp }}/mobilemoe-smoke/*.txt
+            ${{ runner.temp }}/mobilemoe-smoke/gate.py
+            ${{ runner.temp }}/released-models/classpath.json
+            ${{ runner.temp }}/released-models/provenance.json
+          retention-days: 30
+
   test:
     name: Build and test
     runs-on: ubuntu-latest

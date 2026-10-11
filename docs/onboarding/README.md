@@ -71,7 +71,8 @@ whose isolated classpath uses Central runtime JARs and retains their digests.
 
 The publication planner selects exactly one new marker, EmbeddingGemma 2, and no removals.
 The generated catalog contains 459 candidates, 101 qualified model artifacts and
-two qualified compositions. The original entries and marker coordinates are unchanged.
+two qualified compositions. Existing individual model markers and measured qualification
+reports are unchanged; the composition library coordinates advance as described below.
 
 ## Composition release coordinates
 

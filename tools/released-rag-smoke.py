@@ -28,8 +28,9 @@ installed = subprocess.check_output([
     str(cli), '--cache', str(out / 'cache'), '--output', 'json', '--progress', 'off',
     'pull', job['id']], text=True)
 installation = json.loads(installed)
+(out / 'installation.json').write_text(json.dumps(installation, indent=2) + '\n')
 artifact = Path(installation['path'])
-directory = artifact.parent
+directory = artifact if artifact.is_dir() else artifact.parent
 verified = []
 for entry in job['files']:
     path = directory / entry['path'] if job['format'] == 'safetensors' else artifact

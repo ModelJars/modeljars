@@ -201,16 +201,17 @@ usable by Java 21 registry and build tooling; the executable CLI JAR is compiled
 native CLI contains catalog, download, verification, and demo-generation code, but not a second
 copy of the Models inference runtime.
 
-Qualified NVIDIA GPU acceleration is an explicit optional dependency:
+NVIDIA GPU acceleration is an explicit optional dependency:
 
 ```kotlin
-implementation("com.integrallis:backend-tornado:$modelsVersion")
+implementation("com.integrallis:backend-cuda:$modelsVersion")
 ```
 
-Launch with a compatible TornadoVM PTX distribution. `ModelJars.openRuntime(...)` discovers the
-provider through Java `ServiceLoader`, performs eager readiness for eligible Q4_0 artifacts, and
-uses the Vector API unchanged when the module, device, capacity, or runtime is unavailable. See the
-[Models GPU guide](https://integrallis.github.io/models/docs/models/current/gpu-acceleration.html).
+The CUDA backend loads the NVIDIA driver through Java's Foreign Function and Memory API and
+ships Rust-generated PTX kernels. It requires compatible NVIDIA hardware and a driver; adding
+the dependency does not make every model or quantization GPU eligible. See the
+[Models GPU guide](https://integrallis.github.io/models/docs/models/current/gpu-acceleration.html)
+for supported configurations and measured qualification evidence.
 
 Marker dependencies are build-time model-version declarations and contain no transitive runtime
 dependencies. Add each selected marker in compile scope so its generated reference is available to

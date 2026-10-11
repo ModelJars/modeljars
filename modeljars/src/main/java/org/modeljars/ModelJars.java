@@ -1473,6 +1473,7 @@ public final class ModelJars {
         switch (qualification.pooling()) {
           case "last-token" -> Pooling.LAST_TOKEN;
           case "mean" -> Pooling.MEAN;
+          case "cls" -> Pooling.CLS;
           default ->
               throw new ModelJarException(
                   "Unsupported qualified embedding pooling: " + qualification.pooling());

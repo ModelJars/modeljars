@@ -137,6 +137,9 @@ jobs:
       - name: Verify exact GGUF dimensions
         run: npm run catalog:enrich -- --concurrency=6
 
+      - name: Exercise CLS embedding through the public ModelJars loader
+        run: ./gradlew --no-daemon :modeljars:lfm25EmbeddingIntegrationTest
+
       - name: Build and verify
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}

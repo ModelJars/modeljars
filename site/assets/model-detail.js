@@ -578,7 +578,7 @@ export function descriptorRows(model) {
     ["Parameters", formatParameters(dimensions.parameterCount)],
     ["Download", formatBytes(downloadBytes)],
     ["Context", dimensions.contextLength?.toLocaleString("en-US") + " tokens"],
-    ["Embedding width", dimensions.embeddingLength?.toLocaleString("en-US")],
+    ["Hidden width", dimensions.embeddingLength?.toLocaleString("en-US")],
     ["Layers", dimensions.blockCount?.toLocaleString("en-US")],
     ["Attention heads", dimensions.attentionHeadCount?.toLocaleString("en-US")],
     ["KV heads", dimensions.keyValueHeadCount?.toLocaleString("en-US")],

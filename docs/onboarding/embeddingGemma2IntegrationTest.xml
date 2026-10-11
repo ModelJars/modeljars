@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.modeljars.EmbeddingGemma2IntegrationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-11T17:23:26.005Z" hostname="Brians-MacBook-Pro.local" time="38.515">
+  <properties/>
+  <testcase name="publicLoaderHonorsMeanPoolingAndEmbedsTheWholeSequence()" classname="org.modeljars.EmbeddingGemma2IntegrationTest" time="38.465"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 11, 2026 10:23:28 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading model ggml_org_embeddinggemma_2_gguf_q8_0 (295.5 MiB) to /Users/briansam-bodden/.modeljars/cache/sha256/21/2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135/model.gguf
+Oct 11, 2026 10:23:32 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 10% (29.6 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:34 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 20% (59.1 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:36 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 30% (88.7 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:38 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 40% (118.2 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:39 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 50% (147.8 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:41 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 60% (177.3 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:43 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 70% (206.9 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:45 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 80% (236.4 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:47 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 90% (266.0 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:49 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Downloading ggml_org_embeddinggemma_2_gguf_q8_0: 100% (295.5 MiB of 295.5 MiB)
+Oct 11, 2026 10:23:49 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Download complete; verifying SHA-256 for ggml_org_embeddinggemma_2_gguf_q8_0
+Oct 11, 2026 10:23:53 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Model ready in cache: ggml_org_embeddinggemma_2_gguf_q8_0
+Oct 11, 2026 10:23:54 AM com.integrallis.vectors.core.PanamaVectorUtilSupportProvider create
+INFO: vectors-core: Using Panama Vector API SIMD provider (vector bits: 256)
+Oct 11, 2026 10:23:54 AM com.integrallis.vectors.core.VectorizationProvider logActiveToggles
+INFO: vectors-core: provider=PanamaVectorUtilSupport panama=true maxBits=256 preferredBits=256 fastVectorFMA=true fastScalarFMA=true sve=false ggufParallel=true ggufParallelThreshold=1048576 ggufExecutor=persistent ggufThreads=12 ggufChunksPerThread=2 mappedKQuantLongOffsets=auto(q4=true,q5=false,q6=false) q4ShortPairwiseSupported=true q4UnsignedPairwiseSupported=true toggles=[(defaults — no -Dvectors.* overrides)]
+]]></system-err>
+</testsuite>

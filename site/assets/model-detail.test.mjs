@@ -218,6 +218,19 @@ test("summarizes embedding evidence without RAG latency fields", () => {
   assert.equal(summary.decode, null);
 });
 
+test("keeps encoder hidden width separate from projected embedding output", () => {
+  const model = {
+    capabilities: ["text-embedding"],
+    dimensions: { embeddingLength: 512 },
+    sizeBytes: 309855456,
+  };
+  const html = descriptorRows(model);
+  assert.match(html, /Hidden width<\/dt><dd>512/);
+  assert.doesNotMatch(html, /Embedding width/);
+  const summary = qualificationSummary({ ...embeddingQualification, embeddingDimension: 768 });
+  assert.equal(summary.embeddingDimension, 768);
+});
+
 test("summarizes tool conformance without inventing RAG metrics", () => {
   const summary = qualificationSummary({
     qualified: true,

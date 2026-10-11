@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "minimumModelsVersion": "0.3.56",
-  "basis": "Support floor for this catalog: includes LFM2 sequence encoding (0.3.55) and Q4_1 projections (0.3.56). Class availability is a structural check; numerical qualification remains separate.",
+  "minimumModelsVersion": "0.3.58",
+  "basis": "Support floor for this catalog: includes EmbeddingGemma 2 text encoding (0.3.58), LFM2 sequence encoding (0.3.55), and Q4_1 projections (0.3.56). Class availability is a structural check; numerical qualification remains separate.",
   "workloads": {
     "qualifications.json": {
       "backends": [
@@ -63,6 +63,9 @@
         ],
         "gemma-embedding": [
           "backend-java:com.integrallis.models.backend.purejava.llama.EncoderForwardPass"
+        ],
+        "gemma-embedding2": [
+          "backend-java:com.integrallis.models.backend.purejava.gemmaembedding2.EmbeddingGemma2Encoder"
         ],
         "lfm2": [
           "backend-java:com.integrallis.models.backend.purejava.lfm2.Lfm2SequenceEncoder"

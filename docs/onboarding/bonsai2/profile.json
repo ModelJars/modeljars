@@ -1,0 +1,222 @@
+{
+  "profiles": [
+    {
+      "modelId": "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0",
+      "artifactSha256": "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+      "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+            "uri": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/b072e1d3b35a0a630cece372c2127528e0994386/Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+            "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+            "sha256": "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "sampling": {
+          "temperature": {
+            "value": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.temp"
+              }
+            ]
+          },
+          "topP": {
+            "value": 0.95,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.top_p"
+              }
+            ]
+          },
+          "topK": {
+            "value": 20,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.top_k"
+              }
+            ]
+          }
+        },
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": true,
+            "rule": "opt-out-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 16,
+              "kvHeads": 4,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 5946648928,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 65536,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 268435456,
+                "totalBytes": 7288826208
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 2147483648,
+                "totalBytes": 9167874400
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 8589934592,
+                "totalBytes": 15610325344
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 17179869184,
+                "totalBytes": 24200259936
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 23949,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 155021,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 34816,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 142606336,
+                "totalBytes": 7162997088
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 1140850688,
+                "totalBytes": 8161241440
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 4563402752,
+                "totalBytes": 11583793504
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 9126805504,
+                "totalBytes": 16147196256
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 45081,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "modelId": "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    }
+  ]
+}

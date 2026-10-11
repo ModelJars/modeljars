@@ -4108,6 +4108,18 @@ project(":modeljars") {
         outputs.upToDateWhen { false }
     }
 
+    tasks.register<Test>("embeddingGemma2IntegrationTest") {
+        description = "Verifies pinned EmbeddingGemma 2 text weights through the public ModelJars API."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter { includeTestsMatching("org.modeljars.EmbeddingGemma2IntegrationTest") }
+        systemProperty("modeljars.integration.embeddinggemma2.live", "true")
+        jvmArgs("--add-modules", "jdk.incubator.vector", "--enable-native-access=ALL-UNNAMED")
+        maxHeapSize = "4g"
+        outputs.upToDateWhen { false }
+    }
+
     tasks.register<Test>("qwen25SafetensorsIntegrationTest") {
         description = "Runs the pinned Qwen2.5 Safetensors snapshot through ModelJars."
         group = "verification"

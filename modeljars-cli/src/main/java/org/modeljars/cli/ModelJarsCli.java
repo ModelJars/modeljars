@@ -1355,13 +1355,7 @@ public final class ModelJarsCli implements Callable<Integer> {
       descriptor
           .dimensions()
           .embeddingLength()
-          .ifPresent(
-              value ->
-                  identity.put(
-                      descriptor.capabilities().contains("text-embedding")
-                          ? "Embedding"
-                          : "Hidden width",
-                      value + " dimensions"));
+          .ifPresent(value -> identity.put("Hidden width", value + " dimensions"));
       identity.put(
           isComposite(descriptor) ? "Member weights" : "Download",
           CliOutput.humanBytes(declaredSize(descriptor)));

@@ -1,0 +1,30 @@
+✖ catalog composition dependencies follow the library release (15.477739ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 298.034955
+
+✖ failing tests:
+
+test at tools/composition-release.test.mjs:12:1
+✖ catalog composition dependencies follow the library release (15.477739ms)
+  AssertionError [ERR_ASSERTION]: granite_4_1_3b_answerability_hybrid: CLI and site must select the composition built in this release
+
+  '0.1.55' !== '0.1.57'
+
+      at TestContext.<anonymous> (file:///Users/briansam-bodden/Code/java-ai/projects/model-jars/tools/composition-release.test.mjs:18:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '0.1.55',
+    expected: '0.1.57',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

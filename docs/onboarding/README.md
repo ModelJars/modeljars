@@ -72,3 +72,13 @@ whose isolated classpath uses Central runtime JARs and retains their digests.
 The publication planner selects exactly one new marker, EmbeddingGemma 2, and no removals.
 The generated catalog contains 459 candidates, 101 qualified model artifacts and
 two qualified compositions. The original entries and marker coordinates are unchanged.
+
+## Composition release coordinates
+
+The generated site exposed one more dependency mismatch: Granite and Harriet still
+selected their 0.1.55 libraries while this release builds 0.1.57. Their catalog
+coordinates, model versions and download URLs now follow 0.1.57. The underlying
+member artifacts and measured qualification reports are unchanged. A new npm/CI
+consistency check rejects any future drift from `modeljarsVersion`; it failed on
+the original 0.1.55 entries before this correction. Pages must wait for both the
+new embedding marker and the composition libraries to reach Central.

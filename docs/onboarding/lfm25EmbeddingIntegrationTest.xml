@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.modeljars.Lfm25EmbeddingIntegrationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-11T17:24:08.029Z" hostname="Brians-MacBook-Pro.local" time="13.639">
+  <properties/>
+  <testcase name="publicLoaderHonorsClsPoolingAndEmbedsTheWholeSequence()" classname="org.modeljars.Lfm25EmbeddingIntegrationTest" time="13.552"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 11, 2026 10:24:10 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Verifying cached model liquidai_lfm2_5_embedding_350m_gguf_q4_0 (209.1 MiB) at /Users/briansam-bodden/.modeljars/cache/sha256/08/08bb9bfdfb516146b7aeb6d51994206b38e8b31c9e6e66a7bdcebbbc0afa3cea/model.gguf
+Oct 11, 2026 10:24:13 AM org.modeljars.ModelJarInstaller reportProgress
+INFO: Model cache verified: liquidai_lfm2_5_embedding_350m_gguf_q4_0
+Oct 11, 2026 10:24:13 AM com.integrallis.vectors.core.PanamaVectorUtilSupportProvider create
+INFO: vectors-core: Using Panama Vector API SIMD provider (vector bits: 256)
+Oct 11, 2026 10:24:13 AM com.integrallis.vectors.core.VectorizationProvider logActiveToggles
+INFO: vectors-core: provider=PanamaVectorUtilSupport panama=true maxBits=256 preferredBits=256 fastVectorFMA=true fastScalarFMA=true sve=false ggufParallel=true ggufParallelThreshold=1048576 ggufExecutor=persistent ggufThreads=12 ggufChunksPerThread=2 mappedKQuantLongOffsets=auto(q4=true,q5=false,q6=false) q4ShortPairwiseSupported=true q4UnsignedPairwiseSupported=true toggles=[(defaults — no -Dvectors.* overrides)]
+]]></system-err>
+</testsuite>

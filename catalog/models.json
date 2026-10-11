@@ -22617,6 +22617,112 @@
         "feedForwardLength": 6144,
         "attentionBlockCount": 6
       }
+    },
+    {
+      "id": "ggml_org_embeddinggemma_2_gguf_q8_0",
+      "name": "EmbeddingGemma 2 text Q8_0",
+      "description": "EmbeddingGemma 2 text encoder with 768-dimensional output and distinct query/document prefixes. Image, audio, and video towers are separate artifacts.",
+      "sourceId": "hf://ggml-org/embeddinggemma-2-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/embeddinggemma-2-GGUF/resolve/bfcd298762cc34d0357ece5ebdd31791a3a374d8/embeddinggemma-2-Q8_0.gguf",
+      "revision": "bfcd298762cc34d0357ece5ebdd31791a3a374d8",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.embeddinggemma-2-gguf.q8_0:2.0.0-q8_0.1",
+      "modelVersion": "2.0.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "gemma-embedding2",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.jvllm/models/embeddinggemma-2-Q8_0.gguf",
+      "sha256": "2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135",
+      "sizeBytes": 309855456,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q8-0",
+        "text-only",
+        "bidirectional-attention",
+        "symmetric-sliding-window",
+        "per-layer-input",
+        "mean-pooling"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "embeddings",
+        "retrieval"
+      ],
+      "dimensions": {
+        "parameterCount": 271002648,
+        "contextLength": 262144,
+        "embeddingLength": 512,
+        "blockCount": 24,
+        "attentionHeadCount": 4,
+        "keyLength": 512,
+        "valueLength": 512,
+        "feedForwardLength": 2048,
+        "attentionBlockCount": 24
+      },
+      "catalogPublishedAt": "2026-10-11T17:11:50Z"
+    },
+    {
+      "id": "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0",
+      "name": "Bonsai 2 27B PTQ1_0",
+      "description": "Exact 5.95 GB PTQ1_0 text candidate. Requires signed Hadamard execution; pending production qualification. File size does not include runtime memory.",
+      "sourceId": "hf://prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "sourceUri": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf",
+      "downloadUri": "https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf/resolve/b072e1d3b35a0a630cece372c2127528e0994386/Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+      "revision": "b072e1d3b35a0a630cece372c2127528e0994386",
+      "markerCoordinate": "org.modeljars.huggingface:prism-ml.ternary-bonsai-2-27b-gguf.ptq1_0:2.0.0-ptq1_0.1",
+      "modelVersion": "2.0.0",
+      "variant": "ptq1_0",
+      "format": "gguf",
+      "architecture": "qwen35",
+      "quantization": "PTQ1_0",
+      "localPath": "${user.home}/.jvllm/models/Ternary-Bonsai-2-27B-PTQ1_0.gguf",
+      "sha256": "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+      "sizeBytes": 5946648928,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "ptq1-0",
+        "text-only",
+        "signed-hadamard",
+        "hybrid-attention",
+        "gated-delta-net",
+        "publisher-reference-required"
+      ],
+      "backends": {
+        "pure-java": true,
+        "llama.cpp": false
+      },
+      "domains": [
+        "general",
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 26895998464,
+        "contextLength": 262144,
+        "embeddingLength": 5120,
+        "blockCount": 64,
+        "attentionHeadCount": 24,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 17408,
+        "attentionBlockCount": 16
+      }
     }
   ]
 }

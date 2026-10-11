@@ -125,6 +125,7 @@ jobs:
         run: >
           ./gradlew --no-daemon
           :modeljars:lfm25EmbeddingIntegrationTest
+          :modeljars:embeddingGemma2IntegrationTest
           :modeljars-composite-granite-answerability:qualifiedIntegrationTest
 
       - name: Validate build

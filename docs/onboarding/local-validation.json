@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-11T17:27:01.246568+00:00",
+  "versions": {
+    "vectors": "0.1.29",
+    "models": "0.3.58",
+    "modeljars": "0.1.57"
+  },
+  "unitTests": {
+    "tests": 402,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 7
+  },
+  "catalogSiteTests": {
+    "tests": 324,
+    "failures": 0,
+    "skipped": 0
+  },
+  "realWeightTasks": [
+    "embeddingGemma2IntegrationTest",
+    "lfm25EmbeddingIntegrationTest"
+  ],
+  "consumerGraphs": "six Maven and six Gradle consumers passed against staged ModelJars and released Models/Vectors",
+  "qualificationEvidenceRevision": "96965f151a516b96eb2dc23fc3e0f3767d96e7a3",
+  "localRemoteMetadata": "Existing gated MobileMoE config returned HTTP 401 without HF_TOKEN; authenticated CI verification required before merge."
+}

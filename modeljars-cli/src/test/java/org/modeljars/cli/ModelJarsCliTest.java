@@ -319,7 +319,7 @@ class ModelJarsCliTest {
   }
 
   @Test
-  void labelsAnEmbeddingModelsOutputWidthAsEmbeddingDimensions() {
+  void doesNotPresentAnEmbeddingModelsHiddenWidthAsItsOutputDimension() {
     ModelJarDescriptor embedding =
         descriptor(
             "example_embedding_q8_0",
@@ -331,8 +331,8 @@ class ModelJarsCliTest {
     Result shown = run(cli(embedding), "show", "example");
 
     assertEquals(0, shown.status());
-    assertTrue(shown.output().contains("Embedding"));
-    assertFalse(shown.output().contains("Hidden width"));
+    assertTrue(shown.output().contains("Hidden width"));
+    assertFalse(shown.output().contains("Embedding     4096 dimensions"));
   }
 
   @Test

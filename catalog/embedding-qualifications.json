@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-09T15:42:25Z",
+  "generatedAt": "2026-10-11T17:11:51Z",
   "policyVersion": "oracle-equivalence-v1",
-  "modelsRevision": "bd9887bcb4ce0efbcd5e5017e618582b6a898e93",
-  "qualifiedModels": 30,
+  "modelsRevision": "96965f151a516b96eb2dc23fc3e0f3767d96e7a3",
+  "qualifiedModels": 31,
   "rejectedModels": 0,
   "entries": [
     {
@@ -27,7 +27,7 @@
       "minimumOracleCosine": 0.99999759730181,
       "meanOracleCosine": 0.9999980879556425,
       "maxComponentDelta": 0.0004197061061859131,
-      "maxNormDeviation": 7.56458828909956e-9,
+      "maxNormDeviation": 7.56458828909956e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -63,7 +63,7 @@
       "minimumOracleCosine": 0.9999156829064476,
       "meanOracleCosine": 0.99994297351732,
       "maxComponentDelta": 0.002286471426486969,
-      "maxNormDeviation": 4.168090428358084e-9,
+      "maxNormDeviation": 4.168090428358084e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -99,7 +99,7 @@
       "minimumOracleCosine": 0.9997466487182669,
       "meanOracleCosine": 0.9998709606445759,
       "maxComponentDelta": 0.003438426647335291,
-      "maxNormDeviation": 4.203453807249957e-9,
+      "maxNormDeviation": 4.203453807249957e-09,
       "environment": {
         "hostname": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -134,7 +134,7 @@
       "minimumOracleCosine": 0.9998214816667929,
       "meanOracleCosine": 0.999897205011811,
       "maxComponentDelta": 0.0031219469383358955,
-      "maxNormDeviation": 4.174147028024322e-9,
+      "maxNormDeviation": 4.174147028024322e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -170,7 +170,7 @@
       "minimumOracleCosine": 0.9997759364791906,
       "meanOracleCosine": 0.999892056921535,
       "maxComponentDelta": 0.0034497063606977463,
-      "maxNormDeviation": 4.80260176072278e-9,
+      "maxNormDeviation": 4.80260176072278e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -206,7 +206,7 @@
       "minimumOracleCosine": 0.9997886055300848,
       "meanOracleCosine": 0.9998991448240785,
       "maxComponentDelta": 0.003452809527516365,
-      "maxNormDeviation": 6.622577597426016e-9,
+      "maxNormDeviation": 6.622577597426016e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -242,7 +242,7 @@
       "minimumOracleCosine": 0.9997503493388641,
       "meanOracleCosine": 0.9998511694245169,
       "maxComponentDelta": 0.003885079175233841,
-      "maxNormDeviation": 3.3596332382757055e-9,
+      "maxNormDeviation": 3.3596332382757055e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -278,7 +278,7 @@
       "minimumOracleCosine": 0.9999038183029708,
       "meanOracleCosine": 0.9999361151418471,
       "maxComponentDelta": 0.002494215965270996,
-      "maxNormDeviation": 6.3708395225958725e-9,
+      "maxNormDeviation": 6.3708395225958725e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -288,6 +288,42 @@
         "processors": 12,
         "physicalMemoryBytes": 34359738368,
         "maxHeapBytes": 8589934592,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      }
+    },
+    {
+      "modelId": "ggml_org_embeddinggemma_2_gguf_q8_0",
+      "model": "EmbeddingGemma 2 Q8_0 text GGUF",
+      "backend": "pure-java",
+      "backendVersion": "models-0.3.58",
+      "workload": "oracle-equivalence-v1",
+      "probeSetSha256": "a25952a4cb80e57c099291dda9b44ad2b713c0688c386015a1e0000bf6fbf8b9",
+      "artifactSha256": "2188ac1deca4b77dffefd603c2776a9d76d9d74ec01841392982ebb840b09135",
+      "artifactSizeBytes": 309855456,
+      "report": "benchmark-results/2026-10-11-model-onboarding/embeddinggemma2-released-equivalence.json",
+      "reportSha256": "97883af637177912a5644ee95fc6052d892581ab02f189ab0f0f4f531482dd2a",
+      "qualified": true,
+      "probes": 8,
+      "embeddingDimension": 768,
+      "pooling": "mean",
+      "normalized": true,
+      "oracleBackend": "llama.cpp",
+      "oracleVersion": "5c8854fd88319125125dc4b836c98b1b215b0f23",
+      "minimumOracleCosine": 0.9998087162015021,
+      "meanOracleCosine": 0.999900544202417,
+      "maxComponentDelta": 0.0027919337153434753,
+      "maxNormDeviation": 7.675834412523841e-09,
+      "environment": {
+        "host": "Brians-MacBook-Pro.local",
+        "osName": "Mac OS X",
+        "osVersion": "26.6.2",
+        "architecture": "x86_64",
+        "cpuModel": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+        "processors": 12,
+        "physicalMemoryBytes": 34359738368,
+        "maxHeapBytes": 4294967296,
         "javaVersion": "25.0.3",
         "javaVendor": "Eclipse Adoptium",
         "vmName": "OpenJDK 64-Bit Server VM"
@@ -314,7 +350,7 @@
       "minimumOracleCosine": 0.9995564792114265,
       "meanOracleCosine": 0.9996536706740835,
       "maxComponentDelta": 0.003600437194108963,
-      "maxNormDeviation": 5.6529170233687864e-9,
+      "maxNormDeviation": 5.6529170233687864e-09,
       "environment": {
         "hostname": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -349,7 +385,7 @@
       "minimumOracleCosine": 0.9999914691940232,
       "meanOracleCosine": 0.9999939053676736,
       "maxComponentDelta": 0.000431649386882782,
-      "maxNormDeviation": 3.1081981433089823e-9,
+      "maxNormDeviation": 3.1081981433089823e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -385,7 +421,7 @@
       "minimumOracleCosine": 0.9999993815508919,
       "meanOracleCosine": 0.9999996695770076,
       "maxComponentDelta": 0.00011379574425518513,
-      "maxNormDeviation": 3.0205358214629996e-9,
+      "maxNormDeviation": 3.0205358214629996e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -421,7 +457,7 @@
       "minimumOracleCosine": 0.9997358091628682,
       "meanOracleCosine": 0.9998387665884314,
       "maxComponentDelta": 0.002650570124387741,
-      "maxNormDeviation": 4.2809642497587674e-9,
+      "maxNormDeviation": 4.2809642497587674e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -457,7 +493,7 @@
       "minimumOracleCosine": 0.9997379672014721,
       "meanOracleCosine": 0.9998291382009318,
       "maxComponentDelta": 0.003294551745057106,
-      "maxNormDeviation": 2.1773736147423506e-9,
+      "maxNormDeviation": 2.1773736147423506e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -492,8 +528,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999997317740534,
       "meanOracleCosine": 0.9999998414551889,
-      "maxComponentDelta": 0.00008554384112358093,
-      "maxNormDeviation": 3.254011171627269e-9,
+      "maxComponentDelta": 8.554384112358093e-05,
+      "maxNormDeviation": 3.254011171627269e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -529,7 +565,7 @@
       "minimumOracleCosine": 0.9995014497617521,
       "meanOracleCosine": 0.999646999958326,
       "maxComponentDelta": 0.005263041704893112,
-      "maxNormDeviation": 2.73471778555745e-9,
+      "maxNormDeviation": 2.73471778555745e-09,
       "environment": {
         "hostname": "rockhopper",
         "osName": "Linux",
@@ -564,7 +600,7 @@
       "minimumOracleCosine": 0.999657500443561,
       "meanOracleCosine": 0.9997563194850597,
       "maxComponentDelta": 0.003360288217663765,
-      "maxNormDeviation": 1.1142254896512327e-9,
+      "maxNormDeviation": 1.1142254896512327e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -600,7 +636,7 @@
       "minimumOracleCosine": 0.9999989286736022,
       "meanOracleCosine": 0.9999993317012712,
       "maxComponentDelta": 0.00024854205548763275,
-      "maxNormDeviation": 6.540634478469087e-9,
+      "maxNormDeviation": 6.540634478469087e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -636,7 +672,7 @@
       "minimumOracleCosine": 0.9995060267488544,
       "meanOracleCosine": 0.9998408091612497,
       "maxComponentDelta": 0.005427975207567215,
-      "maxNormDeviation": 3.2622038403928855e-9,
+      "maxNormDeviation": 3.2622038403928855e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -672,7 +708,7 @@
       "minimumOracleCosine": 0.9992395369537561,
       "meanOracleCosine": 0.9996518712967475,
       "maxComponentDelta": 0.006381319835782051,
-      "maxNormDeviation": 4.7661210533789244e-9,
+      "maxNormDeviation": 4.7661210533789244e-09,
       "environment": {
         "hostname": "vectors-bench",
         "osName": "Linux",
@@ -707,7 +743,7 @@
       "minimumOracleCosine": 0.9992974227333126,
       "meanOracleCosine": 0.9997018507886162,
       "maxComponentDelta": 0.007313007488846779,
-      "maxNormDeviation": 4.246619278447383e-9,
+      "maxNormDeviation": 4.246619278447383e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -743,7 +779,7 @@
       "minimumOracleCosine": 0.9993101571523949,
       "meanOracleCosine": 0.9997564972708805,
       "maxComponentDelta": 0.006543818861246109,
-      "maxNormDeviation": 4.789706853358666e-9,
+      "maxNormDeviation": 4.789706853358666e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -779,7 +815,7 @@
       "minimumOracleCosine": 0.9990987412111836,
       "meanOracleCosine": 0.9996442895819867,
       "maxComponentDelta": 0.007804400287568569,
-      "maxNormDeviation": 3.981569296485077e-9,
+      "maxNormDeviation": 3.981569296485077e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -815,7 +851,7 @@
       "minimumOracleCosine": 0.9994363685820361,
       "meanOracleCosine": 0.9997464977009223,
       "maxComponentDelta": 0.0062254369258880615,
-      "maxNormDeviation": 2.691561418188826e-9,
+      "maxNormDeviation": 2.691561418188826e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -851,7 +887,7 @@
       "minimumOracleCosine": 0.9995117362682604,
       "meanOracleCosine": 0.9996140137272909,
       "maxComponentDelta": 0.004982158541679382,
-      "maxNormDeviation": 5.542114434042844e-9,
+      "maxNormDeviation": 5.542114434042844e-09,
       "environment": {
         "hostname": "rockhopper",
         "osName": "Linux",
@@ -886,7 +922,7 @@
       "minimumOracleCosine": 0.9999998666165458,
       "meanOracleCosine": 0.9999999232975672,
       "maxComponentDelta": 0.00011244416236877441,
-      "maxNormDeviation": 4.4732385573453826e-9,
+      "maxNormDeviation": 4.4732385573453826e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -921,8 +957,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999999026714388,
       "meanOracleCosine": 0.9999999331411745,
-      "maxComponentDelta": 0.000052401795983314514,
-      "maxNormDeviation": 3.0685659568874257e-9,
+      "maxComponentDelta": 5.2401795983314514e-05,
+      "maxNormDeviation": 3.0685659568874257e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -957,8 +993,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999998587666357,
       "meanOracleCosine": 0.9999999191553867,
-      "maxComponentDelta": 0.00006095040589570999,
-      "maxNormDeviation": 3.3160986179225915e-9,
+      "maxComponentDelta": 6.095040589570999e-05,
+      "maxNormDeviation": 3.3160986179225915e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -993,8 +1029,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999998579886656,
       "meanOracleCosine": 0.9999998957713219,
-      "maxComponentDelta": 0.00009181350469589233,
-      "maxNormDeviation": 2.7013222769767253e-9,
+      "maxComponentDelta": 9.181350469589233e-05,
+      "maxNormDeviation": 2.7013222769767253e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -1029,8 +1065,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999998617691246,
       "meanOracleCosine": 0.9999999239689742,
-      "maxComponentDelta": 0.00006361864507198334,
-      "maxNormDeviation": 3.713527374493708e-9,
+      "maxComponentDelta": 6.361864507198334e-05,
+      "maxNormDeviation": 3.713527374493708e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",
@@ -1065,8 +1101,8 @@
       "oracleVersion": "a5822222909b785f23ddc74ce3c8f85bd0e38562",
       "minimumOracleCosine": 0.9999998614326966,
       "meanOracleCosine": 0.9999999187688463,
-      "maxComponentDelta": 0.00007646530866622925,
-      "maxNormDeviation": 4.357824323619752e-9,
+      "maxComponentDelta": 7.646530866622925e-05,
+      "maxNormDeviation": 4.357824323619752e-09,
       "environment": {
         "host": "Brians-MacBook-Pro.local",
         "osName": "Mac OS X",

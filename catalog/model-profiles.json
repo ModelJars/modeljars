@@ -10182,6 +10182,11 @@
       "modelId": "walkingcat_soprano_1_1_80m_gguf_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "ggml_org_embeddinggemma_2_gguf_q8_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
     }
   ]
 }

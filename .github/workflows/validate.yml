@@ -121,8 +121,11 @@ jobs:
       - name: Verify runtime support from a clean build
         run: ./gradlew --no-daemon clean verifyQualificationRuntimeCompatibility
 
-      - name: Exercise CLS embedding through the public ModelJars loader
-        run: ./gradlew --no-daemon :modeljars:lfm25EmbeddingIntegrationTest
+      - name: Exercise embedding and composition loaders with real weights
+        run: >
+          ./gradlew --no-daemon
+          :modeljars:lfm25EmbeddingIntegrationTest
+          :modeljars-composite-granite-answerability:qualifiedIntegrationTest
 
       - name: Validate build
         run: >

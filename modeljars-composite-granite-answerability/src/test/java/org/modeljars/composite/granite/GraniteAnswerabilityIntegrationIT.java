@@ -73,7 +73,8 @@ class GraniteAnswerabilityIntegrationIT {
       Verdict recomputed = GraniteAnswerability.classify(hybrid, request, Prefix.RECOMPUTED);
 
       assertEquals(shared.output(), recomputed.output());
-      assertEquals(shared.sharedPrefixTokens(), recomputed.sharedPrefixTokens());
+      assertTrue(shared.sharedPrefixTokens() > 0);
+      assertEquals(0, recomputed.sharedPrefixTokens());
       assertTrue(shared.physicallySharesPrefix());
       assertFalse(recomputed.physicallySharesPrefix());
     }

@@ -27,6 +27,13 @@ quantization variants, runtime feature flags, and backend compatibility. A bundl
 below `META-INF/modeljars/models/<catalog-id>/` and is verified against the same size and SHA-256
 metadata as an external model.
 
+RAG evidence can declare an entry-specific `policyVersion`; otherwise it inherits the manifest's
+policy. `ModelRagQualification.policyVersion()` and the generated site expose the effective policy.
+A publisher-reference entry must bind its hashed verdict and both raw reports through
+`qualificationEvidence`. Publication checks the reviewed artifact, pinned publisher runtime,
+matched host and workload, model contribution, and the original relative-performance thresholds.
+Historical entries and marker metadata retain their existing policy and bytes.
+
 Model identity has one source of truth, `catalog/models.json`; controlled performance evidence has
 the independent versioned source `catalog/performance-profiles.json`. Gradle generates the aggregate
 classpath candidate catalog and one marker build per entry. The aggregate JAR embeds

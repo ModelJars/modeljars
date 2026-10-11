@@ -54,6 +54,7 @@ import java.util.Objects;
  * @param modelAnswerCorrectRate correctness rate among direct model answers
  * @param extractiveFallbackRate fraction of attempts answered by extractive fallback
  * @param environment controlled host and JVM identity
+ * @param policyVersion qualification policy applied to this entry
  */
 public record ModelRagQualification(
     String modelId,
@@ -86,15 +87,119 @@ public record ModelRagQualification(
     double modelAnswerRate,
     double modelAnswerCorrectRate,
     double extractiveFallbackRate,
-    ModelQualificationEnvironment environment)
+    ModelQualificationEnvironment environment,
+    String policyVersion)
     implements ModelExecutionQualification {
 
   public static final double MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0;
   public static final double MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90;
 
+  /**
+   * Preserves the original constructor for callers without a recorded policy identity.
+   *
+   * @param modelId catalog alias of the qualified model
+   * @param model display name and variant of the qualified model
+   * @param backend normalized execution backend identifier
+   * @param backendVersion exact backend version or build
+   * @param workload stable qualification-workload identifier
+   * @param corpusSha256 SHA-256 digest of the retrieval corpus
+   * @param promptTemplate prompt template used by the qualification
+   * @param groundingPolicy policy used to accept, abstain, or extract an answer
+   * @param artifactSha256 SHA-256 digest of the qualified model artifact
+   * @param artifactSizeBytes qualified model artifact size in bytes
+   * @param reportPath repository-relative qualification report path
+   * @param reportUri canonical HTTPS location of the qualification report
+   * @param reportSha256 SHA-256 digest of the qualification report
+   * @param performanceTier measured performance classification
+   * @param verdict qualification verdict
+   * @param qualified whether the artifact passed the production policy
+   * @param attempts measured workload attempts
+   * @param p95RetrievalMillis p95 retrieval latency in milliseconds
+   * @param p95TtftMillis p95 time to first token in milliseconds
+   * @param p95TpotMillis p95 time per output token in milliseconds
+   * @param p95EndToEndMillis p95 end-to-end latency in milliseconds
+   * @param p50PrefillTokensPerSecond p50 prompt-prefill throughput
+   * @param p50DecodeTokensPerSecond p50 decode throughput
+   * @param peakRssBytes peak resident-set size in bytes
+   * @param correctAnswerRate accepted-answer correctness rate
+   * @param rawCorrectAnswerRate model-only correctness rate before grounding-policy fallback
+   * @param abstentionAccuracy accuracy of unsupported-question abstentions
+   * @param modelAnswerRate fraction of attempts answered directly by the model
+   * @param modelAnswerCorrectRate correctness rate among direct model answers
+   * @param extractiveFallbackRate fraction of attempts answered by extractive fallback
+   * @param environment controlled host and JVM identity
+   */
+  public ModelRagQualification(
+      String modelId,
+      String model,
+      String backend,
+      String backendVersion,
+      String workload,
+      String corpusSha256,
+      String promptTemplate,
+      String groundingPolicy,
+      String artifactSha256,
+      long artifactSizeBytes,
+      String reportPath,
+      URI reportUri,
+      String reportSha256,
+      String performanceTier,
+      String verdict,
+      boolean qualified,
+      int attempts,
+      double p95RetrievalMillis,
+      double p95TtftMillis,
+      double p95TpotMillis,
+      double p95EndToEndMillis,
+      double p50PrefillTokensPerSecond,
+      double p50DecodeTokensPerSecond,
+      long peakRssBytes,
+      double correctAnswerRate,
+      double rawCorrectAnswerRate,
+      double abstentionAccuracy,
+      double modelAnswerRate,
+      double modelAnswerCorrectRate,
+      double extractiveFallbackRate,
+      ModelQualificationEnvironment environment) {
+    this(
+        modelId,
+        model,
+        backend,
+        backendVersion,
+        workload,
+        corpusSha256,
+        promptTemplate,
+        groundingPolicy,
+        artifactSha256,
+        artifactSizeBytes,
+        reportPath,
+        reportUri,
+        reportSha256,
+        performanceTier,
+        verdict,
+        qualified,
+        attempts,
+        p95RetrievalMillis,
+        p95TtftMillis,
+        p95TpotMillis,
+        p95EndToEndMillis,
+        p50PrefillTokensPerSecond,
+        p50DecodeTokensPerSecond,
+        peakRssBytes,
+        correctAnswerRate,
+        rawCorrectAnswerRate,
+        abstentionAccuracy,
+        modelAnswerRate,
+        modelAnswerCorrectRate,
+        extractiveFallbackRate,
+        environment,
+        "unspecified");
+  }
+
   /** Validates immutable evidence, metrics, rates, and the production policy floor. */
   public ModelRagQualification {
     modelId = requireIdentifier(modelId);
+    policyVersion = requireText(policyVersion, "policyVersion");
     model = requireText(model, "model");
     backend = requireText(backend, "backend").toLowerCase(Locale.ROOT);
     backendVersion = requireText(backendVersion, "backendVersion");

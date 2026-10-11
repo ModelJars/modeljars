@@ -44,6 +44,18 @@ class ModelRagQualificationRegistryTest {
   private static final String MODELS_REVISION = "3b8ef7392a24b92faf9ec8d30cc3984182ecba78";
 
   @Test
+  void entryPolicyOverridesCatalogDefaultWithoutRelabelingTheCatalog() {
+    Properties input = properties(1.0, 1.0, true);
+    input.setProperty("qualification.qwen3_0_6b_q4_0.policyVersion", "test-publisher-policy");
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromProperties(input);
+    assertEquals("production-rag-model-contribution-v4", registry.policyVersion());
+    assertEquals("test-publisher-policy", registry.qualifications().getFirst().policyVersion());
+    input.setProperty("qualification.qwen3_0_6b_q4_0.policyVersion", " ");
+    assertThrows(
+        IllegalArgumentException.class, () -> ModelRagQualificationRegistry.fromProperties(input));
+  }
+
+  @Test
   void loadsAuditableQualificationAndMatchesOnlyTheCertifiedArtifact() {
     ModelRagQualificationRegistry registry =
         ModelRagQualificationRegistry.fromProperties(properties(1.0, 1.0, true));
@@ -57,6 +69,7 @@ class ModelRagQualificationRegistryTest {
 
     ModelRagQualification qualification = registry.qualifications().getFirst();
     assertEquals("qwen3_0_6b_q4_0", qualification.modelId());
+    assertEquals("production-rag-model-contribution-v4", qualification.policyVersion());
     assertEquals("llama.cpp", qualification.backend());
     assertEquals("general", qualification.workload());
     assertEquals("d".repeat(64), qualification.corpusSha256());

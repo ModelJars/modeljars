@@ -83,7 +83,7 @@ public final class ModelRagQualificationRegistry {
   }
 
   /**
-   * Returns the production policy version applied by the qualification run.
+   * Returns the catalog default policy. Individual entries may record a different policy.
    *
    * @return qualification policy version
    */
@@ -320,7 +320,9 @@ public final class ModelRagQualificationRegistry {
             longValue(properties, environment + "maxHeapBytes"),
             required(properties, environment + "javaVersion"),
             required(properties, environment + "javaVendor"),
-            required(properties, environment + "vmName")));
+            required(properties, environment + "vmName")),
+        properties.getProperty(
+            prefix + "policyVersion", required(properties, ROOT_PREFIX + "policyVersion")));
   }
 
   private static SourcedQualification newestQualification(

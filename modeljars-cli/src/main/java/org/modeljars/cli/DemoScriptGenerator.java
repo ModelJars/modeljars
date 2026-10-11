@@ -77,7 +77,11 @@ final class DemoScriptGenerator {
         requestedInput
             .map(String::strip)
             .filter(value -> !value.isEmpty())
-            .orElseGet(() -> input(type));
+            .orElseGet(
+                () ->
+                    graniteComposition(descriptor)
+                        ? "In which German state is Aachen?"
+                        : input(type));
     String source =
         switch (type) {
           case CHAT -> chatSource(descriptor, input);
@@ -242,7 +246,20 @@ final class DemoScriptGenerator {
             .formatted(descriptor.markerCoordinate(), javaString(defaultInput));
   }
 
+  private static boolean graniteComposition(ModelJarDescriptor descriptor) {
+    return descriptor.markerCoordinate().groupId().equals("org.modeljars.composite")
+        && descriptor.markerCoordinate().artifactId().equals("granite-answerability");
+  }
+
   private String compositeSource(ModelJarDescriptor descriptor, String defaultInput) {
+    if (graniteComposition(descriptor)) {
+      return graniteSource(descriptor, defaultInput);
+    }
+    if (!descriptor.markerCoordinate().groupId().equals("org.modeljars.composite")
+        || !descriptor.markerCoordinate().artifactId().equals("qwen3-chat-tools")) {
+      throw new IllegalArgumentException(
+          "No demo entrypoint for composition " + descriptor.markerCoordinate());
+    }
     return directives(descriptor, false)
         + """
         import com.integrallis.models.api.SamplingOptions;
@@ -270,6 +287,35 @@ final class DemoScriptGenerator {
           private static void quietLibraries() {
             Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
             Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+          }
+        }
+        """
+            .formatted(javaString(defaultInput));
+  }
+
+  private String graniteSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import java.util.List;
+        import org.modeljars.composite.granite.GraniteAnswerability;
+
+        class ModelJarsDemo {
+          public static void main(String... args) {
+            var question = args.length == 0 ? "%s" : String.join(" ", args);
+            var documents = List.of(
+                "Aachen is a spa city in North Rhine-Westphalia, Germany, near the Belgian and Dutch borders.",
+                "Aachen Cathedral was consecrated in 805 and became the first German UNESCO World Heritage site in 1978.");
+            var request = GraniteAnswerability.Request.of(documents, question);
+            System.out.println("Question: " + question);
+            System.out.println("Documents: " + documents);
+            try (var hybrid = GraniteAnswerability.open()) {
+              var verdict = GraniteAnswerability.classify(
+                  hybrid, request, GraniteAnswerability.Prefix.SHARED);
+              System.out.println("Answerability: " + verdict.answerability());
+              System.out.println("Raw output: " + verdict.output());
+              System.out.println("Physical prefix sharing: " + verdict.physicallySharesPrefix());
+              System.out.println("Shared prefix tokens: " + verdict.sharedPrefixTokens());
+            }
           }
         }
         """
@@ -567,10 +613,14 @@ final class DemoScriptGenerator {
 
             private static int requiredInt(JsonNode arguments, String name) {
               JsonNode value = arguments.get(name);
-              if (value == null || !value.isIntegralNumber()) {
+              if (value == null || !value.isIntegralNumber() || !value.canConvertToInt()) {
                 throw new IllegalArgumentException("Missing integer argument: " + name);
               }
-              return value.intValue();
+              int brightness = value.intValue();
+              if (brightness < 0 || brightness > 100) {
+                throw new IllegalArgumentException("Brightness must be 0..100");
+              }
+              return brightness;
             }
           }
         }

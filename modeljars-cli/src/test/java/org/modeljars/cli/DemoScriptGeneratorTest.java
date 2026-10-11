@@ -176,6 +176,52 @@ class DemoScriptGeneratorTest {
         "conversation.generate(");
   }
 
+  @Test
+  void generatesCompilableGraniteAnswerabilityRatherThanQwenChat(
+      @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
+    var descriptor =
+        org.modeljars.ModelJarRegistry.fromClasspath()
+            .resolve(org.modeljars.ModelJar.of("modeljars://granite-answerability"))
+            .orElseThrow();
+    var demo = generator.generate(descriptor, Optional.empty());
+    assertEquals(DemoScriptGenerator.Type.COMPOSITE, demo.type());
+    assertContains(
+        demo.source(),
+        "GraniteAnswerability.open()",
+        "GraniteAnswerability.classify(",
+        "physicallySharesPrefix()",
+        "In which German state is Aachen?");
+    assertTrue(!demo.source().contains("Qwen3ChatTools"));
+    SpringFixtures.assertCompiles(demo.fileName(), demo.source(), directory);
+  }
+
+  @Test
+  void generatedToolHandlerRejectsOutOfRangeAndOverflowingBrightness(
+      @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
+    var demo = generator.generate(descriptor(Set.of("tool-calling"), "needle2"), Optional.empty());
+    SpringFixtures.assertCompiles(demo.fileName(), demo.source(), directory);
+    try (var classes =
+        new java.net.URLClassLoader(
+            new java.net.URL[] {directory.toUri().toURL()}, getClass().getClassLoader())) {
+      var home = classes.loadClass("ModelJarsDemo$SmartHome");
+      var method =
+          home.getDeclaredMethod(
+              "requiredInt", com.fasterxml.jackson.databind.JsonNode.class, String.class);
+      method.setAccessible(true);
+      var json = new com.fasterxml.jackson.databind.ObjectMapper();
+      assertEquals(0, method.invoke(null, json.readTree("{\"brightness\":0}"), "brightness"));
+      assertEquals(100, method.invoke(null, json.readTree("{\"brightness\":100}"), "brightness"));
+      for (String number : java.util.List.of("-1", "101", "4294967296")) {
+        var arguments = json.readTree("{\"brightness\":" + number + "}");
+        var failure =
+            org.junit.jupiter.api.Assertions.assertThrows(
+                java.lang.reflect.InvocationTargetException.class,
+                () -> method.invoke(null, arguments, "brightness"));
+        assertTrue(failure.getCause() instanceof IllegalArgumentException);
+      }
+    }
+  }
+
   private static void assertContains(String source, String... fragments) {
     for (String fragment : fragments) {
       assertTrue(source.contains(fragment), () -> "missing generated source fragment: " + fragment);

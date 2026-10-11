@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
+import { validatePublisherReference } from "./rag-publisher-reference-gate.mjs";
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const GIT_REVISION = /^[a-f0-9]{40}$/;
@@ -25,6 +26,8 @@ function qualificationKey(entry) {
 function evidenceIdentity(entry) {
   return JSON.stringify({
     qualified: entry.qualified,
+    policyVersion: entry.policyVersion,
+    qualificationEvidence: entry.qualificationEvidence,
     verdict: entry.verdict,
     artifactSha256: entry.artifactSha256,
     artifactSizeBytes: entry.artifactSizeBytes,
@@ -164,6 +167,7 @@ export async function validateQualificationSmokeGate({
       evidenceIdentity(prior) === evidenceIdentity(entry)
     ) continue;
 
+    await validatePublisherReference(entry, currentQualifications.modelsRevision, loadReport);
     const smoke = assertSmokeMetadata(entry);
     if (loadReport !== undefined) {
       const bytes = await loadReport({

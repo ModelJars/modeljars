@@ -45,6 +45,7 @@ plugins {
 val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
 val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v6"
+val PUBLISHER_RAG_POLICY_VERSION = "production-rag-publisher-reference-v1"
 val PRODUCTION_TOOL_POLICY_VERSION = "needle2-tool-conformance-v2"
 
 fun directPomDependencies(document: Document): NodeList =
@@ -362,6 +363,7 @@ data class CatalogQualificationEnvironment(
 
 data class CatalogRagQualification(
     val modelId: String,
+    val policyVersion: String?,
     val model: String,
     val backend: String,
     val backendVersion: String,
@@ -662,6 +664,7 @@ fun CatalogPerformanceProfile.registryProperties(): String =
 fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
     buildString {
         val prefix = "qualification.$modelId."
+        policyVersion?.let { appendLine("${prefix}policyVersion=${propertyValue(it)}") }
         appendLine("${prefix}model=${propertyValue(model)}")
         appendLine("${prefix}backend=${propertyValue(backend)}")
         appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
@@ -707,7 +710,7 @@ fun CatalogRagQualification.siteMetadata(
             "https://github.com/integrallis/models/blob/" +
             "${qualifications.modelsRevision}/$reportPath") +
         ("modelsRevision" to qualifications.modelsRevision) +
-        ("policyVersion" to qualifications.policyVersion) +
+        ("policyVersion" to (policyVersion ?: qualifications.policyVersion)) +
         ("useCaseTier" to
             when {
                 !qualified -> "UNQUALIFIED"
@@ -1709,6 +1712,9 @@ val ragQualifications =
                         raw["environment"].stringKeyMap("$context.environment")
                     CatalogRagQualification(
                         modelId = modelId,
+                        policyVersion =
+                            if (raw.containsKey("policyVersion")) raw.requiredString("policyVersion")
+                            else null,
                         model = raw.requiredString("model"),
                         backend = raw.requiredString("backend"),
                         backendVersion = raw.requiredString("backendVersion"),
@@ -2625,6 +2631,22 @@ ragQualifications?.let { qualifications ->
         "Qualification policyVersion must not be blank"
     }
     qualifications.entries.forEach { qualification ->
+        require(
+            qualification.policyVersion == null ||
+                qualification.policyVersion == qualifications.policyVersion ||
+                qualification.policyVersion == PUBLISHER_RAG_POLICY_VERSION,
+        ) {
+            "Unsupported entry qualification policy for ${qualification.modelId}"
+        }
+        if (qualification.policyVersion == PUBLISHER_RAG_POLICY_VERSION) {
+            require(
+                qualification.modelId == "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0" &&
+                    qualification.artifactSha256 == "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3" &&
+                    qualification.artifactSizeBytes == 5_946_648_928L,
+            ) {
+                "Publisher-reference policy is bound to the reviewed Bonsai PTQ artifact"
+            }
+        }
         val model =
             catalogEntries.singleOrNull { it.id == qualification.modelId }
                 ?: error("Unknown modelId in qualification: ${qualification.modelId}")

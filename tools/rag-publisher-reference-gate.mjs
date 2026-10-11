@@ -51,6 +51,8 @@ export async function validatePublisherReference(entry, revision, loadReport) {
       Number.isFinite(report.summary.endToEndMillis?.p95) && report.summary.endToEndMillis.p95 > 0, "relative performance timing is invalid");
     require(report.summary.correctAnswerRate >= .9 && report.summary.abstentionAccuracy === 1, "quality floor failed");
   }
+  require(Number.isSafeInteger(entry.contextLength) && entry.contextLength > 0 &&
+    entry.contextLength === candidate.settings?.contextLength, "tested context differs from catalog");
   require(candidate.backend === entry.backend && candidate.backendVersion === entry.backendVersion, "candidate runtime differs");
   require(comparator.backend === "llama.cpp" && comparator.backendVersion === REFERENCE, "unpinned publisher comparator");
   for (const key of ["hostname", "osName", "architecture", "cpuModel", "availableProcessors", "totalMemoryBytes"])

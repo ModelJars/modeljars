@@ -44,6 +44,29 @@ class ModelRagQualificationRegistryTest {
   private static final String MODELS_REVISION = "3b8ef7392a24b92faf9ec8d30cc3984182ecba78";
 
   @Test
+  void testedContextIsOptionalForHistoricalRecordsButPositiveWhenDeclared() {
+    Properties input = properties(1.0, 1.0, true);
+    assertEquals(
+        0,
+        ModelRagQualificationRegistry.fromProperties(input)
+            .qualifications()
+            .getFirst()
+            .contextLength());
+    input.setProperty("qualification.qwen3_0_6b_q4_0.contextLength", "2048");
+    assertEquals(
+        2048,
+        ModelRagQualificationRegistry.fromProperties(input)
+            .qualifications()
+            .getFirst()
+            .contextLength());
+    for (String invalid : List.of("0", "-1", "invalid")) {
+      input.setProperty("qualification.qwen3_0_6b_q4_0.contextLength", invalid);
+      assertThrows(
+          ModelJarException.class, () -> ModelRagQualificationRegistry.fromProperties(input));
+    }
+  }
+
+  @Test
   void entryPolicyOverridesCatalogDefaultWithoutRelabelingTheCatalog() {
     Properties input = properties(1.0, 1.0, true);
     input.setProperty("qualification.qwen3_0_6b_q4_0.policyVersion", "test-publisher-policy");

@@ -364,6 +364,7 @@ data class CatalogQualificationEnvironment(
 data class CatalogRagQualification(
     val modelId: String,
     val policyVersion: String?,
+    val contextLength: Int?,
     val model: String,
     val backend: String,
     val backendVersion: String,
@@ -665,6 +666,7 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
     buildString {
         val prefix = "qualification.$modelId."
         policyVersion?.let { appendLine("${prefix}policyVersion=${propertyValue(it)}") }
+        contextLength?.let { appendLine("${prefix}contextLength=$it") }
         appendLine("${prefix}model=${propertyValue(model)}")
         appendLine("${prefix}backend=${propertyValue(backend)}")
         appendLine("${prefix}backendVersion=${propertyValue(backendVersion)}")
@@ -1715,6 +1717,9 @@ val ragQualifications =
                         policyVersion =
                             if (raw.containsKey("policyVersion")) raw.requiredString("policyVersion")
                             else null,
+                        contextLength =
+                            if (raw.containsKey("contextLength")) integer(raw, "contextLength", context)
+                            else null,
                         model = raw.requiredString("model"),
                         backend = raw.requiredString("backend"),
                         backendVersion = raw.requiredString("backendVersion"),
@@ -2637,6 +2642,9 @@ ragQualifications?.let { qualifications ->
                 qualification.policyVersion == PUBLISHER_RAG_POLICY_VERSION,
         ) {
             "Unsupported entry qualification policy for ${qualification.modelId}"
+        }
+        require(qualification.contextLength == null || qualification.contextLength > 0) {
+            "Recorded qualification contextLength must be positive for ${qualification.modelId}"
         }
         if (qualification.policyVersion == PUBLISHER_RAG_POLICY_VERSION) {
             require(

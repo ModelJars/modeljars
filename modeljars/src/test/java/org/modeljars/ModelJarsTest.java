@@ -80,6 +80,41 @@ class ModelJarsTest {
   private static final ModelJar GRANITE = Ibm_Granite_Granite_4_1_3b_Gguf_Q4_K_M.MODEL;
 
   @Test
+  void loadsWithTheTestedContextInsteadOfAllocatingTheAdvertisedMaximum() throws Exception {
+    Properties qualificationProperties = new Properties();
+    var resources =
+        getClass().getClassLoader().getResources(ModelRagQualificationRegistry.RESOURCE);
+    String key = "qualification.qwen3_0_6b_q4_0.contextLength";
+    while (resources.hasMoreElements()) {
+      qualificationProperties.clear();
+      try (var input = resources.nextElement().openStream()) {
+        qualificationProperties.load(input);
+      }
+      if (qualificationProperties.containsKey("qualification.qwen3_0_6b_q4_0.model")) break;
+    }
+    qualificationProperties.setProperty(key, "2048");
+    AtomicReference<BackendConfiguration> selected = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromProperties(qualificationProperties),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-model.gguf"),
+            (backend, path, configuration) -> {
+              selected.set(configuration);
+              return new StubBackend();
+            },
+            Map::of,
+            List::of);
+    try (var runtime =
+        loader.loadRuntime(QWEN, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
+      assertEquals(
+          "2048", selected.get().recommendations().get("models.purejava.maxContextLength"));
+      assertEquals(2048, runtime.qualification().contextLength());
+    }
+  }
+
+  @Test
   void opensAQualifiedModelWithoutExposingItsInstalledPath() {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(QWEN).orElseThrow();

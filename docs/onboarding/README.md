@@ -12,14 +12,15 @@ and `benchmark-results/2026-10-11-model-onboarding/` in the Models repository. B
 weight files have been installed and SHA-256 verified locally. The 5.95 GB figure describes
 Bonsai's artifact, not the memory required to run it.
 
-Bonsai's current blocker is an authoritative comparator for the exact PTQ1_0 file. The existing
-`production-rag-model-contribution-v6` gate requires Ollama or Transformers. The publisher's
-reference is independently useful, but calling that fork Ollama would misstate the evidence.
-Ollama v0.40.3's parser still has no type 143 sizing implementation; see
-[the upstream tracker](https://github.com/ollama/ollama/issues/18521) and
-[Prism's backend support](https://github.com/PrismML-Eng/Bonsai-demo/blob/d5ea901004ae983f5bea86dd2e3f5fa1fe915e2c/BACKEND-SUPPORT.md).
-No qualification threshold or comparator requirement has been relaxed. Its computed candidate
-profile is retained in `bonsai2/profile.json`; the public profile manifest covers published models.
+The initial Bonsai intake lacked an accepted comparator for the exact PTQ1_0 file. The
+original `production-rag-model-contribution-v6` protocol required Ollama or Transformers;
+Prism's publisher reference must not be described as Ollama. That failed intake remains part
+of the history. Models now has a separate, explicit `production-rag-publisher-reference-v1`
+protocol for the pinned publisher implementation and exact artifact. The current work reruns
+its 200 public QA cases on the frozen candidate and measures correctness, latency, throughput,
+and resources separately. Production qualification is still pending; comparator availability
+alone does not qualify the model. Its computed candidate profile remains in `bonsai2/profile.json`;
+the public profile manifest covers published models.
 
 EmbeddingGemma 2's image, audio and video encoders are separate artifacts and future modality
 work. Bonsai's vision projector is likewise outside the text candidate. Neither entry claims

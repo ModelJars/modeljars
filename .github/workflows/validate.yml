@@ -62,8 +62,14 @@ jobs:
       - name: Exercise the source MobileMoE fixture suite with the installed gated weights
         env:
           FIXTURE_REPORT_ROOT: ${{ runner.temp }}/mobilemoe-smoke
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           MOBILE_FIXTURE=$(python3 -c 'import json,os,pathlib; print(json.loads((pathlib.Path(os.environ["FIXTURE_REPORT_ROOT"])/"installation.json").read_text())["path"])')
+          python3 -m venv "$RUNNER_TEMP/mobilemoe-oracle-venv"
+          "$RUNNER_TEMP/mobilemoe-oracle-venv/bin/pip" install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+          "$RUNNER_TEMP/mobilemoe-oracle-venv/bin/pip" install transformers==4.57.6 tokenizers==0.22.2 safetensors==0.7.0 numpy==2.2.6
+          "$RUNNER_TEMP/mobilemoe-oracle-venv/bin/python" tools/prepare-mobilemoe-oracle.py --directory "$MOBILE_FIXTURE"
+          cp "$MOBILE_FIXTURE/oracle-provenance.json" "$FIXTURE_REPORT_ROOT/oracle-provenance.json"
           (cd models-smoke-source && ./gradlew --no-daemon \
             :backend-java:mobileMoeHuggingFaceIntegrationTest \
             "-Dmodels.fixtures.mobileMoeQatDirectory=$MOBILE_FIXTURE")

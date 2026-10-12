@@ -137,9 +137,11 @@ jobs:
             fi
           fi
 
-          echo "required=${required}" >> "${GITHUB_OUTPUT}"
-          echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
-          echo "comparison=${comparison}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "required=${required}"
+            echo "mode=${mode}"
+            echo "comparison=${comparison}"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Set up Java
         uses: actions/setup-java@v5

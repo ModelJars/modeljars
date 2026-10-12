@@ -59,6 +59,22 @@ jobs:
           python3 tools/released-rag-smoke.py --models-repo models-smoke-source \
             --payload "$RUNNER_TEMP/released-models" \
             --model-id facebook_mobilemoe_s_qat_int4_g32 --output "$RUNNER_TEMP/mobilemoe-smoke"
+      - name: Exercise the source MobileMoE fixture suite with the installed gated weights
+        env:
+          FIXTURE_REPORT_ROOT: ${{ runner.temp }}/mobilemoe-smoke
+        run: |
+          MOBILE_FIXTURE=$(python3 -c 'import json,os,pathlib; print(json.loads((pathlib.Path(os.environ["FIXTURE_REPORT_ROOT"])/"installation.json").read_text())["path"])')
+          (cd models-smoke-source && ./gradlew --no-daemon \
+            :backend-java:mobileMoeHuggingFaceIntegrationTest \
+            "-Dmodels.fixtures.mobileMoeQatDirectory=$MOBILE_FIXTURE")
+          python3 - <<'PYTHON'
+          import pathlib, xml.etree.ElementTree as E
+          reports = pathlib.Path('models-smoke-source/backend-java/build/test-results/mobileMoeHuggingFaceIntegrationTest')
+          suites = [E.parse(p).getroot() for p in reports.glob('TEST-*.xml')]
+          counts = {k: sum(int(s.get(k, 0)) for s in suites) for k in ['tests', 'failures', 'errors', 'skipped']}
+          print('Pinned source fixture suite:', counts)
+          assert counts['tests'] >= 7 and not any(counts[k] for k in ['failures', 'errors', 'skipped']), counts
+          PYTHON
       - name: Retain reports and exact inputs
         if: always()
         uses: actions/upload-artifact@v7
@@ -71,6 +87,7 @@ jobs:
             ${{ runner.temp }}/mobilemoe-smoke/gate.py
             ${{ runner.temp }}/released-models/classpath.json
             ${{ runner.temp }}/released-models/provenance.json
+            models-smoke-source/backend-java/build/test-results/mobileMoeHuggingFaceIntegrationTest/*.xml
           retention-days: 30
 
   test:

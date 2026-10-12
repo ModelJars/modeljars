@@ -150,6 +150,11 @@ loading, which Phase 2.1 delivers first.
 
 ## What has not been done
 
-**No code exists for any phase.** No accuracy, WER, page-accuracy or throughput number appears
-above, because none has been measured here. Every architectural fact was range-fetched from the
-artifact's own header with the triage tool; every upstream benchmark figure is labelled as theirs.
+The audio frontend is partially implemented: Models contains `WhisperMelFrontend`, unit tests,
+and an independent tensor-oracle test for its window and filterbank calculations. This does not
+implement Whisper's encoder, decoder, cross-attention, or a qualified transcription pipeline.
+No completed ASR, vision, or OCR qualification is claimed here. The architectural inventory above
+comes from artifact headers; upstream benchmark figures remain labelled as upstream results.
+
+Status checked against the runtime source on 2026-10-12. Component progress must not be reported
+as a qualified modality.

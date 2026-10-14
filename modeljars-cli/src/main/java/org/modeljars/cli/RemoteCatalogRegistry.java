@@ -73,11 +73,6 @@ final class RemoteCatalogRegistry {
     this.fetcher = Objects.requireNonNull(fetcher, "fetcher");
   }
 
-  /** Loads the freshest verified catalog available to the CLI. */
-  static ModelJarRegistry loadDefault() {
-    return loadDefaultCatalog().registry();
-  }
-
   /**
    * Loads the freshest verified catalog together with the model profiles published in the same
    * registry file.

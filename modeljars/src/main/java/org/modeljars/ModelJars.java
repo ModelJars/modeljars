@@ -1011,10 +1011,6 @@ public final class ModelJars {
     }
   }
 
-  EmbeddingBackend loadEmbedding(ModelJar model, ModelLoadOptions options) {
-    return loadEmbeddingRuntime(model, options).model();
-  }
-
   ModelJarEmbeddingRuntime loadEmbeddingRuntime(ModelJar model, ModelLoadOptions options) {
     Objects.requireNonNull(model, "model");
     Objects.requireNonNull(options, "options");
@@ -1035,10 +1031,6 @@ public final class ModelJars {
     return new ModelJarEmbeddingRuntime(backend, descriptor, qualification);
   }
 
-  RerankingModel loadReranker(ModelJar model, ModelLoadOptions options) {
-    return loadRerankingRuntime(model, options).model();
-  }
-
   ModelJarRerankingRuntime loadRerankingRuntime(ModelJar model, ModelLoadOptions options) {
     Objects.requireNonNull(model, "model");
     Objects.requireNonNull(options, "options");
@@ -1051,10 +1043,6 @@ public final class ModelJars {
     Path artifact = installer.install(descriptor, options);
     RerankingModel reranker = rerankingModelLoader.load(artifact, descriptor, qualification);
     return new ModelJarRerankingRuntime(reranker, descriptor, qualification);
-  }
-
-  TextToSpeechModel loadSpeech(ModelJar model, ModelLoadOptions options) {
-    return loadSpeechRuntime(model, options).model();
   }
 
   ModelJarSpeechRuntime loadSpeechRuntime(ModelJar model, ModelLoadOptions options) {

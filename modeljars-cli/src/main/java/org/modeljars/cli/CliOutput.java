@@ -128,10 +128,6 @@ final class CliOutput {
     return format;
   }
 
-  int width() {
-    return width;
-  }
-
   void line(String text) {
     stream.println(text);
   }

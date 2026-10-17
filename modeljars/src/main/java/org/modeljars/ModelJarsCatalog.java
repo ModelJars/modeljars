@@ -161,13 +161,20 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
               descriptor.alias(),
               true,
               tags,
+              tags,
               contextLength.get(),
               0.0,
               0.0,
               descriptor.sizeBytes().orElse(0L),
               performanceFor(descriptor),
               qualityFor(descriptor, tags),
-              1.0));
+              1.0,
+              // The catalog's own feature set, passed through rather than reinterpreted. It mixes
+              // artifact facts (`q4-k-m`, `verified-sha256`), architecture (`grouped-query-
+              // attention`) and routing-relevant properties (`long-context`,
+              // `noncommercial-research-license`). Deciding which of those matter is the
+              // application's job, not this provider's, so all of them are reported.
+              descriptor.features()));
     }
     return List.copyOf(discovered);
   }

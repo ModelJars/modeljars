@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.integrallis.models.api.catalog.DiscoveredModel;
 import com.integrallis.models.api.catalog.ModelCatalogProvider;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,37 @@ class ModelJarsCatalogTest {
       // A context window is what the router filters on before it scores anything, so a model
       // without one cannot be routed to at all.
       assertTrue(model.contextWindow() > 0, model.id());
+    }
+  }
+
+  @Test
+  void carriesCatalogFeaturesSoApplicationsCanRouteOnThem() {
+    // The catalog declares properties that are not capabilities -- long-context,
+    // noncommercial-research-license, medical-use-warning. Dropping them here is invisible: every
+    // other assertion still passes, and the only symptom is that an application cannot express
+    // "this needs a long context" without inventing a capability name and declaring it by hand.
+    var catalog = ModelJarRegistry.fromClasspath();
+    var declared = new HashSet<String>();
+    for (var descriptor : catalog.descriptors()) {
+      declared.addAll(descriptor.features());
+    }
+    var reported = new HashSet<String>();
+    for (DiscoveredModel model : new ModelJarsCatalog().discover()) {
+      reported.addAll(model.features());
+    }
+    // Discovery reports a subset of the installed catalog, so this asserts the direction that can
+    // actually fail: nothing reported may be invented, and if anything is installed and runnable
+    // its features must survive the trip.
+    assertTrue(declared.containsAll(reported), "discovery invented features: " + reported);
+    for (DiscoveredModel model : new ModelJarsCatalog().discover()) {
+      assertEquals(
+          catalog.descriptors().stream()
+              .filter(d -> d.alias().equals(model.id()))
+              .findFirst()
+              .orElseThrow()
+              .features(),
+          model.features(),
+          model.id());
     }
   }
 

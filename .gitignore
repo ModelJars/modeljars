@@ -6,6 +6,10 @@ out/
 
 *.class
 *.log
+# Probe output under docs/model-evidence/ is evidence rather than build noise. A figure whose raw
+# log is ignored cannot be checked against the document that quotes it, and this repository's
+# documents are required to be checkable.
+!docs/model-evidence/**/*.log
 .DS_Store
 node_modules/
 __pycache__/

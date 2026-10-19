@@ -1,0 +1,30 @@
+build: harriet 0162, pass 2
+load at start: 7.53 4.19 1.75 1/185 3121
+DISCARDED WARM-UP                                  MS      MS/Q  HEAP MIB
+warm-up, not a measurement                       6005      6005       822
+    q1 true           p=0.792636  confidence=0.263586
+
+BATCH                                              MS      MS/Q  HEAP MIB
+one rubric, 1 question                           5427      5427       823
+    q1 true           p=0.780316  confidence=0.240411
+one rubric, 2 questions                          5841      2920       823
+    q1 true           p=0.818441  confidence=0.316523
+    q2 true           p=0.532226  confidence=0.002999
+one rubric, 3 questions                          6276      2092       823
+    q1 true           p=0.822828  confidence=0.326148
+    q2 true           p=0.611310  confidence=0.036051
+    q3 false          p=0.927524  confidence=0.624904
+three rubrics, 1 question                        5367      5367       823
+    q1 true           p=0.868568  confidence=0.438648
+three rubrics, 2 questions                       6727      3363       823
+    q1 true           p=0.851968  confidence=0.395106
+    q2 billing        p=0.994538  confidence=0.966347
+three rubrics, 3 questions                       8300      2766       823
+    q1 true           p=0.864846  confidence=0.428594
+    q2 billing        p=0.995530  confidence=0.971403
+    q3 today          p=0.582685  confidence=0.123016
+no rubric, 3 questions                           5527      1842       823
+    q1 true           p=0.566167  confidence=0.012669
+    q2 false          p=0.633177  confidence=0.051798
+    q3 false          p=0.945807  confidence=0.696050
+load at end: 7.80 4.78 2.08 1/185 3203

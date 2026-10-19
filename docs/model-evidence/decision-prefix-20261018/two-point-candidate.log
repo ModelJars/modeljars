@@ -1,0 +1,27 @@
+DISCARDED WARM-UP                                  MS      MS/Q
+warm-up, not a measurement                      13736     13736
+    q1 true           p=0.809192  confidence=0.296842
+
+BATCH                                              MS      MS/Q
+one rubric, 1 question                          13950     13950
+    q1 true           p=0.808567  confidence=0.295541
+one rubric, 2 questions                         15171      7585
+    q1 true           p=0.825461  confidence=0.332017
+    q2 true           p=0.515407  confidence=0.000685
+one rubric, 3 questions                         16247      5415
+    q1 true           p=0.844592  confidence=0.376790
+    q2 true           p=0.581843  confidence=0.019415
+    q3 false          p=0.921886  confidence=0.604502
+three rubrics, 1 question                       14177     14177
+    q1 true           p=0.861688  confidence=0.420198
+three rubrics, 2 questions                      19185      9592
+    q1 true           p=0.862212  confidence=0.421585
+    q2 billing        p=0.994700  confidence=0.967099
+three rubrics, 3 questions                      22178      7392
+    q1 true           p=0.853588  confidence=0.399212
+    q2 billing        p=0.996244  confidence=0.975374
+    q3 today          p=0.625113  confidence=0.169868
+no rubric, 3 questions                          14429      4809
+    q1 true           p=0.573128  confidence=0.015486
+    q2 false          p=0.622335  confidence=0.043624
+    q3 false          p=0.941585  confidence=0.678880

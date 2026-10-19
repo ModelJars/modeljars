@@ -15,6 +15,7 @@
  */
 package org.modeljars;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,6 +64,125 @@ final class ModelJarDecisionRuntimeGroupingTest {
     runtime.decide(new Noul("Anything else?"), EVIDENCE);
     assertEquals(1, backend.evidencePrefills, "the group must leave the evidence resumable");
     assertTrue(backend.resumes >= 1, "the next question must resume, not re-read");
+  }
+
+  /**
+   * QUESTIONS WITH DIFFERENT RUBRICS MUST STILL READ THE EVIDENCE ONCE.
+   *
+   * <p>MEASURED 2026-10-19 on an isolated 8-vCPU EPYC-Milan host over a 250-token ticket: three
+   * questions carrying three rubrics took 16,497 ms against 6,343 ms for the same three sharing one
+   * rubric, because the resumption point was captured after the evidence AND the rubric, so a
+   * question whose rubric differed matched nothing and re-read the ticket. An extra question cost
+   * 5,539 ms instead of 432 ms -- and a boolean, a choice and a score, each with its own written
+   * rules, is exactly the shape a batch of real decisions has.
+   */
+  @Test
+  void aBatchOfDifferentRubricsReadsTheEvidenceOnce() {
+    StubBackend backend = new StubBackend(Integer.MAX_VALUE);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+
+    runtime.decideAll(mixedRubrics(), EVIDENCE);
+
+    assertEquals(
+        1,
+        backend.coldPrefills,
+        "three rubrics over one piece of evidence must read the evidence once");
+    assertTrue(backend.resumes >= 2, "the second and third questions must resume, not re-read");
+  }
+
+  /**
+   * A CALLER ASKING ONE QUESTION AT A TIME CANNOT BE ASKED TO KNOW ITS OWN FUTURE.
+   *
+   * <p>{@code decideAll} sees every rubric before it answers anything, so it can put the point in
+   * the right place. {@code decide} cannot, so it starts where a single question is cheapest and
+   * moves once a second rubric over the same evidence proves the questions are unlike. The move
+   * costs one more read of the evidence, once, instead of one per question forever.
+   */
+  @Test
+  void repeatedSingleQuestionsStopReReadingTheEvidenceAfterTheFirstRubricChange() {
+    StubBackend backend = new StubBackend(Integer.MAX_VALUE);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+
+    for (AnswerSpace space : mixedRubrics()) {
+      runtime.decide(space, EVIDENCE);
+    }
+
+    assertEquals(
+        2,
+        backend.coldPrefills,
+        "the second question pays to move the point; the third must not pay again");
+  }
+
+  /** Only one resumption point is held, because each one retains 98.3 MiB of linear state. */
+  @Test
+  void onlyOneResumptionPointIsHeldAtATime() {
+    StubBackend backend = new StubBackend(Integer.MAX_VALUE);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+
+    runtime.decideAll(mixedRubrics(), EVIDENCE);
+
+    assertEquals(
+        1, backend.liveCaptures(), "a second point would cost another copy of the linear state");
+  }
+
+  /**
+   * RESUMING MUST NOT MOVE AN ANSWER.
+   *
+   * <p>The stub's logits are a function of the position the answer is read at, so a prefix that was
+   * resumed at the wrong boundary -- or a criteria segment prefilled at the wrong offset -- changes
+   * the distribution rather than failing. That is the failure this guards: the whole point of
+   * resuming is that the backend ends up having read the same tokens at the same positions.
+   */
+  @Test
+  void resumingTheEvidenceGivesTheSameAnswerAsReadingItWhole() {
+    AnswerSpace first = new Noul("Is the amount stated?", "an amount appears", "none appears");
+    AnswerSpace second = new Noul("Is it monthly?", "a period appears", "no period appears");
+
+    StubBackend resumed = new StubBackend(Integer.MAX_VALUE);
+    ModelJarDecisionRuntime resumedRuntime = runtime(resumed);
+    Verdict afterResuming = resumedRuntime.decideAll(List.of(first, second), EVIDENCE).get(1);
+
+    StubBackend cold = new StubBackend(Integer.MAX_VALUE);
+    Verdict fromCold = runtime(cold).decide(second, EVIDENCE);
+
+    assertArrayEquals(
+        fromCold.probabilities(),
+        afterResuming.probabilities(),
+        "a question answered after resuming must match the same question asked cold");
+    assertEquals(1, resumed.coldPrefills, "and it must not have re-read the evidence to do it");
+  }
+
+  /**
+   * The three questions the support demo asks: a boolean, a choice and a score, each with rules.
+   */
+  private static List<AnswerSpace> mixedRubrics() {
+    return List.of(
+        new Noul("Is the amount stated?", "an amount appears", "none appears"),
+        new Noul("Is it monthly?", "a period appears", "no period appears"),
+        new Noul("Is the payer named?", "a payer appears", "no payer"));
+  }
+
+  /**
+   * A GROUP MUST NOT LEAVE A RESUMPTION POINT THAT NO LONGER EXISTS.
+   *
+   * <p>The grouped path resets the session, which clears the token history every capture is
+   * validated against. A point held across that reset is a handle to nothing: the backend rejects
+   * it on the next question whose evidence happens to match, which would turn a working runtime
+   * into one that throws on its second batch.
+   */
+  @Test
+  void aGroupedCallDoesNotLeaveAStaleStatePoint() {
+    StubBackend backend = new StubBackend(2);
+    ModelJarDecisionRuntime runtime = runtime(backend);
+
+    runtime.decide(
+        new Noul("Is the amount stated?", "an amount appears", "none appears"), EVIDENCE);
+    runtime.decideAll(spaces(10), EVIDENCE);
+    Verdict after =
+        runtime.decide(
+            new Noul("Is it monthly?", "a period appears", "no period appears"), EVIDENCE);
+
+    assertEquals(2, after.probabilities().length, "the decision after a group still answers");
   }
 
   @Test
@@ -247,7 +367,9 @@ final class ModelJarDecisionRuntimeGroupingTest {
     private int position;
     private int groupedCalls;
     private int evidencePrefills;
+    private int coldPrefills;
     private int resumes;
+    private final List<java.lang.ref.WeakReference<Resumption>> captures = new ArrayList<>();
 
     private StubBackend(int breakEven) {
       this(breakEven, true);
@@ -313,6 +435,9 @@ final class ModelJarDecisionRuntimeGroupingTest {
 
     @Override
     public float[] prefill(int[] tokens, int startPosition) {
+      if (startPosition == 0) {
+        coldPrefills++;
+      }
       if (startPosition == 0 && tokens.length == EVIDENCE.length()) {
         evidencePrefills++;
       }
@@ -339,7 +464,21 @@ final class ModelJarDecisionRuntimeGroupingTest {
     @Override
     public Resumption capture() {
       int captured = position;
-      return () -> captured;
+      Resumption point = () -> captured;
+      captures.add(new java.lang.ref.WeakReference<>(point));
+      return point;
+    }
+
+    /**
+     * Captures this backend issued that are still reachable.
+     *
+     * <p>Each one retains a copy of the model's linear state on the real backend -- MEASURED
+     * 2026-10-18 at 98.3 MiB on Harriet, flat in prefix length -- so how many are held at once is a
+     * resource decision and belongs in a test.
+     */
+    private long liveCaptures() {
+      System.gc();
+      return captures.stream().filter(reference -> reference.get() != null).count();
     }
 
     @Override

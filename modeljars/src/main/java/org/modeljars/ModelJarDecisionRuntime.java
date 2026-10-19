@@ -92,11 +92,47 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    */
   static final String ALLOW_INEXACT_GROUPING_PROPERTY = "modeljars.decisions.allowInexactGrouping";
 
-  /** The evidence tokens the current resumption point was captured after, if any. */
-  private int[] evidenceTokens;
+  /**
+   * The tokens the held resumption point was captured after, if any.
+   *
+   * <p>Either the whole shared prefix -- the evidence and the rubric -- or the evidence alone. One
+   * point, not two, because a point is not free: MEASURED 2026-10-18 on Harriet, each capture
+   * retains 98.3 MiB of linear state, flat in prefix length, so a second point would cost that
+   * again on every open runtime.
+   *
+   * <p>Which one is held is decided by what is being asked. Questions that share a rubric reuse the
+   * whole prefix and read nothing but their own criterion. Questions whose rubrics differ cannot
+   * share it however it is captured, so for them the point goes after the evidence instead and each
+   * question re-reads only its own rubric. MEASURED 2026-10-19 on an isolated 8-vCPU EPYC-Milan
+   * host over a 250-token ticket, three questions with three rubrics: 16,497 ms when every question
+   * re-read the evidence against 7,766 ms when it resumed after it, and 5,539 ms against 1,378 ms
+   * for each question after the first.
+   *
+   * <p>The tokens the backend ends up having read, and the positions they sit at, are the same
+   * either way, so the prompt and the answer do not depend on this at all.
+   */
+  private int[] resumeTokens;
 
-  /** The position to return to before reading a new criterion over the same evidence. */
-  private ResumableInferenceBackend.Resumption evidencePoint;
+  /** The position the held point returns to. */
+  private ResumableInferenceBackend.Resumption resumePoint;
+
+  /**
+   * Where to capture when the evidence has to be read, for callers that ask one question at a time.
+   *
+   * <p>{@link #decideAll} knows every question before it answers any of them, so it can tell
+   * whether a shared rubric exists and say where the point belongs. A caller using {@link #decide}
+   * cannot be asked to know its own future, so this starts where a single question is cheapest and
+   * moves once a second rubric over the same evidence proves otherwise.
+   */
+  private CaptureLevel singleQuestionLevel = CaptureLevel.SHARED;
+
+  /**
+   * Where a resumption point is taken: after the evidence and the rubric, or after the evidence.
+   */
+  private enum CaptureLevel {
+    SHARED,
+    STATE
+  }
 
   /**
    * The part of the prompt that does not vary between questions: the evidence, then the rubric.
@@ -105,6 +141,10 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * space, so what is in it is paid for once and what follows it is paid for per question. MEASURED
    * 2026-09-24 the tokens after it cost 18.5 ms each, so the split is the whole of the per-question
    * latency.
+   *
+   * <p>Questions whose rubrics differ have no shared prefix to resume, so for those the resumption
+   * point is taken after {@code state} alone and only the rubric is re-read; see {@link
+   * #resumeTokens}. The prompt is this string either way.
    *
    * <p>The rubric belongs here and the lettered options do not, and that is measured rather than
    * reasoned. Over 120 JevBench items: rubric and letters both after the criterion scored
@@ -148,6 +188,14 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * full read of the evidence, 2.68 s, and each one after it costs 0.45 s. Answers are
    * bit-identical to asking each question against a cold prefill.
    *
+   * <p>That holds whether or not the questions share a rubric, which it did not always: a batch of
+   * unlike rubrics has no shared prefix to resume, and until 0.1.62 every question in one re-read
+   * the evidence. MEASURED 2026-10-19 on an isolated 8-vCPU EPYC-Milan host over a 250-token
+   * ticket, three questions with three rubrics: 16,497 ms against 7,766 ms once the point moved
+   * behind the rubric, with every measured verdict identical. A batch that does share one rubric is
+   * unchanged, and still the cheapest shape: 6,343 ms against 5,895 ms for the same three
+   * questions.
+   *
    * <p>A backend that says grouping pays off at this size answers the group in lockstep instead;
    * see {@link #MINIMUM_GROUP_SIZE_PROPERTY} for the measurements and how to force either path.
    *
@@ -165,9 +213,18 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     if (grouped != null) {
       return grouped;
     }
+    // One rubric across the batch means the whole prefix is shared and every question after the
+    // first reads only its own criterion. Rubrics that differ cannot share the prefix however it
+    // is captured, so the point goes after the evidence and each question re-reads its own rubric
+    // instead of the whole ticket.
+    String shared = sharedPrefix(spaces.get(0), state);
+    boolean oneRubric =
+        spaces.stream().allMatch(space -> shared.equals(sharedPrefix(space, state)));
+    CaptureLevel level = oneRubric ? CaptureLevel.SHARED : CaptureLevel.STATE;
+
     List<Verdict> verdicts = new ArrayList<>(spaces.size());
     for (AnswerSpace space : spaces) {
-      verdicts.add(decide(space, state));
+      verdicts.add(decide(space, state, level));
     }
     return List.copyOf(verdicts);
   }
@@ -280,17 +337,15 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
             ? candidate
             : null;
     if (resumable == null) {
-      backend.reset();
+      resetBackend();
       backend.prefill(evidence, 0);
-      evidenceTokens = null;
-      evidencePoint = null;
-    } else if (evidencePoint == null || !Arrays.equals(evidence, evidenceTokens)) {
-      backend.reset();
+    } else if (resumePoint == null || !Arrays.equals(evidence, resumeTokens)) {
+      resetBackend();
       backend.prefill(evidence, 0);
-      evidenceTokens = evidence;
-      evidencePoint = resumable.capture();
+      resumeTokens = evidence;
+      resumePoint = resumable.capture();
     } else {
-      resumable.resume(evidencePoint);
+      resumable.resume(resumePoint);
     }
     float[][] logits = groupedBackend.decideGrouped(suffixes);
 
@@ -334,6 +389,10 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
    * @return a probability over exactly the declared options
    */
   public Verdict decide(AnswerSpace space, String state) {
+    return decide(space, state, singleQuestionLevel);
+  }
+
+  private Verdict decide(AnswerSpace space, String state, CaptureLevel level) {
     Objects.requireNonNull(space, "space");
     Objects.requireNonNull(state, "state");
     List<String> labels = space.labels();
@@ -365,19 +424,12 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
             && Arrays.equals(evidence, Arrays.copyOf(prompt, evidence.length));
 
     if (!resumable) {
-      backend.reset();
+      resetBackend();
       return scorer.score(space, backend.prefill(prompt, 0), letterTokens);
     }
 
     ResumableInferenceBackend resumableBackend = (ResumableInferenceBackend) backend;
-    if (evidencePoint == null || !Arrays.equals(evidence, evidenceTokens)) {
-      backend.reset();
-      backend.prefill(evidence, 0);
-      evidenceTokens = evidence;
-      evidencePoint = resumableBackend.capture();
-    } else {
-      resumableBackend.resume(evidencePoint);
-    }
+    positionAtSharedPrefix(resumableBackend, tokenizer, state, evidence, level);
 
     // The whole suffix in one prefill, reading the answer off its final position, rather than
     // prefilling all but the last token and then stepping the last one on its own.
@@ -389,6 +441,89 @@ public final class ModelJarDecisionRuntime implements AutoCloseable {
     // The
     // answer is read from the same position either way.
     return scorer.score(space, backend.prefill(optionTokens, evidence.length), letterTokens);
+  }
+
+  /**
+   * Returns the backend to position zero and drops both resumption points with it.
+   *
+   * <p>A capture is only resumable while the session's token history still begins with the tokens
+   * it was taken after. A reset clears that history, so a point held across one is a handle to
+   * nothing -- the backend rejects it, loudly, on the next decision that happens to match its
+   * tokens. Resetting and forgetting belong in one place.
+   */
+  private void resetBackend() {
+    backend.reset();
+    resumeTokens = null;
+    resumePoint = null;
+  }
+
+  /**
+   * Puts the backend at the end of this question's shared prefix, reading as little as it can.
+   *
+   * <p>Three cases. The held point already covers the whole prefix, so nothing is read. The held
+   * point covers the evidence, so only this question's rubric is read -- the case a batch of unlike
+   * questions is in, and the case that used to re-read the evidence per question. Or there is no
+   * usable point, so the evidence is read and a point is taken at {@code level}.
+   *
+   * <p>The tokens the backend ends up having read are identical in all three cases, so the prompt
+   * is identical and so is the answer. What differs is how much of it was read again.
+   *
+   * <p>A tokeniser that does not split the evidence and the rubric on the same boundary as the
+   * whole prefix makes the middle case unsafe -- the backend would hold tokens the prompt does not
+   * contain -- so that is checked, the same way the grouped path checks its own split, and falls
+   * back to reading the prefix whole.
+   */
+  private void positionAtSharedPrefix(
+      ResumableInferenceBackend resumable,
+      Tokenizer tokenizer,
+      String state,
+      int[] evidence,
+      CaptureLevel level) {
+    if (resumePoint != null && Arrays.equals(evidence, resumeTokens)) {
+      resumable.resume(resumePoint);
+      return;
+    }
+
+    int[] stateTokens = tokenizer.encode(state);
+    boolean splitsCleanly =
+        stateTokens.length > 0
+            && stateTokens.length < evidence.length
+            && Arrays.equals(stateTokens, Arrays.copyOf(evidence, stateTokens.length));
+
+    if (splitsCleanly && resumePoint != null && Arrays.equals(stateTokens, resumeTokens)) {
+      // The point is already after the evidence: resume it and read this rubric only. It stays
+      // where it is, because the next question's rubric is no more likely to match this one.
+      resumable.resume(resumePoint);
+      backend.prefill(
+          Arrays.copyOfRange(evidence, stateTokens.length, evidence.length), stateTokens.length);
+      return;
+    }
+
+    // A point held over the same evidence but a different rubric is the proof that a caller asking
+    // one question at a time is asking unlike questions. Move its level once, here, rather than
+    // re-reading the evidence on every question after this one.
+    boolean sameEvidenceDifferentRubric =
+        splitsCleanly
+            && resumeTokens != null
+            && resumeTokens.length > stateTokens.length
+            && Arrays.equals(stateTokens, Arrays.copyOf(resumeTokens, stateTokens.length));
+    if (sameEvidenceDifferentRubric) {
+      singleQuestionLevel = CaptureLevel.STATE;
+      level = CaptureLevel.STATE;
+    }
+
+    resetBackend();
+    if (level == CaptureLevel.STATE && splitsCleanly) {
+      backend.prefill(stateTokens, 0);
+      resumeTokens = stateTokens;
+      resumePoint = resumable.capture();
+      backend.prefill(
+          Arrays.copyOfRange(evidence, stateTokens.length, evidence.length), stateTokens.length);
+      return;
+    }
+    backend.prefill(evidence, 0);
+    resumeTokens = evidence;
+    resumePoint = resumable.capture();
   }
 
   /**

@@ -4126,6 +4126,21 @@ project(":modeljars") {
         dependsOn(generateRuntimeQualificationResources)
     }
 
+    tasks.register<Test>("routerQualityIntegrationTest") {
+        description =
+            "Routes between the artifacts cached on this machine, proving the catalog-to-router " +
+                "seam: absence stays absence, an unmeasured task scores the declared prior, and a " +
+                "quality floor refuses what nobody measured."
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter { includeTestsMatching("org.modeljars.RouterQualityEndToEndIntegrationTest") }
+        systemProperty("modeljars.integration.router.live", "true")
+        jvmArgs("--add-modules", "jdk.incubator.vector", "--enable-native-access=ALL-UNNAMED")
+        maxHeapSize = "4g"
+        outputs.upToDateWhen { false }
+    }
+
     tasks.register<Test>("lfm25EmbeddingIntegrationTest") {
         description = "Verifies pinned LFM2.5 weights and CLS embedding through the public ModelJars API."
         group = "verification"

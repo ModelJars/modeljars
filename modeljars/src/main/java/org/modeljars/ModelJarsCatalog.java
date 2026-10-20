@@ -229,9 +229,29 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    * Task-specific measurements only. RAG answer correctness does not measure general chat, coding,
    * reasoning, SQL or translation, and is not transferred to those router task labels. Missing
    * measurements remain absent so the router can distinguish unknown from measured zero.
+   *
+   * <p>The {@code grounding} score is the model's own correctness, {@code rawCorrectAnswerRate},
+   * and only for an artifact the policy placed in {@link RagUseCaseTier#GENERATIVE_RAG}. That tier
+   * is defined as the model answering directly while holding the benchmark's bar; {@link
+   * RagUseCaseTier#GUARDED_RAG} is defined as production-usable <em>with</em> the grounding and
+   * extractive fallback policy, which is a statement about a pipeline and not about the model the
+   * router hands a prompt to. Reporting a guarded artifact's pipeline correctness as its {@code
+   * grounding} quality would describe work the router does not control: MEASURED 2026-10-20, a
+   * GUARDED_RAG artifact whose pipeline scores 1.0 and whose raw rate is 0.111 was wired into a
+   * fleet without the guard, declared at 0.70 by hand, and answered 23 points below a frontier
+   * model on HotpotQA while producing none of 50 required abstentions.
+   *
+   * <p>So a guarded artifact gets no {@code grounding} score at all, and carries the {@code
+   * rag-guard-required} feature instead, which an application can exclude when it does not run the
+   * guard or require when it does.
    */
   Map<String, Double> qualityFor(ModelJarDescriptor descriptor, Set<String> tags) {
     Map<String, Double> quality = new HashMap<>();
+    for (ModelRagQualification qualification : qualifications.qualificationsFor(descriptor)) {
+      if (qualification.useCaseTier() == RagUseCaseTier.GENERATIVE_RAG) {
+        quality.merge("grounding", qualification.rawCorrectAnswerRate(), Math::max);
+      }
+    }
     if (tags.contains("tool-use")) {
       for (ModelToolQualification qualification :
           toolQualifications.qualificationsFor(descriptor)) {

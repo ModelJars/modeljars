@@ -119,6 +119,68 @@ class ModelJarsCatalogTest {
     }
   }
 
+  /**
+   * GROUNDING QUALITY IS THE MODEL'S OWN CORRECTNESS, AND ONLY WHERE THE POLICY SAYS SO.
+   *
+   * <p>{@link RagUseCaseTier#GUARDED_RAG} is defined as production-usable <em>with</em> the
+   * grounding and extractive fallback policy. That is a measurement of a pipeline, and the router
+   * selects a model, not a pipeline: reporting a guarded artifact's pipeline correctness as its
+   * {@code grounding} quality tells an application the model can do something the evidence does not
+   * say it can do unaided.
+   *
+   * <p>MEASURED 2026-10-20 that this is not hypothetical. The Llama-3.2-1B artifact below is
+   * GUARDED_RAG with a pipeline rate of 1.0 and a model-only rate of 0.111. A demo fleet wired it
+   * in without the guard, declared its grounding quality as 0.70 by hand, and measured 23 points
+   * behind a frontier model on HotpotQA while producing none of 50 required abstentions.
+   *
+   * <p>Every qualified artifact in this catalog is currently GUARDED_RAG, so the correct number of
+   * grounding scores is zero. That is the point rather than a gap: absence is what the router is
+   * now built to handle, and a quality floor refuses it.
+   */
+  @Test
+  void groundingQualityIsOnlyReportedForArtifactsQualifiedToAnswerUnguarded() {
+    ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
+    ModelRagQualificationRegistry rag = ModelRagQualificationRegistry.fromClasspath();
+    ModelJarsCatalog catalog = new ModelJarsCatalog();
+
+    int guarded = 0;
+    int generative = 0;
+    for (ModelJarDescriptor descriptor : registry.descriptors()) {
+      var qualifications = rag.qualificationsFor(descriptor);
+      if (qualifications.isEmpty()) {
+        continue;
+      }
+      var quality = catalog.qualityFor(descriptor, java.util.Set.of("grounding"));
+      boolean anyGenerative =
+          qualifications.stream().anyMatch(q -> q.useCaseTier() == RagUseCaseTier.GENERATIVE_RAG);
+      if (anyGenerative) {
+        generative++;
+        double expected =
+            qualifications.stream()
+                .filter(q -> q.useCaseTier() == RagUseCaseTier.GENERATIVE_RAG)
+                .mapToDouble(ModelRagQualification::rawCorrectAnswerRate)
+                .max()
+                .orElseThrow();
+        assertEquals(expected, quality.get("grounding"), 1.0e-9, descriptor.alias());
+      } else {
+        guarded++;
+        assertFalse(
+            quality.containsKey("grounding"),
+            descriptor.alias() + " is not qualified to answer unguarded");
+      }
+    }
+    assertTrue(guarded + generative > 0, "the catalog must carry RAG qualifications to test");
+    // Stated rather than assumed: if an artifact ever reaches GENERATIVE_RAG, this test starts
+    // checking its number instead, and the count here is what tells a reader which world they are
+    // in when they read the assertion above.
+    assertEquals(
+        0,
+        generative,
+        "no catalogued artifact is qualified to answer RAG unguarded; "
+            + guarded
+            + " are qualified only with the grounding policy");
+  }
+
   @Test
   void ragQualificationsDoNotInventUnrelatedTaskQuality() {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();

@@ -22616,7 +22616,8 @@
         "valueLength": 256,
         "feedForwardLength": 6144,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-10-22T17:00:00Z"
     },
     {
       "id": "ggml_org_embeddinggemma_2_gguf_q8_0",

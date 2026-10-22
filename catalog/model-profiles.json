@@ -9005,6 +9005,182 @@
       }
     },
     {
+      "modelId": "mradermacher_mixture_summarizer_qwen3_5_2b_gguf_q4_k_m",
+      "artifactSha256": "ab10ae99794cdb461fb468c880fb354ba55d55d0b4bc1762364ac4715deef6a7",
+      "revision": "a52be4bdaae6bf2ed32fed4af19dfaf330fcb372",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Mixture-Summarizer-Qwen3.5-2B.Q4_K_M.gguf",
+            "uri": "https://huggingface.co/mradermacher/Mixture-Summarizer-Qwen3.5-2B-GGUF/resolve/a52be4bdaae6bf2ed32fed4af19dfaf330fcb372/Mixture-Summarizer-Qwen3.5-2B.Q4_K_M.gguf",
+            "revision": "a52be4bdaae6bf2ed32fed4af19dfaf330fcb372",
+            "sha256": "ab10ae99794cdb461fb468c880fb354ba55d55d0b4bc1762364ac4715deef6a7",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": false,
+            "rule": "opt-in-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 6,
+              "kvHeads": 2,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 1274396864,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 2398470336
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2750791872
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1610612736,
+                "totalBytes": 3958751424
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 3221225472,
+                "totalBytes": 5569364160
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 2374877376
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 2562048192
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 855638016,
+                "totalBytes": 3203776704
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 1711276032,
+                "totalBytes": 4059414720
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    },
+    {
       "modelId": "minicpm5_2b_q4_k_m",
       "artifactSha256": "ec2d5801640099e97d8d7e8003ad4d81f336e757811f03a26173dddf386602fd",
       "revision": "2079a22f3beaa4e306449978533478fe0522f4b3",
@@ -10365,6 +10541,20 @@
       "modelId": "walkingcat_soprano_1_1_80m_gguf_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "mradermacher_mixture_summarizer_qwen3_5_2b_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
     },
     {
       "modelId": "ggml_org_embeddinggemma_2_gguf_q8_0",

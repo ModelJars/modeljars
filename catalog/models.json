@@ -22723,6 +22723,120 @@
         "feedForwardLength": 17408,
         "attentionBlockCount": 16
       }
+    },
+    {
+      "id": "minicpm5_2b_q4_k_m",
+      "name": "MiniCPM5 2B GGUF Q4_K_M",
+      "description": "Official Apache-2.0 OpenBMB on-device model, Llama-family weights with 42 blocks, grouped-query attention and 128k context. Upstream labels it 2.6B; the header's tensors measure 2,249,369,600 parameters.",
+      "sourceId": "hf://openbmb/MiniCPM5-2B-GGUF",
+      "sourceUri": "https://huggingface.co/openbmb/MiniCPM5-2B-GGUF",
+      "downloadUri": "https://huggingface.co/openbmb/MiniCPM5-2B-GGUF/resolve/2079a22f3beaa4e306449978533478fe0522f4b3/MiniCPM5-2B-Q4_K_M.gguf",
+      "revision": "2079a22f3beaa4e306449978533478fe0522f4b3",
+      "markerCoordinate": "org.modeljars.huggingface:openbmb.minicpm5-2b-gguf.q4_k_m:5.0.0-q4_k_m.1",
+      "modelVersion": "5.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "tokenizer": "minicpm5-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/MiniCPM5-2B-Q4_K_M.gguf",
+      "sha256": "ec2d5801640099e97d8d7e8003ad4d81f336e757811f03a26173dddf386602fd",
+      "sizeBytes": 1561318368,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "first-party-gguf",
+        "minicpm5-pretokenizer",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general",
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 2249369600,
+        "contextLength": 131072,
+        "embeddingLength": 2048,
+        "blockCount": 42,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 6144,
+        "attentionBlockCount": 42
+      },
+      "catalogPublishedAt": "2026-10-22T13:52:00Z"
+    },
+    {
+      "id": "vibethinker_1_5b_q4_k_m",
+      "name": "VibeThinker 1.5B GGUF Q4_K_M",
+      "description": "MIT-licensed Qwen2.5-Math-1.5B derivative tuned for mathematical and competitive-programming reasoning.",
+      "sourceId": "hf://mradermacher/VibeThinker-1.5B-GGUF",
+      "sourceUri": "https://huggingface.co/mradermacher/VibeThinker-1.5B-GGUF",
+      "downloadUri": "https://huggingface.co/mradermacher/VibeThinker-1.5B-GGUF/resolve/d0d66139a78030a92a582f966b0f7cbbb3b19406/VibeThinker-1.5B.Q4_K_M.gguf",
+      "revision": "d0d66139a78030a92a582f966b0f7cbbb3b19406",
+      "markerCoordinate": "org.modeljars.huggingface:mradermacher.vibethinker-1.5b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "qwen2",
+      "tokenizer": "qwen2-bpe",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/VibeThinker-1.5B.Q4_K_M.gguf",
+      "sha256": "59fa32aaaf5c4512452a9bff8bb6d08f1e39a75acee226b5e01372f7509e3458",
+      "sizeBytes": 1117321472,
+      "license": "MIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixed-quantization",
+        "q4-k",
+        "q6-k",
+        "grouped-query-attention",
+        "long-context",
+        "community-conversion",
+        "chat-template"
+      ],
+      "backends": {
+        "pure-java": false,
+        "llama.cpp": true
+      },
+      "domains": [
+        "mathematics",
+        "reasoning"
+      ],
+      "dimensions": {
+        "parameterCount": 1543714304,
+        "contextLength": 131072,
+        "embeddingLength": 1536,
+        "blockCount": 28,
+        "attentionHeadCount": 12,
+        "keyValueHeadCount": 2,
+        "feedForwardLength": 8960,
+        "attentionBlockCount": 28
+      }
     }
   ]
 }

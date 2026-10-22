@@ -9003,6 +9003,189 @@
           "recurrent layer state is excluded; only attention layers are charged"
         ]
       }
+    },
+    {
+      "modelId": "minicpm5_2b_q4_k_m",
+      "artifactSha256": "ec2d5801640099e97d8d7e8003ad4d81f336e757811f03a26173dddf386602fd",
+      "revision": "2079a22f3beaa4e306449978533478fe0522f4b3",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "MiniCPM5-2B-Q4_K_M.gguf",
+            "uri": "https://huggingface.co/openbmb/MiniCPM5-2B-GGUF/resolve/2079a22f3beaa4e306449978533478fe0522f4b3/MiniCPM5-2B-Q4_K_M.gguf",
+            "revision": "2079a22f3beaa4e306449978533478fe0522f4b3",
+            "sha256": "ec2d5801640099e97d8d7e8003ad4d81f336e757811f03a26173dddf386602fd",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "sampling": {
+          "temperature": {
+            "value": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.temp"
+              }
+            ]
+          },
+          "topP": {
+            "value": 0.95,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.top_p"
+              }
+            ]
+          }
+        },
+        "eosTokenIds": [
+          {
+            "id": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          },
+          {
+            "id": 130073,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<|im_end|>"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 8,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 9,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 131072,
+          "groups": [
+            {
+              "layers": 42,
+              "kvHeads": 2,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 1561318368,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 43008,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 176160768,
+                "totalBytes": 2811220960
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 1409286144,
+                "totalBytes": 4044346336
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 5637144576,
+                "totalBytes": 8272204768
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 22848,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 93585408,
+                "totalBytes": 2728645600
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 748683264,
+                "totalBytes": 3383743456
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 2994733056,
+                "totalBytes": 5629793248
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
     }
   ],
   "coverage": [
@@ -10187,6 +10370,19 @@
       "modelId": "ggml_org_embeddinggemma_2_gguf_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "minicpm5_2b_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (130073) added from tokenizer.chat_template",
+      "unsourced": [
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
     }
   ]
 }

@@ -22838,6 +22838,49 @@
         "feedForwardLength": 8960,
         "attentionBlockCount": 28
       }
+    },
+    {
+      "id": "laya_q8_0",
+      "name": "Laya GGUF Q8_0",
+      "description": "Apache-2.0 typed-decision model: a state and a typed question in, a chosen option and a probability out, in one non-autoregressive pass. Not a text generator -- it has no continuation to stream.",
+      "sourceId": "hf://ggml-org/Laya-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/Laya-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/Laya-GGUF/resolve/845f314dd047fc2444a5289a4d50c1e1d59e27e1/Laya-Q8_0.gguf",
+      "revision": "845f314dd047fc2444a5289a4d50c1e1d59e27e1",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.laya-gguf.q8_0:1.0.0-q8_0.1",
+      "modelVersion": "1.0.0",
+      "variant": "q8_0",
+      "format": "gguf",
+      "architecture": "modern-bert",
+      "quantization": "Q8_0",
+      "localPath": "${user.home}/.jvllm/models/Laya-Q8_0.gguf",
+      "sha256": "c06528c5746d3bb8baa72a27938be95abbfd0b226f8471e8a9e365ed0bb066d2",
+      "sizeBytes": 449397600,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "typed-decision"
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": false,
+        "llama.cpp": false
+      },
+      "dimensions": {
+        "parameterCount": 421029889,
+        "contextLength": 8192,
+        "embeddingLength": 1024,
+        "blockCount": 30,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 16,
+        "feedForwardLength": 2624,
+        "attentionBlockCount": 30
+      },
+      "features": [
+        "decision-confidence-uncalibrated"
+      ],
+      "domains": [
+        "general"
+      ]
     }
   ]
 }

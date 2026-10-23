@@ -24,6 +24,7 @@ import com.integrallis.models.api.catalog.ModelCatalogProvider;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -224,7 +225,8 @@ class ModelJarsCatalogTest {
 
   @Test
   void onlyTagsTasksTheCatalogueVocabularyCovers() {
-    List<String> routerTasks =
+    // Tasks the pretrained classifier can emit from a query.
+    List<String> classifierTasks =
         List.of(
             "chat",
             "code",
@@ -236,6 +238,16 @@ class ModelJarsCatalogTest {
             "summarization",
             "tool-use",
             "translation");
+    // Tasks only an application can ask for by name. ModelRouter takes the task from
+    // `request.taskType()` and falls back to the classifier only when that is empty, so a tag the
+    // classifier never emits is still reachable -- it is just never selected by accident.
+    //
+    // `decision` has to be a tag rather than nothing at all: the router skips the tag filter for a
+    // candidate whose tags are EMPTY, so an untagged typed-decision model would be eligible for
+    // every task including chat. Tagged, it is eligible only for a caller who names `decision`.
+    List<String> requestedOnlyTasks = List.of("decision");
+    List<String> routerTasks =
+        Stream.concat(classifierTasks.stream(), requestedOnlyTasks.stream()).toList();
     for (DiscoveredModel model : new ModelJarsCatalog().discover()) {
       // An unmapped capability must not leak through as a tag the classifier never emits, because
       // the router filters on an exact tag match and the model would silently become ineligible.

@@ -27,6 +27,12 @@ const QUALIFICATION_FILES = [
   ["catalog/reranking-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/speech-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/component-qualifications.json", (entry) => entry.qualified === true],
+  // A decision qualification carries no `qualified` boolean. Its tier is the verdict, and the
+  // weaker of the two publishable tiers still publishes -- it just exports no confidence quality.
+  [
+    "catalog/decision-qualifications.json",
+    (entry) => entry.tier === "CALIBRATED_DECISION" || entry.tier === "RANKED_DECISION",
+  ],
 ];
 
 /** Inserts the field directly after sizeBytes, leaving every other key in place. */

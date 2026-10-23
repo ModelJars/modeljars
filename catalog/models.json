@@ -22856,6 +22856,7 @@
       "localPath": "${user.home}/.jvllm/models/Laya-Q8_0.gguf",
       "sha256": "c06528c5746d3bb8baa72a27938be95abbfd0b226f8471e8a9e365ed0bb066d2",
       "sizeBytes": 449397600,
+      "catalogPublishedAt": "2026-10-23T04:40:22Z",
       "license": "Apache-2.0",
       "capabilities": [
         "typed-decision"

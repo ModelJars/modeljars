@@ -961,7 +961,8 @@ public final class ModelJars {
               + " is a typed-decision model, not a text generator: it answers one typed question"
               + " in a single non-autoregressive pass and has no continuation to stream. Open it"
               + " through its decision entry point instead -- ModelJarsCatalog.locate(id) for the"
-              + " artifact path, then the decoder's own decision facade.");
+              + " artifact path, then ModernBertDecisionModel.open(path) in the pure-Java"
+              + " decoder.");
     }
     throw new ModelJarException(
         descriptor.markerCoordinate()

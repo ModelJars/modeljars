@@ -114,12 +114,10 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           required=false
-          mode=none
           comparison=""
           case "${EVENT_NAME}" in
             schedule|workflow_dispatch)
               required=true
-              mode=full
               ;;
             pull_request)
               comparison="${BASE_SHA}"
@@ -132,20 +130,19 @@ jobs:
               ;;
           esac
 
+          # `required` now gates only the pinned Hugging Face metadata check, which authenticates
+          # against gated repositories and is therefore not run on every pull request.
           if [[ "${required}" != "true" ]]; then
             if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
                 ! git cat-file -e "${comparison}^{commit}"; then
               required=true
-              mode=full
             elif ! git diff --quiet "${comparison}" "${GITHUB_SHA}" -- catalog/models.json; then
               required=true
-              mode=changed
             fi
           fi
 
           {
             echo "required=${required}"
-            echo "mode=${mode}"
             echo "comparison=${comparison}"
           } >> "${GITHUB_OUTPUT}"
 
@@ -239,17 +236,20 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: ./gradlew --no-daemon verifyRemoteCatalogMetadata
 
+      # Every model, every time -- never only the ones this change touched.
+      #
+      # This ran in `changed` mode against the merge base, which checks a new or edited entry and
+      # nothing else. publish.yml enriches all of them unconditionally, so the two gates disagreed
+      # and a catalog entry carrying hand-written dimensions passed its own pull request and failed
+      # on main. MEASURED 2026-10-23: three entries reached main that way -- laya_q8_0,
+      # minicpm5_2b_q4_k_m and vibethinker_1_5b_q4_k_m -- each with a parameterCount that was the
+      # non-embedding total, understating the published figure by 11-15%. One of them was already
+      # published, so correcting it cost a new marker coordinate.
+      #
+      # The whole catalog takes about 40 seconds of HTTP range requests, which is cheaper than
+      # discovering the drift after a release.
       - name: Verify exact GGUF dimensions
-        if: steps.remote-catalog.outputs.required == 'true'
-        env:
-          MODE: ${{ steps.remote-catalog.outputs.mode }}
-          COMPARISON: ${{ steps.remote-catalog.outputs.comparison }}
-        run: |
-          if [[ "${MODE}" == "changed" ]]; then
-            npm run catalog:enrich -- --concurrency=2 --changed-from="${COMPARISON}"
-          else
-            npm run catalog:enrich -- --concurrency=3
-          fi
+        run: npm run catalog:enrich -- --concurrency=3
 
       - name: Publish JVM Runtime smoke-test artifacts to Maven Local
         run: >

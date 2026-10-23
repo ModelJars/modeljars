@@ -81,6 +81,15 @@ test("every catalog entry renders its full detail page without throwing", () => 
   // from catalog/qualifications.json (build.gradle.kts, the candidateTestMetadata join). The kinds
   // are read from the directory rather than listed here, so a new kind is joined the day it lands
   // instead of the day somebody remembers this file.
+  //
+  // WHAT THIS JOIN STILL CANNOT TEST, measured 2026-10-23: generateSite does not attach the raw
+  // manifest entry, it attaches entry.siteMetadata(...), which ENRICHES it. A raw rag entry in
+  // catalog/qualifications.json carries no useCaseTier at all; the deployed catalog.json carries
+  // useCaseTier=GUARDED_RAG on the same entry. So these renders exercise the raw shape, one field
+  // short of the shape production serves, and that enrichment lives in Kotlin and cannot be
+  // reproduced here. The assertions below hold on both shapes, but a defect reachable ONLY via an
+  // enriched field would pass here. Closing that gap means asserting against the generated
+  // catalog.json after generateSite, which runs later in validate.yml than npm test does.
   const MODELS = JSON.parse(readFileSync(join(ROOT, "catalog/models.json"), "utf8"));
   const kindFiles = [
     ["ragQualifications", "catalog/qualifications.json"],

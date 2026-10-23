@@ -1236,3 +1236,92 @@ test("treats absent embedding evidence as no additional publications", () => {
     [entry.id],
   );
 });
+
+test("publishes a typed-decision model, whose tier is its only verdict", () => {
+  // A decision qualification carries no `qualified` boolean. Reading only that field left
+  // laya_q8_0 in the catalog -- passing verifyCatalog, generating a marker, exporting its
+  // accuracy to the router -- and filtered out of every publication plan, so it could never
+  // reach a consumer. MEASURED 2026-10-23: the plan returned 0 publications for it.
+  const decision = model({
+    id: "laya_q8_0",
+    markerCoordinate:
+      "org.modeljars.huggingface:ggml-org.laya-gguf.q8_0:1.0.0-q8_0.1",
+    capabilities: ["typed-decision"],
+  });
+  const planned = selectCatalogPublications(catalog([decision]), ["all"]);
+  const empty = { schemaVersion: 1, entries: [] };
+  const decisionManifest = {
+    schemaVersion: 1,
+    entries: [
+      {
+        modelId: "laya_q8_0",
+        tier: "RANKED_DECISION",
+        artifactSha256: decision.sha256,
+        artifactSizeBytes: decision.sizeBytes,
+      },
+    ],
+  };
+
+  // Without the manifest it is dropped, which is the defect this pins.
+  assert.deepEqual(
+    filterQualifiedPublications(planned, catalog([decision]), empty).publications,
+    [],
+  );
+
+  const admitted = filterQualifiedPublications(
+    planned,
+    catalog([decision]),
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    empty,
+    decisionManifest,
+  );
+  assert.deepEqual(
+    admitted.publications.map((publication) => publication.id),
+    ["laya_q8_0"],
+  );
+
+  // The weaker tier publishes; only UNQUALIFIED is withheld.
+  for (const tier of ["CALIBRATED_DECISION", "RANKED_DECISION"]) {
+    const manifest = {
+      schemaVersion: 1,
+      entries: [{ ...decisionManifest.entries[0], tier }],
+    };
+    assert.equal(
+      filterQualifiedPublications(
+        planned,
+        catalog([decision]),
+        empty,
+        empty,
+        empty,
+        empty,
+        empty,
+        empty,
+        manifest,
+      ).publications.length,
+      1,
+      `${tier} must publish`,
+    );
+  }
+  const unqualified = {
+    schemaVersion: 1,
+    entries: [{ ...decisionManifest.entries[0], tier: "UNQUALIFIED" }],
+  };
+  assert.deepEqual(
+    filterQualifiedPublications(
+      planned,
+      catalog([decision]),
+      empty,
+      empty,
+      empty,
+      empty,
+      empty,
+      empty,
+      unqualified,
+    ).publications,
+    [],
+  );
+});

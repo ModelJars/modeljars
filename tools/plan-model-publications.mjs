@@ -32,6 +32,8 @@ function parseArguments(argumentsList) {
         "--previous-speech-qualifications",
         "--component-qualifications",
         "--previous-component-qualifications",
+        "--decision-qualifications",
+        "--previous-decision-qualifications",
         "--github-output",
         "--ids",
       ].includes(name) ||
@@ -49,6 +51,8 @@ function parseArguments(argumentsList) {
           "[--speech-qualifications FILE --previous-speech-qualifications FILE] " +
           "[--component-qualifications FILE " +
           "--previous-component-qualifications FILE] " +
+          "[--decision-qualifications FILE " +
+          "--previous-decision-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -93,6 +97,23 @@ function parseArguments(argumentsList) {
   ) {
     throw new Error(
       "--previous-speech-qualifications is required for a speech-qualification-aware delta",
+    );
+  }
+  if (
+    values.has("--previous-decision-qualifications") &&
+    (!values.has("--previous") || !values.has("--decision-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-decision-qualifications requires --previous and --decision-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--decision-qualifications") &&
+    !values.has("--previous-decision-qualifications")
+  ) {
+    throw new Error(
+      "--previous-decision-qualifications is required for a decision-qualification-aware delta",
     );
   }
   if (
@@ -168,6 +189,7 @@ function qualifiedCatalog(
   rerankingManifest,
   speechManifest,
   componentManifest,
+  decisionManifest,
 ) {
   const filtered = filterQualifiedPublications(
     selectCatalogPublications(catalog, ["all"]),
@@ -178,6 +200,7 @@ function qualifiedCatalog(
     rerankingManifest,
     speechManifest,
     componentManifest,
+    decisionManifest,
   );
   const qualifiedIds = new Set(
     filtered.publications.map((publication) => publication.id),
@@ -252,6 +275,13 @@ async function main() {
     componentQualificationPath === undefined
       ? { schemaVersion: 1, entries: [] }
       : await readCatalog(componentQualificationPath);
+  const decisionQualificationPath = argumentsMap.get(
+    "--decision-qualifications",
+  );
+  const currentDecisionQualifications =
+    decisionQualificationPath === undefined
+      ? { schemaVersion: 1, entries: [] }
+      : await readCatalog(decisionQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -285,6 +315,9 @@ async function main() {
       const previousComponentPath = argumentsMap.get(
         "--previous-component-qualifications",
       );
+      const previousDecisionPath = argumentsMap.get(
+        "--previous-decision-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
@@ -303,6 +336,9 @@ async function main() {
         previousComponentPath === undefined
           ? { schemaVersion: 1, entries: [] }
           : await readCatalog(previousComponentPath),
+        previousDecisionPath === undefined
+          ? { schemaVersion: 1, entries: [] }
+          : await readCatalog(previousDecisionPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
@@ -312,6 +348,7 @@ async function main() {
         currentRerankingQualifications,
         currentSpeechQualifications,
         currentComponentQualifications,
+        currentDecisionQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -383,6 +420,7 @@ async function main() {
           currentRerankingQualifications,
           currentSpeechQualifications,
           currentComponentQualifications,
+          currentDecisionQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

@@ -211,7 +211,8 @@ public final class ModelDecisionQualificationRegistry {
     try {
       return Instant.parse(value);
     } catch (DateTimeParseException malformed) {
-      throw new ModelJarException("Invalid decision qualification generatedAt: " + value, malformed);
+      throw new ModelJarException(
+          "Invalid decision qualification generatedAt: " + value, malformed);
     }
   }
 

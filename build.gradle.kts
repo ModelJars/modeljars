@@ -2701,8 +2701,16 @@ publicDecisionQualifications.forEach { qualification ->
     require(entry.sizeBytes == qualification.artifactSizeBytes) {
         "Decision qualification size does not match catalog model ${qualification.modelId}"
     }
+    // `backends` says which decoder can execute the artifact, which for Laya is the pure-Java one.
+    // It does NOT say the model can be opened as a text generator: ModelJars.openRuntime selects a
+    // generative InferenceBackend from this same map, and PureJavaBackend dispatches bert and
+    // nomic-bert, not modern-bert. That distinction is carried by the capability list -- a
+    // typed-decision model declares no text-generation -- and openRuntime refuses on it.
     require(entry.backends[qualification.backend] == true) {
         "Decision qualification backend is not advertised by ${qualification.modelId}"
+    }
+    require("text-generation" !in entry.capabilities) {
+        "A typed-decision model must not advertise text-generation: ${qualification.modelId}"
     }
     require("typed-decision" in entry.capabilities) {
         "Decision-qualified model must advertise the typed-decision capability: ${qualification.modelId}"

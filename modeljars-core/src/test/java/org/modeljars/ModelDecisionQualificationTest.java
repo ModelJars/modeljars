@@ -30,7 +30,8 @@ import org.junit.jupiter.api.Test;
  */
 class ModelDecisionQualificationTest {
 
-  private static final String DIGEST = "c06528c5746d3bb8baa72a27938be95abbfd0b226f8471e8a9e365ed0bb066d2";
+  private static final String DIGEST =
+      "c06528c5746d3bb8baa72a27938be95abbfd0b226f8471e8a9e365ed0bb066d2";
 
   @Test
   void acceptsTheMeasuredLayaRecordAndExportsNoConfidenceQuality() {

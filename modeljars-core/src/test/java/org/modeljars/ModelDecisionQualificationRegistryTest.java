@@ -47,8 +47,7 @@ class ModelDecisionQualificationRegistryTest {
     assertFalse(
         entry.exportsConfidenceQuality(), "the ranked tier must not export a confidence quality");
     assertFalse(
-        entry.testedUncalibratedReporting(),
-        "zero exercised buckets means untested, not upheld");
+        entry.testedUncalibratedReporting(), "zero exercised buckets means untested, not upheld");
   }
 
   @Test
@@ -86,8 +85,7 @@ class ModelDecisionQualificationRegistryTest {
   @Test
   void refusesATierItCannotInterpretAtLoadRatherThanAtUse() throws IOException {
     ModelJarException failure =
-        assertThrows(
-            ModelJarException.class, () -> parse(laya("PROBABLY_FINE", "0.1638", "0")));
+        assertThrows(ModelJarException.class, () -> parse(laya("PROBABLY_FINE", "0.1638", "0")));
     assertTrue(failure.getMessage().contains("Unknown decision tier"), failure.getMessage());
   }
 
@@ -105,7 +103,8 @@ class ModelDecisionQualificationRegistryTest {
         "modeljars.decisionQualifications.schemaVersion=1\n"
             + "decisionQualification.laya_q8_0.model=Laya Q8_0\n";
     ModelJarException failure = assertThrows(ModelJarException.class, () -> parse(body));
-    assertTrue(failure.getMessage().contains("Missing decision qualification property"),
+    assertTrue(
+        failure.getMessage().contains("Missing decision qualification property"),
         failure.getMessage());
   }
 
@@ -144,14 +143,22 @@ class ModelDecisionQualificationRegistryTest {
         + "modeljars.decisionQualifications.modelsRevision=0.5.3\n"
         + "decisionQualification.laya_q8_0.model=Laya Q8_0\n"
         + "decisionQualification.laya_q8_0.backend=pure-java\n"
-        + "decisionQualification.laya_q8_0.artifactSha256=" + DIGEST + "\n"
-        + "decisionQualification.laya_q8_0.tier=" + tier + "\n"
+        + "decisionQualification.laya_q8_0.artifactSha256="
+        + DIGEST
+        + "\n"
+        + "decisionQualification.laya_q8_0.tier="
+        + tier
+        + "\n"
         + "decisionQualification.laya_q8_0.cohort=jevbench-120\n"
         + "decisionQualification.laya_q8_0.cases=120\n"
         + "decisionQualification.laya_q8_0.chanceAccuracy=0.3004\n"
         + "decisionQualification.laya_q8_0.accuracy=0.7833\n"
-        + "decisionQualification.laya_q8_0.calibrationError=" + calibrationError + "\n"
-        + "decisionQualification.laya_q8_0.uncalibratedBucketsExercised=" + exercised + "\n";
+        + "decisionQualification.laya_q8_0.calibrationError="
+        + calibrationError
+        + "\n"
+        + "decisionQualification.laya_q8_0.uncalibratedBucketsExercised="
+        + exercised
+        + "\n";
   }
 
   private static ModelDecisionQualificationRegistry parse(String body) throws IOException {

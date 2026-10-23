@@ -1092,6 +1092,71 @@ class ModelJarsTest {
         new ByteArrayInputStream(properties.getBytes(StandardCharsets.ISO_8859_1)));
   }
 
+  @Test
+  void refusesToOpenATypedDecisionModelAsAGenerativeRuntime() {
+    // The catalog's `backends` map says pure-java for Laya because the pure-Java decoder does run
+    // it. That is not the same as being drivable as a text generator: PureJavaBackend dispatches
+    // bert and nomic-bert, not modern-bert. Without this refusal the call downloads 449 MB and
+    // then fails inside the loader on an unsupported architecture.
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () -> ModelJars.requireGenerativeModel(typedDecisionDescriptor()));
+    assertTrue(
+        failure.getMessage().contains("typed-decision model, not a text generator"),
+        failure.getMessage());
+    // The refusal has to name the call that would have worked, or it only tells the caller no.
+    assertTrue(failure.getMessage().contains("ModelJarsCatalog.locate"), failure.getMessage());
+  }
+
+  @Test
+  void refusesANonGenerativeModelByNamingWhatItDoesAdvertise() {
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () -> ModelJars.requireGenerativeModel(speechDescriptor("a".repeat(64))));
+    assertTrue(
+        failure.getMessage().contains("does not advertise text-generation"), failure.getMessage());
+    assertTrue(failure.getMessage().contains("text-to-speech"), failure.getMessage());
+  }
+
+  @Test
+  void admitsAGenerativeModel() {
+    // The guard must not reject what it is there to let through, or every openRuntime call breaks.
+    ModelJarDescriptor generative = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
+    assertTrue(generative.capabilities().contains("text-generation"), "fixture is not generative");
+    ModelJars.requireGenerativeModel(generative);
+  }
+
+  private static ModelJarDescriptor typedDecisionDescriptor() {
+    return new ModelJarDescriptor(
+        "laya-q8",
+        "hf://ggml-org/Laya-GGUF",
+        ModelJarCoordinate.parse("org.modeljars.huggingface:ggml-org.laya-gguf.q8_0:1.0.0-q8_0.1"),
+        ModelVersion.parse("1.0.0"),
+        "q8_0",
+        "gguf",
+        "modern-bert",
+        "Q8_0",
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(URI.create("https://huggingface.co/ggml-org/Laya-GGUF")),
+        Optional.empty(),
+        Optional.of("845f314dd047fc2444a5289a4d50c1e1d59e27e1"),
+        Optional.of("c".repeat(64)),
+        Optional.of(449_397_600L),
+        Optional.of("Apache-2.0"),
+        Set.of("typed-decision"),
+        Set.of("decision-confidence-uncalibrated"),
+        List.of(),
+        Map.of("pure-java", true),
+        Optional.of("Laya GGUF Q8_0"),
+        Optional.empty(),
+        Optional.empty(),
+        Set.of("general"),
+        ModelDimensions.unknown());
+  }
+
   private static ModelJarDescriptor speechDescriptor(String sha) {
     return new ModelJarDescriptor(
         "soprano-q8",

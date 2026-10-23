@@ -489,6 +489,43 @@ data class CatalogRerankingQualifications(
     val raw: Map<String, Any?>,
 )
 
+/**
+ * One typed-decision verdict as the catalog records it.
+ *
+ * Deliberately NOT modelled on the RAG shape. A decision model has no retrieval, no streamed
+ * tokens and no abstention in its interface, so p95RetrievalMillis, p95TtftMillis, p95TpotMillis,
+ * correctAnswerRate, abstentionAccuracy and modelAnswerRate have no meaning for it. What it has is
+ * an accuracy over labelled decisions, the chance floor that makes that accuracy interpretable, and
+ * a tier saying how far its published confidence travels.
+ */
+data class CatalogDecisionQualification(
+    val modelId: String,
+    val tier: String,
+    val backend: String,
+    val artifactSha256: String,
+    val artifactSizeBytes: Long,
+    val cohort: String,
+    val cases: Int,
+    val chanceAccuracy: Double,
+    val accuracy: Double,
+    val calibrationError: Double,
+    val uncalibratedBucketsExercised: Int,
+    val reportPath: String,
+    val raw: Map<String, Any?>,
+) {
+    /** The only tier whose published probability a caller may threshold. */
+    val exportsConfidenceQuality: Boolean
+        get() = tier == "CALIBRATED_DECISION"
+}
+
+data class CatalogDecisionQualifications(
+    val generatedAt: String,
+    val policyVersion: String,
+    val modelsRevision: String,
+    val entries: List<CatalogDecisionQualification>,
+    val raw: Map<String, Any?>,
+)
+
 data class CatalogSpeechQualification(
     val modelId: String,
     val model: String,
@@ -856,6 +893,58 @@ fun CatalogEmbeddingQualification.siteMetadata(
         ("modelsRevision" to qualifications.modelsRevision) +
         ("policyVersion" to qualifications.policyVersion) +
         ("useCaseTier" to if (qualified) "SEMANTIC_SEARCH" else "UNQUALIFIED")
+
+fun CatalogDecisionQualification.registryProperties(): String =
+    buildString {
+        val prefix = "decisionQualification.$modelId."
+        appendLine("${prefix}model=${propertyValue(raw.requiredString("model"))}")
+        appendLine("${prefix}backend=${propertyValue(backend)}")
+        appendLine("${prefix}artifactSha256=$artifactSha256")
+        appendLine("${prefix}tier=${propertyValue(tier)}")
+        appendLine("${prefix}cohort=${propertyValue(cohort)}")
+        appendLine("${prefix}cases=$cases")
+        appendLine("${prefix}chanceAccuracy=$chanceAccuracy")
+        appendLine("${prefix}accuracy=$accuracy")
+        // NaN is written literally. A cohort where every answer declared itself uncalibrated has no
+        // calibration to report, and omitting the key would let a reader default it to zero, which
+        // reads as perfect calibration.
+        appendLine("${prefix}calibrationError=$calibrationError")
+        appendLine(
+            "${prefix}uncalibratedBucketsExercised=$uncalibratedBucketsExercised",
+        )
+    }
+
+fun CatalogDecisionQualifications.registryProperties(
+    entries: List<CatalogDecisionQualification> = this.entries,
+): String =
+    buildString {
+        appendLine("modeljars.decisionQualifications.schemaVersion=1")
+        appendLine("modeljars.decisionQualifications.generatedAt=$generatedAt")
+        appendLine(
+            "modeljars.decisionQualifications.policyVersion=${propertyValue(policyVersion)}",
+        )
+        appendLine("modeljars.decisionQualifications.modelsRevision=$modelsRevision")
+        entries.forEach { append(it.registryProperties()) }
+    }
+
+fun CatalogDecisionQualification.siteMetadata(
+    qualifications: CatalogDecisionQualifications,
+): Map<String, Any?> =
+    raw +
+        ("reportUri" to
+            "https://github.com/integrallis/models/blob/" +
+            "${qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to qualifications.modelsRevision) +
+        ("exportsConfidenceQuality" to exportsConfidenceQuality) +
+        // Said explicitly on the site, because a reader seeing a tier without this would have to
+        // know the policy to tell whether the number beside it is trustworthy.
+        ("confidenceCaveat" to
+            if (exportsConfidenceQuality) {
+                "Calibrated on this cohort; the published probability may be thresholded."
+            } else {
+                "Accurate, but the published probability is not a fitted probability in this " +
+                    "regime: rank with it, do not threshold it."
+            })
 
 fun CatalogRerankingQualification.registryProperties(): String =
     buildString {
@@ -2028,6 +2117,91 @@ val embeddingQualifications =
             "Embedding qualification model IDs must be unique"
         }
         CatalogEmbeddingQualifications(
+            generatedAt = document.requiredString("generatedAt"),
+            policyVersion = document.requiredString("policyVersion"),
+            modelsRevision = document.requiredString("modelsRevision"),
+            entries = entries,
+            raw = document,
+        )
+    } else {
+        null
+    }
+
+val decisionQualificationCatalogFile = file("catalog/decision-qualifications.json")
+val decisionQualifications =
+    if (decisionQualificationCatalogFile.isFile) {
+        val document =
+            JsonSlurper()
+                .parse(decisionQualificationCatalogFile)
+                .stringKeyMap("catalog/decision-qualifications.json")
+        require((document["schemaVersion"] as? Number)?.toInt() == 1) {
+            "catalog/decision-qualifications.json must use schemaVersion 1"
+        }
+        val entries =
+            ((document["entries"] as? List<*>)
+                    ?: error("Decision qualification manifest must contain entries"))
+                .map { value ->
+                    val raw = value.stringKeyMap("Every decision qualification entry")
+                    val modelId = raw.requiredString("modelId")
+                    val tier = raw.requiredString("tier")
+                    // Refused here rather than at use: an unqualified model has no entry at all, so
+                    // a tier this build cannot interpret would be published as if its meaning were
+                    // known.
+                    require(tier == "CALIBRATED_DECISION" || tier == "RANKED_DECISION") {
+                        "decision qualification $modelId.tier must be CALIBRATED_DECISION or " +
+                            "RANKED_DECISION, not $tier"
+                    }
+                    val chanceAccuracy =
+                        (raw["chanceAccuracy"] as? Number)?.toDouble()
+                            ?: error(
+                                "decision qualification $modelId.chanceAccuracy must be a number; " +
+                                    "an accuracy without its chance floor cannot be interpreted")
+                    val accuracy =
+                        (raw["accuracy"] as? Number)?.toDouble()
+                            ?: error("decision qualification $modelId.accuracy must be a number")
+                    // A sanity check, not a threshold. A model no better than guessing has not been
+                    // shown to decide anything, whichever policy admitted it.
+                    require(accuracy > chanceAccuracy) {
+                        "decision qualification $modelId accuracy $accuracy does not beat its " +
+                            "chance floor $chanceAccuracy"
+                    }
+                    val calibrationError =
+                        (raw["calibrationError"] as? Number)?.toDouble() ?: Double.NaN
+                    // The one combination that would be an outright lie: claiming the probability
+                    // can be trusted while recording that nothing measured it.
+                    require(!(tier == "CALIBRATED_DECISION" && calibrationError.isNaN())) {
+                        "decision qualification $modelId claims CALIBRATED_DECISION with no " +
+                            "measured calibration error"
+                    }
+                    CatalogDecisionQualification(
+                        modelId = modelId,
+                        tier = tier,
+                        backend = raw.requiredString("backend"),
+                        artifactSha256 = raw.requiredString("artifactSha256"),
+                        artifactSizeBytes =
+                            (raw["artifactSizeBytes"] as? Number)?.toLong()
+                                ?: error("decision qualification $modelId.artifactSizeBytes must be an integer"),
+                        cohort = raw.requiredString("cohort"),
+                        cases =
+                            (raw["cases"] as? Number)?.toInt()
+                                ?: error("decision qualification $modelId.cases must be an integer"),
+                        chanceAccuracy = chanceAccuracy,
+                        accuracy = accuracy,
+                        calibrationError = calibrationError,
+                        uncalibratedBucketsExercised =
+                            (raw["uncalibratedBucketsExercised"] as? Number)?.toInt()
+                                ?: error(
+                                    "decision qualification $modelId.uncalibratedBucketsExercised " +
+                                        "must be an integer; zero means the artifact's uncalibrated " +
+                                        "promise was never exercised, which is not the same as upheld"),
+                        reportPath = raw.requiredString("report"),
+                        raw = raw,
+                    )
+                }
+        require(entries.map(CatalogDecisionQualification::modelId).distinct().size == entries.size) {
+            "Decision qualification model IDs must be unique"
+        }
+        CatalogDecisionQualifications(
             generatedAt = document.requiredString("generatedAt"),
             policyVersion = document.requiredString("policyVersion"),
             modelsRevision = document.requiredString("modelsRevision"),

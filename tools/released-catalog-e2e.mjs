@@ -41,14 +41,41 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
  * capability names, because "it loaded" is not the claim the catalog makes about it -- openRuntime
  * on an embedding model, or on a typed-decision model, is a different failure than a broken one.
  */
+/**
+ * The lines from a failed probe that say WHY, rather than that something failed.
+ *
+ * javac diagnostics, Java exception headers and our own require() messages are what a reader acts
+ * on; jbang's dependency chatter and its "run with --verbose" footer are not.
+ */
+function diagnosticLines(failure) {
+  const output = `${failure.stdout || ""}${failure.stderr || ""}`;
+  const interesting = output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        /\berror\b|cannot find symbol|^symbol:|^location:|Exception|Caused by/i.test(line) &&
+        !/Run with --verbose|Error during compile/i.test(line),
+    );
+  const summary = interesting.length > 0 ? interesting.slice(0, 6).join(" | ") : "";
+  return summary || String(failure.message || "").split("\n")[0];
+}
+
 const CAPABILITY_PROBES = {
   "text-generation": {
     entry: "openRuntime",
+    // Every call here is lifted from its declaration, because the first version of this probe was
+    // written from memory and invented three: ModelPrompt.ofUser(String), SamplingOptions.greedy()
+    // and a reply.text() on what is already a String. It never compiled, so the text-generation
+    // arm of this harness never ran -- a stub that looked like coverage. The real surface is
+    // ModelPrompt.text(String), SamplingOptions.builder(), and generate returning String
+    // (models-api/.../ModelPrompt.java, SamplingOptions.java, TextGenerationModel.java).
     body: `try (var runtime = ModelJars.openRuntime(MODEL)) {
-      var reply = runtime.model().generate(ModelPrompt.ofUser("Reply with the single word: ready"),
-          SamplingOptions.greedy().withMaxTokens(16));
-      require(reply != null && !reply.text().isBlank(), "generated no text");
-      System.out.println("PASS generate: " + reply.text().strip().replace('\\n', ' '));
+      String reply = runtime.model().generate(
+          ModelPrompt.text("Reply with the single word: ready"),
+          SamplingOptions.builder().temperature(0).maxTokens(16).build());
+      require(reply != null && !reply.isBlank(), "generated no text");
+      System.out.println("PASS generate: " + reply.strip().replace('\\n', ' '));
     }`,
     imports: ["com.integrallis.models.api.ModelPrompt", "com.integrallis.models.api.SamplingOptions"],
   },
@@ -129,7 +156,7 @@ const CAPABILITY_PROBES = {
 function parseArguments(argv) {
   const values = new Map();
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === "--all" || argv[i] === "--keep") {
+    if (argv[i] === "--all" || argv[i] === "--keep" || argv[i] === "--compile-only") {
       values.set(argv[i], true);
     } else if (argv[i].startsWith("--")) {
       values.set(argv[i], argv[i + 1]);
@@ -214,6 +241,8 @@ async function main() {
   } else if (options.get("--all")) {
     targets = all.filter((model) => probeFor(model)[0]);
   } else {
+    // Compile-only wants the same selection: one model per capability is one probe body per
+    // capability, which is every distinct thing there is to compile.
     targets = smallestPerCapability(all);
   }
   if (targets.length === 0) throw new Error("no published model matched");
@@ -231,13 +260,20 @@ async function main() {
     const source = path.join(dir, "e2e.java");
     await writeFile(source, program(model, capability, probe, modeljarsVersion));
     const started = Date.now();
+    const compileOnly = Boolean(options.get("--compile-only"));
     try {
-      const { stdout, stderr } = await run("jbang", [source], {
+      // `jbang build` resolves the published dependencies and runs javac without executing main,
+      // so it downloads no weights. MEASURED 2026-10-23: the text-generation probe shipped with
+      // three invented API calls and never compiled, so that arm of this harness silently never
+      // ran and the only signal came from a failed deployment. Compiling is cheap enough to do on
+      // every pull request, which is where that should have been caught.
+      const { stdout, stderr } = await run("jbang", compileOnly ? ["build", source] : [source], {
         maxBuffer: 64 * 1024 * 1024,
         env: { ...process.env },
       });
       await writeFile(path.join(dir, "run.log"), stdout + stderr);
-      const passed = stdout.includes(`RESULT: PASS ${model.id}`);
+      // A build emits no RESULT line, so compile-only passes on javac exiting clean.
+      const passed = compileOnly || stdout.includes(`RESULT: PASS ${model.id}`);
       results.push({
         id: model.id,
         capability,
@@ -251,8 +287,13 @@ async function main() {
         path.join(dir, "run.log"),
         `${failure.stdout || ""}${failure.stderr || ""}\n${failure.message}`,
       );
-      results.push({ id: model.id, capability, status: "FAIL", error: failure.message.split("\n")[0] });
-      process.stdout.write(`FAIL ${model.id} (${capability}): ${failure.message.split("\n")[0]}\n`);
+      // "Command failed: jbang ..." names nothing. The first run of this harness reported exactly
+      // that for a compile error in the probe itself, and the cause was only readable by
+      // downloading the uploaded artifact. The diagnosis belongs in the line that reports the
+      // failure, so the compiler and runtime diagnostics are surfaced here.
+      const detail = diagnosticLines(failure);
+      results.push({ id: model.id, capability, status: "FAIL", error: detail });
+      process.stdout.write(`FAIL ${model.id} (${capability}): ${detail}\n`);
     }
     // Reclaim the weights between models, because a 6 GB artifact each fills a runner.
     //

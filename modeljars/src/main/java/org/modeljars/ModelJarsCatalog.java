@@ -72,7 +72,12 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
           Map.entry("multilingual", "translation"),
           Map.entry("bilingual", "translation"),
           Map.entry("chat", "chat"),
-          Map.entry("tool-calling", "tool-use"));
+          Map.entry("tool-calling", "tool-use"),
+          // A typed-decision model is NOT a text generator. It is routable, but only for decision
+          // work: it answers a typed question over a state in one non-autoregressive pass and has
+          // no continuation to stream. The tag keeps it out of chat routing, where handing it a
+          // prompt would be a category error rather than a quality trade-off.
+          Map.entry("typed-decision", "decision"));
 
   private final ModelJarRegistry models;
   private final ModelRagQualificationRegistry qualifications;
@@ -144,7 +149,9 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
           && !("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty())) {
         continue;
       }
-      if (!descriptor.capabilities().contains("text-generation")) {
+      boolean generates = descriptor.capabilities().contains("text-generation");
+      boolean decides = descriptor.capabilities().contains("typed-decision");
+      if (!generates && !decides) {
         // Embedding models have no per-task generation quality and nothing sensible to route to.
         continue;
       }
@@ -255,8 +262,20 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
   }
 
   private Set<String> tagsFor(ModelJarDescriptor descriptor) {
+    return tagsFor(descriptor.capabilities());
+  }
+
+  /**
+   * The router tags a capability set earns, and nothing it does not.
+   *
+   * <p>Package-private so the mapping can be driven directly. It is the only thing standing between
+   * a catalogued model and a router that trusts the tag, and an unmapped capability must contribute
+   * nothing rather than a guess -- inventing a tag would route work to a model nobody measured on
+   * it.
+   */
+  Set<String> tagsFor(Set<String> capabilities) {
     Set<String> tags = new LinkedHashSet<>();
-    for (String capability : descriptor.capabilities()) {
+    for (String capability : capabilities) {
       String tag = TASK_TAGS.get(capability);
       if (tag != null) {
         tags.add(tag);

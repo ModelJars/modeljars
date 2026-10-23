@@ -22772,12 +22772,14 @@
         "coding"
       ],
       "dimensions": {
-        "parameterCount": 2249369600,
+        "parameterCount": 2516756480,
         "contextLength": 131072,
         "embeddingLength": 2048,
         "blockCount": 42,
         "attentionHeadCount": 16,
         "keyValueHeadCount": 2,
+        "keyLength": 128,
+        "valueLength": 128,
         "feedForwardLength": 6144,
         "attentionBlockCount": 42
       },
@@ -22829,7 +22831,7 @@
         "reasoning"
       ],
       "dimensions": {
-        "parameterCount": 1543714304,
+        "parameterCount": 1777088000,
         "contextLength": 131072,
         "embeddingLength": 1536,
         "blockCount": 28,

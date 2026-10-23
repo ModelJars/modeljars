@@ -22872,8 +22872,6 @@
         "embeddingLength": 1024,
         "blockCount": 30,
         "attentionHeadCount": 16,
-        "keyValueHeadCount": 16,
-        "feedForwardLength": 2624,
         "attentionBlockCount": 30
       },
       "features": [

@@ -6516,9 +6516,124 @@ val testRagLaunchQualificationPolicy = tasks.register("testRagLaunchQualificatio
     }
 }
 
+/**
+ * The gate a decision qualification must clear to be published.
+ *
+ * Deliberately not `verifyQualifiedRagEntry` with different field names. There is no latency tier
+ * to classify here, because a decision is one non-autoregressive pass and the policy that measured
+ * it does not gate on wall clock. There is no 0.9 correctness floor either: a RAG pipeline's 0.9 is
+ * against a single right answer, while a decision cohort mixes 2-option and 12-option questions
+ * whose chance floors differ by more than that gap, so the only readable quality claim is accuracy
+ * against this cohort's own chance.
+ *
+ * Calibration is checked but never gated on. The tier already carries that finding -- a
+ * RANKED_DECISION publishes with its accuracy and exports no confidence quality -- and gating
+ * publication on it would withhold a model that measurably decides well because the probability
+ * beside the decision is not fitted. What is refused is a tier that claims more than the evidence.
+ */
+fun verifyQualifiedDecisionEntry(entry: CatalogDecisionQualification) {
+    require(entry.publishable) {
+        "Published decision entry has an unpublishable tier: ${entry.modelId} (${entry.tier})"
+    }
+    require(entry.cases >= 100) {
+        "Decision qualification needs at least 100 measured cases: ${entry.modelId}"
+    }
+    val rates = listOf(entry.accuracy, entry.chanceAccuracy)
+    require(rates.all { it.isFinite() && it >= 0.0 && it <= 1.0 }) {
+        "Decision qualification has invalid accuracy evidence: ${entry.modelId}"
+    }
+    // Chance, not a fixed floor. The number that makes an accuracy readable is the cohort's own.
+    require(entry.accuracy > entry.chanceAccuracy) {
+        "Decision accuracy does not beat its chance floor: ${entry.modelId} " +
+            "(${entry.accuracy} <= ${entry.chanceAccuracy})"
+    }
+    require(entry.exportsConfidenceQuality == (entry.tier == "CALIBRATED_DECISION")) {
+        "Decision tier and confidence export disagree: ${entry.modelId}"
+    }
+    require(!(entry.exportsConfidenceQuality && entry.calibrationError.isNaN())) {
+        "Decision entry claims a calibrated confidence with no measured calibration error: " +
+            entry.modelId
+    }
+    require(entry.calibrationError.isNaN() || entry.calibrationError >= 0.0) {
+        "Decision calibration error must be NaN or non-negative: ${entry.modelId}"
+    }
+    require(entry.cohort.isNotBlank()) {
+        "Decision qualification must name its cohort: ${entry.modelId}"
+    }
+    require(entry.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
+        "Decision qualification report digest is invalid: ${entry.modelId}"
+    }
+}
+
+val testDecisionLaunchQualificationPolicy =
+    tasks.register("testDecisionLaunchQualificationPolicy") {
+        group = "verification"
+        description = "Exercise every decision publication gate and prove each one rejects"
+        doLast {
+            // A seed built here rather than read from the manifest: the gate must be exercised
+            // whether or not a decision model happens to be in the catalog yet, and a gate that
+            // only runs when its data exists is a gate nobody notices has stopped working.
+            val seed =
+                CatalogDecisionQualification(
+                    modelId = "seed_decision_model",
+                    tier = "RANKED_DECISION",
+                    backend = "pure-java",
+                    artifactSha256 = "a".repeat(64),
+                    artifactSizeBytes = 449_397_600L,
+                    cohort = "JevBench v1.1, MIT, 120 cases",
+                    cases = 120,
+                    chanceAccuracy = 0.300417,
+                    accuracy = 0.783333,
+                    calibrationError = 0.16377,
+                    uncalibratedBucketsExercised = 0,
+                    reportPath = "experiments/decision/report.json",
+                    reportSha256 = "b".repeat(64),
+                    raw = mapOf("model" to "Seed Decision Model"),
+                )
+            verifyQualifiedDecisionEntry(seed)
+            // Both publishable tiers pass; only the stronger one may export a confidence quality.
+            verifyQualifiedDecisionEntry(
+                seed.copy(tier = "CALIBRATED_DECISION", calibrationError = 0.08),
+            )
+            // A cohort that measured no calibration at all still publishes at the weaker tier.
+            verifyQualifiedDecisionEntry(seed.copy(calibrationError = Double.NaN))
+            val rejected =
+                listOf(
+                    "unpublishable tier" to seed.copy(tier = "UNQUALIFIED"),
+                    "at least 100 measured cases" to seed.copy(cases = 99),
+                    "invalid accuracy evidence" to seed.copy(accuracy = Double.NaN),
+                    "invalid accuracy evidence" to seed.copy(accuracy = 1.5),
+                    "invalid accuracy evidence" to seed.copy(chanceAccuracy = -0.1),
+                    "does not beat its chance floor" to seed.copy(accuracy = 0.300417),
+                    "does not beat its chance floor" to seed.copy(accuracy = 0.2),
+                    "claims a calibrated confidence" to
+                        seed.copy(tier = "CALIBRATED_DECISION", calibrationError = Double.NaN),
+                    "must be NaN or non-negative" to seed.copy(calibrationError = -0.01),
+                    "must name its cohort" to seed.copy(cohort = "  "),
+                    "report digest is invalid" to seed.copy(reportSha256 = "not-a-digest"),
+                )
+            rejected.forEach { (message, entry) ->
+                val failure = runCatching { verifyQualifiedDecisionEntry(entry) }.exceptionOrNull()
+                require(
+                    failure is IllegalArgumentException &&
+                        failure.message.orEmpty().contains(message),
+                ) {
+                    "Decision qualification mutation must reject $message; got $failure"
+                }
+            }
+            // Every published entry in the real manifest, if there is one.
+            publicDecisionQualifications.forEach(::verifyQualifiedDecisionEntry)
+            println(
+                "Verified both publishable decision tiers, ${rejected.size} rejected mutations " +
+                    "and ${publicDecisionQualifications.size} published entries",
+            )
+        }
+    }
+
 val verifyLaunchQualifications =
     tasks.register("verifyLaunchQualifications") {
         dependsOn(testRagLaunchQualificationPolicy)
+        dependsOn(testDecisionLaunchQualificationPolicy)
         group = "verification"
         description =
             "Fail unless at least 25 distinct upstream models passed the production RAG policy"

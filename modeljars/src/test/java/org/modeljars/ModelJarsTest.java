@@ -1101,12 +1101,31 @@ class ModelJarsTest {
     ModelJarException failure =
         assertThrows(
             ModelJarException.class,
-            () -> ModelJars.requireGenerativeModel(typedDecisionDescriptor()));
+            () -> ModelJars.requireGenerativeModel(typedDecisionDescriptor(), "openRuntime"));
     assertTrue(
         failure.getMessage().contains("typed-decision model, not a text generator"),
         failure.getMessage());
     // The refusal has to name the call that would have worked, or it only tells the caller no.
     assertTrue(failure.getMessage().contains("ModelJarsCatalog.locate"), failure.getMessage());
+    assertTrue(failure.getMessage().contains("ModelJarInstaller.install"), failure.getMessage());
+  }
+
+  @Test
+  void refusesADecisionRuntimeWithoutClaimingTheCallerWantedATextGenerator() {
+    // openDecisionRuntime reaches the same guard, and answering it with "not a text generator"
+    // addresses a question its caller did not ask. The route that works is the same either way.
+    ModelJarException failure =
+        assertThrows(
+            ModelJarException.class,
+            () ->
+                ModelJars.requireGenerativeModel(typedDecisionDescriptor(), "openDecisionRuntime"));
+    assertFalse(
+        failure.getMessage().contains("not a text generator"),
+        "openDecisionRuntime's caller did not ask for a text generator: " + failure.getMessage());
+    assertTrue(
+        failure.getMessage().contains("constrained-decoding decision runtime cannot serve it"),
+        failure.getMessage());
+    assertTrue(failure.getMessage().contains("ModernBertDecisionModel.open"), failure.getMessage());
   }
 
   @Test
@@ -1114,7 +1133,8 @@ class ModelJarsTest {
     ModelJarException failure =
         assertThrows(
             ModelJarException.class,
-            () -> ModelJars.requireGenerativeModel(speechDescriptor("a".repeat(64))));
+            () ->
+                ModelJars.requireGenerativeModel(speechDescriptor("a".repeat(64)), "openRuntime"));
     assertTrue(
         failure.getMessage().contains("does not advertise text-generation"), failure.getMessage());
     assertTrue(failure.getMessage().contains("text-to-speech"), failure.getMessage());
@@ -1125,7 +1145,7 @@ class ModelJarsTest {
     // The guard must not reject what it is there to let through, or every openRuntime call breaks.
     ModelJarDescriptor generative = ModelJarRegistry.fromClasspath().resolve(QWEN).orElseThrow();
     assertTrue(generative.capabilities().contains("text-generation"), "fixture is not generative");
-    ModelJars.requireGenerativeModel(generative);
+    ModelJars.requireGenerativeModel(generative, "openRuntime");
   }
 
   private static ModelJarDescriptor typedDecisionDescriptor() {

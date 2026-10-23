@@ -73,12 +73,16 @@ class LayaDecisionCatalogRouteTest {
     ModelJarException failure =
         assertThrows(
             ModelJarException.class,
-            () -> ModelJars.requireGenerativeModel(descriptor.orElseThrow()));
+            () -> ModelJars.requireGenerativeModel(descriptor.orElseThrow(), "openRuntime"));
     assertTrue(
         failure.getMessage().contains("typed-decision model, not a text generator"),
         failure.getMessage());
     assertTrue(failure.getMessage().contains("ModelJarsCatalog.locate"), failure.getMessage());
     assertTrue(failure.getMessage().contains("ModernBertDecisionModel.open"), failure.getMessage());
+    // install() is what fetches; locate() only reports a cached copy. Naming only locate sends a
+    // reader with a cold cache to a call that returns empty -- which is how the released-catalog
+    // probe failed on its first cold run.
+    assertTrue(failure.getMessage().contains("ModelJarInstaller.install"), failure.getMessage());
   }
 
   @Test

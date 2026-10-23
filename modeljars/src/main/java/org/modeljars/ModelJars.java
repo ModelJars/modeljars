@@ -951,23 +951,33 @@ public final class ModelJars {
    * fails there on an unsupported architecture -- after downloading 449 MB of weights, and with a
    * message that names neither the real reason nor the call that would have worked.
    */
-  static void requireGenerativeModel(ModelJarDescriptor descriptor) {
+  static void requireGenerativeModel(ModelJarDescriptor descriptor, String entryPoint) {
     if (descriptor.capabilities().contains("text-generation")) {
       return;
     }
     if (descriptor.capabilities().contains("typed-decision")) {
+      // openDecisionRuntime reaches here too, and telling its caller that their model "is not a
+      // text generator" answers a question they did not ask: they asked for a decision runtime.
+      // That runtime drives a generative backend in a constrained mode, which this model has no
+      // decoder for, so the refusal has to name the route that does work either way.
+      String why =
+          "openDecisionRuntime".equals(entryPoint)
+              ? " is a typed-decision model whose decoder is not a generative backend, so the"
+                  + " constrained-decoding decision runtime cannot serve it"
+              : " is a typed-decision model, not a text generator: it answers one typed question"
+                  + " in a single non-autoregressive pass and has no continuation to stream";
       throw new ModelJarException(
           descriptor.markerCoordinate()
-              + " is a typed-decision model, not a text generator: it answers one typed question"
-              + " in a single non-autoregressive pass and has no continuation to stream. Open it"
-              + " through its decision entry point instead -- ModelJarsCatalog.locate(id) for the"
-              + " artifact path, then ModernBertDecisionModel.open(path) in the pure-Java"
-              + " decoder.");
+              + why
+              + ". Install it with ModelJarInstaller.install(model) or find a cached copy with"
+              + " ModelJarsCatalog.locate(id), then open that path with"
+              + " ModernBertDecisionModel.open(path) in the pure-Java decoder.");
     }
     throw new ModelJarException(
         descriptor.markerCoordinate()
-            + " does not advertise text-generation, so it cannot be opened as a generative"
-            + " runtime; it advertises "
+            + " does not advertise text-generation, so it cannot be opened through "
+            + entryPoint
+            + "; it advertises "
             + String.join(", ", descriptor.capabilities()));
   }
 
@@ -990,7 +1000,7 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
-    requireGenerativeModel(descriptor);
+    requireGenerativeModel(descriptor, "openRuntime");
     ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
@@ -1025,7 +1035,7 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
-    requireGenerativeModel(descriptor);
+    requireGenerativeModel(descriptor, "openDecisionRuntime");
     ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());

@@ -1,0 +1,115 @@
+# Exercise published catalog models end to end, resolving only from Maven Central.
+#
+# This runs AFTER a deployment, which is the whole point. Every other gate in this repository
+# measures an artifact against the library in this checkout, so none of them can see the failure
+# that exists only once something is published: a marker on Central that no released library can
+# use. MEASURED 2026-10-23 -- laya_q8_0 was published carrying decision evidence while the newest
+# released modeljars-core had no registry to read it, and every pre-publication gate was green.
+#
+# `pages` is the last step of a catalog deployment: it verifies every public marker resolves from
+# Central and then deploys the site. So this waits for `pages` to succeed on main rather than
+# guessing at a delay.
+name: released-catalog-e2e
+
+on:
+  workflow_run:
+    workflows: [pages]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      model_ids:
+        description: Comma-separated published catalog model IDs, or blank for one per capability.
+        required: false
+        default: ""
+        type: string
+      all:
+        description: Exercise every published model with a probe. Slow; downloads the catalog.
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Weekly, because a released library and a published marker can drift apart without either
+    # repository changing: a consumer resolves whatever Central serves today.
+    - cron: "23 5 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: released-catalog-e2e-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  exercise:
+    # A failed or cancelled deployment has nothing to exercise.
+    if: >-
+      github.event_name != 'workflow_run'
+      || github.event.workflow_run.conclusion == 'success'
+    name: Exercise published models from Central
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Java
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Install JBang
+        run: |
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          echo "$HOME/.jbang/bin" >> "$GITHUB_PATH"
+
+      # The released version, read from the latest release tag rather than from gradle.properties:
+      # this job's subject is what Central serves, and a property in this checkout can name a
+      # version that is not published yet.
+      - name: Resolve the released ModelJars version
+        id: released
+        run: |
+          set -euo pipefail
+          git fetch --tags --quiet
+          version="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sed 's/^v//' \
+            | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+          [ -n "$version" ] || { echo "no release tag to exercise" >&2; exit 1; }
+          code="$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://repo1.maven.org/maven2/org/modeljars/modeljars/$version/modeljars-$version.jar")"
+          [ "$code" = "200" ] || {
+            echo "modeljars $version is tagged but not resolvable on Central (HTTP $code)" >&2
+            exit 1
+          }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "exercising published models against modeljars $version"
+
+      # Free disk before pulling weights. The runner has far less room than the catalog needs, and
+      # --prune-weights reclaims each artifact between models.
+      - name: Reclaim runner disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc || true
+          df -h / | tail -1
+
+      - name: Exercise published models
+        env:
+          CI: "true"
+        run: |
+          set -euo pipefail
+          args=(--modeljars-version "${{ steps.released.outputs.version }}" --prune-weights)
+          if [ -n "${{ inputs.model_ids }}" ]; then
+            args+=(--ids "${{ inputs.model_ids }}")
+          elif [ "${{ inputs.all }}" = "true" ]; then
+            args+=(--all)
+          fi
+          node tools/released-catalog-e2e.mjs "${args[@]}"
+
+      # Retained on failure as well as success: the run log per model is the only record of why a
+      # published model could not be used, and it is gone with the runner otherwise.
+      - name: Retain the per-model evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: released-catalog-e2e
+          path: build/released-e2e/
+          retention-days: 30

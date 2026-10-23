@@ -17,11 +17,19 @@ test("scopes remote catalog checks while retaining scheduled and release audits"
   assert.match(validateWorkflow, /fetch-depth:\s*0/);
   assert.match(validateWorkflow, /id:\s*remote-catalog/);
   assert.match(validateWorkflow, /catalog\/models\.json/);
-  assert.match(validateWorkflow, /mode=changed/);
-  assert.match(validateWorkflow, /--changed-from="\$\{COMPARISON\}"/);
 
+  // Enrichment is unscoped: every model, every run, never only the ones a change touched.
+  // Scoping it to the merge base made this gate disagree with publish.yml, which enriches the
+  // whole catalog, so an entry with hand-written dimensions passed its own pull request and
+  // failed on main. Three reached main that way on 2026-10-23.
+  assert.doesNotMatch(validateWorkflow, /--changed-from/);
+  assert.doesNotMatch(validateWorkflow, /mode=changed/);
+  assert.match(validateWorkflow, /- name: Verify exact GGUF dimensions\n\s+run: npm run catalog:enrich -- --concurrency=3/);
+
+  // `required` gates only the pinned Hugging Face metadata check now. That one authenticates
+  // against gated repositories, so it stays off pull requests that cannot hold the token.
   const remoteCondition = /if:\s*steps\.remote-catalog\.outputs\.required == 'true'/g;
-  assert.equal(validateWorkflow.match(remoteCondition)?.length, 2);
+  assert.equal(validateWorkflow.match(remoteCondition)?.length, 1);
   assert.match(validateWorkflow, /verifyRemoteCatalogMetadata/);
   assert.match(validateWorkflow, /HF_TOKEN:\s*\$\{\{ secrets\.HF_TOKEN \}\}/);
   assert.match(validateWorkflow, /npm run catalog:enrich/);

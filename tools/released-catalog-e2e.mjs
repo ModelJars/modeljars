@@ -70,12 +70,27 @@ const CAPABILITY_PROBES = {
     // arm of this harness never ran -- a stub that looked like coverage. The real surface is
     // ModelPrompt.text(String), SamplingOptions.builder(), and generate returning String
     // (models-api/.../ModelPrompt.java, SamplingOptions.java, TextGenerationModel.java).
+    // MEASURED 2026-10-23: the first green run of this arm reported PASS for the output
+    // "_to_starter_starter_starter_st" -- a degenerate repetition loop. Asserting only that the
+    // text is non-blank cannot tell a working decoder from one emitting noise, and
+    // smallestPerCapability always selects the most heavily quantised generative artifact, so
+    // this arm will always run on the least coherent model in the catalogue.
+    //
+    // Coherence is the wrong assertion: a 13 MiB cq2_mixed artifact never promised it, and the
+    // catalogue records no repetition-loop measurement for it (catalog/generation-safety.json
+    // holds a stopRate only once a run is recorded). Determinism at temperature 0 IS promised,
+    // costs one extra call, and fails on real defects -- uninitialised state, a dirty KV cache,
+    // or a cold/hot divergence -- without demanding that the words mean anything.
     body: `try (var runtime = ModelJars.openRuntime(MODEL)) {
-      String reply = runtime.model().generate(
-          ModelPrompt.text("Reply with the single word: ready"),
-          SamplingOptions.builder().temperature(0).maxTokens(16).build());
-      require(reply != null && !reply.isBlank(), "generated no text");
-      System.out.println("PASS generate: " + reply.strip().replace('\\n', ' '));
+      var greedy = SamplingOptions.builder().temperature(0).maxTokens(16).build();
+      ModelPrompt prompt = ModelPrompt.text("Reply with the single word: ready");
+      String first = runtime.model().generate(prompt, greedy);
+      require(first != null && !first.isBlank(), "generated no text");
+      String second = runtime.model().generate(prompt, greedy);
+      require(first.equals(second),
+          "temperature 0 is not deterministic: first=[" + first + "] second=[" + second + "]");
+      System.out.println("PASS generate: decoded and reproducible at temperature 0"
+          + " (" + first.strip().replace('\\n', ' ') + ")");
     }`,
     imports: ["com.integrallis.models.api.ModelPrompt", "com.integrallis.models.api.SamplingOptions"],
   },

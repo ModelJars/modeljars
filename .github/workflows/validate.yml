@@ -173,6 +173,30 @@ jobs:
       - name: Test catalog tooling and site modules
         run: npm test
 
+      # Compile every released-catalog probe against what Central actually serves, without pulling
+      # any weights. MEASURED 2026-10-23: the text-generation probe shipped with three invented API
+      # calls, so it never compiled and that arm of the end-to-end harness silently never ran. The
+      # only signal was a failed post-deployment run, which is far too late and far too expensive
+      # for a compile error. `jbang build` resolves and runs javac in seconds.
+      - name: Compile released-catalog probes against Central
+        run: |
+          set -euo pipefail
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          export PATH="$HOME/.jbang/bin:$PATH"
+          version="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' | sed 's/^v//' \
+            | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+          if [ -z "$version" ]; then
+            echo "no release tag yet; nothing published to compile against" >&2
+            exit 0
+          fi
+          code="$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://repo1.maven.org/maven2/org/modeljars/modeljars/$version/modeljars-$version.jar")"
+          if [ "$code" != "200" ]; then
+            echo "modeljars $version is tagged but not on Central (HTTP $code); skipping" >&2
+            exit 0
+          fi
+          node tools/released-catalog-e2e.mjs --modeljars-version "$version" --compile-only
+
       - name: Verify generated performance profiles match pinned evidence
         run: npm run catalog:profiles:check
 

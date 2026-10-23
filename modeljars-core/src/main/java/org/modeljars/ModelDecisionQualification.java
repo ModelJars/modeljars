@@ -26,17 +26,17 @@ package org.modeljars;
  * <p><b>Accuracy and calibration are separate findings and this record keeps them separate.</b> A
  * decision model can be reliably right about which option to pick while its probability means
  * nothing in the regime it is being used in, and a caller needs to know which of the two it is
- * holding. {@code tier} is that answer: {@code CALIBRATED_DECISION} may be thresholded,
- * {@code RANKED_DECISION} may be ranked and not thresholded.
+ * holding. {@code tier} is that answer: {@code CALIBRATED_DECISION} may be thresholded, {@code
+ * RANKED_DECISION} may be ranked and not thresholded.
  *
  * <p><b>Chance is recorded beside accuracy, always.</b> An accuracy figure over a cohort mixing
  * binary and six-way questions means very little alone — 0.60 is near-guessing on one and three
- * times chance on the other. A reader who has {@code accuracy} without {@code chanceAccuracy} has
- * a number they cannot interpret.
+ * times chance on the other. A reader who has {@code accuracy} without {@code chanceAccuracy} has a
+ * number they cannot interpret.
  *
  * <p>{@code uncalibratedBucketsExercised} exists so a pass cannot be mistaken for evidence. A
- * cohort with no question in a bucket the artifact declares uncalibrated never tested that
- * promise, and zero here says so rather than implying it held.
+ * cohort with no question in a bucket the artifact declares uncalibrated never tested that promise,
+ * and zero here says so rather than implying it held.
  *
  * @param modelId catalog alias of the qualified model
  * @param model display name and variant of the qualified model
@@ -49,8 +49,7 @@ package org.modeljars;
  * @param artifactSizeBytes byte size of the qualified model artifact
  * @param report repository-relative path to the qualification evidence report
  * @param reportSha256 SHA-256 digest of the evidence report
- * @param tier what the model may be used for; only the calibrated tier exports a confidence
- *     quality
+ * @param tier what the model may be used for; only the calibrated tier exports a confidence quality
  * @param cases number of labelled decisions scored
  * @param chanceAccuracy accuracy a uniform random chooser would reach on this cohort's option
  *     counts
@@ -111,7 +110,12 @@ public record ModelDecisionQualification(
       // An unqualified model has no record. A tier this code does not understand would otherwise
       // be published as though its meaning were known.
       throw new ModelJarException(
-          "Unknown decision tier: " + tier + "; expected " + TIER_CALIBRATED + " or " + TIER_RANKED);
+          "Unknown decision tier: "
+              + tier
+              + "; expected "
+              + TIER_CALIBRATED
+              + " or "
+              + TIER_RANKED);
     }
     if (artifactSizeBytes <= 0) {
       throw new ModelJarException("artifactSizeBytes must be positive: " + artifactSizeBytes);

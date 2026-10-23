@@ -77,7 +77,12 @@ class CatalogModelSpringIntegrationIT {
               assertThat(context).hasSingleBean(ChatClient.Builder.class);
 
               String answer =
-                  context.getBean(ChatClient.Builder.class).build().prompt("Say READY").call().content();
+                  context
+                      .getBean(ChatClient.Builder.class)
+                      .build()
+                      .prompt("Say READY")
+                      .call()
+                      .content();
 
               // Greedy decoding, so this is stable run to run. What is asserted is that tokens came
               // out of weights no application code ever named by path.
@@ -85,8 +90,7 @@ class CatalogModelSpringIntegrationIT {
               assertThat(answer.strip()).isNotEmpty();
               // Prose, not a tool call, for the plain chat model this picks.
               assertThat(answer).doesNotContain("<tool_call>");
-              System.out.println(
-                  "end-to-end answered from " + model.id() + ": " + answer.strip());
+              System.out.println("end-to-end answered from " + model.id() + ": " + answer.strip());
             });
   }
 
@@ -122,11 +126,12 @@ class CatalogModelSpringIntegrationIT {
    */
   private static Optional<DiscoveredModel> smallestInstalledChatModel() {
     List<DiscoveredModel> chat =
-        new ModelJarsCatalog().discover().stream()
-            .filter(model -> model.tags().contains("chat"))
-            .filter(model -> model.sizeBytes() > 0)
-            .sorted((left, right) -> Long.compare(left.sizeBytes(), right.sizeBytes()))
-            .toList();
+        new ModelJarsCatalog()
+            .discover().stream()
+                .filter(model -> model.tags().contains("chat"))
+                .filter(model -> model.sizeBytes() > 0)
+                .sorted((left, right) -> Long.compare(left.sizeBytes(), right.sizeBytes()))
+                .toList();
     return chat.stream()
         .filter(model -> !model.tags().contains("tool-use"))
         .findFirst()

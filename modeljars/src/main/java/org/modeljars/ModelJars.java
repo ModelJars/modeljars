@@ -936,6 +936,40 @@ public final class ModelJars {
     return componentQualification;
   }
 
+  /**
+   * Refuses a model that is not a text generator, before anything is downloaded or loaded.
+   *
+   * <p>Guards both generative entry points. {@code openDecisionRuntime} needs it as much as {@code
+   * openRuntime} does, because it loads the same {@link
+   * com.integrallis.models.api.InferenceBackend} and only configures it to decode a decision.
+   *
+   * <p>A descriptor's {@code backends} map says which decoder can execute the artifact, not that it
+   * can be driven as a text generator, and this is the only place that distinction is enforced. A
+   * typed-decision model is the case that makes it matter: the pure-Java decoder does run Laya, so
+   * the map says {@code pure-java}, but {@code PureJavaBackend} dispatches {@code bert} and {@code
+   * nomic-bert} and not {@code modern-bert}. Without this check the call reaches the loader and
+   * fails there on an unsupported architecture -- after downloading 449 MB of weights, and with a
+   * message that names neither the real reason nor the call that would have worked.
+   */
+  static void requireGenerativeModel(ModelJarDescriptor descriptor) {
+    if (descriptor.capabilities().contains("text-generation")) {
+      return;
+    }
+    if (descriptor.capabilities().contains("typed-decision")) {
+      throw new ModelJarException(
+          descriptor.markerCoordinate()
+              + " is a typed-decision model, not a text generator: it answers one typed question"
+              + " in a single non-autoregressive pass and has no continuation to stream. Open it"
+              + " through its decision entry point instead -- ModelJarsCatalog.locate(id) for the"
+              + " artifact path, then the decoder's own decision facade.");
+    }
+    throw new ModelJarException(
+        descriptor.markerCoordinate()
+            + " does not advertise text-generation, so it cannot be opened as a generative"
+            + " runtime; it advertises "
+            + String.join(", ", descriptor.capabilities()));
+  }
+
   private static String advertisedBackends(ModelJarDescriptor descriptor) {
     List<String> advertised =
         Stream.of(JAVA_BACKEND, NATIVE_BACKEND)
@@ -955,6 +989,7 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    requireGenerativeModel(descriptor);
     ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());
@@ -989,6 +1024,7 @@ public final class ModelJars {
         models
             .resolve(model)
             .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    requireGenerativeModel(descriptor);
     ModelExecutionQualification qualification = selectQualification(descriptor, options.backend());
     String backend = qualification.backend();
     List<String> activeJvmArguments = List.copyOf(jvmArguments.get());

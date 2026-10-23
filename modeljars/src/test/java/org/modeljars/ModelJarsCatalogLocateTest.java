@@ -55,8 +55,7 @@ class ModelJarsCatalogLocateTest {
     }
 
     assertTrue(
-        unlocatable.isEmpty(),
-        "discover() advertises models locate() cannot find: " + unlocatable);
+        unlocatable.isEmpty(), "discover() advertises models locate() cannot find: " + unlocatable);
     // Said out loud, because an empty catalogue would make the assertion above meaningless.
     System.out.println(
         "locatesEveryModelItAdvertises checked " + discovered.size() + " installed model(s)");
@@ -68,7 +67,8 @@ class ModelJarsCatalogLocateTest {
     int checked = 0;
     for (DiscoveredModel model : catalog.discover()) {
       Path located = catalog.locate(model.id()).orElseThrow();
-      assertTrue(Files.exists(located), model.id() + " located at a path that does not exist: " + located);
+      assertTrue(
+          Files.exists(located), model.id() + " located at a path that does not exist: " + located);
       checked++;
     }
     System.out.println("returnsAPathThatReallyExists checked " + checked + " installed model(s)");
@@ -106,8 +106,7 @@ class ModelJarsCatalogLocateTest {
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
     ModelJarsCatalog catalog = new ModelJarsCatalog();
 
-    List<String> installedIds =
-        catalog.discover().stream().map(DiscoveredModel::id).toList();
+    List<String> installedIds = catalog.discover().stream().map(DiscoveredModel::id).toList();
     int checked = 0;
     for (ModelJarDescriptor descriptor : registry.descriptors()) {
       if (installedIds.contains(descriptor.alias())) {
@@ -203,7 +202,10 @@ class ModelJarsCatalogLocateTest {
       }
       assertFalse(
           catalog.locate(descriptor.alias()).isPresent(),
-          descriptor.alias() + " has unloadable format " + descriptor.format() + " yet was located");
+          descriptor.alias()
+              + " has unloadable format "
+              + descriptor.format()
+              + " yet was located");
     }
   }
 }

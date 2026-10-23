@@ -256,7 +256,9 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     }
     try {
       Path artifact = ModelJarCache.artifactPath(descriptor);
-      return ModelJarCache.isComplete(descriptor, artifact) ? Optional.of(artifact) : Optional.empty();
+      return ModelJarCache.isComplete(descriptor, artifact)
+          ? Optional.of(artifact)
+          : Optional.empty();
     } catch (RuntimeException e) {
       // A descriptor without a digest cannot be content-addressed, so it is not in the cache.
       return Optional.empty();
@@ -328,10 +330,10 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    * rag-guard-required} feature instead, which an application can exclude when it does not run the
    * guard or require when it does.
    *
-   * <p>The {@code decision} score is a typed-decision model's own measured accuracy over a
-   * labelled cohort, and <b>both</b> decision tiers export it. Accuracy is a property of the
-   * weights: it is how well the model picks the right option, which is exactly what a router
-   * choosing between decision models needs to compare.
+   * <p>The {@code decision} score is a typed-decision model's own measured accuracy over a labelled
+   * cohort, and <b>both</b> decision tiers export it. Accuracy is a property of the weights: it is
+   * how well the model picks the right option, which is exactly what a router choosing between
+   * decision models needs to compare.
    *
    * <p><b>Calibration is deliberately not a quality here.</b> Whether the published probability can
    * be thresholded is a usage constraint rather than a measure of how good the model is, and it
@@ -339,8 +341,8 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    * 0.1638 on a cohort it was not calibrated for while answering 0.7833 of it correctly. So it
    * travels the same way the guard requirement does, as a catalog feature an application can
    * exclude or require, and {@code ModelDecisionQualificationRegistry.Entry
-   * #exportsConfidenceQuality()} is what a consumer asks before trusting the number. Publishing
-   * (1 - calibrationError) as a quality score would invent a metric nobody measured.
+   * #exportsConfidenceQuality()} is what a consumer asks before trusting the number. Publishing (1
+   * - calibrationError) as a quality score would invent a metric nobody measured.
    */
   Map<String, Double> qualityFor(ModelJarDescriptor descriptor, Set<String> tags) {
     Map<String, Double> quality = new HashMap<>();
@@ -353,8 +355,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
       decisionQualifications
           .qualificationFor(descriptor)
           .ifPresent(
-              qualification ->
-                  quality.merge("decision", qualification.accuracy(), Math::max));
+              qualification -> quality.merge("decision", qualification.accuracy(), Math::max));
     }
     if (tags.contains("tool-use")) {
       for (ModelToolQualification qualification :

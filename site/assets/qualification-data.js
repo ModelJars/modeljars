@@ -195,8 +195,32 @@ export function primaryQualification(model) {
   const composition = Array.isArray(model?.compositionQualifications)
     ? model.compositionQualifications
     : [];
+  // A decision qualification carries no `qualified` boolean and no `useCaseTier`: its tier IS the
+  // verdict, and the registry refuses any tier but the two publishable ones. Left unmapped, a
+  // typed-decision model has no primary qualification at all -- which is how selecting laya_q8_0
+  // rendered "Catalog unavailable: Cannot read properties of null (reading 'backend')". Both
+  // publishable tiers are qualified; only the stronger one exports a confidence quality, and that
+  // distinction belongs in the label rather than here.
+  const decision = Array.isArray(model?.decisionQualifications)
+    ? model.decisionQualifications.map((entry) => ({
+        ...entry,
+        useCaseTier: entry.useCaseTier || entry.tier,
+        qualified:
+          typeof entry.qualified === "boolean"
+            ? entry.qualified
+            : entry.tier === "CALIBRATED_DECISION" || entry.tier === "RANKED_DECISION",
+      }))
+    : [];
   // Prefer workload evidence over equivalence evidence when an artifact carries both.
-  const entries = [...composition, ...rag, ...tool, ...reranking, ...speech, ...embedding];
+  const entries = [
+    ...composition,
+    ...rag,
+    ...tool,
+    ...decision,
+    ...reranking,
+    ...speech,
+    ...embedding,
+  ];
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
@@ -209,6 +233,10 @@ export function qualificationLabel(qualification) {
   if (qualification.useCaseTier === "TEXT_TO_SPEECH") return "Text-to-speech";
   if (qualification.useCaseTier === "HYBRID_COMPOSITION") return "Qualified hybrid";
   if (qualification.useCaseTier === "RECIPE_PINNED_BASE") return "Typed decisions";
+  // The two decision tiers differ in one way a reader acts on: whether the probability beside the
+  // answer is one anybody fitted. Both publish; only the calibrated one may be thresholded.
+  if (qualification.useCaseTier === "CALIBRATED_DECISION") return "Calibrated decisions";
+  if (qualification.useCaseTier === "RANKED_DECISION") return "Ranked decisions";
   return "Guarded RAG";
 }
 

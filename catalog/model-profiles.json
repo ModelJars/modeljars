@@ -10573,6 +10573,11 @@
         "thinkingDefault"
       ],
       "memoryFit": "computed"
+    },
+    {
+      "modelId": "laya_q8_0",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
     }
   ]
 }

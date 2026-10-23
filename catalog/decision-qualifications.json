@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-23T04:39:38Z",
+  "policyVersion": "decision-calibration-v2",
+  "modelsRevision": "e1c011b7365635e0bbab36a80fba5e2a4b4b4a50",
+  "entries": [
+    {
+      "modelId": "laya_q8_0",
+      "model": "Laya GGUF Q8_0",
+      "backend": "pure-java",
+      "backendVersion": "models-0.5.4",
+      "tier": "RANKED_DECISION",
+      "cohort": "JevBench v1.1, MIT, 120 cases",
+      "cohortSha256": "4bcce87d40fd8edefd8984297d76390794c9fe2613c77fb9bb334006f5969b02",
+      "artifactSha256": "c06528c5746d3bb8baa72a27938be95abbfd0b226f8471e8a9e365ed0bb066d2",
+      "artifactSizeBytes": 449397600,
+      "report": "experiments/laya-modern-bert/evidence/jevbench-120-decision-calibration-v2.json",
+      "reportSha256": "37928bf64426704b5086b0b2a5b25ce1e75b497a8b4127fdd37433a2ace890e2",
+      "cases": 120,
+      "chanceAccuracy": 0.300417,
+      "accuracy": 0.783333,
+      "byType": {
+        "score": {
+          "cases": 12,
+          "accuracy": 0.75,
+          "chance": 0.25
+        },
+        "noul": {
+          "cases": 36,
+          "accuracy": 0.777778,
+          "chance": 0.5
+        },
+        "choice": {
+          "cases": 72,
+          "accuracy": 0.791667,
+          "chance": 0.209028
+        }
+      },
+      "calibrationError": 0.16377,
+      "uncalibratedAnswers": 0,
+      "uncalibratedBucketsExercised": 0,
+      "limitations": [
+        "calibration error 0.1638 > 0.10: the ranking is reliable, the published probability is not a fitted probability in this regime and no confidence quality is exported"
+      ],
+      "environment": {
+        "osName": "Mac OS X",
+        "osArch": "x86_64",
+        "javaVersion": "25.0.3",
+        "availableProcessors": 12
+      }
+    }
+  ]
+}

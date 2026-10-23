@@ -25,6 +25,7 @@ import com.integrallis.models.backend.purejava.PureJavaBackend;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.modeljars.ModelComponentQualificationRegistry;
+import org.modeljars.ModelDecisionQualificationRegistry;
 import org.modeljars.ModelEmbeddingQualificationRegistry;
 import org.modeljars.ModelJarRegistry;
 import org.modeljars.ModelRagQualification;
@@ -51,6 +52,7 @@ class ModelJarsJvmRuntimeDependencyTest {
     var rerankingQualifications = ModelRerankingQualificationRegistry.fromClasspath();
     var speechQualifications = ModelSpeechQualificationRegistry.fromClasspath();
     var componentQualifications = ModelComponentQualificationRegistry.fromClasspath();
+    var decisionQualifications = ModelDecisionQualificationRegistry.fromClasspath();
 
     // Every public capability has its own evidence gate. Passing any gate is sufficient to publish,
     // so the aggregate catalog is the union of all qualification registries. A composition
@@ -82,12 +84,21 @@ class ModelJarsJvmRuntimeDependencyTest {
             .filter(ModelComponentQualificationRegistry.Entry::qualified)
             .map(ModelComponentQualificationRegistry.Entry::modelId)
             .collect(Collectors.toSet());
+    // A decision qualification has no `qualified` flag: the tier is the verdict, and the registry
+    // refuses an unknown tier at load, so every entry it holds is one of the two publishable
+    // tiers. Omitting this registry made a published decision model look like an unqualified
+    // model in the aggregate catalog.
+    var decisionQualified =
+        decisionQualifications.entries().stream()
+            .map(ModelDecisionQualificationRegistry.Entry::modelId)
+            .collect(Collectors.toSet());
     var allQualified = new java.util.HashSet<>(ragQualified);
     allQualified.addAll(embeddingQualified);
     allQualified.addAll(toolQualified);
     allQualified.addAll(rerankingQualified);
     allQualified.addAll(speechQualified);
     allQualified.addAll(componentQualified);
+    allQualified.addAll(decisionQualified);
 
     var physicalDescriptors =
         descriptors.stream()
@@ -127,6 +138,7 @@ class ModelJarsJvmRuntimeDependencyTest {
                             .sha256()
                             .flatMap(speechQualifications::qualificationFor)
                             .isPresent()
+                        || decisionQualifications.qualificationFor(descriptor).isPresent()
                         || componentQualified.contains(descriptor.alias())));
     assertNull(
         getClass()

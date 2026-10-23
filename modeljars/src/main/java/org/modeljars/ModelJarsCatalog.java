@@ -170,7 +170,16 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
               descriptor.alias(),
               true,
               tags,
-              tags,
+              // The catalog's exact capabilities, not the tags again. DiscoveredModel takes both,
+              // and ModelCandidate's two-tag constructor documents passing tags twice as a
+              // compatibility shim for "descriptors written before capability requirements
+              // existed", telling catalog providers to supply exact capabilities. This provider
+              // was still using the shim, which was invisible while every tag happened to share a
+              // name with a capability -- `chat` tags come from the `chat` capability. A
+              // typed-decision model is the first whose tag is named differently from its
+              // capability (`decision` from `typed-decision`), so the shim showed up as a model
+              // that declares the capability in the catalog and denies it to the router.
+              descriptor.capabilities(),
               contextLength.get(),
               0.0,
               0.0,

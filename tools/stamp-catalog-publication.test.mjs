@@ -48,3 +48,24 @@ test("takes the union of qualified ids across manifests, never the sum", () => {
   ]);
   assert.deepEqual([...ids].sort(), ["a", "b", "c"]);
 });
+
+test("counts a decision model as qualified by its tier, which is its only verdict", () => {
+  // A decision qualification carries no `qualified` boolean, and the weaker publishable tier still
+  // publishes. Reading only `qualified` would leave every decision model unstamped, and the build
+  // gate refuses a qualified model without catalogPublishedAt -- so the omission shows up as a
+  // failed release, not as a missing field.
+  const decision = {
+    entries: [
+      { modelId: "ranked", tier: "RANKED_DECISION" },
+      { modelId: "calibrated", tier: "CALIBRATED_DECISION" },
+      { modelId: "rejected", tier: "UNQUALIFIED" },
+    ],
+  };
+  const ids = qualifiedIds([
+    [
+      decision,
+      (e) => e.tier === "CALIBRATED_DECISION" || e.tier === "RANKED_DECISION",
+    ],
+  ]);
+  assert.deepEqual([...ids].sort(), ["calibrated", "ranked"]);
+});

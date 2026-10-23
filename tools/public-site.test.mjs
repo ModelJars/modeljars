@@ -10,6 +10,20 @@ function read(relativePath) {
   return readFile(path.join(repositoryRoot, relativePath), "utf8");
 }
 
+/**
+ * The Models version the site must advertise, read from the build.
+ *
+ * This assertion hardcoded 0.3.42 and so pinned the stale value it was supposed to catch: the
+ * apple page advertised backend-apple 0.3.42 against a published 0.5.4 and the test agreed with
+ * it. Reading the property means the test tracks the release instead of freezing a moment.
+ */
+async function modelsVersion() {
+  const properties = await read("gradle.properties");
+  const match = properties.match(/^modelsVersion\s*=\s*(\d+\.\d+\.\d+)/m);
+  assert.ok(match, "gradle.properties must declare a concrete modelsVersion");
+  return match[1];
+}
+
 test("keeps every local link and asset on every static page resolvable", async () => {
   const pages = [
     "site/index.html",
@@ -273,7 +287,10 @@ test("explains the product, evidence, and complete Java onboarding", async () =>
   assert.match(apple, /Apple Foundation Models from Java/);
   assert.match(apple, /not a downloadable ModelJAR/);
   assert.match(apple, /LangChain4J and Spring AI/);
-  assert.match(apple, /com\.integrallis:backend-apple:0\.3\.42/);
+  assert.match(
+    apple,
+    new RegExp(`com\\.integrallis:backend-apple:${(await modelsVersion()).replace(/\./g, "\\.")}`),
+  );
   assert.match(apple, /AppleFoundationModels\.create/);
   assert.match(apple, /client\.availability/);
   assert.match(

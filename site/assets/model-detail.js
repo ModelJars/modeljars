@@ -156,6 +156,16 @@ export function isToolEvidence(qualification) {
   return Boolean(qualification) && qualification.structuredOutputRate !== undefined;
 }
 
+/**
+ * True for typed-decision evidence: an accuracy against a chance floor, not a latency or an
+ * answer rate. Keyed on chanceAccuracy because that is the field a decision cannot be read
+ * without -- an accuracy with no floor beside it is uninterpretable when a cohort mixes 2-option
+ * and 12-option questions.
+ */
+export function isDecisionEvidence(qualification) {
+  return Boolean(qualification) && qualification.chanceAccuracy !== undefined;
+}
+
 /** True for cross-encoder score, ordering, and latency evidence. */
 export function isRerankingEvidence(qualification) {
   return (
@@ -260,6 +270,30 @@ export function qualificationSummary(qualification) {
       rawQuality: null,
       finalQuality: null,
       fallbackRate: null,
+    };
+  }
+  if (isDecisionEvidence(qualification)) {
+    return {
+      label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      cohort: qualification.cohort,
+      cases: qualification.cases,
+      accuracy: formatPercent(qualification.accuracy),
+      chance: formatPercent(qualification.chanceAccuracy),
+      // A cohort that measured no calibration carries NaN, which JSON cannot hold, so it arrives
+      // here as null. Number(null) is 0 and 0 is finite, so testing only for finiteness printed
+      // "0.0000" -- a zero that reads as PERFECT calibration for a model nobody calibrated. The
+      // value has to be a number before it is formatted.
+      calibrationError:
+        typeof qualification.calibrationError === "number"
+        && Number.isFinite(qualification.calibrationError)
+          ? qualification.calibrationError.toFixed(4)
+          : "not measured",
+      exportsConfidenceQuality: Boolean(qualification.exportsConfidenceQuality),
+      confidenceCaveat: qualification.confidenceCaveat,
+      evidenceUri: qualification.reportUri,
+      evidenceSha256: qualification.reportSha256,
+      qualified: qualification.qualified,
     };
   }
   if (isToolEvidence(qualification)) {
@@ -688,6 +722,36 @@ function renderEmbeddingQualification(summary) {
     </section>`;
 }
 
+function renderDecisionQualification(summary) {
+  return `
+    <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="decision-evidence-title">
+      <div class="verification-heading">
+        <div>
+          <p class="eyebrow">Production evidence</p>
+          <h2 id="decision-evidence-title">${escapeHtml(summary.label)}</h2>
+        </div>
+        <span>${escapeHtml(String(summary.cases))} cases</span>
+      </div>
+      <p>
+        The exact artifact answered ${escapeHtml(String(summary.cases))} labelled questions from
+        ${escapeHtml(summary.cohort)} in process on ${escapeHtml(summary.backend)}. Accuracy is
+        read against this cohort's own chance floor, because a cohort mixing 2-option and
+        12-option questions has no single baseline.
+      </p>
+      <dl class="dimension-grid qualification-metrics">
+        <div><dt>Accuracy</dt><dd>${escapeHtml(summary.accuracy)}</dd></div>
+        <div><dt>Chance floor</dt><dd>${escapeHtml(summary.chance)}</dd></div>
+        <div><dt>Calibration error</dt><dd>${escapeHtml(summary.calibrationError)}</dd></div>
+        <div><dt>Confidence</dt><dd>${summary.exportsConfidenceQuality ? "calibrated" : "rank only"}</dd></div>
+      </dl>
+      ${summary.confidenceCaveat ? `<p>${escapeHtml(summary.confidenceCaveat)}</p>` : ""}
+      <div class="qualification-evidence">
+        <a href="${safeExternalUrl(summary.evidenceUri)}">Raw decision JSON &#8599;</a>
+        <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code>
+      </div>
+    </section>`;
+}
+
 function renderToolQualification(summary) {
   return `
     <section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="tool-evidence-title">
@@ -814,6 +878,7 @@ function renderQualification(qualification) {
   if (isCompositionEvidence(qualification)) return renderCompositionQualification(summary);
   if (isSpeechEvidence(qualification)) return renderSpeechQualification(summary);
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
+  if (isDecisionEvidence(qualification)) return renderDecisionQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
   if (isRerankingEvidence(qualification)) return renderRerankingQualification(summary);
   return `

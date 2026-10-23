@@ -38,10 +38,9 @@ import org.junit.jupiter.api.Test;
  * route is only defensible if the one-step route says so rather than failing in the loader after a
  * download, which is what the refusal test pins.
  *
- * <p>The second step, {@code ModernBertDecisionModel.open(path).decide(...)}, is not exercised
- * here: that class ships in {@code backend-java} and this repository builds against the released
- * version, so an end-to-end decision test can only compile once a release carrying the decoder is
- * resolvable. It is deliberately absent rather than stubbed.
+ * <p>The second step, {@code ModernBertDecisionModel.open(path).decide(...)}, opens the real
+ * weights, so it lives in {@code LayaDecisionIntegrationIT} and runs on its own task with the
+ * Vector API module added -- the repository convention for a real-weight gate.
  */
 class LayaDecisionCatalogRouteTest {
 

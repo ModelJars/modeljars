@@ -4537,6 +4537,28 @@ project(":modeljars") {
         outputs.upToDateWhen { false }
     }
 
+    tasks.named<Test>("test") {
+        // Real-weight gates run on their own task with the Vector API module added;
+        // jdk.incubator.vector is not optional for this runtime, so a test that opens a model
+        // cannot run on the default task's JVM. The other modules already exclude this pattern.
+        // This module's older gates self-skip on a -D fixture property instead, which is why the
+        // exclusion was not needed until a gate found its own artifact through
+        // ModelJarsCatalog.locate -- that one has nothing to skip on, and should not.
+        exclude("**/*IntegrationIT.class")
+    }
+
+    tasks.register<Test>("layaDecisionIntegrationTest") {
+        description =
+            "Opens the pinned Laya artifact at the path ModelJarsCatalog.locate reports and " +
+                "answers one typed question through it"
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter { includeTestsMatching("org.modeljars.LayaDecisionIntegrationIT") }
+        jvmArgs("--add-modules", "jdk.incubator.vector")
+        outputs.upToDateWhen { false }
+    }
+
     tasks.register<Test>("msMarcoRerankerIntegrationTest") {
         description = "Runs the pinned MS MARCO MiniLM artifact through ModelJars reranking."
         group = "verification"

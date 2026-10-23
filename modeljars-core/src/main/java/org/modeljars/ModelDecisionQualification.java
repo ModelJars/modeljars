@@ -94,6 +94,7 @@ public record ModelDecisionQualification(
   /** The tier whose ranking is reliable and whose probability is not a fitted one. */
   public static final String TIER_RANKED = "RANKED_DECISION";
 
+  /** Validates every field, so an entry that reached a consumer was checked at construction. */
   public ModelDecisionQualification {
     modelId = requireText(modelId, "modelId");
     model = requireText(model, "model");
@@ -147,7 +148,11 @@ public record ModelDecisionQualification(
     environment = requireText(environment, "environment");
   }
 
-  /** Whether a model with this record may publish a confidence quality callers can gate on. */
+  /**
+   * Whether a model with this record may publish a confidence quality callers can gate on.
+   *
+   * @return true only for {@link #TIER_CALIBRATED}
+   */
   public boolean exportsConfidenceQuality() {
     return TIER_CALIBRATED.equals(tier);
   }
@@ -156,6 +161,8 @@ public record ModelDecisionQualification(
    * Whether this cohort ever exercised a bucket the artifact declares uncalibrated.
    *
    * <p>False means the honesty promise is untested rather than upheld.
+   *
+   * @return true when at least one uncalibrated bucket was answered in this cohort
    */
   public boolean testedUncalibratedReporting() {
     return uncalibratedBucketsExercised > 0;

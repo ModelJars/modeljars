@@ -511,11 +511,22 @@ data class CatalogDecisionQualification(
     val calibrationError: Double,
     val uncalibratedBucketsExercised: Int,
     val reportPath: String,
+    val reportSha256: String,
     val raw: Map<String, Any?>,
 ) {
     /** The only tier whose published probability a caller may threshold. */
     val exportsConfidenceQuality: Boolean
         get() = tier == "CALIBRATED_DECISION"
+
+    /**
+     * Whether the model goes in the catalog at all.
+     *
+     * Mirrors `DecisionUseCaseTier.publishable()` in models: the weaker tier still publishes, it
+     * just does not export a confidence quality. Only UNQUALIFIED is withheld. The parse block
+     * rejects any other tier string, so this is a two-way check rather than a default.
+     */
+    val publishable: Boolean
+        get() = tier == "CALIBRATED_DECISION" || tier == "RANKED_DECISION"
 }
 
 data class CatalogDecisionQualifications(
@@ -2195,6 +2206,7 @@ val decisionQualifications =
                                         "must be an integer; zero means the artifact's uncalibrated " +
                                         "promise was never exercised, which is not the same as upheld"),
                         reportPath = raw.requiredString("report"),
+                        reportSha256 = raw.requiredString("reportSha256"),
                         raw = raw,
                     )
                 }
@@ -2522,12 +2534,15 @@ val publicToolQualifications =
     toolQualifications?.entries?.filter(CatalogToolQualification::qualified).orEmpty()
 val publicSpeechQualifications =
     speechQualifications?.entries?.filter(CatalogSpeechQualification::qualified).orEmpty()
+val publicDecisionQualifications =
+    decisionQualifications?.entries?.filter(CatalogDecisionQualification::publishable).orEmpty()
 val publicModelIds =
     publicQualifications.map(CatalogRagQualification::modelId).toSet() +
         publicEmbeddingQualifications.map(CatalogEmbeddingQualification::modelId).toSet() +
         publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
-        publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet()
+        publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet() +
+        publicDecisionQualifications.map(CatalogDecisionQualification::modelId).toSet()
 val compositionComponentIds =
     catalogEntries
         .filter { "composition-component" in it.capabilities }
@@ -2674,6 +2689,31 @@ publicRerankingQualifications.forEach { qualification ->
     }
     require("reranking" in entry.capabilities) {
         "Reranking-qualified model must advertise the reranking capability: ${qualification.modelId}"
+    }
+}
+publicDecisionQualifications.forEach { qualification ->
+    val entry =
+        catalogEntries.singleOrNull { it.id == qualification.modelId }
+            ?: error("Decision qualification references unknown catalog model: ${qualification.modelId}")
+    require(entry.sha256 == qualification.artifactSha256) {
+        "Decision qualification SHA-256 does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.sizeBytes == qualification.artifactSizeBytes) {
+        "Decision qualification size does not match catalog model ${qualification.modelId}"
+    }
+    require(entry.backends[qualification.backend] == true) {
+        "Decision qualification backend is not advertised by ${qualification.modelId}"
+    }
+    require("typed-decision" in entry.capabilities) {
+        "Decision-qualified model must advertise the typed-decision capability: ${qualification.modelId}"
+    }
+    // The catalog's own feature flag and the qualification's tier are two independent claims about
+    // the same fact. Letting them disagree is how a model ends up advertising a trustworthy
+    // probability on the site while its evidence says the opposite.
+    val advertisesUncalibrated = "decision-confidence-uncalibrated" in entry.features
+    require(advertisesUncalibrated != qualification.exportsConfidenceQuality) {
+        "Catalog feature decision-confidence-uncalibrated and qualification tier " +
+            "${qualification.tier} disagree for ${qualification.modelId}"
     }
 }
 publicToolQualifications.forEach { qualification ->
@@ -2971,6 +3011,66 @@ toolQualifications?.let { qualifications ->
         }
         require(qualification.environment.maxHeapBytes > 0) {
             "Tool qualification heap must be positive for ${qualification.modelId}"
+        }
+    }
+}
+
+decisionQualifications?.let { qualifications ->
+    require(qualifications.policyVersion == "decision-calibration-v2") {
+        "Decision qualifications must use the decision-calibration-v2 policy, not " +
+            qualifications.policyVersion
+    }
+    require(qualifications.modelsRevision.matches(Regex("[0-9a-f]{40}"))) {
+        "Decision qualification modelsRevision must be a 40-character Git commit"
+    }
+    qualifications.entries.forEach { qualification ->
+        val model =
+            catalogEntries.singleOrNull { it.id == qualification.modelId }
+                ?: error("Unknown modelId in decision qualification: ${qualification.modelId}")
+        require(model.sha256 == qualification.artifactSha256) {
+            "Decision qualification SHA-256 does not match ${qualification.modelId}"
+        }
+        require(model.sizeBytes == qualification.artifactSizeBytes) {
+            "Decision qualification size does not match ${qualification.modelId}"
+        }
+        require(model.backends[qualification.backend] == true) {
+            "Decision qualification backend is not supported by ${qualification.modelId}"
+        }
+        require(qualification.artifactSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Decision qualification artifact SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(qualification.reportSha256.matches(Regex("[0-9a-f]{64}"))) {
+            "Decision qualification report SHA-256 is invalid for ${qualification.modelId}"
+        }
+        require(
+            qualification.reportPath.isNotBlank() &&
+                !qualification.reportPath.startsWith("/") &&
+                ".." !in qualification.reportPath,
+        ) {
+            "Decision qualification report path is invalid for ${qualification.modelId}"
+        }
+        require(qualification.cases > 0) {
+            "Decision qualification cases must be positive for ${qualification.modelId}"
+        }
+        require(qualification.cohort.isNotBlank()) {
+            "Decision qualification cohort must name the dataset for ${qualification.modelId}"
+        }
+        listOf(
+            "chanceAccuracy" to qualification.chanceAccuracy,
+            "accuracy" to qualification.accuracy,
+        ).forEach { (name, value) ->
+            require(value.isFinite() && value >= 0.0 && value <= 1.0) {
+                "Decision $name must be a rate in [0, 1] for ${qualification.modelId}"
+            }
+        }
+        // NaN is the legitimate reading for a cohort that measured no calibration; a negative or
+        // infinite one is not.
+        require(qualification.calibrationError.isNaN() || qualification.calibrationError >= 0.0) {
+            "Decision calibrationError must be NaN or non-negative for ${qualification.modelId}"
+        }
+        require(qualification.uncalibratedBucketsExercised >= 0) {
+            "Decision uncalibratedBucketsExercised must be non-negative for " +
+                qualification.modelId
         }
     }
 }
@@ -3870,6 +3970,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
         }
+    val candidateTestDecisionQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/decision-qualifications-v1.properties")
+        }
     val candidateTestSpeechQualificationRegistry =
         candidateTestResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
@@ -3906,6 +4010,9 @@ project(":modeljars-core") {
             if (rerankingQualificationCatalogFile.isFile) {
                 inputs.file(rerankingQualificationCatalogFile)
             }
+            if (decisionQualificationCatalogFile.isFile) {
+                inputs.file(decisionQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -3926,6 +4033,7 @@ project(":modeljars-core") {
                 candidateTestToolQualificationRegistry,
                 candidateTestEmbeddingQualificationRegistry,
                 candidateTestRerankingQualificationRegistry,
+                candidateTestDecisionQualificationRegistry,
                 candidateTestSpeechQualificationRegistry,
                 candidateTestComponentQualificationRegistry,
             )
@@ -3961,6 +4069,11 @@ project(":modeljars-core") {
                                         rerankingQualifications?.entries
                                             ?.filter { it.modelId == entry.id }
                                             ?.map { it.siteMetadata(rerankingQualifications) }
+                                            .orEmpty()) +
+                                    ("decisionQualifications" to
+                                        decisionQualifications?.entries
+                                            ?.filter { it.modelId == entry.id }
+                                            ?.map { it.siteMetadata(decisionQualifications) }
                                             .orEmpty()) +
                                     ("toolQualifications" to
                                         toolQualifications?.entries
@@ -4018,6 +4131,11 @@ project(":modeljars-core") {
                 candidateTestRerankingQualificationRegistry.get().asFile.writeText(
                     rerankingQualifications?.registryProperties()
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestDecisionQualificationRegistry.get().asFile.writeText(
+                    decisionQualifications?.registryProperties()
+                        ?: "modeljars.decisionQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 candidateTestSpeechQualificationRegistry.get().asFile.writeText(
@@ -4219,6 +4337,10 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
         }
+    val runtimeDecisionQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/decision-qualifications-v1.properties")
+        }
     val runtimeToolQualificationRegistry =
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -4240,6 +4362,9 @@ project(":modeljars") {
             if (rerankingQualificationCatalogFile.isFile) {
                 inputs.file(rerankingQualificationCatalogFile)
             }
+            if (decisionQualificationCatalogFile.isFile) {
+                inputs.file(decisionQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -4252,6 +4377,7 @@ project(":modeljars") {
                 runtimeRagQualificationMetadata,
                 runtimeEmbeddingQualificationRegistry,
                 runtimeRerankingQualificationRegistry,
+                runtimeDecisionQualificationRegistry,
                 runtimeToolQualificationRegistry,
                 runtimeSpeechQualificationRegistry,
                 runtimeComponentQualificationRegistry,
@@ -4276,6 +4402,11 @@ project(":modeljars") {
                 runtimeRerankingQualificationRegistry.get().asFile.writeText(
                     rerankingQualifications?.registryProperties()
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeDecisionQualificationRegistry.get().asFile.writeText(
+                    decisionQualifications?.registryProperties()
+                        ?: "modeljars.decisionQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 runtimeToolQualificationRegistry.get().asFile.writeText(
@@ -4924,6 +5055,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
         }
+    val aggregateDecisionQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/decision-qualifications-v1.properties")
+        }
     val aggregateToolQualificationRegistry =
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -4953,6 +5088,9 @@ project(":modeljars-catalog") {
             if (rerankingQualificationCatalogFile.isFile) {
                 inputs.file(rerankingQualificationCatalogFile)
             }
+            if (decisionQualificationCatalogFile.isFile) {
+                inputs.file(decisionQualificationCatalogFile)
+            }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -4972,6 +5110,7 @@ project(":modeljars-catalog") {
                 aggregateQualificationMetadata,
                 aggregateEmbeddingQualificationRegistry,
                 aggregateRerankingQualificationRegistry,
+                aggregateDecisionQualificationRegistry,
                 aggregateToolQualificationRegistry,
                 aggregateSpeechQualificationRegistry,
                 aggregateComponentQualificationRegistry,
@@ -5037,6 +5176,14 @@ project(":modeljars-catalog") {
                                                     requireNotNull(rerankingQualifications),
                                                 )
                                             }) +
+                                    ("decisionQualifications" to
+                                        publicDecisionQualifications
+                                            .filter { it.modelId == entry.id }
+                                            .map {
+                                                it.siteMetadata(
+                                                    requireNotNull(decisionQualifications),
+                                                )
+                                            }) +
                                     ("toolQualifications" to
                                         publicToolQualifications
                                             .filter { it.modelId == entry.id }
@@ -5075,6 +5222,12 @@ project(":modeljars-catalog") {
                     rerankingQualifications
                         ?.registryProperties(publicRerankingQualifications)
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateDecisionQualificationRegistry.get().asFile.writeText(
+                    decisionQualifications
+                        ?.registryProperties(publicDecisionQualifications)
+                        ?: "modeljars.decisionQualifications.schemaVersion=1\n",
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateToolQualificationRegistry.get().asFile.writeText(
@@ -5221,6 +5374,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/reranking-qualifications-v1.properties")
             }
+        val markerDecisionQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/decision-qualifications-v1.properties")
+            }
         val markerToolQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -5252,6 +5409,9 @@ project(":modeljars-catalog") {
                 if (rerankingQualificationCatalogFile.isFile) {
                     inputs.file(rerankingQualificationCatalogFile)
                 }
+                if (decisionQualificationCatalogFile.isFile) {
+                    inputs.file(decisionQualificationCatalogFile)
+                }
                 if (speechQualificationCatalogFile.isFile) {
                     inputs.file(speechQualificationCatalogFile)
                 }
@@ -5267,6 +5427,7 @@ project(":modeljars-catalog") {
                     markerQualificationMetadata,
                     markerEmbeddingQualificationRegistry,
                     markerRerankingQualificationRegistry,
+                    markerDecisionQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerSpeechQualificationRegistry,
                     markerComponentQualificationRegistry,
@@ -5283,6 +5444,8 @@ project(":modeljars-catalog") {
                         toolQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val modelRerankingQualifications =
                         rerankingQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
+                    val modelDecisionQualifications =
+                        decisionQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val modelSpeechQualifications =
                         speechQualifications?.entries?.filter { it.modelId == entry.id }.orEmpty()
                     val modelComponentQualifications =
@@ -5304,6 +5467,10 @@ project(":modeljars-catalog") {
                                     ("rerankingQualifications" to
                                         modelRerankingQualifications.map {
                                             it.siteMetadata(requireNotNull(rerankingQualifications))
+                                        }) +
+                                    ("decisionQualifications" to
+                                        modelDecisionQualifications.map {
+                                            it.siteMetadata(requireNotNull(decisionQualifications))
                                         }) +
                                     ("toolQualifications" to
                                         modelToolQualifications.map {
@@ -5376,6 +5543,11 @@ project(":modeljars-catalog") {
                             ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerDecisionQualificationRegistry.get().asFile.writeText(
+                        decisionQualifications?.registryProperties(modelDecisionQualifications)
+                            ?: "modeljars.decisionQualifications.schemaVersion=1\n",
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerToolQualificationRegistry.get().asFile.writeText(
                         toolQualifications?.registryProperties(modelToolQualifications)
                             ?: emptyToolQualificationRegistryProperties(),
@@ -5441,6 +5613,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/qualifications-v1.properties",
                         "META-INF/modeljars/embedding-qualifications-v1.properties",
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
+                        "META-INF/modeljars/decision-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/speech-qualifications-v1.properties",
                         "META-INF/modeljars/component-qualifications-v1.properties",

@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { filterCatalog } from "./search.js";
 import {
   buildFacets,
+  catalogDomains,
   modelTerms,
   relatedModels,
   sizeTier,
@@ -299,4 +301,44 @@ test("a fully qualified hybrid reads Qualified, with the kind carried separately
 
 test("an ordinary model has no kind pill", () => {
   assert.equal(kindProfile({ name: "Qwen3.5 4B" }), null);
+});
+
+/**
+ * A DELIBERATE CATEGORY MUST CONTAIN EVERYTHING THAT BELONGS TO IT.
+ *
+ * MEASURED 2026-10-23: filtering modeljars.org by System One did not list laya_q8_0, the only
+ * typed-decision model in the catalogue. The facet reads `domains`, the two compositions carry
+ * domains: ["system-1"] by hand, and Laya's domain is "general" -- correctly, since it is a
+ * general-purpose decision model. Hand-tagging each new one is a step somebody forgets, and the
+ * domain is also packaged into the published marker, so tagging it would rewrite immutable bytes
+ * for a presentation fix. The capability is the real discriminator, so the facet derives from it.
+ */
+test("every typed-decision artifact is discoverable as System One", async () => {
+  const [models, compositions] = await Promise.all([
+    readFile(new URL("../../catalog/models.json", import.meta.url), "utf8").then(JSON.parse),
+    readFile(new URL("../../catalog/compositions.json", import.meta.url), "utf8").then(JSON.parse),
+  ]);
+  const catalog = [...models.models, ...compositions.compositions];
+  const decisionArtifacts = catalog.filter((entry) =>
+    (entry.capabilities || []).includes("typed-decision"),
+  );
+  assert.ok(decisionArtifacts.length > 0, "the catalogue must hold a typed-decision artifact");
+
+  for (const entry of decisionArtifacts) {
+    assert.ok(
+      catalogDomains(entry).includes("system-1"),
+      `${entry.id} is a typed-decision artifact but is not discoverable under System One`,
+    );
+  }
+
+  // A facet button that shows a count and then returns a different number of rows is worse than
+  // no button: the count comes from buildFacets and the rows from filterCatalog, so the two must
+  // read the same predicate. They did not, which is the other half of the same defect.
+  const facet = buildFacets(catalog).domains.find((entry) => entry.value === "system-1");
+  assert.ok(facet, "the System One facet must exist");
+  assert.equal(
+    facet.count,
+    filterCatalog(catalog, { domain: "system-1" }).length,
+    "the System One count must equal the number of entries the filter returns",
+  );
 });

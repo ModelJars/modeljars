@@ -1,4 +1,4 @@
-import { modelTerms, sizeTier } from "./taxonomy.js";
+import { catalogDomains, modelTerms, sizeTier } from "./taxonomy.js";
 import { primaryQualification } from "./qualification-data.js";
 
 const SEARCH_ALIASES = new Map([
@@ -59,7 +59,7 @@ export function filterCatalog(catalog, filters = {}) {
         (qualification === "production-rag" ? evidence?.qualified === true : evidenceTier === qualification);
       return (
         matches(model, query, backend) &&
-        (!domain || model.domains?.includes(domain)) &&
+        (!domain || catalogDomains(model).includes(domain)) &&
         (!architecture || normalize(model.architecture) === normalize(architecture)) &&
         (!size || sizeTier(model) === size) &&
         qualificationMatches

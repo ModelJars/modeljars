@@ -80,6 +80,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
           Map.entry("typed-decision", "decision"));
 
   private final ModelJarRegistry models;
+  private final ModelDecisionQualificationRegistry decisionQualifications;
   private final ModelRagQualificationRegistry qualifications;
   private final ModelToolQualificationRegistry toolQualifications;
   private final ModelPerformanceProfileRegistry profiles;
@@ -131,6 +132,7 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     this.models = models;
     this.qualifications = qualifications;
     this.toolQualifications = toolQualifications;
+    this.decisionQualifications = ModelDecisionQualificationRegistry.fromClasspath();
     this.profiles = profiles;
     this.runtime = Map.copyOf(runtime);
   }
@@ -325,6 +327,20 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    * <p>So a guarded artifact gets no {@code grounding} score at all, and carries the {@code
    * rag-guard-required} feature instead, which an application can exclude when it does not run the
    * guard or require when it does.
+   *
+   * <p>The {@code decision} score is a typed-decision model's own measured accuracy over a
+   * labelled cohort, and <b>both</b> decision tiers export it. Accuracy is a property of the
+   * weights: it is how well the model picks the right option, which is exactly what a router
+   * choosing between decision models needs to compare.
+   *
+   * <p><b>Calibration is deliberately not a quality here.</b> Whether the published probability can
+   * be thresholded is a usage constraint rather than a measure of how good the model is, and it
+   * does not transfer -- a temperature is fitted to a distribution, which is why Laya measures
+   * 0.1638 on a cohort it was not calibrated for while answering 0.7833 of it correctly. So it
+   * travels the same way the guard requirement does, as a catalog feature an application can
+   * exclude or require, and {@code ModelDecisionQualificationRegistry.Entry
+   * #exportsConfidenceQuality()} is what a consumer asks before trusting the number. Publishing
+   * (1 - calibrationError) as a quality score would invent a metric nobody measured.
    */
   Map<String, Double> qualityFor(ModelJarDescriptor descriptor, Set<String> tags) {
     Map<String, Double> quality = new HashMap<>();
@@ -332,6 +348,13 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
       if (qualification.useCaseTier() == RagUseCaseTier.GENERATIVE_RAG) {
         quality.merge("grounding", qualification.rawCorrectAnswerRate(), Math::max);
       }
+    }
+    if (tags.contains("decision")) {
+      decisionQualifications
+          .qualificationFor(descriptor)
+          .ifPresent(
+              qualification ->
+                  quality.merge("decision", qualification.accuracy(), Math::max));
     }
     if (tags.contains("tool-use")) {
       for (ModelToolQualification qualification :

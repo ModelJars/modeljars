@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.integrallis.models.api.catalog.DiscoveredModel;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +78,56 @@ class ModelJarsCatalogDecisionTest {
             model.capabilities().contains("chat"),
             model.id() + " is tagged chat without declaring chat");
       }
+    }
+  }
+
+  @Test
+  void aDecisionQualityIsExportedOnlyWhenEvidenceBindsToTheExactArtifact() {
+    // The quality a router compares decision models on is the model's own accuracy. It must come
+    // from evidence bound to these exact bytes -- no evidence, no quality, rather than a default.
+    ModelJarsCatalog catalog = new ModelJarsCatalog();
+
+    for (ModelJarDescriptor descriptor : ModelJarRegistry.fromClasspath().descriptors()) {
+      Map<String, Double> quality = catalog.qualityFor(descriptor, Set.of("decision"));
+      boolean hasEvidence =
+          ModelDecisionQualificationRegistry.fromClasspath()
+              .qualificationFor(descriptor)
+              .isPresent();
+      assertEquals(
+          hasEvidence,
+          quality.containsKey("decision"),
+          descriptor.alias()
+              + ": a decision quality must appear exactly when digest-bound evidence does");
+    }
+  }
+
+  @Test
+  void calibrationIsNeverPublishedAsAQualityScore() {
+    // Calibration is a usage constraint, not a measure of how good the model is, and it does not
+    // transfer -- a temperature is fitted to a distribution. Publishing (1 - ECE) as a quality
+    // would invent a metric nobody measured, so no such key may exist.
+    ModelJarsCatalog catalog = new ModelJarsCatalog();
+
+    for (ModelJarDescriptor descriptor : ModelJarRegistry.fromClasspath().descriptors()) {
+      Map<String, Double> quality = catalog.qualityFor(descriptor, Set.of("decision"));
+      assertFalse(
+          quality.keySet().stream().anyMatch(key -> key.contains("calibrat")),
+          descriptor.alias() + " published a calibration-derived quality: " + quality.keySet());
+      assertFalse(
+          quality.containsKey("decision-confidence"),
+          descriptor.alias() + " published a confidence quality: " + quality.keySet());
+    }
+  }
+
+  @Test
+  void aModelWithNoDecisionTagGetsNoDecisionQualityEvenWithEvidence() {
+    // The tag is what gates the lookup, so a text generator cannot inherit a decision score.
+    ModelJarsCatalog catalog = new ModelJarsCatalog();
+
+    for (ModelJarDescriptor descriptor : ModelJarRegistry.fromClasspath().descriptors()) {
+      assertFalse(
+          catalog.qualityFor(descriptor, Set.of("chat")).containsKey("decision"),
+          descriptor.alias() + " got a decision quality without the decision tag");
     }
   }
 

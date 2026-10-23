@@ -179,16 +179,78 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
     return List.copyOf(discovered);
   }
 
+  /**
+   * Where this machine already holds the weights for a catalogued model.
+   *
+   * <p>The catalog has always reported <em>what</em> is installed; this reports <em>where</em>, so
+   * a caller that resolved a model through the catalog no longer has to name a file the catalog
+   * already knew. {@code models} opens exactly this path with its own decoder.
+   *
+   * <p>It returns the same path {@link ModelJars} itself would open, deliberately. {@code
+   * ModelJars.cachePath} hands {@link ModelJarCache#artifactPath} straight to the backend for every
+   * supported format, so a second notion of "the loadable path" here would mean this catalog could
+   * send a caller to one file while the library's own loader used another.
+   *
+   * <p><b>Nothing is downloaded.</b> An uninstalled model is {@link Optional#empty()}, which is
+   * what the SPI requires: a lookup must not turn into a multi-gigabyte fetch.
+   *
+   * @param id the model alias, as {@link #discover()} reports it
+   * @return the artifact path when it is installed, otherwise empty
+   */
+  @Override
+  public Optional<Path> locate(String id) {
+    if (id == null || id.isBlank()) {
+      return Optional.empty();
+    }
+    for (ModelJarDescriptor descriptor : models.descriptors()) {
+      if (!id.equals(descriptor.alias()) || !loadableFormat(descriptor)) {
+        continue;
+      }
+      Optional<Path> installed = installedPath(descriptor);
+      if (installed.isPresent()) {
+        return installed;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * The formats a Models backend can open, as {@code ModelJars.cachePath} defines them.
+   *
+   * <p>Checked here so this method never reports a path the loader would then refuse. A safetensors
+   * marker with no file list has no artifact to point at.
+   */
+  private static boolean loadableFormat(ModelJarDescriptor descriptor) {
+    return "gguf".equals(descriptor.format())
+        || "cact".equals(descriptor.format())
+        || ("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty());
+  }
+
   private boolean cached(ModelJarDescriptor descriptor) {
-    if (descriptor.localPath().filter(Files::isRegularFile).isPresent()) {
-      return true;
+    return installedPath(descriptor).isPresent();
+  }
+
+  /**
+   * The installed artifact path, or empty when the model is not on this machine.
+   *
+   * <p>Both answers are loadable: a marker's configured {@code localPath} is what {@code
+   * ModelJarLocator.requireLocalPath} opens, and the content-addressed cache path is what {@code
+   * ModelJars} opens. Keeping one method behind both {@link #cached} and {@link #locate} is what
+   * makes "reported by discover" and "locatable" the same set -- two predicates would eventually
+   * disagree, and a model the catalog advertised but could not locate would look like a defect in
+   * whichever caller hit it.
+   */
+  private Optional<Path> installedPath(ModelJarDescriptor descriptor) {
+    Optional<Path> local = descriptor.localPath().filter(Files::isRegularFile);
+    if (local.isPresent()) {
+      return local;
     }
     try {
       Path artifact = ModelJarCache.artifactPath(descriptor);
-      return ModelJarCache.isComplete(descriptor, artifact);
+      return ModelJarCache.isComplete(descriptor, artifact) ? Optional.of(artifact) : Optional.empty();
     } catch (RuntimeException e) {
       // A descriptor without a digest cannot be content-addressed, so it is not in the cache.
-      return false;
+      return Optional.empty();
     }
   }
 

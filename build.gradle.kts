@@ -3890,6 +3890,35 @@ project(":modeljars-cli") {
         testImplementation("org.springframework.ai:spring-ai-client-chat:$springAiVersion")
         testImplementation("org.springframework.ai:spring-ai-rag:$springAiVersion")
         testImplementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
+        // ApplicationContextRunner, for the end-to-end gate that drives a real catalog model
+        // through the starter: this is the only test scope where the ModelJars catalog and the
+        // Spring starter share a classpath.
+        testImplementation("org.springframework.boot:spring-boot-test:$springBootVersion")
+        // ApplicationContextRunner's assertions are AssertJ-based, so the runner needs it on the
+        // classpath even to compile. Same version models tests use.
+        testImplementation("org.assertj:assertj-core:3.27.2")
+    }
+
+    tasks.named<Test>("test") {
+        // Real-weight gates follow the repo convention: excluded here, run by their own task with
+        // the Vector API module added. jdk.incubator.vector is not optional for this runtime, so a
+        // test that opens a model cannot run on the default task's JVM.
+        exclude("**/*IntegrationIT.class")
+    }
+
+    tasks.register<Test>("catalogModelSpringIntegrationTest") {
+        description =
+            "Drives an installed ModelJar from integrallis.models.catalog-model through the " +
+                "Spring starter to a generated answer"
+        group = "verification"
+        testClassesDirs = sourceSets.test.get().output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        filter {
+            includeTestsMatching("org.modeljars.cli.CatalogModelSpringIntegrationIT")
+        }
+        jvmArgs("--add-modules", "jdk.incubator.vector", "--enable-native-access=ALL-UNNAMED")
+        maxHeapSize = "4g"
+        outputs.upToDateWhen { false }
     }
 
     val springIntegrationResources = layout.buildDirectory.dir("generated/resources/spring-integration")

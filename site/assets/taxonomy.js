@@ -172,9 +172,23 @@ export function verificationProfile(model) {
     qualification?.maximumSameArtifactOracleLogitDelta !== undefined
   ) {
     checks.push(`${qualification.pairs}-pair reranking qualification`);
-  } else if (qualification) {
+  } else if (qualification?.chanceAccuracy !== undefined) {
+    // A decision qualification counts labelled cases, not requests, and carries no `attempts`.
+    // Left to the RAG fallback below it rendered "undefined-request RAG qualification" on
+    // laya_q8_0: a decision model described as having passed a workload it never ran.
+    checks.push(`${qualification.cases}-case typed-decision qualification`);
+  } else if (qualification?.basisVerdict !== undefined) {
+    // A recipe composes nothing and runs no workload of its own: what it can show is the verdict
+    // its pinned base earned. kind === "recipe" misses the hybrid branch above, so it reached the
+    // RAG fallback too -- harriet_qwen3_5_4b_decisions published the same fabricated sentence.
+    checks.push(`Pinned base ${String(qualification.basisVerdict).toLowerCase()}`);
+  } else if (qualification?.attempts !== undefined) {
     checks.push(`${qualification.attempts}-request RAG qualification`);
   }
+  // No `else`: an unrecognised evidence shape contributes NO check. The fallback used to be the
+  // RAG one, so every kind that did not match a branch above was published as having passed the
+  // RAG workload, with an `undefined` where its request count belonged. Showing one check fewer
+  // is a gap; naming a workload the artifact never ran is a false claim about measured evidence.
 
   if (qualification?.qualified && pinnedArtifact && completeMetadata) {
     return { level: "qualified", label: qualificationLabel(qualification), checks };

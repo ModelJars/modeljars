@@ -423,6 +423,7 @@ export function filterQualifiedPublications(
   rerankingQualifications = { schemaVersion: 1, entries: [] },
   speechQualifications = { schemaVersion: 1, entries: [] },
   componentQualifications = { schemaVersion: 1, entries: [] },
+  decisionQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -447,6 +448,19 @@ export function filterQualifiedPublications(
     qualifiedIds.add(id);
   }
   for (const id of collectQualifiedIds(speechQualifications, modelsById)) {
+    qualifiedIds.add(id);
+  }
+  // A decision qualification carries no `qualified` boolean: the tier is the verdict, and the
+  // weaker of the two publishable tiers still publishes -- it just exports no confidence quality.
+  // Without this, a typed-decision model sits in the catalog, passes verifyCatalog and generates a
+  // marker, and is then filtered out of every publication plan, so it can never reach a consumer.
+  for (const id of collectQualifiedIds(
+    decisionQualifications,
+    modelsById,
+    (qualification) =>
+      qualification.tier === "CALIBRATED_DECISION" ||
+      qualification.tier === "RANKED_DECISION",
+  )) {
     qualifiedIds.add(id);
   }
   for (const id of collectQualifiedComponentIds(

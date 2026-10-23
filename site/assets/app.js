@@ -5,7 +5,13 @@ import { describeCoordinate } from "./coordinate.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { primaryQualification } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
-import { buildFacets, kindProfile, sizeTier, verificationProfile } from "./taxonomy.js";
+import {
+  buildFacets,
+  catalogDomains,
+  kindProfile,
+  sizeTier,
+  verificationProfile,
+} from "./taxonomy.js";
 import { initializeTheme } from "./theme.js";
 
 const catalog = [];
@@ -73,7 +79,7 @@ function renderEntry(model) {
   // buttons still emit the full coordinate, because a shortened one does not resolve in a build.
   const coordinate = describeCoordinate(model.markerCoordinate);
   const tags = [
-    ...(model.domains || []),
+    ...catalogDomains(model),
     ...(model.capabilities || []).slice(0, 2),
   ].slice(0, 4);
   const qualification = primaryQualification(model);

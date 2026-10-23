@@ -1,7 +1,30 @@
 import { primaryQualification, qualificationLabel } from "./qualification-data.js";
 
+/**
+ * The domains an entry is discoverable under, including the ones its capabilities imply.
+ *
+ * MEASURED 2026-10-23: filtering the catalogue by System One did not list laya_q8_0, the only
+ * typed-decision MODEL in it -- the facet held just the two compositions, which carry
+ * domains: ["system-1"] by hand. Laya's domain is "general", and correctly so: it is a
+ * general-purpose decision model, not a domain-specific one. What makes an artifact System One is
+ * its typed-decision CAPABILITY, so that is what the facet reads.
+ *
+ * Deriving it also avoids rewriting a published marker. `domains` is packaged into the marker's
+ * registry properties (build.gradle.kts), and the live marker on Central carries
+ * model.laya_q8_0.domains=general -- verified by unzipping it. Hand-tagging the domain would have
+ * changed published, immutable bytes and forced a coordinate bump for a presentation fix, and it
+ * would have left the NEXT decision model missing from the facet until somebody remembered.
+ */
+export function catalogDomains(model) {
+  const declared = model.domains || [];
+  const typedDecision = (model.capabilities || []).includes("typed-decision");
+  return typedDecision && !declared.includes("system-1")
+    ? [...declared, "system-1"]
+    : declared;
+}
+
 const FACET_FIELDS = {
-  domains: (model) => model.domains || [],
+  domains: catalogDomains,
   capabilities: (model) => model.capabilities || [],
   tags: (model) => model.tags || [],
   backends: (model) => {
@@ -48,7 +71,7 @@ export function modelTerms(model) {
     model.license,
     model.family,
     sizeTier(model),
-    ...(model.domains || []),
+    ...catalogDomains(model),
     ...(model.capabilities || []),
     ...(model.features || []),
     ...(model.tags || []),

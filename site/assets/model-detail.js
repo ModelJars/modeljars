@@ -82,6 +82,36 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 }`;
 }
 
+export function decisionJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
+    throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  }
+  const reference = referenceClassName(modelId);
+  // Deliberately not ModelJars.openRuntime: a typed-decision model has no generative backend and
+  // the runtime refuses it by design. Publishing the generative snippet here handed every reader
+  // of a decision model's page a call that throws on the first line.
+  return `import static org.modeljars.catalog.${reference}.MODEL;
+
+import com.integrallis.models.backend.purejava.bert.ModernBertConfig.QuestionType;
+import com.integrallis.models.backend.purejava.bert.ModernBertDecisionModel;
+import com.integrallis.models.backend.purejava.bert.ModernBertDecisionPrompt.Option;
+import java.nio.file.Path;
+import java.util.List;
+import org.modeljars.ModelJarInstaller;
+import org.modeljars.ModelJarRegistry;
+
+Path weights = new ModelJarInstaller(ModelJarRegistry.fromClasspath()).install(MODEL);
+
+try (var model = ModernBertDecisionModel.open(weights)) {
+  var answer = model.decide(QuestionType.NOUL,
+      "Is this sentence written in English?",
+      List.of(Option.of("yes"), Option.of("no")),
+      "This sentence is written in English.");
+  int chosen = answer.chosen();
+  float confidence = answer.probabilities()[chosen];
+}`;
+}
+
 export function speechJavaSnippet(modelId) {
   if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
     throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
@@ -574,6 +604,8 @@ export function resourceMemoryNote(model) {
     ? "Reranking"
     : (model.capabilities || []).includes("text-to-speech")
       ? "Speech synthesis"
+    : (model.capabilities || []).includes("typed-decision")
+      ? "Decision"
       : "Embedding";
   return `Memory baseline covers the complete artifact bytes. ${purpose} working buffers, backend workspace, repacking, JVM, allocator, and operating-system overhead are additional.`;
 }
@@ -656,6 +688,10 @@ function checkRows(profile) {
       "Standalone members are qualified; internal components are bound by the composition evidence.",
     ],
     ["Controlled composition", "The complete routing recipe passed a controlled comparison."],
+    [
+      "Pinned base qualified",
+      "The recipe runs no workload of its own; the verdict shown is the one its pinned base earned.",
+    ],
   ]);
   return profile.checks
     .map(
@@ -668,6 +704,8 @@ function checkRows(profile) {
                 ? "The exact artifact completed the controlled end-to-end RAG workload."
                 : check.endsWith("-case tool-calling qualification")
                   ? "The exact artifact completed the controlled tool-calling conformance suite."
+                : check.endsWith("-case typed-decision qualification")
+                  ? "The exact artifact answered a labelled decision cohort against its own chance floor."
                 : "Verified catalog evidence."),
           )}</small></span>
         </li>`,
@@ -1054,6 +1092,8 @@ export function renderModel(model, catalog) {
                 ? rerankingJavaSnippet(model.id)
                 : isSpeechEvidence(qualification)
                   ? speechJavaSnippet(model.id)
+                : isDecisionEvidence(qualification)
+                  ? decisionJavaSnippet(model.id)
                   : javaSnippet(model.id),
             "language-java",
           )}

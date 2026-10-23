@@ -90,7 +90,11 @@ public final class ModelDecisionQualificationRegistry {
       double calibrationError,
       int uncalibratedBucketsExercised) {
 
-    /** Whether a model with this evidence may publish a confidence quality callers can gate on. */
+    /**
+     * Whether a model with this evidence may publish a confidence quality callers can gate on.
+     *
+     * @return true only for {@link ModelDecisionQualification#TIER_CALIBRATED}
+     */
     public boolean exportsConfidenceQuality() {
       return ModelDecisionQualification.TIER_CALIBRATED.equals(tier);
     }
@@ -99,12 +103,18 @@ public final class ModelDecisionQualificationRegistry {
      * Whether the cohort ever exercised a bucket the artifact declares uncalibrated.
      *
      * <p>False means untested, not upheld.
+     *
+     * @return true when at least one uncalibrated bucket was answered in this cohort
      */
     public boolean testedUncalibratedReporting() {
       return uncalibratedBucketsExercised > 0;
     }
 
-    /** How far above a uniform random chooser this accuracy sits, as a multiple. */
+    /**
+     * How far above a uniform random chooser this accuracy sits, as a multiple.
+     *
+     * @return accuracy divided by the chance floor, or NaN when no chance floor was recorded
+     */
     public double chanceMultiple() {
       return chanceAccuracy <= 0.0 ? Double.NaN : accuracy / chanceAccuracy;
     }
@@ -307,17 +317,29 @@ public final class ModelDecisionQualificationRegistry {
         .findFirst();
   }
 
-  /** When this metadata was generated, or empty when unrecorded. */
+  /**
+   * When this metadata was generated, or empty when unrecorded.
+   *
+   * @return an ISO-8601 instant, or the empty string
+   */
   public String generatedAt() {
     return generatedAt;
   }
 
-  /** The policy version these verdicts were produced under. */
+  /**
+   * The policy version these verdicts were produced under.
+   *
+   * @return the policy id, or the empty string when unrecorded
+   */
   public String policyVersion() {
     return policyVersion;
   }
 
-  /** The models revision these verdicts were measured against. */
+  /**
+   * The models revision these verdicts were measured against.
+   *
+   * @return the revision, or the empty string when unrecorded
+   */
   public String modelsRevision() {
     return modelsRevision;
   }

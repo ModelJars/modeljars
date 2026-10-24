@@ -237,6 +237,15 @@ jobs:
           verifyQualificationRuntimeCompatibility verifyReleaseTrain verifyPublishedConsumerGraph
           verifyQwenChatToolsPublication verifyGraniteAnswerabilityPublication generateSite
 
+      # npm test renders the catalog too, but it runs BEFORE this build and has to assemble its own
+      # join from catalog/*.json, which reproduces the fields and not the enrichment generateSite
+      # applies: a raw rag entry carries no useCaseTier, the served catalog.json carries
+      # useCaseTier=GUARDED_RAG. MEASURED 2026-10-23: 104 of 107 entries differed that way, so a
+      # defect reachable only through an enriched field passed npm test and reached production.
+      # This renders the exact bytes the browser fetches, which is only possible after generateSite.
+      - name: Render every served catalog entry
+        run: node tools/rendered-catalog-check.mjs
+
       - name: Retain dependency and consumer evidence
         if: always()
         uses: actions/upload-artifact@v7

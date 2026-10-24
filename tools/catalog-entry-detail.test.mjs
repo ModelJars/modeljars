@@ -88,8 +88,11 @@ test("every catalog entry renders its full detail page without throwing", () => 
   // useCaseTier=GUARDED_RAG on the same entry. So these renders exercise the raw shape, one field
   // short of the shape production serves, and that enrichment lives in Kotlin and cannot be
   // reproduced here. The assertions below hold on both shapes, but a defect reachable ONLY via an
-  // enriched field would pass here. Closing that gap means asserting against the generated
-  // catalog.json after generateSite, which runs later in validate.yml than npm test does.
+  // enriched field would pass here. That gap is now covered by tools/rendered-catalog-check.mjs,
+  // which runs after generateSite in validate.yml and renders the served catalog.json itself; it
+  // refuses to run against a de-enriched copy, so it cannot quietly become a duplicate of this.
+  // This test stays because it runs in seconds with no Gradle build, and catches the same class
+  // of defect before the build does.
   const MODELS = JSON.parse(readFileSync(join(ROOT, "catalog/models.json"), "utf8"));
   const kindFiles = [
     ["ragQualifications", "catalog/qualifications.json"],

@@ -91,9 +91,9 @@ The JVM Runtime release contains these coordinates and transitive dependencies:
 ```text
 org.modeljars:modeljars:0.1.65
   -> org.modeljars:modeljars-core:0.1.65
-  -> com.integrallis:models:0.5.4
-  -> com.integrallis:backend-java:0.5.4
-  -> com.integrallis:backend-native:0.5.4
+  -> com.integrallis:models:0.5.5
+  -> com.integrallis:backend-java:0.5.5
+  -> com.integrallis:backend-native:0.5.5
   -> com.integrallis:vectors-core:0.1.30 (through Models)
 ```
 

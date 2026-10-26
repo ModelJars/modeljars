@@ -21,6 +21,14 @@ const SKIP_DIRECTORIES = new Set([
   "build", "node_modules", ".git", ".gradle", "benchmark-results", "catalog",
 ]);
 const TEXT = new Set([".md", ".html", ".js", ".yml", ".yaml", ".adoc", ".json", ".txt"]);
+// Owned by verify-site-version.mjs instead, which compares them against Maven Central's <release>.
+//
+// These two were checked by both gates under different authorities and could not satisfy either
+// without breaking the other: this gate reads gradle.properties, which is the version the tree
+// BUILDS and which the catalog's composition pins follow, while the site must advertise a version a
+// visitor can actually resolve. Central is the right authority for a copy-paste snippet and the
+// build property is the right authority for everything else, so each gate now owns its own files.
+const SITE_OWNED = new Set(["site/index.html", "site/assets/dependency-snippets.js"]);
 
 async function* documents(dir) {
   for (const item of await readdir(dir, { withFileTypes: true })) {
@@ -45,6 +53,7 @@ test("every document cites the current version of each library", async () => {
 
   for await (const file of documents(repositoryRoot)) {
     const relative = path.relative(repositoryRoot, file);
+    if (SITE_OWNED.has(relative)) continue;
     const text = await readFile(file, "utf8");
     for (const match of text.matchAll(coordinate)) {
       const [, group, artifact, cited] = match;

@@ -91,10 +91,10 @@ The JVM Runtime release contains these coordinates and transitive dependencies:
 ```text
 org.modeljars:modeljars:0.1.65
   -> org.modeljars:modeljars-core:0.1.65
-  -> com.integrallis:models:0.5.6
-  -> com.integrallis:backend-java:0.5.6
-  -> com.integrallis:backend-native:0.5.6
-  -> com.integrallis:vectors-core:0.1.31 (through Models)
+  -> com.integrallis:models:0.5.7
+  -> com.integrallis:backend-java:0.5.7
+  -> com.integrallis:backend-native:0.5.7
+  -> com.integrallis:vectors-core:0.1.32 (through Models)
 ```
 
 The separate CLI release workflow builds host-native executables with GraalVM on GitHub Actions,

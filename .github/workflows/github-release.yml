@@ -1,0 +1,106 @@
+name: github-release
+
+# A published version with no GitHub Release is invisible to anyone reading the repository rather
+# than Maven Central. Releases here were created by hand and the practice lapsed on 2026-10-11:
+# v0.1.58 through v0.1.68 all had tags and Central artifacts while the Releases page still showed
+# 0.1.57. Nothing in any workflow had ever created one, unlike vectors and models where the release
+# workflow does it, so there was nothing to notice when it stopped.
+#
+# The tag is the trigger because the tag is what the publish procedure creates last, after Central
+# has the artifacts. Notes come from `--generate-notes`, which GitHub derives from the pull requests
+# merged between this tag and the previous one; that is the same material a hand-written summary was
+# drawing on, and it cannot drift from the commits the way prose does.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: Create a Release for every tag that has none, oldest first.
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create the GitHub Release for this tag
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # --generate-notes needs the history back to the previous tag to diff against.
+          fetch-depth: 0
+
+      - name: Create the Release, or leave an existing one alone
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG already has a Release; nothing to do." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --title "ModelJars ${TAG#v}" \
+            --verify-tag \
+            --generate-notes
+          {
+            echo "### GitHub Release"
+            echo
+            echo "Created \`$TAG\` with notes generated from the pull requests merged since the"
+            echo "previous tag."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  backfill:
+    name: Backfill every tag that has no Release
+    if: github.event_name == 'workflow_dispatch' && inputs.backfill
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create the missing Releases, oldest first
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Oldest first so each Release's generated notes diff against the tag below it rather
+          # than against whatever happened to be created previously.
+          mapfile -t tags < <(
+            git tag --list 'v[0-9]*.[0-9]*.[0-9]*' \
+              | sed 's/^v//' \
+              | sort -t. -k1,1n -k2,2n -k3,3n \
+              | sed 's/^/v/'
+          )
+          created=0
+          skipped=0
+          for tag in "${tags[@]}"; do
+            if gh release view "$tag" >/dev/null 2>&1; then
+              skipped=$((skipped + 1))
+              continue
+            fi
+            echo "creating $tag"
+            gh release create "$tag" \
+              --title "ModelJars ${tag#v}" \
+              --verify-tag \
+              --generate-notes
+            created=$((created + 1))
+          done
+          {
+            echo "### Backfill"
+            echo
+            echo "Created ${created} Release(s); ${skipped} tag(s) already had one."
+          } >> "$GITHUB_STEP_SUMMARY"

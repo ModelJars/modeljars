@@ -742,6 +742,272 @@
       }
     },
     {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_k_s",
+      "artifactSha256": "f625ed640ed403aa7657dbd2d2b783ade13974883c1c26688b4c6c2d345c9b9e",
+      "revision": "116f76234503685a98f572982177b11d44ec8ff1",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "google_gemma-3-1b-it-Q4_K_S.gguf",
+            "uri": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/116f76234503685a98f572982177b11d44ec8ff1/google_gemma-3-1b-it-Q4_K_S.gguf",
+            "revision": "116f76234503685a98f572982177b11d44ec8ff1",
+            "sha256": "f625ed640ed403aa7657dbd2d2b783ade13974883c1c26688b4c6c2d345c9b9e",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          },
+          {
+            "id": 106,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<end_of_turn>"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 26,
+              "kvHeads": 1,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": 512,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": true
+        },
+        "weightBytes": 780993280,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": true,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 26624,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 109051904,
+                "totalBytes": 1963787008
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 872415232,
+                "totalBytes": 2727150336
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 14144,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 57933824,
+                "totalBytes": 1912668928
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 463470592,
+                "totalBytes": 2318205696
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "sliding window 512 declared without a per-layer pattern; every layer is charged full attention (upper bound)"
+        ]
+      }
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q6_k",
+      "artifactSha256": "ccad0cb14e9008f699f4b820110b899cf81983a987c40a05a8a1128d2fb713fb",
+      "revision": "116f76234503685a98f572982177b11d44ec8ff1",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "google_gemma-3-1b-it-Q6_K.gguf",
+            "uri": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/116f76234503685a98f572982177b11d44ec8ff1/google_gemma-3-1b-it-Q6_K.gguf",
+            "revision": "116f76234503685a98f572982177b11d44ec8ff1",
+            "sha256": "ccad0cb14e9008f699f4b820110b899cf81983a987c40a05a8a1128d2fb713fb",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          },
+          {
+            "id": 106,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template",
+                "token": "<end_of_turn>"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 26,
+              "kvHeads": 1,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": 512,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": true
+        },
+        "weightBytes": 1011738880,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": true,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 26624,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 109051904,
+                "totalBytes": 2194532608
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 872415232,
+                "totalBytes": 2957895936
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 14144,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 57933824,
+                "totalBytes": 2143414528
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 463470592,
+                "totalBytes": 2548951296
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "sliding window 512 declared without a per-layer pattern; every layer is charged full attention (upper bound)"
+        ]
+      }
+    },
+    {
       "modelId": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
       "artifactSha256": "375e12a4a18929a641f9744b060d4a7cf4e279530750555828ec0c117870bc96",
       "revision": "116f76234503685a98f572982177b11d44ec8ff1",
@@ -1517,6 +1783,137 @@
                 "contextTokens": 131072,
                 "kvBytes": 2281701376,
                 "totalBytes": 4248006784
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q6_k",
+      "artifactSha256": "0f4c510daf16e0d1b3bc94931fd9296c28936bebdda2593687d4eb70c5b70628",
+      "revision": "067b946cf014b7c697f3654f621d577a3e3afd1c",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Llama-3.2-1B-Instruct-Q6_K.gguf",
+            "uri": "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/067b946cf014b7c697f3654f621d577a3e3afd1c/Llama-3.2-1B-Instruct-Q6_K.gguf",
+            "revision": "067b946cf014b7c697f3654f621d577a3e3afd1c",
+            "sha256": "0f4c510daf16e0d1b3bc94931fd9296c28936bebdda2593687d4eb70c5b70628",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 128009,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 131072,
+          "groups": [
+            {
+              "layers": 16,
+              "kvHeads": 8,
+              "keyLength": 64,
+              "valueLength": 64,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 1021800576,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 32768,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 134217728,
+                "totalBytes": 2229760128
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 1073741824,
+                "totalBytes": 3169284224
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 4294967296,
+                "totalBytes": 6390509696
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 17408,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 71303168,
+                "totalBytes": 2166845568
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 570425344,
+                "totalBytes": 2665967744
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 2281701376,
+                "totalBytes": 4377243776
               }
             ],
             "maxContextByBudget": [
@@ -2612,6 +3009,127 @@
                 "contextTokens": 16384,
                 "kvBytes": 1711276032,
                 "totalBytes": 3658600480
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q8_0",
+      "artifactSha256": "36eb025121a50ee6d37fe900659393ff8fb5ea34adc0e3c11fc635e07624dcdb",
+      "revision": "4595af8c3dff738094bd6c86054dfb5a90d5c41e",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "deepseek-coder-1.3b-instruct.Q8_0.gguf",
+            "uri": "https://huggingface.co/TheBloke/deepseek-coder-1.3b-instruct-GGUF/resolve/4595af8c3dff738094bd6c86054dfb5a90d5c41e/deepseek-coder-1.3b-instruct.Q8_0.gguf",
+            "revision": "4595af8c3dff738094bd6c86054dfb5a90d5c41e",
+            "sha256": "36eb025121a50ee6d37fe900659393ff8fb5ea34adc0e3c11fc635e07624dcdb",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 32021,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 16384,
+          "groups": [
+            {
+              "layers": 24,
+              "kvHeads": 16,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 1432219680,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 196608,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 805306368,
+                "totalBytes": 3311267872
+              },
+              {
+                "contextTokens": 16384,
+                "kvBytes": 3221225472,
+                "totalBytes": 5727186976
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 16384,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 104448,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 427819008,
+                "totalBytes": 2933780512
+              },
+              {
+                "contextTokens": 16384,
+                "kvBytes": 1711276032,
+                "totalBytes": 4217237536
               }
             ],
             "maxContextByBudget": [
@@ -6049,6 +6567,127 @@
       }
     },
     {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q5_k_m",
+      "artifactSha256": "f15d02e8e51a5c6f9448b972819acfa66aee4d8bb7d881a8b8ba3d90da08ef09",
+      "revision": "f86cb2c1fa58255f8052cc32aeede1b7482d4361",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "qwen2.5-coder-1.5b-instruct-q5_k_m.gguf",
+            "uri": "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/resolve/f86cb2c1fa58255f8052cc32aeede1b7482d4361/qwen2.5-coder-1.5b-instruct-q5_k_m.gguf",
+            "revision": "f86cb2c1fa58255f8052cc32aeede1b7482d4361",
+            "sha256": "f15d02e8e51a5c6f9448b972819acfa66aee4d8bb7d881a8b8ba3d90da08ef09",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 151645,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 28,
+              "kvHeads": 2,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 1285494336,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 28672,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 117440512,
+                "totalBytes": 2476676672
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 939524096,
+                "totalBytes": 3298760256
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 15232,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 62390272,
+                "totalBytes": 2421626432
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 499122176,
+                "totalBytes": 2858358336
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
       "modelId": "qwen2_5_coder_1_5b_instruct_q8_0",
       "artifactSha256": "507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47",
       "revision": "f86cb2c1fa58255f8052cc32aeede1b7482d4361",
@@ -7097,6 +7736,127 @@
       }
     },
     {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q8_0",
+      "artifactSha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+      "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "qwen2.5-0.5b-instruct-q8_0.gguf",
+            "uri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q8_0.gguf",
+            "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+            "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 151645,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 24,
+              "kvHeads": 2,
+              "keyLength": 64,
+              "valueLength": 64,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 675710816,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 1799784288
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2152105824
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 1776191328
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 1963362144
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
       "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
       "artifactSha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
       "revision": "91cad51170dc346986eccefdc2dd33a9da36ead9",
@@ -7193,6 +7953,127 @@
                 "contextTokens": 32768,
                 "kvBytes": 499122176,
                 "totalBytes": 2690184736
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q5_0",
+      "artifactSha256": "a579334a7b19838b19f7855252b6bc08b012b46e338cf1494a88e77509cfe4d9",
+      "revision": "91cad51170dc346986eccefdc2dd33a9da36ead9",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "qwen2.5-1.5b-instruct-q5_0.gguf",
+            "uri": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/91cad51170dc346986eccefdc2dd33a9da36ead9/qwen2.5-1.5b-instruct-q5_0.gguf",
+            "revision": "91cad51170dc346986eccefdc2dd33a9da36ead9",
+            "sha256": "a579334a7b19838b19f7855252b6bc08b012b46e338cf1494a88e77509cfe4d9",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 151645,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 28,
+              "kvHeads": 2,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 1259173408,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 28672,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 117440512,
+                "totalBytes": 2450355744
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 939524096,
+                "totalBytes": 3272439328
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 15232,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 62390272,
+                "totalBytes": 2395305504
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 499122176,
+                "totalBytes": 2832037408
               }
             ],
             "maxContextByBudget": [
@@ -8477,6 +9358,182 @@
       }
     },
     {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q5_k_s",
+      "artifactSha256": "a201a5899049a7f7845f910ad803574787b4474c3daffc0d33e8688f9114880f",
+      "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Qwen3.5-0.8B-Q5_K_S.gguf",
+            "uri": "https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/6ab461498e2023f6e3c1baea90a8f0fe38ab64d0/Qwen3.5-0.8B-Q5_K_S.gguf",
+            "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
+            "sha256": "a201a5899049a7f7845f910ad803574787b4474c3daffc0d33e8688f9114880f",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": false,
+            "rule": "opt-in-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 6,
+              "kvHeads": 2,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 568889600,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 1692963072
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2045284608
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1610612736,
+                "totalBytes": 3253244160
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 3221225472,
+                "totalBytes": 4863856896
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 1669370112
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 1856540928
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 855638016,
+                "totalBytes": 2498269440
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 1711276032,
+                "totalBytes": 3353907456
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    },
+    {
       "modelId": "unsloth_qwen3_5_0_8b_gguf_q6_k",
       "artifactSha256": "8408c5c222111cec253682b49eece2a02ed641ded68490001ec4ee160e71098e",
       "revision": "6ab461498e2023f6e3c1baea90a8f0fe38ab64d0",
@@ -8802,6 +9859,534 @@
                 "contextTokens": 262144,
                 "kvBytes": 1711276032,
                 "totalBytes": 4065853696
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q4_k_s",
+      "artifactSha256": "56eee7b85a2023ba393c5f9a5a5e372e3645e7925a13adb4d13723fc5bc14124",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Qwen3.5-2B-Q4_K_S.gguf",
+            "uri": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q4_K_S.gguf",
+            "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+            "sha256": "56eee7b85a2023ba393c5f9a5a5e372e3645e7925a13adb4d13723fc5bc14124",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": false,
+            "rule": "opt-in-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 6,
+              "kvHeads": 2,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 1217757440,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 2341830912
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2694152448
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1610612736,
+                "totalBytes": 3902112000
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 3221225472,
+                "totalBytes": 5512724736
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 2318237952
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 2505408768
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 855638016,
+                "totalBytes": 3147137280
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 1711276032,
+                "totalBytes": 4002775296
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_m",
+      "artifactSha256": "1885b3a9195f8cc09da9a7a7a75afdc1e8d5cbf9fc4a499c3961dddea37098ac",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Qwen3.5-2B-Q5_K_M.gguf",
+            "uri": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q5_K_M.gguf",
+            "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+            "sha256": "1885b3a9195f8cc09da9a7a7a75afdc1e8d5cbf9fc4a499c3961dddea37098ac",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": false,
+            "rule": "opt-in-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 6,
+              "kvHeads": 2,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 1435238656,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 2559312128
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2911633664
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1610612736,
+                "totalBytes": 4119593216
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 3221225472,
+                "totalBytes": 5730205952
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 2535719168
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 2722889984
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 855638016,
+                "totalBytes": 3364618496
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 1711276032,
+                "totalBytes": 4220256512
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_s",
+      "artifactSha256": "5503c57f038bd201e0583d64d50d4aebba2f628004834cb4d32abb141eb1bfda",
+      "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Qwen3.5-2B-Q5_K_S.gguf",
+            "uri": "https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/f6d5376be1edb4d416d56da11e5397a961aca8ae/Qwen3.5-2B-Q5_K_S.gguf",
+            "revision": "f6d5376be1edb4d416d56da11e5397a961aca8ae",
+            "sha256": "5503c57f038bd201e0583d64d50d4aebba2f628004834cb4d32abb141eb1bfda",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 248068,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 248069,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": false,
+            "rule": "opt-in-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 6,
+              "kvHeads": 2,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 1384546560,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 2508620032
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 2860941568
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1610612736,
+                "totalBytes": 4068901120
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 3221225472,
+                "totalBytes": 5679513856
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 2485027072
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 2672197888
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 855638016,
+                "totalBytes": 3313926400
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 1711276032,
+                "totalBytes": 4169564416
               }
             ],
             "maxContextByBudget": [
@@ -9444,6 +11029,38 @@
       "memoryFit": "computed (upper bound)"
     },
     {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_k_s",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<end_of_turn> (106) added from tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed (upper bound)"
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q6_k",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<end_of_turn> (106) added from tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed (upper bound)"
+    },
+    {
       "modelId": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
@@ -9565,6 +11182,22 @@
     },
     {
       "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_s",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|eot_id|> (128009) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q6_k",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
       "turnTerminator": "<|eot_id|> (128009) already declared",
@@ -9712,6 +11345,22 @@
     },
     {
       "modelId": "deepseek_coder_1_3b_instruct_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
       "turnTerminator": "not determined: no tokenizer.chat_template",
@@ -10159,6 +11808,22 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q5_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
       "modelId": "qwen2_5_coder_1_5b_instruct_q8_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
@@ -10276,7 +11941,39 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q8_0",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
       "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q5_0",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
       "turnTerminator": "<|im_end|> (151645) already declared",
@@ -10491,6 +12188,20 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q5_k_s",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    },
+    {
       "modelId": "unsloth_qwen3_5_0_8b_gguf_q6_k",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
@@ -10506,6 +12217,48 @@
     },
     {
       "modelId": "unsloth_qwen3_5_2b_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q4_k_s",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (248046) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_s",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
       "turnTerminator": "<|im_end|> (248046) already declared",

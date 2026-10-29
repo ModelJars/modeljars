@@ -1656,7 +1656,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -1673,7 +1673,8 @@
         "valueLength": 256,
         "feedForwardLength": 6912,
         "attentionBlockCount": 26
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T18:51:56Z"
     },
     {
       "id": "bartowski_google_gemma_3_1b_it_gguf_q5_k_m",
@@ -1806,7 +1807,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -1823,7 +1824,8 @@
         "valueLength": 256,
         "feedForwardLength": 6912,
         "attentionBlockCount": 26
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T18:51:56Z"
     },
     {
       "id": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
@@ -3051,7 +3053,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -3068,7 +3070,8 @@
         "valueLength": 64,
         "feedForwardLength": 8192,
         "attentionBlockCount": 16
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T18:51:56Z"
     },
     {
       "id": "bartowski_llama_3_2_1b_instruct_gguf_q8_0",
@@ -6117,7 +6120,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -6133,7 +6136,8 @@
       "domains": [
         "coding",
         "general"
-      ]
+      ],
+      "catalogPublishedAt": "2026-10-29T20:03:56Z"
     },
     {
       "id": "deepseek_coder_6_7b_instruct_q4_0",
@@ -14523,7 +14527,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "dimensions": {
@@ -14539,7 +14543,8 @@
       "domains": [
         "coding",
         "general"
-      ]
+      ],
+      "catalogPublishedAt": "2026-10-29T20:03:56Z"
     },
     {
       "id": "qwen2_5_coder_1_5b_instruct_q6_k",
@@ -16121,7 +16126,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -16136,7 +16141,8 @@
         "keyValueHeadCount": 2,
         "feedForwardLength": 4864,
         "attentionBlockCount": 24
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T18:51:56Z"
     },
     {
       "id": "qwen_qwen2_5_1_5b_instruct_gguf_q4_0",
@@ -16260,7 +16266,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -16275,7 +16281,8 @@
         "keyValueHeadCount": 2,
         "feedForwardLength": 8960,
         "attentionBlockCount": 28
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T20:03:55Z"
     },
     {
       "id": "qwen_qwen2_5_1_5b_instruct_gguf_q5_k_m",
@@ -21000,7 +21007,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -21017,7 +21024,8 @@
         "valueLength": 256,
         "feedForwardLength": 3584,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T18:51:55Z"
     },
     {
       "id": "unsloth_qwen3_5_0_8b_gguf_q6_k",
@@ -21344,7 +21352,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -21361,7 +21369,8 @@
         "valueLength": 256,
         "feedForwardLength": 6144,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T20:03:55Z"
     },
     {
       "id": "unsloth_qwen3_5_2b_gguf_q5_k_m",
@@ -21393,7 +21402,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -21410,7 +21419,8 @@
         "valueLength": 256,
         "feedForwardLength": 6144,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T20:03:56Z"
     },
     {
       "id": "unsloth_qwen3_5_2b_gguf_q5_k_s",
@@ -21442,7 +21452,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": true
       },
       "domains": [
@@ -21459,7 +21469,8 @@
         "valueLength": 256,
         "feedForwardLength": 6144,
         "attentionBlockCount": 6
-      }
+      },
+      "catalogPublishedAt": "2026-10-29T20:03:56Z"
     },
     {
       "id": "unsloth_qwen3_5_2b_gguf_q6_k",

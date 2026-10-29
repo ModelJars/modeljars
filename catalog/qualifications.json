@@ -3462,11 +3462,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "a201a5899049a7f7845f910ad803574787b4474c3daffc0d33e8688f9114880f",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/unsloth-qwen3-5-0-8b-gguf-q5_k_s/default-correctness/models-rust-ffm.json",
         "reportSha256": "52636cf7ea319a63fe036991c53a4733899900ceb452201ea21f8dd55aa49e2c",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3516,11 +3518,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "f625ed640ed403aa7657dbd2d2b783ade13974883c1c26688b4c6c2d345c9b9e",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/bartowski-google-gemma-3-1b-it-gguf-q4_k_s/default-correctness/models-rust-ffm.json",
         "reportSha256": "81a7e5db5e50aacd96257d29a447f0fda4c07ca31238cf8f865c508d6720e555",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3570,11 +3574,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/qwen-qwen2-5-0-5b-instruct-gguf-q8_0/default-correctness/models-rust-ffm.json",
         "reportSha256": "4f5b7c9fee665e700e89115f99cb299205399e84ecfa0b5d1d247c05e11914af",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3624,11 +3630,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "ccad0cb14e9008f699f4b820110b899cf81983a987c40a05a8a1128d2fb713fb",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/bartowski-google-gemma-3-1b-it-gguf-q6_k/default-correctness/models-rust-ffm.json",
         "reportSha256": "b2e82513d6159b0d4b159d86e209df4e8b42913314b25d773464bbdc373ed763",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3678,11 +3686,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "0f4c510daf16e0d1b3bc94931fd9296c28936bebdda2593687d4eb70c5b70628",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/bartowski-llama-3-2-1b-instruct-gguf-q6_k/default-correctness/models-rust-ffm.json",
         "reportSha256": "0356618aa3f48f548cac5a4b4c847f956104b128000dc9432726653479c0fc36",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3732,11 +3742,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "a579334a7b19838b19f7855252b6bc08b012b46e338cf1494a88e77509cfe4d9",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/qwen-qwen2-5-1-5b-instruct-gguf-q5_0/default-correctness/models-rust-ffm.json",
         "reportSha256": "a39b1adaed009a5221ed732c3866cad07e768a109ec492b4c4284a538ff1027a",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3786,11 +3798,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "56eee7b85a2023ba393c5f9a5a5e372e3645e7925a13adb4d13723fc5bc14124",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/unsloth-qwen3-5-2b-gguf-q4_k_s/default-correctness/models-rust-ffm.json",
         "reportSha256": "163615bce59321650c6d73bb05e8bba4988287aec87622d6dd22529a3918659c",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3840,11 +3854,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "f15d02e8e51a5c6f9448b972819acfa66aee4d8bb7d881a8b8ba3d90da08ef09",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/qwen-qwen2-5-coder-1-5b-instruct-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
         "reportSha256": "0fded4de4eb88fe449b12c41f16ee28278a424bf49b7db936a43d5f7bfb2d295",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3894,11 +3910,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "36eb025121a50ee6d37fe900659393ff8fb5ea34adc0e3c11fc635e07624dcdb",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/thebloke-deepseek-coder-1-3b-instruct-gguf-q8_0/default-correctness/models-rust-ffm.json",
         "reportSha256": "2a201149b409a9a4b9ed0f6014d550c39442629b96492fb908532ead7cd79ef5",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -3948,11 +3966,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "1885b3a9195f8cc09da9a7a7a75afdc1e8d5cbf9fc4a499c3961dddea37098ac",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/unsloth-qwen3-5-2b-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
         "reportSha256": "99e7dccfa0249128ad567e97580d67a5fbb5a18da58cdcebddc47e12861c0800",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     },
     {
@@ -4002,11 +4022,13 @@
         "configuration": "library-defaults",
         "backend": "rust-ffm",
         "artifactSha256": "5503c57f038bd201e0583d64d50d4aebba2f628004834cb4d32abb141eb1bfda",
-        "report": "default-correctness/models-rust-ffm.json",
+        "report": "benchmark-results/certified-20261029/rag/unsloth-qwen3-5-2b-gguf-q5_k_s/default-correctness/models-rust-ffm.json",
         "reportSha256": "0ae05357ca2c870d2f4b4fc33a2bf766d12458dc35b5baced7c01cbe1f410e2e",
         "totalAttempts": 9,
         "successfulAttempts": 9,
-        "tuningSystemProperties": []
+        "tuningSystemProperties": [],
+        "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
+        "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
     }
   ]

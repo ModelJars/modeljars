@@ -3,7 +3,7 @@
  * Records `catalogPublishedAt` on newly qualified catalog models.
  *
  * `catalogPublishedAt` is the instant a model's marker was first published publicly, and
- * `build.gradle.kts` refuses a qualified model without one. It is a **first** publication instant,
+ * SDK and site publication refuse a qualified model without one. It is a **first** publication instant,
  * so this never overwrites an existing value: moving one would rewrite when an already-public
  * marker appeared. Models are matched by id and the field is inserted after `sizeBytes`, which is
  * where every existing entry carries it.

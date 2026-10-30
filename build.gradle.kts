@@ -2669,10 +2669,20 @@ publicCatalogEntries.forEach { entry ->
 }
 val publicModelsMissingPublicationTime =
     publicCatalogEntries.filter { it.catalogPublishedAt == null }.map(CatalogEntry::id)
-require(publicModelsMissingPublicationTime.isEmpty()) {
-    "Every qualified catalog model must record catalogPublishedAt: " +
-        publicModelsMissingPublicationTime.sorted().joinToString(", ")
-}
+// A newly qualified marker must be buildable before its first public publication instant exists.
+// SDK and site publication still require the completed publication record.
+val verifyCatalogPublicationTimes =
+    tasks.register("verifyCatalogPublicationTimes") {
+        group = "verification"
+        description = "Require actual first-publication times before publishing the SDK or site"
+        inputs.file(file("catalog/models.json"))
+        doLast {
+            require(publicModelsMissingPublicationTime.isEmpty()) {
+                "Every qualified catalog model must record catalogPublishedAt before SDK or site " +
+                    "publication: " + publicModelsMissingPublicationTime.sorted().joinToString(", ")
+            }
+        }
+    }
 publicEmbeddingQualifications.forEach { qualification ->
     val entry =
         catalogEntries.singleOrNull { it.id == qualification.modelId }
@@ -6784,6 +6794,9 @@ tasks.named("check") {
 allprojects {
     tasks.withType<PublishToMavenRepository>().configureEach {
         dependsOn(rootProject.tasks.named("verifyCatalog"))
+        if (!name.startsWith("publishMarker")) {
+            dependsOn(verifyCatalogPublicationTimes)
+        }
     }
 }
 
@@ -6970,6 +6983,7 @@ val verifyReleaseBundle =
         description = "Verify staged signatures, checksums, and Central bundle layout"
         dependsOn(generateReleaseChecksums)
         dependsOn(verifyLaunchQualifications)
+        dependsOn(verifyCatalogPublicationTimes)
         inputs.dir(releaseRepository)
 
         doLast {

@@ -52,7 +52,7 @@ test("takes the union of qualified ids across manifests, never the sum", () => {
 test("counts a decision model as qualified by its tier, which is its only verdict", () => {
   // A decision qualification carries no `qualified` boolean, and the weaker publishable tier still
   // publishes. Reading only `qualified` would leave every decision model unstamped, and the build
-  // gate refuses a qualified model without catalogPublishedAt -- so the omission shows up as a
+  // publication gate refuses a qualified model without catalogPublishedAt -- so the omission shows up as a
   // failed release, not as a missing field.
   const decision = {
     entries: [

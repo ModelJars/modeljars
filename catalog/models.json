@@ -22911,6 +22911,7 @@
       "localPath": "${user.home}/.jvllm/models/Flint-Q4_K_M.gguf",
       "sha256": "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
       "sizeBytes": 23387911136,
+      "catalogPublishedAt": "2026-10-30T23:21:40Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-generation",

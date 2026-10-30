@@ -1126,7 +1126,7 @@
         "successfulAttempts": 9,
         "tuningSystemProperties": [],
         "report": "benchmark-results/2026-10-30-flint-released/results/default-correctness/models-rust-ffm.json",
-        "modelsRevision": "a7007cc8712241cb10da8872dd642bff56a7f0cb",
+        "modelsRevision": "53d3736062f495a308411fe6330411194380807c",
         "backendVersion": "models@0.5.8+released vectors@0.1.32"
       },
       "qualificationEvidence": {

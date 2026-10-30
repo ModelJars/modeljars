@@ -6795,7 +6795,13 @@ allprojects {
     tasks.withType<PublishToMavenRepository>().configureEach {
         dependsOn(rootProject.tasks.named("verifyCatalog"))
         if (!name.startsWith("publishMarker")) {
-            dependsOn(verifyCatalogPublicationTimes)
+            // Local repositories exercise the unpublished SDK in clean consumers. Only
+            // external publication needs the marker's first-publication timestamp; the
+            // signed Central bundle retains its separate verifyReleaseBundle gate.
+            dependsOn(providers.provider {
+                if (repository.url.scheme == "file") emptyList<String>()
+                else listOf(":verifyCatalogPublicationTimes")
+            })
         }
     }
 }

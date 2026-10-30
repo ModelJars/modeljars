@@ -363,6 +363,7 @@ data class CatalogQualificationEnvironment(
 
 data class CatalogRagQualification(
     val modelId: String,
+    val modelsRevision: String?,
     val policyVersion: String?,
     val contextLength: Int?,
     val model: String,
@@ -710,8 +711,9 @@ fun CatalogPerformanceProfile.registryProperties(): String =
         }
     }
 
-fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
+fun CatalogRagQualification.registryProperties(fallbackRevision: String): String =
     buildString {
+        val evidenceRevision = modelsRevision ?: fallbackRevision
         val prefix = "qualification.$modelId."
         policyVersion?.let { appendLine("${prefix}policyVersion=${propertyValue(it)}") }
         contextLength?.let { appendLine("${prefix}contextLength=$it") }
@@ -728,7 +730,7 @@ fun CatalogRagQualification.registryProperties(modelsRevision: String): String =
         appendLine(
             "${prefix}reportUri=" +
                 propertyValue(
-                    "https://github.com/integrallis/models/blob/$modelsRevision/$reportPath",
+                    "https://github.com/integrallis/models/blob/$evidenceRevision/$reportPath",
                 ),
         )
         appendLine("${prefix}reportSha256=$reportSha256")
@@ -758,8 +760,8 @@ fun CatalogRagQualification.siteMetadata(
     raw +
         ("reportUri" to
             "https://github.com/integrallis/models/blob/" +
-            "${qualifications.modelsRevision}/$reportPath") +
-        ("modelsRevision" to qualifications.modelsRevision) +
+            "${modelsRevision ?: qualifications.modelsRevision}/$reportPath") +
+        ("modelsRevision" to (modelsRevision ?: qualifications.modelsRevision)) +
         ("policyVersion" to (policyVersion ?: qualifications.policyVersion)) +
         ("useCaseTier" to
             when {
@@ -1814,6 +1816,14 @@ val ragQualifications =
                         raw["environment"].stringKeyMap("$context.environment")
                     CatalogRagQualification(
                         modelId = modelId,
+                        modelsRevision =
+                            if (raw.containsKey("modelsRevision")) {
+                                raw.requiredString("modelsRevision").also {
+                                    require(it.matches(Regex("[0-9a-f]{40}"))) {
+                                        "$context.modelsRevision must be a lowercase 40-character Git commit"
+                                    }
+                                }
+                            } else null,
                         policyVersion =
                             if (raw.containsKey("policyVersion")) raw.requiredString("policyVersion")
                             else null,

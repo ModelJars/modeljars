@@ -206,6 +206,59 @@ test("fresh smoke has its own immutable revision without moving historical quali
   assert.equal(qualification.backendVersion, "models@revision");
 });
 
+test("a new entry binds its own revision while historical evidence keeps its revision", async () => {
+  const legacy = entry({ modelId: "legacy_model" });
+  const { qualification, bytes } = withSmoke(
+    entry({ modelsRevision: "d".repeat(40) }), defaultReport(),
+  );
+  const loaded = [];
+  const checked = await validateQualificationSmokeGate({
+    previousQualifications: qualifications([legacy]),
+    currentQualifications: qualifications([legacy, qualification]),
+    currentCatalog: { schemaVersion: 2, models: [{ id: modelId }, { id: legacy.modelId }] },
+    loadReport: async (input) => { loaded.push(input); return bytes; },
+  });
+  assert.deepEqual(checked, [`${modelId}/${backend}`]);
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].revision, "d".repeat(40));
+});
+
+test("changing only an entry's revision cannot grandfather it", async () => {
+  await assert.rejects(validateQualificationSmokeGate({
+    previousQualifications: qualifications([entry()]),
+    currentQualifications: qualifications([entry({ modelsRevision: "d".repeat(40) })]),
+    currentCatalog: catalog(),
+  }), /defaultConfigurationSmoke is required/);
+});
+
+test("a separately released smoke takes precedence over the entry's evidence revision", async () => {
+  const backendVersion = "models@0.5.8+released";
+  const { qualification, bytes } = withSmoke(
+    entry({ modelsRevision: "d".repeat(40) }), defaultReport({ backendVersion }),
+  );
+  qualification.defaultConfigurationSmoke.modelsRevision = "e".repeat(40);
+  qualification.defaultConfigurationSmoke.backendVersion = backendVersion;
+  const loaded = [];
+  await validateQualificationSmokeGate({
+    previousQualifications: qualifications([]),
+    currentQualifications: qualifications([qualification]),
+    currentCatalog: catalog(),
+    loadReport: async (input) => { loaded.push(input); return bytes; },
+  });
+  assert.equal(loaded[0].revision, "e".repeat(40));
+});
+
+test("entry revisions must be immutable commits", async () => {
+  for (const revision of ["main", "", "d".repeat(39), "D".repeat(40)]) {
+    const { qualification } = withSmoke(entry({ modelsRevision: revision }), defaultReport());
+    await assert.rejects(validateQualificationSmokeGate({
+      previousQualifications: qualifications([]),
+      currentQualifications: qualifications([qualification]),
+      currentCatalog: catalog(),
+    }), /modelsRevision must be a 40-character Git commit/);
+  }
+});
+
 test("separate smoke revision requires a valid revision and runtime label", async () => {
   for (const binding of [
     { modelsRevision: "main", backendVersion: "models@0.3.57" },

@@ -10947,6 +10947,205 @@
         ],
         "notes": []
       }
+    },
+    {
+      "modelId": "ggml_org_flint_gguf_q4_k_m",
+      "artifactSha256": "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
+      "revision": "468307a1b38259e9e4c9d4fe53d4e3b76386572c",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Flint-Q4_K_M.gguf",
+            "uri": "https://huggingface.co/ggml-org/Flint-GGUF/resolve/468307a1b38259e9e4c9d4fe53d4e3b76386572c/Flint-Q4_K_M.gguf",
+            "revision": "468307a1b38259e9e4c9d4fe53d4e3b76386572c",
+            "sha256": "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "sampling": {
+          "temperature": {
+            "value": 1,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.temp"
+              }
+            ]
+          },
+          "topP": {
+            "value": 0.95,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.top_p"
+              }
+            ]
+          },
+          "topK": {
+            "value": 20,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "general.sampling.top_k"
+              }
+            ]
+          }
+        },
+        "eosTokenIds": [
+          {
+            "id": 150001,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 150006,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 150007,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 14,
+              "kvHeads": 4,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            },
+            {
+              "layers": 35,
+              "kvHeads": 4,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": 513
+            }
+          ],
+          "slidingWindow": 513,
+          "slidingWindowPatternDeclared": true,
+          "upperBound": false
+        },
+        "weightBytes": 23387911136,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 28672,
+            "slidingWindowBytesPerToken": 71680,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 154212352,
+                "totalBytes": 24615865312
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 976295936,
+                "totalBytes": 25437948896
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 3794868224,
+                "totalBytes": 28256521184
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 7552964608,
+                "totalBytes": 32014617568
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 44342,
+                "limitedBy": "memory"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 15232,
+            "slidingWindowBytesPerToken": 38080,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 81925312,
+                "totalBytes": 24543578272
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 518657216,
+                "totalBytes": 24980310176
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 2016023744,
+                "totalBytes": 26477676704
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 4012512448,
+                "totalBytes": 28474165408
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 84599,
+                "limitedBy": "memory"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
     }
   ],
   "coverage": [
@@ -12331,6 +12530,18 @@
       "modelId": "laya_q8_0",
       "generation": "not applicable: no text-generation capability",
       "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
+      "modelId": "ggml_org_flint_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "not determined: chat template did not render: Unexpected escaped character: x",
+      "unsourced": [
+        "minP",
+        "repetitionPenalty",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
     }
   ]
 }

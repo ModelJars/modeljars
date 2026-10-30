@@ -37,6 +37,11 @@ Catalog pull requests must:
 - let maintainers record `catalogPublishedAt` as the first public marker publication instant;
 - use a new immutable marker artifact version for every published metadata change.
 
+A newly qualified marker can be built, tested, and published before `catalogPublishedAt` exists.
+Record that field after its first public publication is verified. SDK publication and Pages
+deployment run `verifyCatalogPublicationTimes` and remain blocked until every qualified public
+model has that record. Local catalog generation is a preview, not evidence of publication.
+
 Run `./gradlew spotlessCheck test verifyCatalog` before opening a pull request. Use
 `./gradlew spotlessApply` to format Java sources. CI generates every marker JAR and
 the website catalog from the metadata, then rejects duplicate coordinates, mutable download URLs,

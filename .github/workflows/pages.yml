@@ -52,7 +52,7 @@ jobs:
         run: npm ci && npm test
 
       - name: Generate searchable catalog
-        run: ./gradlew --no-daemon generateSite
+        run: ./gradlew --no-daemon verifyCatalogPublicationTimes generateSite
 
       - name: Verify public markers are available from Maven Central
         env:

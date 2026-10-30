@@ -25,6 +25,7 @@ import {
   detectTurnTerminator,
   generationProfile,
   kvLayoutFromGguf,
+  modelProfileTargets,
   validateModelProfiles,
 } from "./model-profiles.mjs";
 
@@ -191,9 +192,7 @@ async function profile(model) {
 }
 
 const previous = JSON.parse(await readFile(profilesUrl, "utf8").catch(() => "null"));
-const targets = catalog.models.filter((model) =>
-  requestedIds ? requestedIds.has(model.id) : model.catalogPublishedAt !== undefined,
-);
+const targets = modelProfileTargets(catalog.models, previous, requestedIds);
 const results = new Map();
 const failures = [];
 let next = 0;

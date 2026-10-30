@@ -10,6 +10,17 @@
 
 const GIB = 1024 ** 3;
 
+/** Keep explicitly profiled candidates checked before publication, without inventing a publish date. */
+export function modelProfileTargets(models, previous, requestedIds = null) {
+  const retained = new Set([
+    ...(previous?.profiles ?? []).map((entry) => entry.modelId),
+    ...(previous?.coverage ?? []).map((entry) => entry.modelId),
+  ]);
+  return models.filter((model) => requestedIds
+    ? requestedIds.has(model.id)
+    : model.catalogPublishedAt !== undefined || retained.has(model.id));
+}
+
 export const PROFILE_SCHEMA_VERSION = 1;
 export const CONTEXT_POINTS = Object.freeze([4096, 32768, 131072, 262144]);
 export const MEMORY_BUDGETS_BYTES = Object.freeze([8 * GIB, 16 * GIB, 24 * GIB]);

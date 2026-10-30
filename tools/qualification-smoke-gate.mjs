@@ -26,6 +26,7 @@ function qualificationKey(entry) {
 function evidenceIdentity(entry) {
   return JSON.stringify({
     qualified: entry.qualified,
+    modelsRevision: entry.modelsRevision,
     policyVersion: entry.policyVersion,
     contextLength: entry.contextLength,
     qualificationEvidence: entry.qualificationEvidence,
@@ -161,6 +162,10 @@ export async function validateQualificationSmokeGate({
   const checked = [];
   for (const entry of currentQualifications.entries) {
     if (entry.qualified !== true || !catalogIds.has(entry.modelId)) continue;
+    if (entry.modelsRevision !== undefined && !GIT_REVISION.test(entry.modelsRevision)) {
+      throw new Error(`${qualificationKey(entry)}.modelsRevision must be a 40-character Git commit`);
+    }
+    const evidenceRevision = entry.modelsRevision ?? currentQualifications.modelsRevision;
     const prior = previous.get(qualificationKey(entry));
     if (
       prior !== undefined &&
@@ -168,12 +173,12 @@ export async function validateQualificationSmokeGate({
       evidenceIdentity(prior) === evidenceIdentity(entry)
     ) continue;
 
-    await validatePublisherReference(entry, currentQualifications.modelsRevision, loadReport);
+    await validatePublisherReference(entry, evidenceRevision, loadReport);
     const smoke = assertSmokeMetadata(entry);
     if (loadReport !== undefined) {
       const bytes = await loadReport({
         entry,
-        revision: smoke.modelsRevision ?? currentQualifications.modelsRevision,
+        revision: smoke.modelsRevision ?? evidenceRevision,
         report: smoke.report,
       });
       assertReport(entry, smoke, bytes);

@@ -150,6 +150,12 @@ and rejects tuned properties or any failed attempt. Existing evidence is
 grandfathered until it changes; tuned benchmark success cannot override a
 failed default-configuration smoke.
 
+An entry may set its own `modelsRevision` to the immutable Models commit containing its report.
+This binds generated report links and the default smoke lookup without moving older entries off
+the manifest's historical revision. A separate `defaultConfigurationSmoke.modelsRevision` still
+takes precedence when a released-runtime smoke lives at a later commit. Changing an entry's
+revision requires the same smoke validation as changing its report.
+
 ### Tool-calling template round trip
 
 Every tool-qualified entry in `catalog/tool-qualifications.json` must survive a model-free round

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "minimumModelsVersion": "0.3.58",
-  "basis": "Support floor for this catalog: includes EmbeddingGemma 2 text encoding (0.3.58), LFM2 sequence encoding (0.3.55), and Q4_1 projections (0.3.56). Class availability is a structural check; numerical qualification remains separate.",
+  "minimumModelsVersion": "0.5.8",
+  "basis": "Support floor includes Flint GGUF execution and ordered Q4_K native projections (0.5.8), plus the previously required architectures and formats. Class availability is structural; numerical qualification and released-library verification remain separate.",
   "workloads": {
     "qualifications.json": {
       "backends": [
@@ -47,6 +47,10 @@
         ],
         "smollm3": [
           "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
+        "flint": [
+          "backend-java:com.integrallis.models.backend.purejava.flint.FlintForwardPass",
+          "backend-java:com.integrallis.models.backend.purejava.FlintDecoderAdapter"
         ]
       }
     },

@@ -22897,7 +22897,7 @@
     {
       "id": "ggml_org_flint_gguf_q4_k_m",
       "name": "Flint 40B A2.5B GGUF Q4_K_M",
-      "description": "Pinned Flint mixture-of-experts GGUF candidate. Runtime qualification is in progress; catalog registration does not authorize publication.",
+      "description": "40B mixture-of-experts text model with about 2.5B active parameters. Rust FFM qualified for guarded English RAG with a 512-token output budget; tool calling is not qualified.",
       "sourceId": "hf://ggml-org/Flint-GGUF",
       "sourceUri": "https://huggingface.co/ggml-org/Flint-GGUF",
       "downloadUri": "https://huggingface.co/ggml-org/Flint-GGUF/resolve/468307a1b38259e9e4c9d4fe53d4e3b76386572c/Flint-Q4_K_M.gguf",
@@ -22923,7 +22923,7 @@
         "community-conversion"
       ],
       "backends": {
-        "pure-java": true,
+        "pure-java": false,
         "rust-ffm": true,
         "llama.cpp": true
       },

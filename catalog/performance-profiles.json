@@ -4496,6 +4496,66 @@
           "heap": "host-default"
         }
       }
+    },
+    {
+      "id": "flint_q4_k_m_epyc_7r13_jdk25_rust_ffm_pool8",
+      "modelId": "ggml_org_flint_gguf_q4_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.flint-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "artifactSha256": "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC 7R13 Processor",
+        "processors": "16",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.3+9-LTS",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.kernels.threads": "8"
+      },
+      "evidence": {
+        "benchmarkId": "flint-released-058-20261030-282b3960-public-profile",
+        "measuredAt": "2026-10-30T22:33:12Z",
+        "baseline": "released-models-0.5.8-library-defaults-16-native-threads",
+        "candidate": "released-models-0.5.8-public-profile-8-native-threads",
+        "warmups": 1,
+        "trials": 3,
+        "generatedTokens": 143,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianTtftMillis": 98.861198,
+          "medianEndToEndMillis": 14378.96644,
+          "medianDecodeTokensPerSecond": 9.965442908017792
+        },
+        "candidateMetrics": {
+          "medianTtftMillis": 86.656242,
+          "medianEndToEndMillis": 12553.878274,
+          "medianDecodeTokensPerSecond": 11.393935561861737
+        },
+        "controls": {
+          "scope": "one-case released-library compatibility and paired timing; full RAG qualification is separate",
+          "modelsVersion": "0.5.8",
+          "vectorsVersion": "0.1.32",
+          "modelsReleaseCommit": "282b3960335c586665c6e9f5ff80367c067ec8a3",
+          "modelsEvidenceCommit": "a7007cc8712241cb10da8872dd642bff56a7f0cb",
+          "reportUri": "https://raw.githubusercontent.com/integrallis/models/a7007cc8712241cb10da8872dd642bff56a7f0cb/benchmark-results/2026-10-30-flint-released/results/public-profile.json",
+          "reportSha256": "e662eedba47ddabcaa58c11fea1c82aab6869f078a7d52817d1436db35c71911",
+          "contextLength": "2048",
+          "maxOutputTokens": "512",
+          "temperature": "0.0",
+          "promptSha256": "4c601f43e2071081b9e57fd99ded3af1992fb788afa1dfde06b787ece1e8c315",
+          "expectedOutputSha256": "afa1b20bbb783107be993c0cfb32e055ecb4b77a397d861ace5a3d1df4ac8698",
+          "promptStrategy": "one repeated prompt; warm prefix cache",
+          "order": "baseline then candidate; one warmup and three measurements per arm",
+          "pairedOutputHashes": "3-identical-pairs; all six complete EOS outputs match source qualification",
+          "qualificationModelsRevision": "3098dd306900e4901b27b2615345b42da2c29b46",
+          "qualificationReportSha256": "5b89dfbaa21f5a2818aabdecedd45a5025cf627a00c29561055aa415e6194560",
+          "rssClaim": "none"
+        }
+      }
     }
   ]
 }

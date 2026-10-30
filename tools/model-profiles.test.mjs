@@ -16,12 +16,31 @@ import {
   generationProfile,
   kvCacheBytes,
   kvLayoutFromGguf,
+  modelProfileTargets,
   validateModelProfiles,
 } from "./model-profiles.mjs";
 import { renderChatTemplate } from "./chat-template-render.mjs";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GIB = 1024 ** 3;
+
+test("profile checks retain explicitly profiled candidates before marker publication", () => {
+  const models = [
+    { id: "published", catalogPublishedAt: "2026-10-30T00:00:00Z" },
+    { id: "profiled-candidate" },
+    { id: "coverage-only-candidate" },
+    { id: "unprofiled-candidate" },
+  ];
+  const previous = {
+    profiles: [{ modelId: "profiled-candidate" }, { modelId: "removed-from-catalog" }],
+    coverage: [{ modelId: "coverage-only-candidate" }],
+  };
+  assert.deepEqual(modelProfileTargets(models, previous).map((model) => model.id),
+    ["published", "profiled-candidate", "coverage-only-candidate"]);
+  assert.deepEqual(modelProfileTargets(models, null).map((model) => model.id), ["published"]);
+  assert.deepEqual(modelProfileTargets(models, previous, new Set(["unprofiled-candidate"]))
+    .map((model) => model.id), ["unprofiled-candidate"]);
+});
 
 function read(relativePath) {
   return readFile(path.join(repositoryRoot, relativePath), "utf8");

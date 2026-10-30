@@ -22893,6 +22893,57 @@
       "domains": [
         "general"
       ]
+    },
+    {
+      "id": "ggml_org_flint_gguf_q4_k_m",
+      "name": "Flint 40B A2.5B GGUF Q4_K_M",
+      "description": "Pinned Flint mixture-of-experts GGUF candidate. Runtime qualification is in progress; catalog registration does not authorize publication.",
+      "sourceId": "hf://ggml-org/Flint-GGUF",
+      "sourceUri": "https://huggingface.co/ggml-org/Flint-GGUF",
+      "downloadUri": "https://huggingface.co/ggml-org/Flint-GGUF/resolve/468307a1b38259e9e4c9d4fe53d4e3b76386572c/Flint-Q4_K_M.gguf",
+      "revision": "468307a1b38259e9e4c9d4fe53d4e3b76386572c",
+      "markerCoordinate": "org.modeljars.huggingface:ggml-org.flint-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "flint",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Flint-Q4_K_M.gguf",
+      "sha256": "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
+      "sizeBytes": 23387911136,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "community-conversion"
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": true,
+        "llama.cpp": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 39785287456,
+        "contextLength": 262144,
+        "embeddingLength": 2048,
+        "blockCount": 49,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 6144,
+        "expertCount": 256,
+        "expertUsedCount": 6,
+        "attentionBlockCount": 49
+      }
     }
   ]
 }

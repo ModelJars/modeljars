@@ -86,14 +86,15 @@ value bootstraps the complete accepted catalog. Use `verify` before either publi
 > come last — is in **CONTRIBUTING.md, "Publishing newly qualified models, step by step"**. Read it
 > before dispatching anything; do not script around it.
 
-The JVM Runtime release contains these coordinates and transitive dependencies:
+The next JVM Runtime release uses these coordinates and transitive dependencies.
+The publish workflow assigns `SDK_VERSION` from the next unused release version:
 
 ```text
-org.modeljars:modeljars:0.1.65
-  -> org.modeljars:modeljars-core:0.1.65
-  -> com.integrallis:models:0.5.7
-  -> com.integrallis:backend-java:0.5.7
-  -> com.integrallis:backend-native:0.5.7
+org.modeljars:modeljars:SDK_VERSION
+  -> org.modeljars:modeljars-core:SDK_VERSION
+  -> com.integrallis:models:0.5.8
+  -> com.integrallis:backend-java:0.5.8
+  -> com.integrallis:backend-native:0.5.8
   -> com.integrallis:vectors-core:0.1.32 (through Models)
 ```
 

@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ModelRagQualificationRegistryTest {
-  private static final int AGGREGATE_QUALIFIED_MODELS = 78;
+  private static final int AGGREGATE_QUALIFIED_MODELS = 79;
   private static final String AGGREGATE_MODELS_REVISION =
       "1955b55ba16f9a2cd90655be3ac7323f3efa452a";
 
@@ -230,6 +230,46 @@ class ModelRagQualificationRegistryTest {
     assertEquals(1.0, qualification.modelAnswerCorrectRate());
     assertEquals(43.91685822892476, qualification.p50DecodeTokensPerSecond());
     assertTrue(qualification.productionUsable());
+  }
+
+  @Test
+  void aggregateCatalogBindsFlintToItsOwnEvidenceRevision() {
+    ModelRagQualificationRegistry registry = ModelRagQualificationRegistry.fromClasspath();
+    ModelRagQualification qualification =
+        registry.qualifications().stream()
+            .filter(entry -> entry.modelId().equals("ggml_org_flint_gguf_q4_k_m"))
+            .findFirst()
+            .orElseThrow();
+
+    assertEquals(AGGREGATE_MODELS_REVISION, registry.modelsRevision());
+    assertEquals(AGGREGATE_QUALIFIED_MODELS, registry.qualifiedModels());
+    assertEquals("rust-ffm", qualification.backend());
+    assertEquals("flint", qualification.promptTemplate());
+    assertEquals("production-rag-model-contribution-v6", qualification.policyVersion());
+    assertEquals("PERFORMANCE_REDUCED", qualification.performanceTier());
+    assertEquals("QUALIFIED", qualification.verdict());
+    assertEquals(RagUseCaseTier.GUARDED_RAG, qualification.useCaseTier());
+    assertEquals(2048, qualification.contextLength());
+    assertEquals(23387911136L, qualification.artifactSizeBytes());
+    assertEquals(
+        "c3c4d93f9db92627a2fc47ea8fe8c64a094cabd3549db544bcdd2c00e9a9a347",
+        qualification.artifactSha256());
+    assertEquals(27, qualification.attempts());
+    assertEquals(1.0, qualification.correctAnswerRate());
+    assertEquals(18.0 / 27.0, qualification.modelAnswerRate());
+    assertEquals(1.0, qualification.modelAnswerCorrectRate());
+    assertEquals(11.927506141807852, qualification.p50DecodeTokensPerSecond());
+    assertEquals(
+        URI.create(
+            "https://github.com/integrallis/models/blob/"
+                + "3098dd306900e4901b27b2615345b42da2c29b46/"
+                + "benchmark-results/2026-10-30-flint-qualification/results/native-candidate.json"),
+        qualification.reportUri());
+    assertEquals(
+        "7b52f13b8909e7ba849e44fda2d2a5824fc1ea6690b2a72d329e3e21bda334fa",
+        qualification.reportSha256());
+    assertTrue(qualification.productionUsable());
+    assertTrue(registry.qualified().contains(qualification));
   }
 
   @Test

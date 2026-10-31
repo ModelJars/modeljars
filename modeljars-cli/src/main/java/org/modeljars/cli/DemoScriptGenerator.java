@@ -358,7 +358,7 @@ final class DemoScriptGenerator {
                 // R1 can omit its opening think tag. Never stream that ambiguous prefix.
                 String text = channelOutput.toString();
                 int end = text.toLowerCase(java.util.Locale.ROOT).lastIndexOf("</think>");
-                if (end >= 0) { text = text.substring(end + "</think>".length()); reasoningSeen = true; }
+                if (end >= 0) { text = text.substring(end + "</think>".length()); closers.clear(); reasoningSeen = true; }
                 else if (stopReason != null && stopReason != StopReason.EOS && stopReason != StopReason.STOP_SEQUENCE) return;
                 pending.append(text); channelOutput.setLength(0); bufferImplicitReasoning = false;
               }

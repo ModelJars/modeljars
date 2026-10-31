@@ -337,7 +337,7 @@ class DemoScriptGeneratorTest {
             classes
                 .loadClass("ModelJarsDemo$AnswerStream")
                 .getDeclaredConstructor(
-                    java.util.function.Consumer.class, boolean.class, String.class);
+                    java.util.function.Consumer.class, boolean.class, String.class, String.class);
         ctor.setAccessible(true);
         var prompt =
             org.modeljars.QualifiedChatTemplates.resolve(qualification.promptTemplate())
@@ -355,7 +355,10 @@ class DemoScriptGeneratorTest {
           var stream =
               (com.integrallis.models.api.TokenStream)
                   ctor.newInstance(
-                      (java.util.function.Consumer<String>) answer::append, false, prompt);
+                      (java.util.function.Consumer<String>) answer::append,
+                      false,
+                      prompt,
+                      descriptor.markerCoordinate().toString());
           for (char c : raw.toCharArray()) stream.onToken(String.valueOf(c));
           stream.onComplete();
           assertEquals("Paris", answer.toString(), descriptor.alias() + " / " + tag);
@@ -364,7 +367,10 @@ class DemoScriptGeneratorTest {
             var directStream =
                 (com.integrallis.models.api.TokenStream)
                     ctor.newInstance(
-                        (java.util.function.Consumer<String>) direct::append, false, prompt);
+                        (java.util.function.Consumer<String>) direct::append,
+                        false,
+                        prompt,
+                        descriptor.markerCoordinate().toString());
             directStream.onToken("Paris");
             assertEquals("", direct.toString(), "ambiguous channel output waits for completion");
             directStream.onComplete(

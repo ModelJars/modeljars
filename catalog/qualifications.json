@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-30T22:22:55.051547Z",
+  "generatedAt": "2026-10-31T04:04:41Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "1955b55ba16f9a2cd90655be3ac7323f3efa452a",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 79,
+  "qualifiedModels": 80,
   "rejectedModels": 1,
   "entries": [
     {
@@ -4105,6 +4105,67 @@
         "modelsRevision": "d850ad8a5b8bbbf7d1475cc54a07d1459cfb36cb",
         "backendVersion": "models@0.5.7+vibethinker1-ec3ae4ff2fd3"
       }
+    },
+    {
+      "modelId": "hkust_aaron_edgerock_4b_gguf_q4_k_m",
+      "model": "EdgeRock-4B GGUF Q4_K_M",
+      "backend": "rust-ffm",
+      "backendVersion": "models@dc42095b177dbb254860368b52f92be9b06a102a",
+      "workload": "general",
+      "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+      "promptTemplate": "edgerock",
+      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v24",
+      "artifactSha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+      "artifactSizeBytes": 2936478592,
+      "reportSha256": "72c13bb062b823d9322050023e60a2fe1eff77ae25476d1879dbe6139b6b4ba1",
+      "performanceTier": "PERFORMANCE_REDUCED",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "attempts": 27,
+      "p95RetrievalMillis": 4.15307,
+      "p95TtftMillis": 5035.8870916,
+      "p95TpotMillis": 78.70737104702886,
+      "p95EndToEndMillis": 25081.2688982,
+      "p50PrefillTokensPerSecond": 37.938866478849896,
+      "p50DecodeTokensPerSecond": 13.021041449588271,
+      "peakRssBytes": 4406317056,
+      "correctAnswerRate": 1.0,
+      "rawCorrectAnswerRate": 0.8888888888888888,
+      "abstentionAccuracy": 1.0,
+      "modelAnswerRate": 0.6666666666666666,
+      "modelAnswerCorrectRate": 1.0,
+      "extractiveFallbackRate": 0.2222222222222222,
+      "environment": {
+        "hostname": "edgerock-qual",
+        "osName": "Linux",
+        "osVersion": "6.8.0-138-generic",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC-Milan Processor",
+        "availableProcessors": 8,
+        "totalMemoryBytes": 32857436160,
+        "maxHeapBytes": 8216641536,
+        "javaVersion": "25.0.5",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "report": "benchmark-results/certified-20261030/rag/hkust-aaron-edgerock-4b-gguf-q4_k_m/hkust-aaron-edgerock-4b-gguf-q4_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+        "report": "benchmark-results/certified-20261030/rag/hkust-aaron-edgerock-4b-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "a50c1f9c1e9bd766fb9032e1dbfc719a82fc704fa62394439e7fe7166ff5d40f",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      },
+      "policyVersion": "production-rag-publisher-reference-v1",
+      "contextLength": 2048,
+      "qualificationEvidence": {
+        "report": "benchmark-results/certified-20261030/rag/hkust-aaron-edgerock-4b-gguf-q4_k_m/qualification.json",
+        "reportSha256": "3c0523bcec9aac7bd8b49beb7bc27a387b224dd9eb64579ef3530b0e33dc633f"
+      },
+      "modelsRevision": "13aef240f42d11e542c6e3c90a0938411b84c4f4"
     }
   ]
 }

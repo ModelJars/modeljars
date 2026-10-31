@@ -22945,6 +22945,50 @@
         "expertUsedCount": 6,
         "attentionBlockCount": 49
       }
+    },
+    {
+      "id": "hkust_aaron_edgerock_4b_gguf_q4_k_m",
+      "name": "EdgeRock-4B GGUF Q4_K_M",
+      "description": "Rock Matrix EdgeRock-4B: a Qwen3.5-family hybrid whose eight full-attention layers carry Rock Memory Anchors, a fixed-capacity learned memory read alongside a 1024-token sliding window. Served by the pure-Java Qwen3.5 decoder with the Rust quantized kernels.",
+      "sourceId": "hf://hkust-aaron/EdgeRock-4B-GGUF",
+      "sourceUri": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF",
+      "downloadUri": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF/resolve/a5e045c646b70303156394d52c2ca1e415ec1544/EdgeRock-4B-Q4_K_M.gguf",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "markerCoordinate": "org.modeljars.huggingface:hkust-aaron.edgerock-4b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "edgerock",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/EdgeRock-4B-Q4_K_M.gguf",
+      "sha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+      "sizeBytes": 2936478592,
+      "license": "LicenseRef-EdgeRock-Model-1.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 4578061568,
+        "contextLength": 262144,
+        "embeddingLength": 2560,
+        "blockCount": 32,
+        "attentionHeadCount": 16,
+        "keyValueHeadCount": 4,
+        "keyLength": 256,
+        "valueLength": 256,
+        "feedForwardLength": 9216,
+        "attentionBlockCount": 8
+      },
+      "catalogPublishedAt": "2026-10-31T04:00:01Z"
     }
   ]
 }

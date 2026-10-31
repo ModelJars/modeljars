@@ -51,6 +51,10 @@
         "flint": [
           "backend-java:com.integrallis.models.backend.purejava.flint.FlintForwardPass",
           "backend-java:com.integrallis.models.backend.purejava.FlintDecoderAdapter"
+        ],
+        "edgerock": [
+          "backend-java:com.integrallis.models.backend.purejava.qwen35.Qwen35ForwardPass",
+          "backend-java:com.integrallis.models.backend.purejava.edgerock.EdgeRockMemory"
         ]
       }
     },

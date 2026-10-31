@@ -9,6 +9,10 @@ on:
     - cron: "17 6 * * *"
   workflow_dispatch:
     inputs:
+      reasoning_audit:
+        description: Run the default-answer audit for gated MobileMoE using the configured HF credential.
+        type: boolean
+        default: false
       models_smoke_revision:
         description: Optional immutable Models harness revision for the gated MobileMoE default smoke.
         required: false
@@ -23,6 +27,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gated-reasoning-audit:
+    if: github.event_name == 'workflow_dispatch' && inputs.reasoning_audit
+    name: Gated MobileMoE reasoning display
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Install JBang
+        run: |
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          echo "$HOME/.jbang/bin" >> "$GITHUB_PATH"
+      - name: Exercise the released model with default answer display
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          JAVA_TOOL_OPTIONS: -Xmx8g -Dmodels.native.kernels.threads=8 -Dmodels.purejava.maxContextLength=2048 -Dmodeljars.demo.maxTokens=512
+        run: |
+          mkdir -p reasoning-results
+          jbang tools/reasoning-audit/ReasoningCatalogProbe.java \
+            facebook_mobilemoe_s_qat_int4_g32 reasoning-results/mobilemoe.json \
+            > reasoning-results/mobilemoe.log 2>&1
+          python3 - <<'PYTHON'
+          import json
+          report = json.load(open('reasoning-results/mobilemoe.json'))
+          assert report.get('complete') and not report.get('failure'), report.get('failure')
+          assert len(report['cases']) == 3
+          assert all(c['hasFinalAnswer'] and not c['reasoningMarkerLeak'] for c in report['cases'])
+          assert all(c['stopReason'] in ('EOS', 'STOP_SEQUENCE') for c in report['cases'])
+          PYTHON
+      - name: Retain live reasoning audit evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobilemoe-reasoning-display
+          path: reasoning-results/
+          retention-days: 30
+
   gated-released-rag-smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.models_smoke_revision != ''
     name: Released MobileMoE default RAG smoke

@@ -23,6 +23,11 @@ JAVA=$WORK/jdk/bin/java
 "$JAVA" -version >"$OUT/java-version.txt" 2>&1
 sha256sum "$WORK"/lib/*.jar >"$OUT/runtime-jars.sha256"
 SHARD=$(jq -er .shard "$INPUT")
+HEAP=$(jq -r '.heap // "8g"' "$INPUT")
+MAX_TOKENS=$(jq -r '.maxTokens // 64' "$INPUT")
+CONTEXT=$(jq -r '.contextLength // 0' "$INPUT")
+JVM_ARGS=("-Xmx$HEAP" "-Dmodeljars.demo.maxTokens=$MAX_TOKENS")
+if (( CONTEXT > 0 )); then JVM_ARGS+=("-Dmodels.purejava.maxContextLength=$CONTEXT"); fi
 cp "$WORK/shard-$SHARD.txt" "$OUT/planned-models.txt"
 while IFS= read -r id; do
   [[ "$id" =~ ^[a-z0-9_]+$ ]] || exit 2
@@ -30,7 +35,7 @@ while IFS= read -r id; do
   mkdir -p "$CACHE"
   date -u +%FT%TZ >"$OUT/$id.started"
   rc=0
-  timeout --signal=TERM --kill-after=30 1200 "$JAVA" -Xmx8g --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED \
+  timeout --signal=TERM --kill-after=30 1200 "$JAVA" "${JVM_ARGS[@]}" --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED \
     -Dmodels.native.kernels.threads=8 -Dmodeljars.cache="$CACHE" -cp "$WORK/classes:$WORK/lib/*" \
     ReasoningCatalogProbe "$id" "$OUT/$id.json" >"$OUT/$id.log" 2>&1 || rc=$?
   printf '%s\n' "$rc" >"$OUT/$id.exit-code"

@@ -17,14 +17,14 @@ public class ReasoningReplay {
         for(var item:report.withArray("cases")) {
           var c=(ObjectNode)item;
           var text=new StringBuilder();
-          var display=new ModelJarsDemo.AnswerStream(text::append,false,c.path("prompt").asText());
+          var display=new ModelJarsDemo.AnswerStream(text::append,false,c.path("prompt").asText(),report.path("model").asText());
           String raw=c.path("raw").asText();
           // Character boundaries exercise delimiters independently of the original tokenizer.
           for(int i=0;i<raw.length();i++)display.onToken(raw.substring(i,i+1));
           display.onComplete(new GenerationUsage(c.path("usage").path("promptTokens").asInt(),
               c.path("usage").path("completionTokens").asInt()),StopReason.valueOf(c.path("stopReason").asText()));
           c.set("livePreviousVisible",c.get("visible"));c.put("visible",text.toString());
-          boolean leak=java.util.regex.Pattern.compile("(?i)</?(think|thinking|reasoning)>|<\\|channel>?|<channel\\|>").matcher(text).find();
+          boolean leak=java.util.regex.Pattern.compile("(?i)</?(think|thinking|reasoning)>|## Thinking|<\\|channel>?|<channel\\|>").matcher(text).find();
           c.put("reasoningMarkerLeak",leak);c.put("hasFinalAnswer",display.hasAnswer());
           c.put("status",leak?"REASONING_LEAK":!display.hasAnswer()?"NO_FINAL_ANSWER":"VISIBLE_ANSWER");
         }

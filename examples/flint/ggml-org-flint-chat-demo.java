@@ -21,11 +21,13 @@ class ModelJarsDemo {
   public static void main(String... args) {
     quietLibraries();
     var input = args.length == 0 ? "What is the capital of France? Reply with only the city name." : String.join(" ", args);
+    // This single-turn demo does not need the model's full advertised context capacity.
+    System.getProperties().putIfAbsent("models.purejava.maxContextLength", "2048");
     long loadStarted = System.nanoTime();
     try (var runtime = ModelJars.openRuntime(MODEL)) {
       long loaded = System.nanoTime();
       var prompt = runtime.chatTemplate().render(List.of(ChatMessage.user(input)));
-      int maxTokens = Integer.getInteger("modeljars.demo.maxTokens", 64);
+      int maxTokens = Integer.getInteger("modeljars.demo.maxTokens", 512);
       var options = SamplingOptions.builder().temperature(0).maxTokens(maxTokens).build();
       if (Boolean.getBoolean("modeljars.demo.diagnostics")) {
         System.err.println("Runtime: " + runtime.pipeline().diagnostics());
@@ -42,7 +44,7 @@ class ModelJarsDemo {
         System.out.flush();
         var answer = new AnswerStream(
             text -> { System.out.print(text); System.out.flush(); },
-            Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text());
+            Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text(), MODEL);
         runtime.pipeline().generate(prompt, options, answer);
         System.out.println();
         if (!answer.hasAnswer()) {
@@ -75,13 +77,14 @@ class ModelJarsDemo {
 
   // Only leading, protocol-delimited reasoning is hidden. Literal tags in answers stay text.
   static final class AnswerStream implements TokenStream {
-    private static final String[] OPEN = {"<think>", "<thinking>", "<reasoning>"};
-    private static final String[] CLOSE = {"</think>", "</thinking>", "</reasoning>"};
+    private static final String[] OPEN = {"<think>", "<thinking>", "<reasoning>", "## thinking\n"};
+    private static final String[] CLOSE = {"</think>", "</thinking>", "</reasoning>", "## final response"};
     private final java.util.function.Consumer<String> output;
     private final boolean showReasoning;
     private final StringBuilder pending = new StringBuilder();
     private final StringBuilder channelOutput = new StringBuilder();
     private boolean bufferChannels;
+    private boolean bufferImplicitReasoning;
     private final java.util.ArrayDeque<String> closers = new java.util.ArrayDeque<>();
     private final long started = System.nanoTime();
     private long firstAnswer = -1;
@@ -94,7 +97,12 @@ class ModelJarsDemo {
       this(output, showReasoning, "");
     }
     AnswerStream(java.util.function.Consumer<String> output, boolean showReasoning, String prompt) {
+      this(output, showReasoning, prompt, "");
+    }
+    AnswerStream(java.util.function.Consumer<String> output, boolean showReasoning, String prompt, String model) {
       this.output = output; this.showReasoning = showReasoning;
+      String name = model.toLowerCase(java.util.Locale.ROOT).replace('_', '-');
+      bufferImplicitReasoning = name.contains("deepseek-r1");
       String tail = prompt.stripTrailing();
       for (int i = 0; i < OPEN.length; i++) if (tail.endsWith(OPEN[i])) closers.push(CLOSE[i]);
       bufferChannels = tail.endsWith("<|channel>thought\n<channel|>");
@@ -103,7 +111,7 @@ class ModelJarsDemo {
 
     public void onToken(String token) {
       if (showReasoning) output.accept(token);
-      if (bufferChannels) { channelOutput.append(token); return; }
+      if (bufferChannels || bufferImplicitReasoning) { channelOutput.append(token); return; }
       pending.append(token); drain(false);
     }
 
@@ -141,6 +149,14 @@ class ModelJarsDemo {
       stopReason = reason; finish();
     }
     private void finish() {
+      if (bufferImplicitReasoning) {
+        // R1 can omit its opening think tag. Never stream that ambiguous prefix.
+        String text = channelOutput.toString();
+        int end = text.toLowerCase(java.util.Locale.ROOT).lastIndexOf("</think>");
+        if (end >= 0) { text = text.substring(end + "</think>".length()); reasoningSeen = true; }
+        else if (stopReason != null && stopReason != StopReason.EOS && stopReason != StopReason.STOP_SEQUENCE) return;
+        pending.append(text); channelOutput.setLength(0); bufferImplicitReasoning = false;
+      }
       if (bufferChannels) {
         // Gemma 4 may answer directly, or close a reasoning channel before answering.
         // Buffer this ambiguous protocol until completion so thought text cannot flash onscreen.

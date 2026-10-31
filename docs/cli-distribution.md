@@ -178,11 +178,16 @@ was already broadcast.
 ## Reasoning and chat-demo latency
 
 Generated chat demos stream the visible answer while separating leading `<think>` blocks from the
-terminal output. `-Dmodeljars.demo.showReasoning=true` explicitly opts into raw reasoning display.
+terminal output, including HuatuoGPT’s `## Thinking` / `## Final Response` sections.
+Gemma 4 channel output and DeepSeek R1 responses are buffered until completion because their
+reasoning boundaries can be ambiguous or omit the opening tag. Other chat answers continue to
+stream. `-Dmodeljars.demo.showReasoning=true` explicitly opts into raw reasoning display.
 They preserve the raw generated-token metrics, report the first **visible answer**
 separately from the first generated token, and report truncation or a budget exhausted before any
-answer. Hiding reasoning does not skip its computation. `-Dmodeljars.demo.maxTokens=512` changes the
-output budget explicitly; it can also increase latency.
+answer. Hiding reasoning does not skip its computation. Chat demos allow 512 generated tokens by
+default so a reasoning model can reach its answer; `-Dmodeljars.demo.maxTokens=64` sets a shorter
+budget explicitly. Generation stops earlier on EOS. The single-turn example caps context at 2048
+tokens unless `models.purejava.maxContextLength` is explicitly supplied.
 
 The demo uses the runtime's qualified configuration. A performance profile measured on an EPYC
 server is not automatically applied to an Intel laptop. To inspect the actual selected backend,

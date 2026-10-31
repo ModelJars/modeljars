@@ -174,3 +174,26 @@ gh workflow run sdkman-publish.yml --repo ModelJars/modeljars -f tag=v0.1.39
 Until approval, leave the variable absent or explicitly set it to `false`. Both `make_default` and
 `announce` default to `true` for a stable backfill. Set `announce=false` when retrying a release that
 was already broadcast.
+
+## Reasoning and chat-demo latency
+
+Generated chat demos stream the visible answer while separating leading `<think>` blocks from the
+terminal output. `-Dmodeljars.demo.showReasoning=true` explicitly opts into raw reasoning display.
+They preserve the raw generated-token metrics, report the first **visible answer**
+separately from the first generated token, and report truncation or a budget exhausted before any
+answer. Hiding reasoning does not skip its computation. `-Dmodeljars.demo.maxTokens=512` changes the
+output budget explicitly; it can also increase latency.
+
+The demo uses the runtime's qualified configuration. A performance profile measured on an EPYC
+server is not automatically applied to an Intel laptop. To inspect the actual selected backend,
+worker count and runtime environment, use `-Dmodeljars.demo.diagnostics=true`. For example:
+
+```bash
+JAVA_TOOL_OPTIONS='-Dmodels.native.kernels.threads=8 -Dmodeljars.demo.diagnostics=true' \
+  jbang ggml-org-flint-chat-demo.java
+```
+
+Eight workers is an explicit experiment on an unmatched host, not a measured universal default.
+`examples/flint/compare-threads.sh` compares 4, 8, 16 and 32 workers on the affected Linux machine
+using the accompanying demo. Each arm records a cold prompt and two repeated prompts with warm
+cache; compare like phases. The logs retain the selected runtime and full generation timings.

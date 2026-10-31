@@ -23,6 +23,9 @@ public class ReasoningCatalogProbe {
     var report = new LinkedHashMap<String,Object>();
     report.put("model",args[0]);report.put("java",System.getProperty("java.runtime.version"));
     report.put("scope","default chat-demo display; not an accuracy or performance qualification");
+    report.put("maxTokens",Integer.getInteger("modeljars.demo.maxTokens",64));
+    report.put("contextLengthProperty",System.getProperty("models.purejava.maxContextLength", "runtime-default"));
+    report.put("maxHeapBytes",Runtime.getRuntime().maxMemory());
     var cases = new ArrayList<Map<String,Object>>();report.put("cases",cases);
     var descriptor = org.modeljars.ModelJarRegistry.fromClasspath().descriptors().stream()
         .filter(d -> d.alias().equals(args[0])).findFirst().orElseThrow();
@@ -43,13 +46,13 @@ public class ReasoningCatalogProbe {
         runtime.pipeline().resetContext();
         var prompt = runtime.chatTemplate().render(List.of(ChatMessage.user(input)), tools);
         var raw = new StringBuilder();var visible = new StringBuilder();
-        var output = new ModelJarsDemo.AnswerStream(visible::append,false,prompt.text());
+        var output = new ModelJarsDemo.AnswerStream(visible::append,false,prompt.text(),descriptor.markerCoordinate().toString());
         var result = new LinkedHashMap<String,Object>();result.put("input",input);result.put("prompt",prompt.text());
         long start=System.nanoTime();
         var constraint = toolModel ? com.integrallis.models.runtime.ToolCallTokenConstraints.compile(
             runtime.tokenizer(), runtime.chatTemplate().toolSyntax(), tools, ignored -> List.of()).orElseThrow()
             : com.integrallis.models.runtime.TokenConstraint.unrestricted();
-        runtime.pipeline().generate(prompt,SamplingOptions.builder().temperature(0).maxTokens(toolModel ? 128 : 64).build(),new TokenStream(){
+        runtime.pipeline().generate(prompt,SamplingOptions.builder().temperature(0).maxTokens(toolModel ? 128 : Integer.getInteger("modeljars.demo.maxTokens",64)).build(),new TokenStream(){
           public void onToken(String text){raw.append(text);output.onToken(text);}
           public void onComplete(){output.onComplete();}
           public void onComplete(GenerationUsage usage,StopReason reason){
@@ -59,7 +62,7 @@ public class ReasoningCatalogProbe {
         },constraint);
         result.put("elapsedMillis",(System.nanoTime()-start)/1e6);
         result.put("raw",raw.toString());result.put("visible",visible.toString());
-        boolean leaked=java.util.regex.Pattern.compile("(?i)</?(think|thinking|reasoning)>|<\\|channel>?|<channel\\|>").matcher(visible).find();
+        boolean leaked=java.util.regex.Pattern.compile("(?i)</?(think|thinking|reasoning)>|## Thinking|<\\|channel>?|<channel\\|>").matcher(visible).find();
         result.put("reasoningMarkerLeak",leaked);result.put("hasFinalAnswer",output.hasAnswer());
         result.put("status",leaked?"REASONING_LEAK":!output.hasAnswer()?"NO_FINAL_ANSWER":"VISIBLE_ANSWER");
         cases.add(result);mapper.writerWithDefaultPrettyPrinter().writeValue(Path.of(args[1]).toFile(),report);
@@ -67,7 +70,7 @@ public class ReasoningCatalogProbe {
       }
       report.put("complete",true);
     } catch(Throwable failure) {
-      report.put("complete",false);report.put("failure",failure.toString());
+      report.put("complete",false);report.put("failure",failure.toString());failure.printStackTrace(System.err);
     }
     mapper.writerWithDefaultPrettyPrinter().writeValue(Path.of(args[1]).toFile(),report);
   }

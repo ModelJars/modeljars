@@ -135,7 +135,8 @@ class DemoScriptGeneratorTest {
   }
 
   @Test
-  void generatesAQualifiedHybridDemoThroughItsCompositionEntrypoint() {
+  void generatesAQualifiedHybridDemoThroughItsCompositionEntrypoint(
+      @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
     ModelJarDescriptor source = descriptor(Set.of("chat", "text-generation", "tool-calling"));
     ModelJarDescriptor hybrid =
         new ModelJarDescriptor(
@@ -173,7 +174,10 @@ class DemoScriptGeneratorTest {
         "//DEPS org.modeljars.composite:qwen3-chat-tools:0.1.38",
         "Qwen3ChatTools.open()",
         "hybrid.openSession()",
-        "conversation.generate(");
+        "conversation.generate(",
+        "new AnswerStream",
+        "modeljars.demo.showReasoning");
+    SpringFixtures.assertCompiles(demo.fileName(), demo.source(), directory);
   }
 
   @Test
@@ -239,6 +243,8 @@ class DemoScriptGeneratorTest {
               "  <think>Outer <think>nested</think> reasoning.</think>\nParis", "Paris",
               "<think>one</think><think>two</think>Paris", "Paris",
               "<think>unfinished reasoning", "",
+              "## Thinking\n\nInternal analysis.\n\n## Final Response\nParis", "Paris",
+              "## Thinking\nunfinished reasoning", "",
               "<THINK>analysis</THINK>Paris", "Paris",
               "Paris", "Paris",
               "The literal tag <think> is text here.", "The literal tag <think> is text here.",
@@ -263,6 +269,26 @@ class DemoScriptGeneratorTest {
               constructor.newInstance((java.util.function.Consumer<String>) answer::append);
       for (char c : "<think>hidden</think>Paris".toCharArray()) stream.onToken(String.valueOf(c));
       assertEquals("Paris", answer.toString(), "visible answer must stream before completion");
+      var implicit =
+          type.getDeclaredConstructor(
+              java.util.function.Consumer.class, boolean.class, String.class, String.class);
+      implicit.setAccessible(true);
+      var implicitAnswer = new StringBuilder();
+      var implicitStream =
+          (com.integrallis.models.api.TokenStream)
+              implicit.newInstance(
+                  (java.util.function.Consumer<String>) implicitAnswer::append,
+                  false,
+                  "",
+                  "deepseek_r1_distill_qwen");
+      for (char c : "Unmarked internal reasoning.</think>Paris".toCharArray())
+        implicitStream.onToken(String.valueOf(c));
+      assertEquals(
+          "", implicitAnswer.toString(), "implicit reasoning cannot flash before completion");
+      implicitStream.onComplete(
+          new com.integrallis.models.api.GenerationUsage(16, 45),
+          com.integrallis.models.api.StopReason.EOS);
+      assertEquals("Paris", implicitAnswer.toString());
       var explicit = type.getDeclaredConstructor(java.util.function.Consumer.class, boolean.class);
       explicit.setAccessible(true);
       var raw = new StringBuilder();

@@ -212,11 +212,13 @@ final class DemoScriptGenerator {
           public static void main(String... args) {
             quietLibraries();
             var input = args.length == 0 ? "%s" : String.join(" ", args);
+            // This single-turn demo does not need the model's full advertised context capacity.
+            System.getProperties().putIfAbsent("models.purejava.maxContextLength", "2048");
             long loadStarted = System.nanoTime();
             try (var runtime = ModelJars.openRuntime(MODEL)) {
               long loaded = System.nanoTime();
               var prompt = runtime.chatTemplate().render(List.of(ChatMessage.user(input)));
-              int maxTokens = Integer.getInteger("modeljars.demo.maxTokens", 64);
+              int maxTokens = Integer.getInteger("modeljars.demo.maxTokens", 512);
               var options = SamplingOptions.builder().temperature(0).maxTokens(maxTokens).build();
               if (Boolean.getBoolean("modeljars.demo.diagnostics")) {
                 System.err.println("Runtime: " + runtime.pipeline().diagnostics());
@@ -233,7 +235,7 @@ final class DemoScriptGenerator {
                 System.out.flush();
                 var answer = new AnswerStream(
                     text -> { System.out.print(text); System.out.flush(); },
-                    Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text());
+                    Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text(), MODEL);
                 runtime.pipeline().generate(prompt, options, answer);
                 System.out.println();
                 if (!answer.hasAnswer()) {
@@ -280,13 +282,14 @@ final class DemoScriptGenerator {
     return """
           // Only leading, protocol-delimited reasoning is hidden. Literal tags in answers stay text.
           static final class AnswerStream implements TokenStream {
-            private static final String[] OPEN = {"<think>", "<thinking>", "<reasoning>"};
-            private static final String[] CLOSE = {"</think>", "</thinking>", "</reasoning>"};
+            private static final String[] OPEN = {"<think>", "<thinking>", "<reasoning>", "## thinking\\n"};
+            private static final String[] CLOSE = {"</think>", "</thinking>", "</reasoning>", "## final response"};
             private final java.util.function.Consumer<String> output;
             private final boolean showReasoning;
             private final StringBuilder pending = new StringBuilder();
             private final StringBuilder channelOutput = new StringBuilder();
             private boolean bufferChannels;
+            private boolean bufferImplicitReasoning;
             private final java.util.ArrayDeque<String> closers = new java.util.ArrayDeque<>();
             private final long started = System.nanoTime();
             private long firstAnswer = -1;
@@ -299,7 +302,12 @@ final class DemoScriptGenerator {
               this(output, showReasoning, "");
             }
             AnswerStream(java.util.function.Consumer<String> output, boolean showReasoning, String prompt) {
+              this(output, showReasoning, prompt, "");
+            }
+            AnswerStream(java.util.function.Consumer<String> output, boolean showReasoning, String prompt, String model) {
               this.output = output; this.showReasoning = showReasoning;
+              String name = model.toLowerCase(java.util.Locale.ROOT).replace('_', '-');
+              bufferImplicitReasoning = name.contains("deepseek-r1");
               String tail = prompt.stripTrailing();
               for (int i = 0; i < OPEN.length; i++) if (tail.endsWith(OPEN[i])) closers.push(CLOSE[i]);
               bufferChannels = tail.endsWith("<|channel>thought\\n<channel|>");
@@ -308,7 +316,7 @@ final class DemoScriptGenerator {
 
             public void onToken(String token) {
               if (showReasoning) output.accept(token);
-              if (bufferChannels) { channelOutput.append(token); return; }
+              if (bufferChannels || bufferImplicitReasoning) { channelOutput.append(token); return; }
               pending.append(token); drain(false);
             }
 
@@ -346,6 +354,14 @@ final class DemoScriptGenerator {
               stopReason = reason; finish();
             }
             private void finish() {
+              if (bufferImplicitReasoning) {
+                // R1 can omit its opening think tag. Never stream that ambiguous prefix.
+                String text = channelOutput.toString();
+                int end = text.toLowerCase(java.util.Locale.ROOT).lastIndexOf("</think>");
+                if (end >= 0) { text = text.substring(end + "</think>".length()); reasoningSeen = true; }
+                else if (stopReason != null && stopReason != StopReason.EOS && stopReason != StopReason.STOP_SEQUENCE) return;
+                pending.append(text); channelOutput.setLength(0); bufferImplicitReasoning = false;
+              }
               if (bufferChannels) {
                 // Gemma 4 may answer directly, or close a reasoning channel before answering.
                 // Buffer this ambiguous protocol until completion so thought text cannot flash onscreen.
@@ -383,6 +399,9 @@ final class DemoScriptGenerator {
     return directives(descriptor, false)
         + """
         import com.integrallis.models.api.SamplingOptions;
+        import com.integrallis.models.api.GenerationUsage;
+        import com.integrallis.models.api.StopReason;
+        import com.integrallis.models.api.TokenStream;
         import com.integrallis.models.runtime.chat.ChatMessage;
         import java.util.List;
         import java.util.logging.Level;
@@ -393,24 +412,29 @@ final class DemoScriptGenerator {
           public static void main(String... args) {
             quietLibraries();
             var input = args.length == 0 ? "%s" : String.join(" ", args);
-            var options = SamplingOptions.builder().temperature(0).maxTokens(64).build();
+            var options = SamplingOptions.builder().temperature(0).maxTokens(Integer.getInteger("modeljars.demo.maxTokens", 512)).build();
 
             System.out.println("Input:  " + input);
             try (var hybrid = Qwen3ChatTools.open();
                  var conversation = hybrid.openSession()) {
               var answer = conversation.generate(ChatMessage.user(input), List.of(), options);
               System.out.println("Route:  " + answer.taskType());
-              System.out.println("Output: " + answer.content());
+              var visible = new StringBuilder();
+              var display = new AnswerStream(visible::append, Boolean.getBoolean("modeljars.demo.showReasoning"));
+              display.onToken(answer.content());
+              display.onComplete();
+              System.out.println("Output: " + visible);
             }
           }
 
+        %s
           private static void quietLibraries() {
             Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
             Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
           }
         }
         """
-            .formatted(javaString(defaultInput));
+            .formatted(javaString(defaultInput), answerStreamSource());
   }
 
   private String graniteSource(ModelJarDescriptor descriptor, String defaultInput) {
@@ -675,7 +699,7 @@ final class DemoScriptGenerator {
               var output = runtime.pipeline().generate(prompt, options, constraint);
               var visible = new StringBuilder();
               var display = new AnswerStream(visible::append,
-                  Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text());
+                  Boolean.getBoolean("modeljars.demo.showReasoning"), prompt.text(), MODEL);
               display.onToken(output);
               display.onComplete();
               System.out.println("Model output: " + visible.toString().strip());

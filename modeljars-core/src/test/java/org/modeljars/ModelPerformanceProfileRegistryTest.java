@@ -41,6 +41,24 @@ class ModelPerformanceProfileRegistryTest {
           "org.modeljars.huggingface:huggingfacetb.smollm2-360m-instruct-gguf.q8_0:2.0.0-q8_0.1");
 
   @Test
+  void qwenQ5ProfileSelectsOnlyExistingSettingsForItsMeasuredHost() {
+    ModelPerformanceProfile profile =
+        ModelPerformanceProfileRegistry.fromClasspath().profiles().stream()
+            .filter(p -> p.id().equals("qwen25_05b_q5_k_m_epyc7r13_jdk25_fused_pool8"))
+            .findFirst()
+            .orElseThrow();
+    assertEquals(
+        Map.of(
+            "models.native.kernels.threads", "8", "models.purejava.fusedGroupedAttention", "true"),
+        profile.recommendations());
+    assertEquals("AMD EPYC 7R13 Processor", profile.runtimeSelector().get("cpu-model"));
+    assertEquals("16", profile.runtimeSelector().get("processors"));
+    assertEquals("25.0.3+9-LTS", profile.runtimeSelector().get("vm-version"));
+    assertTrue(profile.javaLaunch().isEmpty());
+    assertTrue(profile.safeForAutomaticSelection());
+  }
+
+  @Test
   void loadsTypedEvidenceAndMatchesOnlyTheExactArtifactAndRuntime() {
     ModelPerformanceProfileRegistry registry =
         ModelPerformanceProfileRegistry.fromProperties(profileProperties(true));

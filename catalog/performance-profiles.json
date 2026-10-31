@@ -4556,6 +4556,71 @@
           "rssClaim": "none"
         }
       }
+    },
+    {
+      "id": "qwen25_05b_q5_k_m_epyc7r13_jdk25_fused_pool8",
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_k_m",
+      "markerCoordinate": "org.modeljars.huggingface:qwen.qwen2.5-0.5b-instruct-gguf.q5_k_m:2.5.0-q5_k_m.1",
+      "artifactSha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+      "backend": "rust-ffm",
+      "selector": {
+        "os": "Linux",
+        "architecture": "amd64",
+        "cpu-model": "AMD EPYC 7R13 Processor",
+        "processors": "16",
+        "java-feature": "25",
+        "compiler": "hotspot-c2",
+        "vm-version": "25.0.3+9-LTS",
+        "active-vector-bits": "256"
+      },
+      "recommendations": {
+        "models.native.kernels.threads": "8",
+        "models.purejava.fusedGroupedAttention": "true"
+      },
+      "evidence": {
+        "benchmarkId": "qwen05-q5-fused-attention-pool-20261031",
+        "measuredAt": "2026-10-31T19:27:38.886361910Z",
+        "baseline": "released-models-0.5.9-fused-native16-decode8",
+        "candidate": "released-models-0.5.9-fused-native8-decode8",
+        "warmups": 1,
+        "trials": 27,
+        "generatedTokens": 621,
+        "outputHashesMatch": true,
+        "baselineMetrics": {
+          "medianDecodeTokensPerSecond": 63.65795491002654,
+          "medianPrefillTokensPerSecond": 279.99831064899854,
+          "p95TtftMillis": 413.874723,
+          "p95EndToEndMillis": 904.9345556999999,
+          "peakRssBytes": 897511424
+        },
+        "candidateMetrics": {
+          "medianDecodeTokensPerSecond": 64.80801632388636,
+          "medianPrefillTokensPerSecond": 252.78755076684985,
+          "p95TtftMillis": 329.2701608,
+          "p95EndToEndMillis": 764.7312039999999,
+          "peakRssBytes": 915173376
+        },
+        "controls": {
+          "modelsVersion": "0.5.9",
+          "vectorsVersion": "0.1.32",
+          "modelsEvidenceRevision": "f746a1102efe9a28c97f2db6d438f3dfc50c394e",
+          "javaThreads": "16",
+          "referenceThreads": "16",
+          "contextLength": "2048",
+          "maxTokens": "256",
+          "template": "chatml",
+          "workload": "general",
+          "artifactSha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+          "nativePoolComparison": "https://github.com/integrallis/models/tree/f746a1102efe9a28c97f2db6d438f3dfc50c394e/benchmark-results/2026-10-31-qwen05-q5-attention-pool",
+          "fusedAttentionComparison": "https://github.com/integrallis/models/tree/f746a1102efe9a28c97f2db6d438f3dfc50c394e/benchmark-results/2026-10-31-qwen05-q5-attention",
+          "independentComparisons": "Fused attention isolated at pool16/decode8; native pool isolated with fused attention fixed. Every timing comparison is same-host.",
+          "confirmationResults": "Selected screen and both fresh confirmations pass unchanged production gates.",
+          "outputHashScope": "Raw generated UTF-8 text, output-token counts, prompts and evaluations match; token IDs are not retained.",
+          "decodeThreadSelection": "With native pool8 and no decode override, the released loader defaults decode workers to8.",
+          "qualificationScope": "Linux AMD EPYC7R13 16vCPU, Temurin25.0.3+9-LTS, nine general RAG cases. No broad accuracy or other-hardware claim.",
+          "outputSignatureSha256": "0332525568c215f1ae44e007b855cc1eee90c63ca68a0169db5e03a98cd39ec1"
+        }
+      }
     }
   ]
 }

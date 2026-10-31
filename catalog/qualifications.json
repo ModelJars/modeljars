@@ -4165,7 +4165,7 @@
         "report": "benchmark-results/certified-20261030/rag/hkust-aaron-edgerock-4b-gguf-q4_k_m/qualification.json",
         "reportSha256": "3c0523bcec9aac7bd8b49beb7bc27a387b224dd9eb64579ef3530b0e33dc633f"
       },
-      "modelsRevision": "13aef240f42d11e542c6e3c90a0938411b84c4f4"
+      "modelsRevision": "d7b7b2cd1915cc2c0c203279e762895c372b61a4"
     }
   ]
 }

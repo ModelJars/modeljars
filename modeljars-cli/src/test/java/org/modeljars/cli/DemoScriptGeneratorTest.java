@@ -333,6 +333,19 @@ class DemoScriptGeneratorTest {
           for (char c : raw.toCharArray()) stream.onToken(String.valueOf(c));
           stream.onComplete();
           assertEquals("Paris", answer.toString(), descriptor.alias() + " / " + tag);
+          if (prompt.contains("<|channel>thought")) {
+            var direct = new StringBuilder();
+            var directStream =
+                (com.integrallis.models.api.TokenStream)
+                    ctor.newInstance(
+                        (java.util.function.Consumer<String>) direct::append, false, prompt);
+            directStream.onToken("Paris");
+            assertEquals("", direct.toString(), "ambiguous channel output waits for completion");
+            directStream.onComplete(
+                new com.integrallis.models.api.GenerationUsage(16, 1),
+                com.integrallis.models.api.StopReason.EOS);
+            assertEquals("Paris", direct.toString(), "direct Gemma answer must survive filtering");
+          }
         }
       }
     }

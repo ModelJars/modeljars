@@ -2,9 +2,29 @@ import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
 export const PUBLISHER_RAG_POLICY = "production-rag-publisher-reference-v1";
-const BONSAI = "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0";
-const ARTIFACT = "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3";
-const REFERENCE = "PrismML-Eng/llama.cpp@e8fd209c975c80aa7fb36a8423571ff3b1b7e955";
+// One reviewed reference per artifact, not one per backend. A llama.cpp comparator is refused by
+// default and admitted only for an artifact that appears here, which is why this is a table rather
+// than a flag: the review is of a specific publisher build against a specific file.
+//
+// Mirrors RagPublisherReference in the models repository. The digests are duplicated across the two
+// repositories by necessity -- this gate reads a catalog and cannot call into Java -- so a change
+// to either has to be made in both, and the Java side has a test pinning its own strings.
+const PUBLISHER_REFERENCES = {
+  prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0: {
+    artifactSha256: "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+    artifactSizeBytes: 5946648928,
+    comparatorBackendVersion: "PrismML-Eng/llama.cpp@e8fd209c975c80aa7fb36a8423571ff3b1b7e955",
+  },
+  // EdgeRock pins a patch as well as a revision: upstream llama.cpp at that commit carries no
+  // edgerock architecture, so the commit alone would name a build that cannot load the artifact.
+  hkust_aaron_edgerock_4b_gguf_q4_k_m: {
+    artifactSha256: "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+    artifactSizeBytes: 2936478592,
+    comparatorBackendVersion:
+      "ggml-org/llama.cpp@62318cd57dc63900ecb153272c0b10f78550855d" +
+      "+edgerock-rma@6a4c32359d88c84a8cee2a6920847220da61d7931d406dc2c0970f0da9dbf20f",
+  },
+};
 
 function require(value, message) {
   if (!value) throw new Error(`Publisher-reference qualification: ${message}`);
@@ -21,8 +41,12 @@ function binding(value) {
 /** Bind the exceptional policy to its exact artifact, pinned reference and hash-verified verdict. */
 export async function validatePublisherReference(entry, revision, loadReport) {
   if (entry.policyVersion !== PUBLISHER_RAG_POLICY) return;
-  require(entry.modelId === BONSAI && entry.artifactSha256 === ARTIFACT &&
-    entry.artifactSizeBytes === 5946648928, "unreviewed artifact");
+  // Refused unless this exact artifact has a reviewed reference. An unknown model on this policy
+  // is a reviewer's omission, not a default to fall through.
+  const reviewed = PUBLISHER_REFERENCES[entry.modelId];
+  require(reviewed, `unreviewed artifact: no publisher reference for ${entry.modelId}`);
+  require(entry.artifactSha256 === reviewed.artifactSha256 &&
+    entry.artifactSizeBytes === reviewed.artifactSizeBytes, "unreviewed artifact");
   const receipt = binding(entry.qualificationEvidence);
   if (!loadReport) return;
   const read = async (reference) => {
@@ -41,9 +65,11 @@ export async function validatePublisherReference(entry, revision, loadReport) {
   require(evidence.comparators?.length === 1, "exactly one publisher comparator is required");
   const candidate = await read(evidence.candidate);
   const comparator = await read(evidence.comparators[0]);
+  const reference = reviewed;
   for (const report of [candidate, comparator]) {
-    require(report.modelId === BONSAI && report.artifactSha256 === ARTIFACT &&
-      report.artifactSizeBytes === 5946648928, "report artifact differs");
+    require(report.modelId === entry.modelId &&
+      report.artifactSha256 === reference.artifactSha256 &&
+      report.artifactSizeBytes === reference.artifactSizeBytes, "report artifact differs");
     require(Array.isArray(report.failures) && report.failures.length === 0, "runtime failures");
     require(report.summary?.totalAttempts >= 27 && report.summary.successfulAttempts === report.summary.totalAttempts &&
       report.runs?.length === report.summary.totalAttempts, "incomplete request evidence");
@@ -54,7 +80,8 @@ export async function validatePublisherReference(entry, revision, loadReport) {
   require(Number.isSafeInteger(entry.contextLength) && entry.contextLength > 0 &&
     entry.contextLength === candidate.settings?.contextLength, "tested context differs from catalog");
   require(candidate.backend === entry.backend && candidate.backendVersion === entry.backendVersion, "candidate runtime differs");
-  require(comparator.backend === "llama.cpp" && comparator.backendVersion === REFERENCE, "unpinned publisher comparator");
+  require(comparator.backend === "llama.cpp" &&
+    comparator.backendVersion === reference.comparatorBackendVersion, "unpinned publisher comparator");
   for (const key of ["hostname", "osName", "architecture", "cpuModel", "availableProcessors", "totalMemoryBytes"])
     require(candidate.environment?.[key] !== undefined &&
       isDeepStrictEqual(candidate.environment[key], comparator.environment?.[key]), `host differs: ${key}`);

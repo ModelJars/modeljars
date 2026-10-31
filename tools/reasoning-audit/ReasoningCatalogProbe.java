@@ -1,3 +1,9 @@
+//JAVA 25+
+//DEPS org.modeljars:modeljars:0.1.71
+//DEPS org.modeljars:modeljars-catalog:0.1.71
+//DEPS com.fasterxml.jackson.core:jackson-databind:2.22.3
+//SOURCES ../../examples/flint/ggml-org-flint-chat-demo.java
+//RUNTIME_OPTIONS --add-modules=jdk.incubator.vector --enable-native-access=ALL-UNNAMED
 /* Copyright 2026 Integrallis Software, LLC. SPDX-License-Identifier: Apache-2.0 */
 import com.integrallis.models.api.*;
 import com.integrallis.models.runtime.chat.ChatMessage;

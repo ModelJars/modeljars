@@ -9,6 +9,10 @@ on:
     - cron: "17 6 * * *"
   workflow_dispatch:
     inputs:
+      quality_audit:
+        description: Compare MobileMoE default chat with the pinned publisher on eight fixed questions.
+        type: boolean
+        default: false
       reasoning_audit:
         description: Run the default-answer audit for gated MobileMoE using the configured HF credential.
         type: boolean
@@ -27,6 +31,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gated-quality-audit:
+    if: github.event_name == 'workflow_dispatch' && inputs.quality_audit
+    name: Paired MobileMoE answer quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Install JBang and pinned publisher dependencies
+        run: |
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          echo "$HOME/.jbang/bin" >> "$GITHUB_PATH"
+          python3 -m venv "$RUNNER_TEMP/oracle-venv"
+          "$RUNNER_TEMP/oracle-venv/bin/pip" install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+          "$RUNNER_TEMP/oracle-venv/bin/pip" install transformers==4.57.6 tokenizers==0.22.2 safetensors==0.7.0 numpy==2.2.6
+      - name: Measure released runtime and independent publisher
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          JAVA_TOOL_OPTIONS: -Xmx8g -Dmodels.native.kernels.threads=4 -Dmodels.purejava.maxContextLength=2048 -Dmodeljars.cache=${{ runner.temp }}/quality-cache
+        run: |
+          mkdir -p quality-results
+          jbang tools/reasoning-audit/QualityCatalogProbe.java tools/reasoning-audit/mobilemoe-quality.json quality-results/mobilemoe.json > quality-results/mobilemoe.log 2>&1
+          "$RUNNER_TEMP/oracle-venv/bin/python" tools/reasoning-audit/mobilemoe-quality-reference.py --cache "$RUNNER_TEMP/quality-cache" --report quality-results/mobilemoe.json > quality-results/reference.log 2>&1
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mobilemoe-paired-quality
+          path: quality-results/
+          retention-days: 30
+
   gated-reasoning-audit:
     if: github.event_name == 'workflow_dispatch' && inputs.reasoning_audit
     name: Gated MobileMoE reasoning display

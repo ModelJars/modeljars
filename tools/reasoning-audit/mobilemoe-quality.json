@@ -1,0 +1,60 @@
+{
+  "id": "facebook_mobilemoe_s_qat_int4_g32",
+  "sha256": "1a54d8eb2adf19c296a1c129f9cd7d7395c21f5facfc6d13d2945e002d55e37d",
+  "sizeBytes": 713916240,
+  "uri": "https://huggingface.co/facebook/MobileMoE-S-QAT/resolve/afda132cad380ac47da5ef055f186884d1c12f65/model.safetensors",
+  "maxTokens": 512,
+  "modes": [
+    {
+      "name": "published-default",
+      "template": "qualified"
+    },
+    {
+      "name": "canonical-concise",
+      "template": "mobilemoe",
+      "system": "Answer the user directly and follow the requested output format. Do not include reasoning or repeat the question. For questions about supplied context, use only that context; if the answer is absent, reply UNKNOWN."
+    }
+  ],
+  "cases": [
+    {
+      "id": "capital",
+      "input": "What is the capital of France? Reply with only the city name.",
+      "expected": "Paris"
+    },
+    {
+      "id": "sum",
+      "input": "What is 17 + 25? Reply with only the number.",
+      "expected": "42"
+    },
+    {
+      "id": "missing-price",
+      "input": "Context: The museum closes at 6 PM on Fridays. What is the admission price? Reply UNKNOWN if the context does not say.",
+      "expected": "UNKNOWN"
+    },
+    {
+      "id": "capital-holdout",
+      "input": "What is the capital of Japan? Reply with only the city name.",
+      "expected": "Tokyo"
+    },
+    {
+      "id": "sum-holdout",
+      "input": "What is 23 + 19? Reply with only the number.",
+      "expected": "42"
+    },
+    {
+      "id": "subtract-holdout",
+      "input": "What is 81 - 36? Reply with only the number.",
+      "expected": "45"
+    },
+    {
+      "id": "supported-price",
+      "input": "Context: Museum admission costs 12 dollars. How much does admission cost? Reply with only the number.",
+      "expected": "12"
+    },
+    {
+      "id": "missing-time",
+      "input": "Context: The library has four floors. What time does it open? Reply UNKNOWN if the context does not say.",
+      "expected": "UNKNOWN"
+    }
+  ]
+}

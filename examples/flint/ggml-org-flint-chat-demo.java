@@ -80,6 +80,8 @@ class ModelJarsDemo {
     private final java.util.function.Consumer<String> output;
     private final boolean showReasoning;
     private final StringBuilder pending = new StringBuilder();
+    private final StringBuilder channelOutput = new StringBuilder();
+    private boolean bufferChannels;
     private final java.util.ArrayDeque<String> closers = new java.util.ArrayDeque<>();
     private final long started = System.nanoTime();
     private long firstAnswer = -1;
@@ -95,12 +97,13 @@ class ModelJarsDemo {
       this.output = output; this.showReasoning = showReasoning;
       String tail = prompt.stripTrailing();
       for (int i = 0; i < OPEN.length; i++) if (tail.endsWith(OPEN[i])) closers.push(CLOSE[i]);
-      if (tail.endsWith("<|channel>thought\n<channel|>")) closers.push("<channel|>");
+      bufferChannels = tail.endsWith("<|channel>thought\n<channel|>");
       reasoningSeen = !closers.isEmpty();
     }
 
     public void onToken(String token) {
       if (showReasoning) output.accept(token);
+      if (bufferChannels) { channelOutput.append(token); return; }
       pending.append(token); drain(false);
     }
 
@@ -133,9 +136,25 @@ class ModelJarsDemo {
     String firstAnswerMillis() {
       return hasAnswer() ? ((firstAnswer - started) / 1_000_000) + " ms" : "n/a";
     }
-    public void onComplete() { drain(true); }
+    public void onComplete() { finish(); }
     public void onComplete(GenerationUsage usage, StopReason reason) {
-      stopReason = reason; drain(true);
+      stopReason = reason; finish();
+    }
+    private void finish() {
+      if (bufferChannels) {
+        // Gemma 4 may answer directly, or close a reasoning channel before answering.
+        // Buffer this ambiguous protocol until completion so thought text cannot flash onscreen.
+        if (stopReason != null && stopReason != StopReason.EOS && stopReason != StopReason.STOP_SEQUENCE) return;
+        String text = channelOutput.toString();
+        int boundary = text.lastIndexOf("<channel|>");
+        if (boundary >= 0) {
+          String after = text.substring(boundary + "<channel|>".length());
+          if (!after.isBlank()) { text = after; reasoningSeen = true; }
+          else text = text.substring(0, boundary);
+        }
+        pending.append(text); channelOutput.setLength(0); bufferChannels = false;
+      }
+      drain(true);
     }
     public void onError(Throwable failure) { throw new IllegalStateException("Generation failed", failure); }
   }

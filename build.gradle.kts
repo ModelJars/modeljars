@@ -46,6 +46,20 @@ val MINIMUM_MODEL_ANSWER_RATE = 1.0 / 3.0
 val MINIMUM_MODEL_ANSWER_CORRECT_RATE = 0.90
 val PRODUCTION_RAG_POLICY_VERSION = "production-rag-model-contribution-v6"
 val PUBLISHER_RAG_POLICY_VERSION = "production-rag-publisher-reference-v1"
+
+// The artifacts reviewed for the publisher-reference policy, as (sha256, sizeBytes) by model id.
+// The policy admits a comparator that is not a stock engine, so it is granted per artifact after
+// review and never to a backend in general.
+val PUBLISHER_RAG_REVIEWED_ARTIFACTS = mapOf(
+    "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0" to Pair(
+        "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3",
+        5_946_648_928L,
+    ),
+    "hkust_aaron_edgerock_4b_gguf_q4_k_m" to Pair(
+        "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+        2_936_478_592L,
+    ),
+)
 val PRODUCTION_TOOL_POLICY_VERSION = "needle2-tool-conformance-v2"
 
 fun directPomDependencies(document: Document): NodeList =
@@ -2889,12 +2903,20 @@ ragQualifications?.let { qualifications ->
             "Recorded qualification contextLength must be positive for ${qualification.modelId}"
         }
         if (qualification.policyVersion == PUBLISHER_RAG_POLICY_VERSION) {
+            // One reviewed artifact per entry on this policy, not one artifact for the policy.
+            // This was bound to Bonsai alone, which made the exceptional-comparator route
+            // unusable by any second model. Mirrors PUBLISHER_REFERENCES in
+            // tools/rag-publisher-reference-gate.mjs and RagPublisherReference in the models
+            // repository; a change belongs in all three.
+            val reviewed = PUBLISHER_RAG_REVIEWED_ARTIFACTS[qualification.modelId]
+            require(reviewed != null) {
+                "Publisher-reference policy has no reviewed artifact for ${qualification.modelId}"
+            }
             require(
-                qualification.modelId == "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0" &&
-                    qualification.artifactSha256 == "53107f530aa52eb00912263ab1ee29bd199261c87cd7b4ad4ca1318c1fe33ee3" &&
-                    qualification.artifactSizeBytes == 5_946_648_928L,
+                qualification.artifactSha256 == reviewed!!.first &&
+                    qualification.artifactSizeBytes == reviewed.second,
             ) {
-                "Publisher-reference policy is bound to the reviewed Bonsai PTQ artifact"
+                "Publisher-reference artifact differs from the reviewed one for ${qualification.modelId}"
             }
         }
         val model =

@@ -1,0 +1,3959 @@
+{
+  "catalogSha256": "b3a79f3f20e9db08429486e3a0e5a7edf1572038c6715bf3fec8fd3458c2ec88",
+  "catalogSourceCommit": "824b195670ccef8d63400a33bd34a2f09afc39a6",
+  "models": [
+    {
+      "modelId": "bartowski_codegemma_7b_it_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "bartowski_codegemma_7b_it_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "bartowski_codegemma_7b_it_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "bartowski_codestral_22b_v0_1_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_coder_v2_lite_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_70b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_8b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_8b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_8b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_8b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_llama_8b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_14b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q4_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_1_5b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_deepseek_r1_distill_qwen_32b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_2b_it_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_9b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_gemma_2_9b_it_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_12b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q4_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q6_k",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_1b_it_gguf_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_27b_it_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_google_gemma_3_4b_it_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_m",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q4_k_s",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_m",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q5_k_s",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q6_k",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_granite_embedding_107m_multilingual_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "bartowski_kwaipilot_kat_coder_v2_5_dev_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q4_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q5_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q6_k",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_1b_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_2_3b_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_llama_3_3_70b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_mathstral_7b_v0_1_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_mathstral_7b_v0_1_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_mathstral_7b_v0_1_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_mathstral_7b_v0_1_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_mathstral_7b_v0_1_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_ministral_8b_instruct_2410_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_mistral_nemo_instruct_2407_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_mistral_small_24b_instruct_2501_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_5_mini_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_phi_3_mini_4k_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_14b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_32b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_math_7b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_math_7b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_math_7b_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_math_7b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_qwen2_5_math_7b_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "math",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "bartowski_yi_coder_1_5b_chat_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-generation"
+      ]
+    },
+    {
+      "modelId": "cactus_compute_needle2_cact_cq2_mixed",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling",
+        "structured-output"
+      ]
+    },
+    {
+      "modelId": "cstr_ms_marco_minilm_l6_v2_gguf_q4_k_imatrix_g7c_f7",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "reranking",
+        "text-ranking"
+      ]
+    },
+    {
+      "modelId": "cstr_ms_marco_minilm_l6_v2_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "reranking",
+        "text-ranking"
+      ]
+    },
+    {
+      "modelId": "deepreinforce_ai_ornith_1_0_35b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "deepreinforce_ai_ornith_1_0_9b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_1_3b_instruct_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_coder_6_7b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "fim"
+      ]
+    },
+    {
+      "modelId": "deepseek_r1_distill_qwen_7b_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "deepseek_r1_distill_qwen_7b_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "deepseek_r1_distill_qwen_7b_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "deepseek_r1_distill_qwen_7b_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "deepseek_r1_distill_qwen_7b_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "dots_studio_dots_tts_mf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-to-speech",
+        "voice-cloning",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "eurollm_1_7b_instruct_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "translation",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "facebook_mobilemoe_s_qat_int4_g32",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "fin_r1_7b_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "fin_r1_7b_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "fin_r1_7b_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "fin_r1_7b_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "fin_r1_7b_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "financial-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "gemma_3n_e2b_it_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "gemma_4_e4b_it_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "ggml_org_embeddinggemma_300m_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "ggml_org_gemma_4_26b_a4b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "granite_4_1_8b_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "granite_4_1_8b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "granite_4_1_8b_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "gsms_b_indian_legal_qwen2_5_3b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube2_1_8b_chat_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube3_500m_chat_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube3_500m_chat_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube3_500m_chat_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube3_500m_chat_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "h2oai_h2o_danube3_500m_chat_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "huatuogpt_o1_7b_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "huatuogpt_o1_7b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "huatuogpt_o1_7b_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "huatuogpt_o1_7b_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "huatuogpt_o1_7b_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "medical-reasoning",
+        "bilingual"
+      ]
+    },
+    {
+      "modelId": "huggingfacetb_smollm2_1_7b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_30b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ibm_granite_granite_4_1_3b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "janhq_jan_v3_5_4b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q5_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_finance_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q5_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_legal_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_medical_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_1_2b_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_bf16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q4_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "liquidai_lfm2_5_embedding_350m_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "llama_3_1_8b_instruct_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "llama_3_1_8b_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "llama_3_1_8b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "llama_3_1_8b_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "lmstudio_community_deepseek_r1_0528_qwen3_8b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "lmstudio_community_gemma_4_e2b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "lmstudio_community_gemma_4_e2b_it_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "lmstudio_community_gemma_4_e2b_it_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_meta_llama_3_8b_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "maziyarpanahi_mistral_7b_instruct_v0_3_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "minicpm5_1b_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "minicpm5_1b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "minicpm5_1b_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "ministral_3_3b_instruct_2512_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ministral_3_3b_instruct_2512_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "ministral_3_3b_instruct_2512_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "mistralai_devstral_small_2507_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "mixedbread_ai_mxbai_rerank_xsmall_v1_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "reranking",
+        "text-ranking"
+      ]
+    },
+    {
+      "modelId": "modeljars_granite_4_1_3b_answerability_alora_f32",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "composition-component"
+      ]
+    },
+    {
+      "modelId": "modeljars_granite_4_1_3b_answerability_alora_integrallis_f32",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "composition-component"
+      ]
+    },
+    {
+      "modelId": "mradermacher_financegemma_e4b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_financegemma_e4b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_financegemma_e4b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_financegemma_e4b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_popit_qwen3_4b_medical_sft_1128_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mungert_hunyuan_mt_7b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "mungert_hunyuan_mt_7b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "mungert_hunyuan_mt_7b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "mungert_hunyuan_mt_7b_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "mungert_hunyuan_mt_7b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "phi_4_mini_instruct_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q4_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_0_5b_instruct_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q4_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q5_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_1_5b_instruct_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_3b_instruct_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_7b_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_7b_instruct_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_coder_7b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen2_5_math_1_5b_instruct_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math",
+        "tool-integrated-reasoning"
+      ]
+    },
+    {
+      "modelId": "qwen3_0_6b_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen3_0_6b_q4_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen3_0_6b_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen3_1_7b_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "qwen3_8b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "qwen3_8b_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "qwen3_8b_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_bf16",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q6_k",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q5_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_1_5b_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_3b_instruct_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_coder_14b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen2_5_coder_32b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_4b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_4b_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_4b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_4b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_4b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_0_6b_gguf_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_0_6b_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q5_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_4b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_8b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_8b_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_embedding_8b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "qwen_qwen3_tts_12hz_0_6b_customvoice_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-to-speech",
+        "multilingual"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q4_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_m",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q4_k_s",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q5_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q6_k",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_all_minilm_l6_v2_embedding_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_m",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_e5_mistral_7b_instruct_embedding_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_f16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_jina_embeddings_v2_base_code_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_f16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_m",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q5_k_s",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q6_k",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "second_state_nomic_embed_text_v1_5_embedding_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "smollm2_360m_instruct_q8_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "smollm3_3b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "smollm3_3b_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning"
+      ]
+    },
+    {
+      "modelId": "sqlcoder_7b_2_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "text-to-sql",
+        "sql-generation"
+      ]
+    },
+    {
+      "modelId": "sugoitoolkit_sugoi_14b_ultra_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "sugoitoolkit_sugoi_32b_ultra_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "translation",
+        "text-generation"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_13b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_34b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "thebloke_codellama_7b_instruct_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q4_0",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q5_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "tinyllama_1_1b_chat_v1_0_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "umarfarookm_umartransit_1b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "umarfarookm_umartransit_1b_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_gemma_4_12b_it_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_gemma_4_31b_it_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_gpt_oss_20b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "reasoning",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_14b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_30b_a3b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_30b_a3b_instruct_2507_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_32b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q5_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q5_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q6_k",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_0_8b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_27b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_bf16",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q4_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q5_k_s",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_2b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_35b_a3b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q5_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q5_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q6_k",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_4b_gguf_q8_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_9b_gguf_q4_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_9b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_5_9b_gguf_q4_k_s",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_6_27b_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_6_35b_a3b_gguf_ud_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_coder_30b_a3b_instruct_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "unsloth_qwen3_coder_next_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion",
+        "tool-calling"
+      ]
+    },
+    {
+      "modelId": "walkingcat_soprano_1_1_80m_gguf_bf16",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-to-speech",
+        "audio-generation",
+        "streaming"
+      ]
+    },
+    {
+      "modelId": "walkingcat_soprano_1_1_80m_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-to-speech",
+        "audio-generation",
+        "streaming"
+      ]
+    },
+    {
+      "modelId": "wordtour_glove_6b_300d_optimal",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "semantic-neighbors",
+        "lexical-expansion",
+        "blurred-bow"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_science_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "king3djbl_nexus_security_gguf_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "mradermacher_mixture_summarizer_qwen3_5_2b_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "ggml_org_embeddinggemma_2_gguf_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "text-embedding",
+        "semantic-search"
+      ]
+    },
+    {
+      "modelId": "prism_ml_ternary_bonsai_2_27b_gguf_ptq1_0",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    },
+    {
+      "modelId": "minicpm5_2b_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ]
+    },
+    {
+      "modelId": "vibethinker_1_5b_q4_k_m",
+      "status": "UNPUBLISHED_CANDIDATE",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "reasoning",
+        "math"
+      ]
+    },
+    {
+      "modelId": "laya_q8_0",
+      "status": "NON_CHAT_INTERFACE",
+      "capabilities": [
+        "typed-decision"
+      ]
+    },
+    {
+      "modelId": "ggml_org_flint_gguf_q4_k_m",
+      "status": "LIVE_AUDIT",
+      "capabilities": [
+        "text-generation",
+        "chat"
+      ]
+    }
+  ]
+}

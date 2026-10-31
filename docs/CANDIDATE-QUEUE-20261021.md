@@ -8,6 +8,30 @@ Ordered by the rules that already exist: `docs/MODALITY-ROADMAP.md` (modality ga
 gates) and `models/docs/CAMPAIGN-RUNBOOK.md` (smallest-first, triage before code, a new modality
 needs a new gate, two arms for any verdict).
 
+## Added 2026-10-31: GLiNER2.5-Decide
+
+Requested from [Mohit Mayank's duplicate-detection article](https://pub.towardsai.net/gliner2-5-decide-fine-tuned-local-system-one-model-jev-level-accuracy-7-faster-367f82c01bf7).
+The linked public checkpoint is [fastino/GLiNER2.5-Decide](https://huggingface.co/fastino/GLiNER2.5-Decide),
+now candidate `fastino_gliner2_5_decide_f32`. No qualification or publication is claimed.
+The article's fine-tuned duplicate-detection adapter has not been identified; its reported
+Jev comparison does not establish the base checkpoint's quality or our runtime's speed.
+
+- Revision: `9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90`.
+- Weights: `model.safetensors`, 1,945,828,140 bytes, SHA-256
+  `40a5a23ff860dc3dff426cecd1048cacdd29c648c96db209dad818e9686dc997` from publisher LFS metadata.
+- Inspected by HTTP range: 419 F32 tensors, **486,444,053 total parameters**.
+  The card's 340M label is not the complete stored parameter count.
+- Pinned config: `gliner2`, `Gliner2ForSchemaExtraction`, DeBERTa-v3-large encoder
+  (`deberta-v2` configuration), 24 layers, width 1024, relative attention; Apache-2.0.
+- Six snapshot files are pinned. Java/Rust support is unavailable; `gliner2` identifies
+  the published Python reference implementation, not an in-JVM execution route.
+
+Support requires DeBERTa attention/tokenization, schema-marker preprocessing and GLiNER2
+classification scoring, followed by a Models typed-decision adapter and ModelJars snapshot loading.
+Qualify with publisher-output parity, label-order and multi-label tests, multiple independent
+classification datasets, and same-host latency measurements. A task-specific fine-tune must beat
+its untuned base on held-out data. The generative RAG gate is not an applicable substitute.
+
 ## Triaged here — real headers, read with `npm run catalog:triage`
 
 | artifact | arch | runtime | towers | params | bytes | license | source |

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-31T04:04:41Z",
+  "generatedAt": "2026-10-31T19:31:53Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "1955b55ba16f9a2cd90655be3ac7323f3efa452a",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 80,
+  "qualifiedModels": 81,
   "rejectedModels": 1,
   "entries": [
     {
@@ -4166,6 +4166,62 @@
         "reportSha256": "3c0523bcec9aac7bd8b49beb7bc27a387b224dd9eb64579ef3530b0e33dc633f"
       },
       "modelsRevision": "d7b7b2cd1915cc2c0c203279e762895c372b61a4"
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_k_m",
+      "model": "Qwen2.5-0.5B-Instruct GGUF Q5_K_M",
+      "backend": "rust-ffm",
+      "backendVersion": "models@0.5.9+345ec7890e23cd43589c62b9e2ece68eb3c81df8",
+      "workload": "general",
+      "corpusSha256": "4b27eba8f166c84ef19c53de825445a6d0097f9bd8efa20b2d7013f34621f83c",
+      "promptTemplate": "chatml",
+      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v24",
+      "artifactSha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+      "artifactSizeBytes": 522186592,
+      "reportSha256": "73ed49ee76a39339da38c569d90fd1d20e9976f53d0281bd9d62e9bf4e1f23a9",
+      "performanceTier": "PRODUCTION_READY",
+      "verdict": "QUALIFIED",
+      "qualified": true,
+      "attempts": 27,
+      "p95RetrievalMillis": 2.0042837000000002,
+      "p95TtftMillis": 314.8108024,
+      "p95TpotMillis": 26.85072775,
+      "p95EndToEndMillis": 764.7253717,
+      "p50PrefillTokensPerSecond": 245.48742045381763,
+      "p50DecodeTokensPerSecond": 64.16920405235182,
+      "peakRssBytes": 882819072,
+      "correctAnswerRate": 1.0,
+      "rawCorrectAnswerRate": 0.0,
+      "abstentionAccuracy": 1.0,
+      "modelAnswerRate": 0.6666666666666666,
+      "modelAnswerCorrectRate": 1.0,
+      "extractiveFallbackRate": 0.2222222222222222,
+      "environment": {
+        "hostname": "ip-172-31-0-101",
+        "osName": "Linux",
+        "osVersion": "7.0.0-1013-aws",
+        "architecture": "amd64",
+        "cpuModel": "AMD EPYC 7R13 Processor",
+        "availableProcessors": 16,
+        "totalMemoryBytes": 65971654656,
+        "maxHeapBytes": 17179869184,
+        "javaVersion": "25.0.3",
+        "javaVendor": "Eclipse Adoptium",
+        "vmName": "OpenJDK 64-Bit Server VM"
+      },
+      "report": "benchmark-results/certified-20261031/rag/qwen-qwen2-5-0-5b-instruct-gguf-q5_k_m/qwen-qwen2-5-0-5b-instruct-gguf-q5_k_m-rust-ffm-grounded.json",
+      "defaultConfigurationSmoke": {
+        "configuration": "library-defaults",
+        "backend": "rust-ffm",
+        "artifactSha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+        "report": "benchmark-results/certified-20261031/rag/qwen-qwen2-5-0-5b-instruct-gguf-q5_k_m/default-correctness/models-rust-ffm.json",
+        "reportSha256": "b4a897930e3d15da5d4285630a683fc0c67a4d1ab77b088cde305e94e2d7975b",
+        "totalAttempts": 9,
+        "successfulAttempts": 9,
+        "tuningSystemProperties": []
+      },
+      "modelsRevision": "3569bbf43742390d21b9180ca1db179c6ecef644",
+      "contextLength": 2048
     }
   ]
 }

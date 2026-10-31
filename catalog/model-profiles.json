@@ -7615,6 +7615,127 @@
       }
     },
     {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_k_m",
+      "artifactSha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+      "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "qwen2.5-0.5b-instruct-q5_k_m.gguf",
+            "uri": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/9217f5db79a29953eb74d5343926648285ec7e67/qwen2.5-0.5b-instruct-q5_k_m.gguf",
+            "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
+            "sha256": "041474553fcabfc2a2d67903f9d2c2e50bd92528e670da4f33b5d0ce6e59fd55",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 151645,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 32768,
+          "groups": [
+            {
+              "layers": 24,
+              "kvHeads": 2,
+              "keyLength": 64,
+              "valueLength": 64,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 522186592,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 12288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 50331648,
+                "totalBytes": 1646260064
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 402653184,
+                "totalBytes": 1998581600
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 6528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 26738688,
+                "totalBytes": 1622667104
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 213909504,
+                "totalBytes": 1809837920
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 32768,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
       "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q6_k",
       "artifactSha256": "2f82233630c349ccf6b8daccf48f9a7865713d9f08a2eadfa456cebe9b97c7f5",
       "revision": "9217f5db79a29953eb74d5343926648285ec7e67",
@@ -12253,6 +12374,22 @@
     },
     {
       "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (151645) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "qwen_qwen2_5_0_5b_instruct_gguf_q5_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",
       "turnTerminator": "<|im_end|> (151645) already declared",

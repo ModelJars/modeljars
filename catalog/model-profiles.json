@@ -11146,6 +11146,150 @@
         ],
         "notes": []
       }
+    },
+    {
+      "modelId": "hkust_aaron_edgerock_4b_gguf_q4_k_m",
+      "artifactSha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+      "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "EdgeRock-4B-Q4_K_M.gguf",
+            "uri": "https://huggingface.co/hkust-aaron/EdgeRock-4B-GGUF/resolve/a5e045c646b70303156394d52c2ca1e415ec1544/EdgeRock-4B-Q4_K_M.gguf",
+            "revision": "a5e045c646b70303156394d52c2ca1e415ec1544",
+            "sha256": "67c354bcb2abe0cba407fbfe8e7f7cc100dd44458b6fbdfee95ae22f3aaa2c6a",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 248046,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 262144,
+          "groups": [
+            {
+              "layers": 8,
+              "kvHeads": 4,
+              "keyLength": 256,
+              "valueLength": 256,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false,
+          "recurrentStateExcluded": true
+        },
+        "weightBytes": 2936478592,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 32768,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 134217728,
+                "totalBytes": 4144438144
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 1073741824,
+                "totalBytes": 5083962240
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 4294967296,
+                "totalBytes": 8305187712
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 8589934592,
+                "totalBytes": 12600155008
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 139761,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 17408,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 71303168,
+                "totalBytes": 4081523584
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 570425344,
+                "totalBytes": 4580645760
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 2281701376,
+                "totalBytes": 6291921792
+              },
+              {
+                "contextTokens": 262144,
+                "kvBytes": 4563402752,
+                "totalBytes": 8573623168
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 262144,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": [
+          "recurrent layer state is excluded; only attention layers are charged"
+        ]
+      }
     }
   ],
   "coverage": [
@@ -12539,6 +12683,22 @@
       "unsourced": [
         "minP",
         "repetitionPenalty",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "hkust_aaron_edgerock_4b_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
         "thinkingDefault"
       ],
       "memoryFit": "computed"

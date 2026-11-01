@@ -23,6 +23,7 @@ const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const QUALIFICATION_FILES = [
   ["catalog/qualifications.json", (entry) => entry.qualified === true],
   ["catalog/tool-qualifications.json", (entry) => entry.summary?.qualified === true],
+  ["catalog/classification-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/embedding-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/reranking-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/speech-qualifications.json", (entry) => entry.qualified === true],

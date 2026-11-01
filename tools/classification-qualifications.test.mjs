@@ -24,3 +24,47 @@ test('malformed identities and nonfinite results fail even for rejected records'
     const entry=fixture();entry.qualified=false;mutate(entry);assert.throws(() => validateEntry(entry));
   }
 });
+
+test('publication filters bind every classification file and enforce measured gates', async () => {
+  const { filterQualifiedPublications, selectCatalogPublications } = await import('./model-publications.mjs');
+  const entry=fixture();
+  const model={id:'fixture',name:'Synthetic classifier',markerCoordinate:'org.example:classifier:1.0.0',
+    revision:'a'.repeat(40),sha256:'a'.repeat(64),sizeBytes:12,architecture:'gliner2',format:'safetensors',
+    capabilities:['text-classification'],backends:{'rust-ffm':true},
+    files:entry.files.map(({downloadUri,...file}) => file)};
+  const catalog={schemaVersion:2,models:[model]},empty={schemaVersion:1,entries:[]};
+  const planned=selectCatalogPublications(catalog,['all']);
+  const filter=(e,c=catalog) => filterQualifiedPublications(planned,c,empty,empty,empty,empty,empty,empty,empty,{schemaVersion:1,entries:[e]});
+  assert.equal(filter(entry).publications.length,1);
+  assert.equal(filter({...entry,qualified:false}).publications.length,0);
+  const changed=structuredClone(catalog);changed.models[0].files[1].sha256='b'.repeat(64);
+  assert.throws(() => filter(entry,changed),/snapshot/);
+  const failed=structuredClone(entry);failed.performance[0].throughputRatio=.7;
+  assert.throws(() => filter(failed),/performance/);
+});
+
+test('classification-only admission reaches both manual and delta publication plans', async () => {
+  const {mkdtemp,writeFile,rm}=await import('node:fs/promises');
+  const {tmpdir}=await import('node:os');
+  const path=await import('node:path');
+  const {spawnSync}=await import('node:child_process');
+  const folder=await mkdtemp(path.join(tmpdir(),'classification-plan-'));
+  try {
+    const entry=fixture(),empty={schemaVersion:1,entries:[]};
+    const catalog={schemaVersion:2,models:[{id:'fixture',name:'Synthetic classifier',
+      markerCoordinate:'org.example:classifier:1.0.0',revision:'a'.repeat(40),sha256:'a'.repeat(64),sizeBytes:12,
+      architecture:'gliner2',format:'safetensors',capabilities:['text-classification'],backends:{'rust-ffm':true},
+      files:entry.files.map(({downloadUri,...file})=>file)}]};
+    for (const [name,body] of Object.entries({catalog,empty,classification:{schemaVersion:1,entries:[entry]}}))
+      await writeFile(path.join(folder,name+'.json'),JSON.stringify(body));
+    const args=['tools/plan-model-publications.mjs','--current',path.join(folder,'catalog.json'),
+      '--qualifications',path.join(folder,'empty.json'),'--classification-qualifications',path.join(folder,'classification.json')];
+    for (const mode of [['--ids','all'],['--previous',path.join(folder,'catalog.json'),
+        '--previous-qualifications',path.join(folder,'empty.json'),
+        '--previous-classification-qualifications',path.join(folder,'empty.json')]]) {
+      const result=spawnSync(process.execPath,[...args,...mode],{encoding:'utf8'});
+      assert.equal(result.status,0,result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout).publications.map(p=>p.id),['fixture']);
+    }
+  } finally {await rm(folder,{recursive:true,force:true});}
+});

@@ -15,11 +15,24 @@ Both runtimes score 61.11% on JevBench yes/no (70% floor), and 43.69% micro-F1 /
 on GoEmotions (70% / 60% floors). JevBench overall accuracy is 80.83%; CLINC banking macro-F1
 is 86.67%. Thus porting fidelity passes these checks while the base checkpoint's registered
 quality claim fails. Keep the full failing evidence; neither speed work nor a policy change
-can turn this measurement into a pass. The performance screen and existing F16 reranker
-regression are underway. ModelJars integration and released-artifact repeats remain outstanding.
+can turn this measurement into a pass. The existing F16 reranker regression passes. The first
+performance screen fails twelve of thirteen shape buckets: at 128–512 tokens, Models reaches
+0.313–0.365x publisher throughput against the 0.80x floor. Three passing final pairs have not
+been run. Both CPU workers are terminated; the conservative aggregate rental upper bound is
+43 minutes 22 seconds, leaving at least 76 minutes 38 seconds under the original two-hour cap.
+
+The user subsequently authorized fine-tuning for qualification and general usage. Models now
+registers a separate unpublished candidate, `modeljars-gliner25-decide-general-v1`, with a bounded
+LoRA training recipe covering all ten CLINC domains, all 28 GoEmotions labels and BoolQ decisions.
+Its 65,656 training, 990 development and 1,001 fresh qualification cases are disjoint by normalized
+text; the original 529 cases are excluded from training/development and remain regression checks.
+Training has not run and no accuracy gain is claimed. GPU access is unresolved. The derived
+checkpoint must satisfy the unchanged quality floors, parity and performance gates; its new name
+does not reset the rental budget. ModelJars integration and released-artifact repeats remain
+outstanding.
 
 Raw outcomes, source/runtime hashes, policy and reports are recorded in
-[Models evidence](https://github.com/integrallis/models/tree/99aed5cc/benchmark-results/2026-11-01-gliner25-decide).
+[Models evidence](https://github.com/integrallis/models/tree/5a1a1ca8/benchmark-results/2026-11-01-gliner25-decide).
 The implementation below remains the admission plan; its original gates are unchanged.
 
 **Recommendation:** support the pinned F32 checkpoint as a schema-driven classification
@@ -55,8 +68,8 @@ probabilities. Catalog inclusion is contingent on measured results.
 
 The six already-pinned snapshot files include both configs and tokenizer metadata. Preserve
 their individual digests; the weight digest alone does not identify the preprocessing graph.
-The inspected publisher commit is a proposed oracle pin, **not yet a tested dependency lock**.
-PR 1 must demonstrate that it loads this snapshot offline and freeze its Python dependencies.
+The publisher commit and Python CPU dependency lock have now been tested offline against the
+snapshot in the remote comparison. Training uses a separately frozen CUDA dependency lock.
 
 Initial scope: English single-label, multi-label, label descriptions, and several declared
 tasks in one encoder pass. Scores and selected labels are structured outputs. No generation,
@@ -65,8 +78,9 @@ chunking is implied. Reject unsupported schema features explicitly.
 
 The article's duplicate-detection LoRA is a separate potential artifact. Its released adapter,
 license, base revision and held-out data have not been established. Do not attribute its
-accuracy or speed claims to this base checkpoint. Defer LoRA, quantization, GPU support,
-cross-task constraint solvers and extraction heads to separately scoped work.
+accuracy or speed claims to this base checkpoint. General-classification LoRA training is now
+authorized as the separately identified experiment above. Quantization, GPU inference support,
+cross-task constraint solvers and extraction heads remain separately scoped work.
 
 ## Verified implementation boundaries
 

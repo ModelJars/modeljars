@@ -11,6 +11,9 @@ and introduce Rust shims wherever required for correct integration or justified 
 A complete pure-Java implementation is not a prerequisite for a supported Models backend.
 Qualification uses a dedicated GLiNER harness; llama.cpp and Ollama are not prerequisites.
 
+The [cross-plan validation](gliner25-qualification-plan-validation.md) records the 2026-11-01
+review against the separate Maple/Mellum/LFM2MoE/ASR/TTS campaign and the resulting safeguards.
+
 This is substantial integration work, but not a new transformer architecture from scratch.
 The main risks are preprocessing parity, refactoring the reranker-specific encoder safely,
 and admitting multi-label decisions without pretending they are generated text or calibrated
@@ -173,6 +176,21 @@ The harness needs:
 - A small schema/protocol test suite with synthetic workers, followed by the remote real-model
   runs. No Python reference dependency is required in a user's ModelJars installation.
 
+Keep the external worker a thin wrapper around the pinned publisher inference API. Compare its
+outputs with direct publisher calls on fixtures before accepting it as the reference. Do not
+silently replace its decoder, normalization or classification rules with our implementation.
+Its readiness response must attest the loaded snapshot/config/tokenizer hashes, runtime and
+remote-code revisions, dtype, effective device placement and thread settings. Cross-check that
+attestation with the launch manifest; a client-supplied artifact path alone is not proof of what
+the server loaded. Fail on unexpected CPU/GPU fallback or mixed placement. Isolate and lock each
+worker's dependencies, including native components, so another experiment cannot change them.
+
+Reuse proven process control, evidence hashing and replication utilities from other modality
+harnesses where suitable; keep GLiNER request semantics, quality metrics and policy independent.
+Identical raw documents and ordered schemas are required for matched comparisons; record each
+adapter's processed inputs as well. Matched generated-token counts are a generative-only rule:
+GLiNER instead matches total encoded input length, labels, tasks, batch size and concurrency.
+
 There are two comparison levels. **Implementation parity** uses the same checkpoint and
 matched semantics to diagnose the Models port with exact preprocessing and numerical tolerances.
 **Operational comparison** asks how comparable tasks perform through the two real runtimes:
@@ -249,6 +267,11 @@ Start on one Linux x86_64 AVX2 host with sufficient RAM; record exact CPU, physi
 OS, JDK, vector width, Rust/native versions if used, Python/Torch dependencies and all thread counts.
 Use serial, counterbalanced Models/reference arms on the same host and immutable snapshot.
 The Models arm includes its actual Java/FFM/Rust execution path and all required shim overhead.
+Verify both arms execute on the same compute class and resource allocation, not merely the same
+host. For the initial CPU qualification, both must report CPU execution with matched CPU/thread
+budgets. A later CPU-versus-GPU deployment comparison can be informative but cannot satisfy this
+implementation-performance gate. An unsupported comparator is recorded as unavailable, not
+silently replaced with a different device or an assumed publisher benchmark number.
 Pin the oracle's actual attention implementation; compare against a supported efficient CPU
 reference configuration, not an accidentally slow implementation.
 
@@ -260,7 +283,11 @@ are stated up front. TTFT and generated tokens/sec are inapplicable.
 
 Proposed performance admission: Models p95 end-to-end ≤1.50× reference and throughput ≥0.80×
 reference for each advertised workload bucket, with a warm-up policy and at least 30 timed
-samples per bucket. Screen once, then require two fresh counterbalanced confirmations.
+samples per bucket. Require at least three paired runs of the final frozen implementation,
+configuration and policy, with counterbalanced arm order. A screening run counts only if all
+those inputs were already frozen; tuning resets the final replication sequence. Every pair
+must pass each advertised bucket. Publish per-pair ratios plus mean, range and standard deviation;
+do not infer a universal noise percentage from another model's measurements.
 These are new proposed classification gates, not automatically inherited RAG policy. Record
 absolute latency and RSS alongside ratios; do not advertise suitability for a deployment SLO
 that was not tested. Any tighter memory/latency requirement must be registered before evaluation.

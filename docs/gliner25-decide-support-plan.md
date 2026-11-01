@@ -4,6 +4,13 @@ Date: 2026-11-01. Status: runtime implementation and first remote evidence now e
 [Models draft PR 323](https://github.com/integrallis/models/pull/323); the pinned base checkpoint
 fails the registered absolute-quality gates. No qualification or publication is claimed.
 
+**The supplied model's performance measurement is complete:** both CPU runtimes ran all 429
+requests across 13 shapes with zero errors. At 512 tokens / 2 labels, publisher p50 is 1.343 s
+and Models p50 is 4.032 s; peak process RSS is 4.04 / 5.46 GiB respectively. The runtime misses
+the relative speed gate; the benchmark itself completed. See the
+[audited absolute measurements](https://github.com/integrallis/models/blob/d8fe3f33/benchmark-results/2026-11-01-gliner25-decide/BASE-PERFORMANCE.md).
+The later incomplete native optimization screen is a separate experiment.
+
 Implementation update: Models reuses the DeBERTa encoder with F16/F32 loading and adds a GLiNER
 classification API/head plus a Rust `tokenizers=0.22.2` FFM adapter. The development runtime at
 `6add46ee740f8acd80295741fc8e22bae34f845f` matches publisher selected labels on all 529 frozen

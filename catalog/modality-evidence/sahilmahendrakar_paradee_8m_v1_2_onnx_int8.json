@@ -1,0 +1,74 @@
+{
+ "id": "sahilmahendrakar_paradee_8m_v1_2_onnx_int8",
+ "downloadUri": "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/resolve/ed2934d4df8a4fd891e29584c5e1104649409765/onnx/paradee_int8.onnx",
+ "sha256": "a6989796692ac173597e15d405c971989202d5c73cfad65f22e90bd7b6c97da1",
+ "format": "onnx",
+ "architecture": "paradee",
+ "irVersion": 8,
+ "producer": "pytorch 2.14.1",
+ "opset": {
+  "ai.onnx": 17
+ },
+ "inputs": [
+  {
+   "name": "input_ids",
+   "elemType": "INT64",
+   "dims": [
+    1,
+    "tokens"
+   ]
+  },
+  {
+   "name": "speed",
+   "elemType": "FLOAT",
+   "dims": [
+    1
+   ]
+  },
+  {
+   "name": "voice",
+   "elemType": "INT64",
+   "dims": [
+    1
+   ]
+  }
+ ],
+ "outputs": [
+  {
+   "name": "waveform",
+   "elemType": "FLOAT",
+   "dims": [
+    "Addwaveform_dim_0",
+    "samples"
+   ]
+  }
+ ],
+ "nodeCount": 2535,
+ "operatorTypes": 56,
+ "initializerCount": 514,
+ "config": {
+  "sha256": "002535cf8dd08a434cdddb13372da8a7b4844152bdf9b5b4e7342e12ec30bcfb",
+  "model_type": "paradee",
+  "sample_rate": 24000,
+  "voices": [
+   "af_heart",
+   "bf_isabella",
+   "am_puck",
+   "bm_fable"
+  ],
+  "n_token": 178
+ },
+ "towers": {},
+ "declaredTasks": [
+  "tts"
+ ],
+ "declaredTaskEvidence": {
+  "tts": {
+   "input": "input_ids",
+   "output": "waveform",
+   "sampleRate": 24000
+  }
+ },
+ "recordedAt": "2026-11-01T21:57:34.784Z",
+ "recordedBy": "tools/modality-claim-gate.mjs --write"
+}

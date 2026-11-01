@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  MODALITY_CLAIMS, backing, claimsOf, declaredTasks, runGate,
+  MODALITY_CLAIMS, backing, claimsOf, declaredTasks, onnxDeclaredTasks, runGate,
 } from "./modality-claim-gate.mjs";
 
 test("a tower in the artifact backs an encoder-side claim", () => {
@@ -58,12 +58,58 @@ test("only governed capabilities are treated as claims", () => {
   assert.ok(MODALITY_CLAIMS.has("speech-to-text"), "stt must be governed before any stt lands");
 });
 
-test("a non-GGUF entry is UNVERIFIABLE, which is not a pass", () => {
+test("a format the gate cannot read is UNVERIFIABLE, which is not a pass", () => {
   const findings = runGate(
     [{ id: "x", format: "safetensors", capabilities: ["text-to-speech"] }],
     () => null);
   assert.equal(findings[0].status, "UNVERIFIABLE");
   assert.notEqual(findings[0].status, "BACKED");
+});
+
+test("an ONNX entry without a record fails for want of evidence, not as unverifiable", () => {
+  const findings = runGate(
+    [{ id: "x", format: "onnx", sha256: "a".repeat(64), capabilities: ["text-to-speech"] }],
+    () => null);
+  assert.equal(findings[0].status, "NO_EVIDENCE");
+});
+
+const paradeeInterface = {
+  inputs: [
+    { name: "input_ids", elemType: "INT64", dims: [1, "T"] },
+    { name: "speed", elemType: "FLOAT", dims: [1] },
+    { name: "voice", elemType: "INT64", dims: [1] },
+  ],
+  outputs: [{ name: "waveform", elemType: "FLOAT", dims: ["n", "samples"] }],
+};
+
+test("token ids in, a float waveform out and a declared sample rate declare tts", () => {
+  const declared = onnxDeclaredTasks(paradeeInterface, { sample_rate: 24000 });
+  assert.deepEqual(declared.tasks, ["tts"]);
+  assert.deepEqual(declared.evidence.tts, { input: "input_ids", output: "waveform", sampleRate: 24000 });
+});
+
+test("the same graph without a sample rate, or with a non-audio output, declares nothing", () => {
+  assert.deepEqual(onnxDeclaredTasks(paradeeInterface, {}).tasks, []);
+  assert.deepEqual(onnxDeclaredTasks(paradeeInterface, { sample_rate: "24000" }).tasks, ["tts"]);
+  assert.deepEqual(onnxDeclaredTasks({
+    inputs: paradeeInterface.inputs,
+    outputs: [{ name: "logits", elemType: "FLOAT", dims: [1, "T", 178] }],
+  }, { sample_rate: 24000 }).tasks, []);
+  assert.deepEqual(onnxDeclaredTasks({
+    inputs: [{ name: "mel", elemType: "FLOAT", dims: [1, 80, "T"] }],
+    outputs: paradeeInterface.outputs,
+  }, { sample_rate: 24000 }).tasks, []);
+});
+
+test("an ONNX record's declared task backs the speech claims and not a vision one", () => {
+  const record = { id: "x", sha256: "a".repeat(64), format: "onnx", towers: {}, declaredTasks: ["tts"] };
+  const findings = runGate(
+    [{ id: "x", format: "onnx", sha256: "a".repeat(64),
+       capabilities: ["text-to-speech", "audio-generation", "image-understanding"] }],
+    () => record);
+  assert.equal(findings[0].status, "UNBACKED_CLAIM");
+  assert.deepEqual(findings[0].backed.map((b) => b.claim), ["audio-generation", "text-to-speech"]);
+  assert.deepEqual(findings[0].unbacked.map((u) => u.claim), ["image-understanding"]);
 });
 
 test("a missing record fails rather than passing silently", () => {

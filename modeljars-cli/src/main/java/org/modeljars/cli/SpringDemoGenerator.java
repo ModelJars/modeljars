@@ -80,7 +80,7 @@ final class SpringDemoGenerator {
       case TOOLS -> "tools";
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
-      case COMPOSITE, DECISION, SPEECH ->
+      case COMPOSITE, CLASSIFICATION, DECISION, SPEECH ->
           throw new IllegalStateException("no Spring demo for " + type);
     };
   }

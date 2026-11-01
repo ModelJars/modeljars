@@ -41,6 +41,7 @@ final class DemoScriptGenerator {
   enum Type {
     CHAT,
     COMPOSITE,
+    CLASSIFICATION,
     DECISION,
     EMBEDDING,
     RERANKING,
@@ -86,6 +87,7 @@ final class DemoScriptGenerator {
         switch (type) {
           case CHAT -> chatSource(descriptor, input);
           case COMPOSITE -> compositeSource(descriptor, input);
+          case CLASSIFICATION -> classificationSource(descriptor, input);
           case DECISION -> decisionSource(descriptor, input);
           case EMBEDDING -> embeddingSource(descriptor, input);
           case RERANKING -> rerankingSource(descriptor, input);
@@ -97,6 +99,10 @@ final class DemoScriptGenerator {
   }
 
   private static Type typeFor(ModelJarDescriptor descriptor) {
+    if (descriptor.features().contains("schema-driven-classification")
+        && descriptor.capabilities().contains("text-classification")) {
+      return Type.CLASSIFICATION;
+    }
     // Capability decides before shape. A recipe is a composition -- it resolves through its
     // members like any other -- but what a caller does with it is a typed decision, not a chat
     // turn, so the composite template would hand them a chat API the model does not have.
@@ -129,12 +135,13 @@ final class DemoScriptGenerator {
     throw new IllegalArgumentException(
         "Model "
             + descriptor.alias()
-            + " does not have a supported chat, embedding, reranking, speech, or Needle tool-calling demo");
+            + " does not have a supported chat, classification, embedding, reranking, speech, or Needle tool-calling demo");
   }
 
   private static String input(Type type) {
     return switch (type) {
       case CHAT -> "What is the capital of France? Reply with only the city name.";
+      case CLASSIFICATION -> "I was charged twice and cannot log in to my account.";
       case DECISION -> "I was charged twice for my September subscription and no refund arrived.";
       case COMPOSITE -> "Name one JVM language.";
       case EMBEDDING -> "Public transit connects people and cities.";
@@ -149,6 +156,7 @@ final class DemoScriptGenerator {
       case CHAT -> "chat";
       case COMPOSITE -> "hybrid";
       case DECISION -> "decisions";
+      case CLASSIFICATION -> "classification";
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
       case SPEECH -> "speech";
@@ -517,6 +525,50 @@ final class DemoScriptGenerator {
         }
         """
             .formatted(javaString(defaultInput));
+  }
+
+  private String classificationSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import com.integrallis.models.api.SchemaClassificationModel.Label;
+        import com.integrallis.models.api.SchemaClassificationModel.Request;
+        import com.integrallis.models.api.SchemaClassificationModel.Task;
+        import java.util.List;
+        import java.util.logging.Level;
+        import java.util.logging.Logger;
+        import org.modeljars.ModelJars;
+
+        class ModelJarsDemo {
+          private static final String MODEL = "%s";
+
+          public static void main(String... args) {
+            Logger.getLogger("org.modeljars").setLevel(Level.WARNING);
+            Logger.getLogger("com.integrallis").setLevel(Level.WARNING);
+            var input = args.length == 0 ? "%s" : String.join(" ", args);
+            var tasks = List.of(
+                new Task("queue", List.of(new Label("billing"), new Label("technical"),
+                    new Label("shipping")), false, 0.5),
+                new Task("topics", List.of(new Label("billing"), new Label("account_access"),
+                    new Label("shipping")), true, 0.5));
+            long started = System.nanoTime();
+            try (var runtime = ModelJars.openClassificationRuntime(MODEL)) {
+              long loaded = System.nanoTime();
+              var results = runtime.model().classify(new Request(input, tasks));
+              long completed = System.nanoTime();
+              System.out.println("Input: " + input);
+              for (var result : results) {
+                var selected = result.labels().stream()
+                    .filter(label -> label.selected()).map(label -> label.label()).toList();
+                System.out.println(result.task() + ": " + selected);
+              }
+              System.out.printf("Load:      %%,d ms%%n", (loaded - started) / 1_000_000);
+              System.out.printf("Execution: %%,d ms%%n", (completed - loaded) / 1_000_000);
+            }
+          }
+        }
+        """
+            .formatted(
+                javaString(descriptor.markerCoordinate().toString()), javaString(defaultInput));
   }
 
   private String embeddingSource(ModelJarDescriptor descriptor, String defaultInput) {

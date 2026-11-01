@@ -53,6 +53,31 @@ class DemoScriptGeneratorTest {
   }
 
   @Test
+  void schemaClassificationUsesItsOwnRuntimeDespiteTypedDecisionCapability(
+      @org.junit.jupiter.api.io.TempDir java.nio.file.Path directory) throws Exception {
+    var model =
+        SpringFixtures.descriptor(
+            "example_gliner_f32",
+            Set.of("text-classification", "multi-label-classification", "typed-decision"),
+            "gliner2",
+            "safetensors",
+            Set.of("schema-driven-classification"));
+    var demo = generator.generate(model, Optional.of("Billing and account access"));
+    assertEquals(DemoScriptGenerator.Type.CLASSIFICATION, demo.type());
+    assertEquals("example-gliner-classification-demo.java", demo.fileName());
+    assertContains(
+        demo.source(),
+        "ModelJars.openClassificationRuntime(MODEL)",
+        "runtime.model().classify(new Request(input, tasks))",
+        "false, 0.5",
+        "true, 0.5",
+        "Billing and account access",
+        model.markerCoordinate().toString());
+    assertTrue(!demo.source().contains("Harriet.open()"));
+    SpringFixtures.assertCompiles(demo.fileName(), demo.source(), directory);
+  }
+
+  @Test
   void generatesAnEmbeddingDemoThatShowsTheInputVectorAndMeasurements() {
     DemoScriptGenerator.GeneratedDemo demo =
         generator.generate(

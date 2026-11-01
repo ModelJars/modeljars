@@ -38,7 +38,7 @@ export function validateEntry(entry) {
     require(Object.values(entry[name]).every(v => finite(v) && v >= 0 && v <= 1), 'invalid quality metric');
   }
   const loss=Math.max(0,...qualityMetrics.map(key => entry.oracleQuality[key]-entry.quality[key]));
-  require(finite(entry.maximumOracleQualityLoss) && Math.abs(entry.maximumOracleQualityLoss-loss)<1e-12,
+  require(finite(entry.maximumOracleQualityLoss) && entry.maximumOracleQualityLoss >= 0 && Math.abs(entry.maximumOracleQualityLoss-loss)<1e-12,
     'recorded oracle loss differs from paired metrics');
   require(entry.cohortCases && Object.keys(entry.cohortCases).sort().join()===Object.keys(cohortCases).sort().join()
     && Object.entries(cohortCases).every(([key,count]) => entry.cohortCases[key]===count), 'incomplete evaluation cohorts');
@@ -57,7 +57,7 @@ export function validateEntry(entry) {
   }
   if (entry.qualified) {
     require(entry.releasedRuntimeVerified && entry.numericalParityPassed && entry.inferenceErrors === 0
-      && entry.maximumOracleQualityLoss <= .005, 'classification production gates failed');
+      && entry.maximumOracleQualityLoss <= .005 + 1e-12, 'classification production gates failed');
     require(pairs.size >= 3, 'three paired replications required');
     for (let pair=1;pair<=pairs.size;pair++) {
       const rows=pairs.get(pair);

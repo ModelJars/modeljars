@@ -2,15 +2,14 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-export const qualityFloors = Object.freeze({
-  'original.jevbench.accuracy': .7, 'original.jevbench.choice': .6,
-  'original.jevbench.noul': .7, 'original.clinc-banking.macroF1': .7,
-  'original.goemotions.microF1': .7, 'original.goemotions.macroF1': .6,
-  'fresh.boolq.accuracy': .7, 'fresh.goemotions.microF1': .7,
-  'fresh.goemotions.macroF1': .6,
-  ...Object.fromEntries(['banking','credit_cards','auto_and_commute','travel','home','work',
-    'kitchen_and_dining','small_talk','utility','meta'].map(domain => [`fresh.clinc-${domain}.macroF1`,.7])),
-});
+export const domains = ['agent_handoff','banking_intent','benefits_request','clinic_request','document_type',
+  'email_triage','news_topic','paper_field','product_feedback','restaurant_review','review_sentiment',
+  'screen_tags','sports_recap','support_intent','support_topic','ticket_route','travel_request'];
+export const qualityMetrics = Object.freeze(['publisher.singleHead.meanDomainExactMatch',
+  'publisher.jointHead.meanDomainExactMatch','publisher.jointDocument.meanDomainExactMatch',
+  'goemotions.microF1','goemotions.macroF1',...domains.flatMap(domain =>
+    ['singleHead','jointHead','jointDocument'].map(mode => `publisher.${mode}.${domain}.exactMatch`))]);
+export const cohortCases = Object.freeze({'publisher.singleHead':2900,'publisher.jointHead':1700,'goemotions.fullTest':5427});
 export const shapes = [
   ...[32,128,256,512].flatMap(tokens => [2,8,32].filter(labels => tokens !== 32 || labels !== 32)
     .map(labels => `tokens${tokens}-labels${labels}-tasks1`)),
@@ -34,13 +33,16 @@ export function validateEntry(entry) {
     require(text(file.role) && digest(file.sha256) && Number.isSafeInteger(file.sizeBytes) && file.sizeBytes > 0, 'invalid snapshot identity');
     new URL(file.downloadUri);
   }
-  require(entry.quality && Object.keys(entry.quality).sort().join() === Object.keys(qualityFloors).sort().join(), 'quality cohort coverage differs');
-  require(Object.values(entry.quality).every(v => finite(v) && v >= 0 && v <= 1), 'invalid quality metric');
-  for (const name of ['maximumOracleQualityLoss','maximumBaseQualityRegression']) {
-    require(finite(entry[name]) && entry[name] >= 0, `invalid ${name}`);
+  for (const name of ['quality','oracleQuality']) {
+    require(entry[name] && Object.keys(entry[name]).sort().join() === [...qualityMetrics].sort().join(), 'quality cohort coverage differs');
+    require(Object.values(entry[name]).every(v => finite(v) && v >= 0 && v <= 1), 'invalid quality metric');
   }
-  require(Number.isSafeInteger(entry.qualityCases) && entry.qualityCases > 0
-    && Number.isSafeInteger(entry.inferenceErrors) && entry.inferenceErrors >= 0, 'invalid quality counts');
+  const loss=Math.max(0,...qualityMetrics.map(key => entry.oracleQuality[key]-entry.quality[key]));
+  require(finite(entry.maximumOracleQualityLoss) && Math.abs(entry.maximumOracleQualityLoss-loss)<1e-12,
+    'recorded oracle loss differs from paired metrics');
+  require(entry.cohortCases && Object.keys(entry.cohortCases).sort().join()===Object.keys(cohortCases).sort().join()
+    && Object.entries(cohortCases).every(([key,count]) => entry.cohortCases[key]===count), 'incomplete evaluation cohorts');
+  require(Number.isSafeInteger(entry.inferenceErrors) && entry.inferenceErrors>=0,'invalid error count');
   for (const name of ['qualified','releasedRuntimeVerified','numericalParityPassed']) require(typeof entry[name] === 'boolean', `missing ${name}`);
   require(Array.isArray(entry.performance), 'performance evidence required');
   const pairs = new Map();
@@ -55,9 +57,7 @@ export function validateEntry(entry) {
   }
   if (entry.qualified) {
     require(entry.releasedRuntimeVerified && entry.numericalParityPassed && entry.inferenceErrors === 0
-      && entry.qualityCases >= 1529 && entry.maximumOracleQualityLoss <= .005
-      && entry.maximumBaseQualityRegression <= .005, 'classification production gates failed');
-    require(Object.entries(qualityFloors).every(([key,floor]) => entry.quality[key] >= floor), 'absolute quality gate failed');
+      && entry.maximumOracleQualityLoss <= .005, 'classification production gates failed');
     require(pairs.size >= 3, 'three paired replications required');
     for (let pair=1;pair<=pairs.size;pair++) {
       const rows=pairs.get(pair);
@@ -75,15 +75,17 @@ const escape = value => String(value).split('').map(ch => {
     : '\\:=#! '.includes(ch) ? `\\${ch}` : ch;
 }).join('');
 export function registryProperties(catalog) {
-  require(catalog.schemaVersion === 1 && catalog.policy === 'schema-classification-v1'
+  require(catalog.schemaVersion === 2 && catalog.policy === 'schema-classification-upstream-v2'
     && Array.isArray(catalog.entries), 'unsupported classification registry schema');
-  const output=['modeljars.classification.schemaVersion=1',`modeljars.classification.count=${catalog.entries.length}`];
+  const output=['modeljars.classification.schemaVersion=2',`modeljars.classification.count=${catalog.entries.length}`];
   catalog.entries.forEach((raw,index) => {
     const entry=validateEntry(raw), prefix=`classification.${index}.`;
     const put=(key,value) => output.push(`${prefix}${escape(key)}=${escape(value)}`);
     for (const key of ['modelId','backend','backendVersion','report','reportSha256','maximumOracleQualityLoss',
-      'maximumBaseQualityRegression','qualityCases','inferenceErrors','numericalParityPassed','releasedRuntimeVerified','qualified']) put(key,entry[key]);
+      'inferenceErrors','numericalParityPassed','releasedRuntimeVerified','qualified']) put(key,entry[key]);
     for (const [key,value] of Object.entries(entry.quality).sort()) put(`quality.${key}`,value);
+    for (const [key,value] of Object.entries(entry.oracleQuality).sort()) put(`oracleQuality.${key}`,value);
+    for (const [key,value] of Object.entries(entry.cohortCases).sort()) put(`cohortCases.${key}`,value);
     put('files.count',entry.files.length);
     entry.files.forEach((file,i) => { for (const key of ['path','role','downloadUri','sha256','sizeBytes']) put(`files.${i}.${key}`,file[key]); });
     put('performance.count',entry.performance.length);

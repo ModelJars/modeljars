@@ -166,7 +166,7 @@ jobs:
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_reranking}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_speech}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_decision}"
-            printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_classification}"
+            printf '%s\n' '{"schemaVersion":2,"entries":[]}' > "${previous_classification}"
           else
             git show "${comparison}:catalog/models.json" > "${previous_catalog}"
             if ! git show "${comparison}:catalog/component-qualifications.json" > "${previous_components}"; then
@@ -192,7 +192,7 @@ jobs:
               printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_decision}"
             fi
             if ! git show "${comparison}:catalog/classification-qualifications.json" > "${previous_classification}"; then
-              printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_classification}"
+              printf '%s\n' '{"schemaVersion":2,"entries":[]}' > "${previous_classification}"
             fi
           fi
           node tools/qualification-smoke-gate.mjs \

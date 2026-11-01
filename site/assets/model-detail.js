@@ -82,6 +82,30 @@ try (var reranker = ModelJars.openReranker(MODEL)) {
 }`;
 }
 
+export function classificationJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  return `import static org.modeljars.catalog.${referenceClassName(modelId)}.MODEL;
+
+import com.integrallis.models.api.SchemaClassificationModel.Label;
+import com.integrallis.models.api.SchemaClassificationModel.Request;
+import com.integrallis.models.api.SchemaClassificationModel.Task;
+import java.util.List;
+import org.modeljars.ModelJars;
+
+try (var classifier = ModelJars.openClassifier(MODEL)) {
+  var task = new Task("queue", List.of(new Label("billing"),
+      new Label("technical"), new Label("shipping")), false, 0.5);
+  var results = classifier.classify(new Request(
+      "My parcel has not arrived.", List.of(task)));
+  System.out.println(results);
+}`;
+}
+
+export function isClassificationEvidence(qualification) {
+  return qualification?.useCaseTier === "SCHEMA_CLASSIFICATION"
+      || qualification?.policy === "schema-classification-upstream-v2";
+}
+
 export function decisionJavaSnippet(modelId) {
   if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
     throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
@@ -300,6 +324,18 @@ export function qualificationSummary(qualification) {
       rawQuality: null,
       finalQuality: null,
       fallbackRate: null,
+    };
+  }
+  if (isClassificationEvidence(qualification)) {
+    return {
+      ...qualification, label: qualificationLabel(qualification),
+      backend: `${qualification.backend} ${qualification.backendVersion}`,
+      evidenceUri: qualification.reportUri || qualification.report,
+      evidenceSha256: qualification.reportSha256,
+      requests: Object.values(qualification.cohortCases).reduce((a,b)=>a+b,0),
+      minimumThroughputRatio: Math.min(...qualification.performance.map(row=>row.throughputRatio)),
+      maximumP95Ratio: Math.max(...qualification.performance.map(row=>row.p95LatencyRatio)),
+      replications: new Set(qualification.performance.map(row=>row.pair)).size,
     };
   }
   if (isDecisionEvidence(qualification)) {
@@ -600,7 +636,9 @@ export function resourceMemoryNote(model) {
   if (isGenerationModel(model)) {
     return "Computed memory is the GGUF weights, an f16 KV cache for one sequence, and a stated runtime-overhead allowance, derived from header metadata (computed, not measured). The memory fit below gives other contexts, KV types, and budgets.";
   }
-  const purpose = (model.capabilities || []).includes("reranking")
+  const purpose = (model.features || []).includes("schema-driven-classification")
+    ? "Schema classification"
+    : (model.capabilities || []).includes("reranking")
     ? "Reranking"
     : (model.capabilities || []).includes("text-to-speech")
       ? "Speech synthesis"
@@ -910,12 +948,36 @@ function renderCompositionQualification(summary) {
     </section>`;
 }
 
+function renderClassificationQualification(summary) {
+  const metrics = [
+    ["Publisher public development, single head exact match", "publisher.singleHead.meanDomainExactMatch"],
+    ["Publisher public development, joint head exact match", "publisher.jointHead.meanDomainExactMatch"],
+    ["Publisher public development, all heads correct", "publisher.jointDocument.meanDomainExactMatch"],
+    ["GoEmotions full test micro-F1", "goemotions.microF1"],
+    ["GoEmotions full test macro-F1", "goemotions.macroF1"],
+  ];
+  return `<section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}" aria-labelledby="classification-evidence-title">
+    <p class="eyebrow">Production evidence</p><h2 id="classification-evidence-title">Schema classification</h2>
+    <p>Measured on ${escapeHtml(summary.backend)} against the same weights in Fastino’s runtime.
+    ${summary.requests} evaluation requests cover 1,700 publisher development documents and 5,427 GoEmotions test documents.
+    Publisher documents are evaluated both jointly and one head per request. These are public development results, not the publisher’s private benchmark.</p>
+    <table><thead><tr><th>Task score</th><th>Models</th><th>Publisher runtime</th></tr></thead>
+    <tbody>${metrics.map(([label,key])=>`<tr><th>${escapeHtml(label)}</th><td>${formatPercent(summary.quality[key])}</td><td>${formatPercent(summary.oracleQuality[key])}</td></tr>`).join("")}</tbody></table>
+    <p>Maximum upstream accuracy loss: ${(summary.maximumOracleQualityLoss*100).toFixed(3)} percentage points.
+    ${summary.replications} paired CPU replications cover all 13 workload shapes; lowest throughput ratio ${summary.minimumThroughputRatio.toFixed(3)}×,
+    highest p95 latency ratio ${summary.maximumP95Ratio.toFixed(3)}×. Ratios are Models divided by the publisher runtime.</p>
+    <p>Label scores are not calibrated confidence estimates. Accuracy varies by task; per-domain scores are disclosed in the evidence.</p>
+    <div class="qualification-evidence"><a href="${safeExternalUrl(summary.evidenceUri)}">Full paired evidence &#8599;</a>
+    <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code></div></section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
   if (isCompositionEvidence(qualification)) return renderCompositionQualification(summary);
   if (isSpeechEvidence(qualification)) return renderSpeechQualification(summary);
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
+  if (isClassificationEvidence(qualification)) return renderClassificationQualification(summary);
   if (isDecisionEvidence(qualification)) return renderDecisionQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
   if (isRerankingEvidence(qualification)) return renderRerankingQualification(summary);
@@ -1092,6 +1154,8 @@ export function renderModel(model, catalog) {
                 ? rerankingJavaSnippet(model.id)
                 : isSpeechEvidence(qualification)
                   ? speechJavaSnippet(model.id)
+                : isClassificationEvidence(qualification)
+                  ? classificationJavaSnippet(model.id)
                 : isDecisionEvidence(qualification)
                   ? decisionJavaSnippet(model.id)
                   : javaSnippet(model.id),

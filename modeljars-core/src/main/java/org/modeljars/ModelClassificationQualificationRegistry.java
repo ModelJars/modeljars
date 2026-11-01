@@ -32,7 +32,7 @@ import java.util.Properties;
 public final class ModelClassificationQualificationRegistry {
   /** Classpath location of versioned classification evidence. */
   public static final String RESOURCE =
-      "META-INF/modeljars/classification-qualifications-v1.properties";
+      "META-INF/modeljars/classification-qualifications-v2.properties";
 
   private final List<ModelClassificationQualification> entries;
 
@@ -91,8 +91,8 @@ public final class ModelClassificationQualificationRegistry {
       throws IOException {
     Properties p = new Properties();
     p.load(Objects.requireNonNull(stream, "stream"));
-    if (!"1".equals(p.getProperty("modeljars.classification.schemaVersion")))
-      throw new ModelJarException("Classification evidence requires schemaVersion 1");
+    if (!"2".equals(p.getProperty("modeljars.classification.schemaVersion")))
+      throw new ModelJarException("Classification evidence requires schemaVersion 2");
     List<ModelClassificationQualification> entries = new ArrayList<>();
     int count = count(p, "modeljars.classification.count", 10000);
     for (int i = 0; i < count; i++) {
@@ -109,8 +109,14 @@ public final class ModelClassificationQualificationRegistry {
                 Long.parseLong(text(p, f + "sizeBytes"))));
       }
       Map<String, Double> quality = new LinkedHashMap<>();
-      for (String metric : ModelClassificationQualification.qualityFloors().keySet())
+      for (String metric : ModelClassificationQualification.qualityMetrics())
         quality.put(metric, number(p, prefix + "quality." + metric));
+      Map<String, Double> oracleQuality = new LinkedHashMap<>();
+      for (String metric : ModelClassificationQualification.qualityMetrics())
+        oracleQuality.put(metric, number(p, prefix + "oracleQuality." + metric));
+      Map<String, Integer> cohortCases = new LinkedHashMap<>();
+      for (String cohort : ModelClassificationQualification.requiredCohortCases().keySet())
+        cohortCases.put(cohort, count(p, prefix + "cohortCases." + cohort, 10000000));
       List<ModelClassificationQualification.PerformanceBucket> performance = new ArrayList<>();
       for (int j = 0, n = count(p, prefix + "performance.count", 10000); j < n; j++) {
         String f = prefix + "performance." + j + ".";
@@ -132,8 +138,8 @@ public final class ModelClassificationQualificationRegistry {
               files,
               quality,
               number(p, prefix + "maximumOracleQualityLoss"),
-              number(p, prefix + "maximumBaseQualityRegression"),
-              count(p, prefix + "qualityCases", 10000000),
+              oracleQuality,
+              cohortCases,
               count(p, prefix + "inferenceErrors", 10000000),
               bool(p, prefix + "numericalParityPassed"),
               performance,

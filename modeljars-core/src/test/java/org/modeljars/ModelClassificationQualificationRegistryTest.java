@@ -32,10 +32,10 @@ class ModelClassificationQualificationRegistryTest {
         ModelClassificationQualificationTest.evidence(
             true,
             true,
-            ModelClassificationQualification.qualityFloors(),
+            ModelClassificationQualificationTest.qualityScores(),
             ModelClassificationQualificationTest.buckets(3));
     var p = new Properties();
-    p.setProperty("modeljars.classification.schemaVersion", "1");
+    p.setProperty("modeljars.classification.schemaVersion", "2");
     p.setProperty("modeljars.classification.count", "1");
     String x = "classification.0.";
     Map.of(
@@ -53,10 +53,6 @@ class ModelClassificationQualificationRegistryTest {
     Map.of(
             "maximumOracleQualityLoss",
             "0",
-            "maximumBaseQualityRegression",
-            "0",
-            "qualityCases",
-            "1529",
             "inferenceErrors",
             "0",
             "numericalParityPassed",
@@ -67,6 +63,8 @@ class ModelClassificationQualificationRegistryTest {
             "true")
         .forEach((k, v) -> p.setProperty(x + k, v));
     e.quality().forEach((k, v) -> p.setProperty(x + "quality." + k, v.toString()));
+    e.oracleQuality().forEach((k, v) -> p.setProperty(x + "oracleQuality." + k, v.toString()));
+    e.cohortCases().forEach((k, v) -> p.setProperty(x + "cohortCases." + k, v.toString()));
     p.setProperty(x + "files.count", "" + e.files().size());
     for (int i = 0; i < e.files().size(); i++) {
       var f = e.files().get(i);
@@ -131,7 +129,7 @@ class ModelClassificationQualificationRegistryTest {
           ModelClassificationQualificationRegistry.fromClasspath(loader).entries().isEmpty());
     }
     var p = properties();
-    p.remove("classification.0.quality.fresh.boolq.accuracy");
+    p.remove("classification.0.quality.goemotions.microF1");
     assertThrows(ModelJarException.class, () -> parse(p));
   }
 

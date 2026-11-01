@@ -27,6 +27,18 @@ import org.junit.jupiter.api.Test;
 class ModelClassificationQualificationTest {
   private static final String SHA = "a".repeat(64);
 
+  static Map<String, Double> qualityScores() {
+    return ModelClassificationQualification.qualityMetrics().stream()
+        .collect(java.util.stream.Collectors.toMap(k -> k, k -> .5));
+  }
+
+  @Test
+  void upstreamFidelityAllowsDisclosedLowAbsoluteAccuracy() {
+    var quality = new HashMap<>(qualityScores());
+    quality.put("goemotions.microF1", .496);
+    assertTrue(evidence(true, true, quality, buckets(3)).qualified());
+  }
+
   static List<ModelClassificationQualification.PerformanceBucket> buckets(int count) {
     var rows = new ArrayList<ModelClassificationQualification.PerformanceBucket>();
     for (int pair = 1; pair <= count; pair++) {
@@ -62,9 +74,9 @@ class ModelClassificationQualificationTest {
                 SHA,
                 12)),
         quality,
-        0,
-        0,
-        1529,
+        Math.max(0, quality.values().stream().mapToDouble(v -> .5 - v).max().orElse(0)),
+        qualityScores(),
+        ModelClassificationQualification.requiredCohortCases(),
         0,
         true,
         buckets,
@@ -74,7 +86,7 @@ class ModelClassificationQualificationTest {
 
   @Test
   void requiresAllThreeCompletePairsAndReleasedRuntime() {
-    var quality = ModelClassificationQualification.qualityFloors();
+    var quality = qualityScores();
     assertTrue(evidence(true, true, quality, buckets(3)).productionUsable());
     assertFalse(evidence(true, true, quality, buckets(3)).confidenceQualified());
     assertThrows(IllegalArgumentException.class, () -> evidence(true, false, quality, buckets(3)));
@@ -95,22 +107,18 @@ class ModelClassificationQualificationTest {
         0,
         new ModelClassificationQualification.PerformanceBucket(
             first.pair(), first.shape(), 30, .799, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> evidence(true, true, ModelClassificationQualification.qualityFloors(), rows));
-    assertFalse(
-        evidence(false, true, ModelClassificationQualification.qualityFloors(), rows)
-            .productionUsable());
+    assertThrows(IllegalArgumentException.class, () -> evidence(true, true, qualityScores(), rows));
+    assertFalse(evidence(false, true, qualityScores(), rows).productionUsable());
   }
 
   @Test
   void rejectsMissingNonfiniteAndFailedQualityCohorts() {
-    var quality = new HashMap<>(ModelClassificationQualification.qualityFloors());
-    quality.put("fresh.goemotions.microF1", .699);
+    var quality = new HashMap<>(qualityScores());
+    quality.put("goemotions.microF1", .494);
     assertThrows(IllegalArgumentException.class, () -> evidence(true, true, quality, buckets(3)));
-    quality.put("fresh.goemotions.microF1", Double.NaN);
+    quality.put("goemotions.microF1", Double.NaN);
     assertThrows(IllegalArgumentException.class, () -> evidence(false, true, quality, buckets(3)));
-    quality.remove("fresh.goemotions.microF1");
+    quality.remove("goemotions.microF1");
     assertThrows(IllegalArgumentException.class, () -> evidence(false, true, quality, buckets(3)));
   }
 }

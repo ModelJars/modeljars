@@ -309,7 +309,7 @@ async function main() {
   );
   const currentClassificationQualifications =
     classificationQualificationPath === undefined
-      ? { schemaVersion: 1, entries: [] }
+      ? { schemaVersion: 2, entries: [] }
       : await readCatalog(classificationQualificationPath);
   let planned;
   if (previousPath === undefined) {
@@ -372,7 +372,7 @@ async function main() {
           ? { schemaVersion: 1, entries: [] }
           : await readCatalog(previousDecisionPath),
         previousClassificationPath === undefined
-          ? { schemaVersion: 1, entries: [] }
+          ? { schemaVersion: 2, entries: [] }
           : await readCatalog(previousClassificationPath),
       );
       const currentQualified = qualifiedCatalog(

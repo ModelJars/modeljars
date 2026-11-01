@@ -11,9 +11,6 @@ and introduce Rust shims wherever required for correct integration or justified 
 A complete pure-Java implementation is not a prerequisite for a supported Models backend.
 Qualification uses a dedicated GLiNER harness; llama.cpp and Ollama are not prerequisites.
 
-The [cross-plan validation](gliner25-qualification-plan-validation.md) records the 2026-11-01
-review against the separate Maple/Mellum/LFM2MoE/ASR/TTS campaign and the resulting safeguards.
-
 This is substantial integration work, but not a new transformer architecture from scratch.
 The main risks are preprocessing parity, refactoring the reranker-specific encoder safely,
 and admitting multi-label decisions without pretending they are generated text or calibrated

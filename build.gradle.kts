@@ -504,6 +504,34 @@ data class CatalogRerankingQualifications(
     val raw: Map<String, Any?>,
 )
 
+/** Same-weight schema classification evidence validated by the publication tool. */
+data class CatalogClassificationQualification(
+    val modelId: String,
+    val qualified: Boolean,
+    val raw: Map<String, Any?>,
+    val properties: String,
+) {
+    fun siteMetadata(): Map<String, Any?> = raw + mapOf(
+        "policyVersion" to "schema-classification-upstream-v2",
+        "useCaseTier" to if (qualified) "SCHEMA_CLASSIFICATION" else "UNQUALIFIED",
+        "reportUri" to raw.requiredString("report"),
+        "cases" to (raw["cohortCases"] as Map<*, *>).values.sumOf { (it as Number).toInt() },
+        "confidenceQualified" to false,
+    )
+}
+
+data class CatalogClassificationQualifications(val entries: List<CatalogClassificationQualification>) {
+    fun registryProperties(selected: List<CatalogClassificationQualification> = entries): String = buildString {
+        appendLine("modeljars.classification.schemaVersion=2")
+        appendLine("modeljars.classification.count=${selected.size}")
+        selected.forEachIndexed { index, entry ->
+            entry.properties.lineSequence().filter { it.startsWith("classification.0.") }.forEach {
+                appendLine("classification.$index." + it.removePrefix("classification.0."))
+            }
+        }
+    }
+}
+
 /**
  * One typed-decision verdict as the catalog records it.
  *
@@ -2162,6 +2190,21 @@ val embeddingQualifications =
         null
     }
 
+val classificationQualificationCatalogFile = file("catalog/classification-qualifications.json")
+val classificationBuildDocument = JsonSlurper().parseText(providers.exec {
+    workingDir(rootDir)
+    commandLine("node", "tools/classification-build-metadata.mjs",
+        classificationQualificationCatalogFile.absolutePath, file("catalog/models.json").absolutePath)
+}.standardOutput.asText.get()).stringKeyMap("Validated classification metadata")
+val classificationQualifications = CatalogClassificationQualifications(
+    (classificationBuildDocument["entries"] as List<*>).map { value ->
+        val wrapped = value.stringKeyMap("Classification build entry")
+        val raw = wrapped["entry"].stringKeyMap("Classification evidence")
+        CatalogClassificationQualification(raw.requiredString("modelId"), raw["qualified"] as Boolean,
+            raw, wrapped.requiredString("properties"))
+    }
+)
+
 val decisionQualificationCatalogFile = file("catalog/decision-qualifications.json")
 val decisionQualifications =
     if (decisionQualificationCatalogFile.isFile) {
@@ -2558,6 +2601,7 @@ val publicToolQualifications =
     toolQualifications?.entries?.filter(CatalogToolQualification::qualified).orEmpty()
 val publicSpeechQualifications =
     speechQualifications?.entries?.filter(CatalogSpeechQualification::qualified).orEmpty()
+val publicClassificationQualifications = classificationQualifications.entries.filter { it.qualified }
 val publicDecisionQualifications =
     decisionQualifications?.entries?.filter(CatalogDecisionQualification::publishable).orEmpty()
 val publicModelIds =
@@ -2566,7 +2610,8 @@ val publicModelIds =
         publicRerankingQualifications.map(CatalogRerankingQualification::modelId).toSet() +
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
         publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet() +
-        publicDecisionQualifications.map(CatalogDecisionQualification::modelId).toSet()
+        publicDecisionQualifications.map(CatalogDecisionQualification::modelId).toSet() +
+        publicClassificationQualifications.map(CatalogClassificationQualification::modelId).toSet()
 val compositionComponentIds =
     catalogEntries
         .filter { "composition-component" in it.capabilities }
@@ -4024,6 +4069,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/decision-qualifications-v1.properties")
         }
+    val candidateTestClassificationQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/classification-qualifications-v2.properties")
+        }
     val candidateTestSpeechQualificationRegistry =
         candidateTestResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
@@ -4062,6 +4111,7 @@ project(":modeljars-core") {
             }
             if (decisionQualificationCatalogFile.isFile) {
                 inputs.file(decisionQualificationCatalogFile)
+                inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
@@ -4084,6 +4134,7 @@ project(":modeljars-core") {
                 candidateTestEmbeddingQualificationRegistry,
                 candidateTestRerankingQualificationRegistry,
                 candidateTestDecisionQualificationRegistry,
+                candidateTestClassificationQualificationRegistry,
                 candidateTestSpeechQualificationRegistry,
                 candidateTestComponentQualificationRegistry,
             )
@@ -4120,6 +4171,7 @@ project(":modeljars-core") {
                                             ?.filter { it.modelId == entry.id }
                                             ?.map { it.siteMetadata(rerankingQualifications) }
                                             .orEmpty()) +
+                                    ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         decisionQualifications?.entries
                                             ?.filter { it.modelId == entry.id }
@@ -4181,6 +4233,10 @@ project(":modeljars-core") {
                 candidateTestRerankingQualificationRegistry.get().asFile.writeText(
                     rerankingQualifications?.registryProperties()
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestClassificationQualificationRegistry.get().asFile.writeText(
+                    classificationQualifications.registryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 candidateTestDecisionQualificationRegistry.get().asFile.writeText(
@@ -4370,21 +4426,6 @@ project(":modeljars-cli") {
 project(":modeljars") {
     description = "Application-facing ModelJars JVM Runtime"
 
-    val classificationResources = layout.buildDirectory.dir("generated/resources/classification")
-    val generateClassificationQualifications = tasks.register<Exec>("generateClassificationQualifications") {
-        val source = rootProject.file("catalog/classification-qualifications.json")
-        val generator = rootProject.file("tools/classification-qualifications.mjs")
-        val output = classificationResources.map { it.file("META-INF/modeljars/classification-qualifications-v1.properties") }
-        inputs.files(source, generator)
-        outputs.file(output)
-        commandLine("node", generator.absolutePath, source.absolutePath, output.get().asFile.absolutePath)
-    }
-    extensions.configure<SourceSetContainer> {
-        named("main") { resources.srcDir(classificationResources) }
-    }
-    tasks.named("processResources") { dependsOn(generateClassificationQualifications) }
-    tasks.named("sourcesJar") { dependsOn(generateClassificationQualifications) }
-
     val runtimeQualificationResources =
         layout.buildDirectory.dir("generated/resources/runtime-qualifications")
     val runtimeRagQualificationRegistry =
@@ -4406,6 +4447,10 @@ project(":modeljars") {
     val runtimeDecisionQualificationRegistry =
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/decision-qualifications-v1.properties")
+        }
+    val runtimeClassificationQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/classification-qualifications-v2.properties")
         }
     val runtimeToolQualificationRegistry =
         runtimeQualificationResources.map {
@@ -4430,6 +4475,7 @@ project(":modeljars") {
             }
             if (decisionQualificationCatalogFile.isFile) {
                 inputs.file(decisionQualificationCatalogFile)
+                inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
@@ -4444,6 +4490,7 @@ project(":modeljars") {
                 runtimeEmbeddingQualificationRegistry,
                 runtimeRerankingQualificationRegistry,
                 runtimeDecisionQualificationRegistry,
+                runtimeClassificationQualificationRegistry,
                 runtimeToolQualificationRegistry,
                 runtimeSpeechQualificationRegistry,
                 runtimeComponentQualificationRegistry,
@@ -4468,6 +4515,10 @@ project(":modeljars") {
                 runtimeRerankingQualificationRegistry.get().asFile.writeText(
                     rerankingQualifications?.registryProperties()
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeClassificationQualificationRegistry.get().asFile.writeText(
+                    classificationQualifications.registryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 runtimeDecisionQualificationRegistry.get().asFile.writeText(
@@ -5147,6 +5198,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/decision-qualifications-v1.properties")
         }
+    val aggregateClassificationQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/classification-qualifications-v2.properties")
+        }
     val aggregateToolQualificationRegistry =
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -5178,6 +5233,7 @@ project(":modeljars-catalog") {
             }
             if (decisionQualificationCatalogFile.isFile) {
                 inputs.file(decisionQualificationCatalogFile)
+                inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
@@ -5199,6 +5255,7 @@ project(":modeljars-catalog") {
                 aggregateEmbeddingQualificationRegistry,
                 aggregateRerankingQualificationRegistry,
                 aggregateDecisionQualificationRegistry,
+                aggregateClassificationQualificationRegistry,
                 aggregateToolQualificationRegistry,
                 aggregateSpeechQualificationRegistry,
                 aggregateComponentQualificationRegistry,
@@ -5264,6 +5321,7 @@ project(":modeljars-catalog") {
                                                     requireNotNull(rerankingQualifications),
                                                 )
                                             }) +
+                                    ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         publicDecisionQualifications
                                             .filter { it.modelId == entry.id }
@@ -5310,6 +5368,10 @@ project(":modeljars-catalog") {
                     rerankingQualifications
                         ?.registryProperties(publicRerankingQualifications)
                         ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateClassificationQualificationRegistry.get().asFile.writeText(
+                    classificationQualifications.registryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateDecisionQualificationRegistry.get().asFile.writeText(
@@ -5466,6 +5528,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/decision-qualifications-v1.properties")
             }
+    val markerClassificationQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/classification-qualifications-v2.properties")
+            }
         val markerToolQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -5499,6 +5565,7 @@ project(":modeljars-catalog") {
                 }
                 if (decisionQualificationCatalogFile.isFile) {
                     inputs.file(decisionQualificationCatalogFile)
+                inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
                 }
                 if (speechQualificationCatalogFile.isFile) {
                     inputs.file(speechQualificationCatalogFile)
@@ -5516,6 +5583,7 @@ project(":modeljars-catalog") {
                     markerEmbeddingQualificationRegistry,
                     markerRerankingQualificationRegistry,
                     markerDecisionQualificationRegistry,
+                markerClassificationQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerSpeechQualificationRegistry,
                     markerComponentQualificationRegistry,
@@ -5556,6 +5624,7 @@ project(":modeljars-catalog") {
                                         modelRerankingQualifications.map {
                                             it.siteMetadata(requireNotNull(rerankingQualifications))
                                         }) +
+                                    ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         modelDecisionQualifications.map {
                                             it.siteMetadata(requireNotNull(decisionQualifications))
@@ -5631,6 +5700,10 @@ project(":modeljars-catalog") {
                             ?: "modeljars.rerankingQualifications.schemaVersion=1\n",
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerClassificationQualificationRegistry.get().asFile.writeText(
+                        classificationQualifications.registryProperties(classificationQualifications.entries.filter { it.modelId == entry.id }),
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerDecisionQualificationRegistry.get().asFile.writeText(
                         decisionQualifications?.registryProperties(modelDecisionQualifications)
                             ?: "modeljars.decisionQualifications.schemaVersion=1\n",
@@ -5702,6 +5775,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/embedding-qualifications-v1.properties",
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/decision-qualifications-v1.properties",
+                        "META-INF/modeljars/classification-qualifications-v2.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/speech-qualifications-v1.properties",
                         "META-INF/modeljars/component-qualifications-v1.properties",

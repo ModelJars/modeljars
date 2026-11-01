@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
-  "policy": "schema-classification-v1",
+  "schemaVersion": 2,
+  "policy": "schema-classification-upstream-v2",
   "entries": []
 }

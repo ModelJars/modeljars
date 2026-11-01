@@ -225,6 +225,9 @@ export function verificationProfile(model) {
     qualification?.maximumSameArtifactOracleLogitDelta !== undefined
   ) {
     checks.push(`${qualification.pairs}-pair reranking qualification`);
+  } else if (qualification?.useCaseTier === "SCHEMA_CLASSIFICATION") {
+    checks.push("Paired upstream classification fidelity");
+    checks.push("Three complete CPU performance replications");
   } else if (qualification?.chanceAccuracy !== undefined) {
     // A decision qualification counts labelled cases, not requests, and carries no `attempts`.
     // Left to the RAG fallback below it rendered "undefined-request RAG qualification" on

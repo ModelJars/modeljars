@@ -85,10 +85,12 @@ class ModelJarsClassificationTest {
                 URI.create("https://example.invalid/report"),
                 SHA,
                 FILES,
-                ModelClassificationQualification.qualityFloors(),
+                ModelClassificationQualification.qualityMetrics().stream()
+                    .collect(java.util.stream.Collectors.toMap(k -> k, k -> .5)),
                 0,
-                0,
-                1529,
+                ModelClassificationQualification.qualityMetrics().stream()
+                    .collect(java.util.stream.Collectors.toMap(k -> k, k -> .5)),
+                ModelClassificationQualification.requiredCohortCases(),
                 0,
                 true,
                 performance,

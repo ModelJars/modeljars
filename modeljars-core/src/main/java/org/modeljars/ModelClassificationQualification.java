@@ -17,7 +17,7 @@ package org.modeljars;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
  * @param files complete pinned model snapshot
  * @param quality measured metrics for all required cohorts
  * @param maximumOracleQualityLoss largest measured loss against the publisher runtime
- * @param maximumBaseQualityRegression largest measured loss against original weights
- * @param qualityCases total held-out quality cases
+ * @param oracleQuality publisher scores on exactly the same requests
+ * @param cohortCases evaluation request counts per declared cohort
  * @param inferenceErrors failed quality inferences
  * @param numericalParityPassed whether numerical checks passed
  * @param performance complete paired CPU measurements
@@ -52,8 +52,8 @@ public record ModelClassificationQualification(
     List<ModelArtifactFile> files,
     Map<String, Double> quality,
     double maximumOracleQualityLoss,
-    double maximumBaseQualityRegression,
-    int qualityCases,
+    Map<String, Double> oracleQuality,
+    Map<String, Integer> cohortCases,
     int inferenceErrors,
     boolean numericalParityPassed,
     List<PerformanceBucket> performance,
@@ -112,20 +112,26 @@ public record ModelClassificationQualification(
       throw new IllegalArgumentException("complete, unique snapshot files required");
     }
     quality = Map.copyOf(quality);
-    if (!quality.keySet().equals(qualityFloors().keySet()))
+    oracleQuality = Map.copyOf(oracleQuality);
+    cohortCases = Map.copyOf(cohortCases);
+    if (!quality.keySet().equals(qualityMetrics())
+        || !oracleQuality.keySet().equals(qualityMetrics()))
       throw new IllegalArgumentException("classification quality cohort coverage differs");
-    for (double value : quality.values()) {
+    for (double value :
+        java.util.stream.Stream.concat(quality.values().stream(), oracleQuality.values().stream())
+            .toList()) {
       if (!Double.isFinite(value) || value < 0 || value > 1)
         throw new IllegalArgumentException("quality metrics must be in [0,1]");
     }
+    double measuredLoss = 0;
+    for (String metric : qualityMetrics())
+      measuredLoss = Math.max(measuredLoss, oracleQuality.get(metric) - quality.get(metric));
     if (!Double.isFinite(maximumOracleQualityLoss)
-        || maximumOracleQualityLoss < 0
-        || !Double.isFinite(maximumBaseQualityRegression)
-        || maximumBaseQualityRegression < 0) {
-      throw new IllegalArgumentException("quality losses must be finite and nonnegative");
-    }
-    if (qualityCases < 1 || inferenceErrors < 0)
-      throw new IllegalArgumentException("invalid quality outcome counts");
+        || Math.abs(measuredLoss - maximumOracleQualityLoss) > 1e-12)
+      throw new IllegalArgumentException(
+          "recorded oracle loss differs from disclosed paired metrics");
+    if (!cohortCases.equals(requiredCohortCases()) || inferenceErrors < 0)
+      throw new IllegalArgumentException("classification cohort coverage or error count differs");
     performance = List.copyOf(performance);
     var unique =
         performance.stream().map(b -> b.pair() + ":" + b.shape()).collect(Collectors.toSet());
@@ -135,10 +141,7 @@ public record ModelClassificationQualification(
         && (!releasedRuntimeVerified
             || !numericalParityPassed
             || inferenceErrors != 0
-            || qualityCases < 1529
             || maximumOracleQualityLoss > .005
-            || maximumBaseQualityRegression > .005
-            || !qualityPasses(quality)
             || !performancePasses(performance))) {
       throw new IllegalArgumentException(
           "qualified classification evidence must pass every registered gate and released-runtime verification");
@@ -164,36 +167,61 @@ public record ModelClassificationQualification(
   }
 
   /**
-   * Returns the registered absolute quality floors.
+   * Returns required task scores for disclosure and paired upstream comparison.
    *
-   * @return frozen quality floors for original and untouched fresh cohorts
+   * @return metric names under the user-approved upstream-fidelity policy
    */
-  public static Map<String, Double> qualityFloors() {
-    var floors = new LinkedHashMap<String, Double>();
-    floors.put("original.jevbench.accuracy", .7);
-    floors.put("original.jevbench.choice", .6);
-    floors.put("original.jevbench.noul", .7);
-    floors.put("original.clinc-banking.macroF1", .7);
-    floors.put("original.goemotions.microF1", .7);
-    floors.put("original.goemotions.macroF1", .6);
-    floors.put("fresh.boolq.accuracy", .7);
-    floors.put("fresh.goemotions.microF1", .7);
-    floors.put("fresh.goemotions.macroF1", .6);
+  public static Set<String> qualityMetrics() {
+    var metrics =
+        new LinkedHashSet<String>(
+            List.of(
+                "publisher.singleHead.meanDomainExactMatch",
+                "publisher.jointHead.meanDomainExactMatch",
+                "publisher.jointDocument.meanDomainExactMatch",
+                "goemotions.microF1",
+                "goemotions.macroF1"));
     for (String domain :
         List.of(
-            "banking",
-            "credit_cards",
-            "auto_and_commute",
-            "travel",
-            "home",
-            "work",
-            "kitchen_and_dining",
-            "small_talk",
-            "utility",
-            "meta")) {
-      floors.put("fresh.clinc-" + domain + ".macroF1", .7);
+            "agent_handoff",
+            "banking_intent",
+            "benefits_request",
+            "clinic_request",
+            "document_type",
+            "email_triage",
+            "news_topic",
+            "paper_field",
+            "product_feedback",
+            "restaurant_review",
+            "review_sentiment",
+            "screen_tags",
+            "sports_recap",
+            "support_intent",
+            "support_topic",
+            "ticket_route",
+            "travel_request")) {
+      for (String mode : List.of("singleHead", "jointHead", "jointDocument"))
+        metrics.add("publisher." + mode + "." + domain + ".exactMatch");
     }
-    return Map.copyOf(floors);
+    return Set.copyOf(metrics);
+  }
+
+  /**
+   * Returns the complete declared evaluation populations.
+   *
+   * @return request counts; publisher documents are evaluated in two different modes
+   */
+  public static Map<String, Integer> requiredCohortCases() {
+    return Map.of(
+        "publisher.singleHead", 2900, "publisher.jointHead", 1700, "goemotions.fullTest", 5427);
+  }
+
+  /**
+   * Counts evaluation requests rather than independent source documents.
+   *
+   * @return total request count across the declared cohorts
+   */
+  public int qualityCases() {
+    return cohortCases.values().stream().mapToInt(Integer::intValue).sum();
   }
 
   /**
@@ -234,11 +262,6 @@ public record ModelClassificationQualification(
             Collectors.toUnmodifiableMap(
                 ModelArtifactFile::path,
                 file -> file.sha256() + ":" + file.sizeBytes() + ":" + file.role()));
-  }
-
-  private static boolean qualityPasses(Map<String, Double> metrics) {
-    return qualityFloors().entrySet().stream()
-        .allMatch(gate -> metrics.get(gate.getKey()) >= gate.getValue());
   }
 
   private static boolean performancePasses(List<PerformanceBucket> buckets) {

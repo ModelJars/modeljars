@@ -216,6 +216,7 @@ export function primaryQualification(model) {
     ...composition,
     ...rag,
     ...tool,
+    ...(model.classificationQualifications || []).map(entry => ({...entry, useCaseTier: "SCHEMA_CLASSIFICATION"})),
     ...decision,
     ...reranking,
     ...speech,
@@ -226,6 +227,7 @@ export function primaryQualification(model) {
 
 export function qualificationLabel(qualification) {
   if (!qualification?.qualified) return qualification ? "Evaluated" : "Not evaluated";
+  if (qualification.useCaseTier === "SCHEMA_CLASSIFICATION") return "Schema classification";
   if (qualification.useCaseTier === "GENERATIVE_RAG") return "Generative RAG";
   if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
   if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";

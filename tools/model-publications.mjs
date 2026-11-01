@@ -425,7 +425,7 @@ export function filterQualifiedPublications(
   speechQualifications = { schemaVersion: 1, entries: [] },
   componentQualifications = { schemaVersion: 1, entries: [] },
   decisionQualifications = { schemaVersion: 1, entries: [] },
-  classificationQualifications = { schemaVersion: 1, entries: [] },
+  classificationQualifications = { schemaVersion: 2, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -465,8 +465,8 @@ export function filterQualifiedPublications(
   )) {
     qualifiedIds.add(id);
   }
-  if (classificationQualifications?.schemaVersion !== 1 || !Array.isArray(classificationQualifications.entries)) {
-    throw new Error("Classification qualifications must use schemaVersion 1");
+  if (classificationQualifications?.schemaVersion !== 2 || !Array.isArray(classificationQualifications.entries)) {
+    throw new Error("Classification qualifications must use schemaVersion 2");
   }
   const classificationIds = new Set();
   const identity = files => canonicalJson(files.map(({path,role,sha256,sizeBytes}) =>
@@ -479,6 +479,10 @@ export function filterQualifiedPublications(
     if (!model || model.architecture !== "gliner2" || model.format !== "safetensors"
         || !Array.isArray(model.files) || identity(entry.files) !== identity(model.files)) {
       throw new Error(`Classification snapshot does not match catalog model ${entry.modelId}`);
+    }
+    const weights = entry.files.find(file => file.path === "model.safetensors");
+    if (!weights || weights.sha256 !== model.sha256 || weights.sizeBytes !== model.sizeBytes) {
+      throw new Error(`Classification primary weights do not match catalog model ${entry.modelId}`);
     }
     if (entry.qualified) {
       if (model.backends?.[entry.backend] !== true) throw new Error("Classification backend is not enabled");

@@ -32,7 +32,8 @@ and where:
   arms are running on the dev box; the throughput passes need a quiet machine and are recorded
   separately. **No verdict exists yet.**
 - **This branch** carries, beside the record: `modeljars contribute` accepting an ONNX graph
-  with its `config.json`; the cache path and the catalog's loadable-format check accepting
+  with its `config.json` (the command that refused v1.1 that morning now writes
+  `docs/model-evidence/paradee-8m/contribute-v1.2.md` for v1.2, run from this branch); the cache path and the catalog's loadable-format check accepting
   `format: onnx` with a file list; the modality claim gate reading an ONNX graph's typed
   interface and the pinned config as its declared task, with the evidence record for this
   artifact; and the catalog entry `sahilmahendrakar_paradee_8m_v1_2_onnx_int8` **as a

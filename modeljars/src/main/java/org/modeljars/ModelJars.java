@@ -22,11 +22,13 @@ import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.Pooling;
 import com.integrallis.models.api.RerankingModel;
+import com.integrallis.models.api.SchemaClassificationModel;
 import com.integrallis.models.api.SharedPrefixInferenceBackend;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.audio.SopranoTextToSpeechModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
+import com.integrallis.models.backend.nativekernel.RustGlinerClassificationModel;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
@@ -1090,6 +1092,104 @@ public final class ModelJars {
     Path artifact = installer.install(descriptor, options);
     RerankingModel reranker = rerankingModelLoader.load(artifact, descriptor, qualification);
     return new ModelJarRerankingRuntime(reranker, descriptor, qualification);
+  }
+
+  /**
+   * Opens a qualified schema classifier with default load options.
+   *
+   * @param model model identifier
+   * @return owned classifier runtime and its exact qualification evidence
+   */
+  public static ModelJarClassificationRuntime openClassificationRuntime(ModelJar model) {
+    return openClassificationRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified schema classifier with explicit load options.
+   *
+   * @param model model identifier
+   * @param options installation and backend options
+   * @return owned classifier runtime and its exact qualification evidence
+   */
+  public static ModelJarClassificationRuntime openClassificationRuntime(
+      ModelJar model, ModelLoadOptions options) {
+    return classpathLoader()
+        .loadClassificationRuntime(
+            model,
+            options,
+            ModelClassificationQualificationRegistry.fromClasspath(),
+            RustGlinerClassificationModel::load);
+  }
+
+  /**
+   * Opens a qualified schema classifier from a marker coordinate.
+   *
+   * @param markerCoordinate model marker Maven coordinate
+   * @return owned classifier runtime and its exact qualification evidence
+   */
+  public static ModelJarClassificationRuntime openClassificationRuntime(String markerCoordinate) {
+    return openClassificationRuntime(ModelJar.of(markerCoordinate));
+  }
+
+  /**
+   * Opens an owned classifier; callers must close the returned model.
+   *
+   * @param model model identifier
+   * @return loaded schema classifier
+   */
+  public static SchemaClassificationModel openClassifier(ModelJar model) {
+    return openClassificationRuntime(model).model();
+  }
+
+  /**
+   * Opens an owned classifier with explicit load options.
+   *
+   * @param model model identifier
+   * @param options installation and backend options
+   * @return loaded schema classifier, which the caller must close
+   */
+  public static SchemaClassificationModel openClassifier(ModelJar model, ModelLoadOptions options) {
+    return openClassificationRuntime(model, options).model();
+  }
+
+  ModelJarClassificationRuntime loadClassificationRuntime(
+      ModelJar model,
+      ModelLoadOptions options,
+      ModelClassificationQualificationRegistry registry,
+      ClassificationModelLoader loader) {
+    Objects.requireNonNull(model, "model");
+    Objects.requireNonNull(options, "options");
+    ModelJarDescriptor descriptor =
+        models
+            .resolve(model)
+            .orElseThrow(() -> new ModelJarException("No qualified ModelJar matched " + model));
+    var qualification =
+        registry
+            .qualificationFor(descriptor)
+            .filter(
+                entry ->
+                    options.backend() == ModelBackend.AUTO
+                        || entry.backend().equals(options.backend().backendId()))
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "ModelJar "
+                            + descriptor.markerCoordinate()
+                            + " has no qualified schema classification execution for "
+                            + options.backend()));
+    requireNativeAccess(qualification.backend(), List.copyOf(jvmArguments.get()));
+    Path snapshot = installer.install(descriptor, options);
+    try {
+      return new ModelJarClassificationRuntime(loader.load(snapshot), descriptor, qualification);
+    } catch (IOException failure) {
+      throw new ModelJarException(
+          "Cannot open qualified classification snapshot " + snapshot, failure);
+    }
+  }
+
+  @FunctionalInterface
+  interface ClassificationModelLoader {
+    SchemaClassificationModel load(Path snapshot) throws IOException;
   }
 
   ModelJarSpeechRuntime loadSpeechRuntime(ModelJar model, ModelLoadOptions options) {

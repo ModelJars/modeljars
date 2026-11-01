@@ -4370,6 +4370,21 @@ project(":modeljars-cli") {
 project(":modeljars") {
     description = "Application-facing ModelJars JVM Runtime"
 
+    val classificationResources = layout.buildDirectory.dir("generated/resources/classification")
+    val generateClassificationQualifications = tasks.register<Exec>("generateClassificationQualifications") {
+        val source = rootProject.file("catalog/classification-qualifications.json")
+        val generator = rootProject.file("tools/classification-qualifications.mjs")
+        val output = classificationResources.map { it.file("META-INF/modeljars/classification-qualifications-v1.properties") }
+        inputs.files(source, generator)
+        outputs.file(output)
+        commandLine("node", generator.absolutePath, source.absolutePath, output.get().asFile.absolutePath)
+    }
+    extensions.configure<SourceSetContainer> {
+        named("main") { resources.srcDir(classificationResources) }
+    }
+    tasks.named("processResources") { dependsOn(generateClassificationQualifications) }
+    tasks.named("sourcesJar") { dependsOn(generateClassificationQualifications) }
+
     val runtimeQualificationResources =
         layout.buildDirectory.dir("generated/resources/runtime-qualifications")
     val runtimeRagQualificationRegistry =

@@ -16,6 +16,8 @@
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -127,6 +129,97 @@ class HuggingFaceContributionServiceTest {
         List.of("needle2.cact"), draft.files().stream().map(ContributionFile::path).toList());
     assertEquals("model-weights", draft.files().getFirst().role());
     assertEquals(artifactSha, draft.files().getFirst().sha256());
+  }
+
+  @Test
+  void discoversASingleOnnxGraphAndCarriesItsConfig() throws Exception {
+    String revision = "e".repeat(40);
+    String graphSha = "a".repeat(64);
+    byte[] config =
+        "{\"model_type\":\"paradee\",\"sample_rate\":24000}".getBytes(StandardCharsets.UTF_8);
+    String modelJson =
+        """
+        {
+          "sha": "%s",
+          "pipeline_tag": "text-to-speech",
+          "cardData": {"license": "apache-2.0"},
+          "config": {"model_type": "paradee"}
+        }
+        """
+            .formatted(revision);
+    String treeJson =
+        """
+        [
+          {"type":"file","path":"config.json","size":%d,"oid":"a"},
+          {"type":"file","path":"onnx/paradee_int8.onnx","size":8462119,"oid":"b",
+           "lfs":{"oid":"%s","size":8462119}},
+          {"type":"file","path":"pytorch/decoder.pt","size":14655977,"oid":"c",
+           "lfs":{"oid":"%s","size":14655977}}
+        ]
+        """
+            .formatted(config.length, graphSha, "d".repeat(64));
+    HuggingFaceContributionService.HttpTransport transport =
+        uri -> {
+          String path = uri.getPath();
+          if (path.contains("/tree/")) return response(treeJson);
+          if (path.contains("/revision/")) return response(modelJson);
+          return new HuggingFaceContributionService.HttpResponse(200, Map.of(), config);
+        };
+
+    ContributionDraft draft =
+        new HuggingFaceContributionService(transport)
+            .prepare(
+                new ContributionRequest(
+                    "sahilmahendrakar/Paradee-8M-v1.2",
+                    "main",
+                    List.of(),
+                    Optional.empty(),
+                    List.of("text-to-speech"),
+                    List.of("speech")));
+
+    assertEquals("onnx", draft.format());
+    assertEquals("Paradee-8M-v1.2 ONNX", draft.name());
+    assertEquals(Optional.of("paradee"), draft.architectureHint());
+    assertEquals(
+        List.of("config.json", "onnx/paradee_int8.onnx"),
+        draft.files().stream().map(ContributionFile::path).toList());
+    assertEquals("model-configuration", draft.files().get(0).role());
+    assertEquals(sha256(config), draft.files().get(0).sha256());
+    assertEquals("model-weights", draft.files().get(1).role());
+    assertEquals(graphSha, draft.files().get(1).sha256());
+  }
+
+  @Test
+  void twoOnnxGraphsNeedAnExplicitChoice() {
+    String treeJson =
+        """
+        [
+          {"type":"file","path":"config.json","size":6,"oid":"a"},
+          {"type":"file","path":"onnx/paradee.onnx","size":34779443,"oid":"b",
+           "lfs":{"oid":"%s","size":34779443}},
+          {"type":"file","path":"onnx/paradee_int8.onnx","size":8462119,"oid":"c",
+           "lfs":{"oid":"%s","size":8462119}}
+        ]
+        """
+            .formatted("b".repeat(64), "c".repeat(64));
+    String modelJson = "{\"sha\":\"" + "e".repeat(40) + "\"}";
+    HuggingFaceContributionService.HttpTransport transport =
+        uri -> uri.getPath().contains("/tree/") ? response(treeJson) : response(modelJson);
+
+    IllegalArgumentException refused =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new HuggingFaceContributionService(transport)
+                    .prepare(
+                        new ContributionRequest(
+                            "sahilmahendrakar/Paradee-8M-v1.2",
+                            "main",
+                            List.of(),
+                            Optional.empty(),
+                            List.of(),
+                            List.of())));
+    assertTrue(refused.getMessage().contains("multiple ONNX graphs"), refused.getMessage());
   }
 
   private static HuggingFaceContributionService.HttpResponse response(String body) {

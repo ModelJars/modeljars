@@ -236,12 +236,15 @@ public final class ModelJarsCatalog implements ModelCatalogProvider {
    * The formats a Models backend can open, as {@code ModelJars.cachePath} defines them.
    *
    * <p>Checked here so this method never reports a path the loader would then refuse. A safetensors
-   * marker with no file list has no artifact to point at.
+   * or ONNX marker with no file list has no artifact to point at: both carry their configuration
+   * beside the weights.
    */
   private static boolean loadableFormat(ModelJarDescriptor descriptor) {
+    boolean multiFile = !descriptor.files().isEmpty();
     return "gguf".equals(descriptor.format())
         || "cact".equals(descriptor.format())
-        || ("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty());
+        || ("safetensors".equals(descriptor.format()) && multiFile)
+        || ("onnx".equals(descriptor.format()) && multiFile);
   }
 
   private boolean cached(ModelJarDescriptor descriptor) {

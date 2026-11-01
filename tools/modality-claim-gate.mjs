@@ -19,6 +19,13 @@
  *      `audiocpp.model_spec.json = {"tasks":["tts"], ...}`. That is the converter stating the
  *      model's purpose, which is stronger evidence than any tensor-name heuristic.
  *
+ *   3. A DECLARED INTERFACE, for ONNX. An ONNX graph has neither ggml tensor namespaces nor a task
+ *      string, but it does declare its typed inputs and outputs, and the pinned config.json beside
+ *      it declares the sample rate. A graph that takes integer token ids and returns a float
+ *      waveform at a declared sample rate is the artifact describing itself as a speech
+ *      generator (`onnxDeclaredTasks`). This is a structural declaration, weaker than a task
+ *      string and stronger than a tensor-name guess; the record keeps the names it decided on.
+ *
  * Requiring a tower alone would be wrong and was checked before this gate was written: soprano,
  * the one genuinely qualified TTS model in the catalog, carries NO tower by any name pattern.
  * A tower-only rule would have failed the honest entry and is exactly the false positive this
@@ -28,9 +35,11 @@
  * record per entry; the gate then compares claims against the record and refuses a record whose
  * `sha256` no longer matches the catalog, so a swapped artifact cannot inherit old evidence.
  *
- *   node tools/modality-claim-gate.mjs            # check (offline, CI)
- *   node tools/modality-claim-gate.mjs --write    # range-fetch headers, record evidence
+ *   node tools/modality-claim-gate.mjs                      # check (offline, CI)
+ *   node tools/modality-claim-gate.mjs --write              # fetch artifacts, record evidence
+ *   node tools/modality-claim-gate.mjs --write --only=<id>  # record one entry only
  */
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 
@@ -80,6 +89,27 @@ export function declaredTasks(metadata = {}) {
   return [...tasks].sort();
 }
 
+/**
+ * Task an ONNX artifact declares through its interface, read from the inspector's summary and
+ * the pinned config.json. One rule so far: integer token ids in, a float waveform out, and a
+ * declared positive sample rate is "tts". The names that satisfied the rule are returned so the
+ * evidence record can show its work; an interface that fits no rule declares nothing.
+ */
+export function onnxDeclaredTasks({ inputs = [], outputs = [] } = {}, config = {}) {
+  const tokenInput = inputs.find(
+    (i) => /^(U?INT(8|16|32|64))$/.test(i.elemType ?? "") && /input_ids|tokens?|phonem/i.test(i.name));
+  const waveformOutput = outputs.find(
+    (o) => o.elemType === "FLOAT" && /audio|wav|waveform|pcm|speech/i.test(o.name));
+  const sampleRate = Number(config?.sample_rate);
+  const tasks = [];
+  const evidence = {};
+  if (tokenInput && waveformOutput && Number.isFinite(sampleRate) && sampleRate > 0) {
+    tasks.push("tts");
+    evidence.tts = { input: tokenInput.name, output: waveformOutput.name, sampleRate };
+  }
+  return { tasks: tasks.sort(), evidence };
+}
+
 /** Decides one claim against one evidence record. Pure; the tests drive this directly. */
 export function backing(claim, evidence) {
   const rule = MODALITY_CLAIMS.get(claim);
@@ -89,7 +119,7 @@ export function backing(claim, evidence) {
   if (tower) return { ok: true, why: `artifact carries a ${tower} tower` };
   const tasks = evidence.declaredTasks ?? [];
   const task = rule.tasks.find((t) => tasks.includes(t));
-  if (task) return { ok: true, why: `artifact's own header declares task "${task}"` };
+  if (task) return { ok: true, why: `artifact declares task "${task}" (${evidence.format === "onnx" ? "typed interface and pinned config" : "header"})` };
   return {
     ok: false,
     why: `no ${rule.towers.join("/")} tower and no declared task in `
@@ -118,9 +148,9 @@ export function runGate(models, loadEvidence) {
   for (const model of models) {
     const claims = claimsOf(model);
     if (claims.length === 0) continue;
-    if (model.format !== "gguf") {
+    if (model.format !== "gguf" && model.format !== "onnx") {
       findings.push({ id: model.id, status: "UNVERIFIABLE", claims,
-        detail: `format is ${model.format}; this gate reads GGUF headers` });
+        detail: `format is ${model.format}; this gate reads GGUF headers and ONNX graphs` });
       continue;
     }
     const ev = loadEvidence(model.id);
@@ -150,6 +180,72 @@ export function runGate(models, loadEvidence) {
   return findings;
 }
 
+async function ggufRecord(model, triageUri) {
+  const t = await triageUri(model.downloadUri);
+  return {
+    id: model.id,
+    downloadUri: model.downloadUri,
+    sha256: model.sha256,
+    architecture: t.architecture,
+    tensorCount: t.tensorCount,
+    towers: t.towers,
+    declaredTasks: declaredTasks(t.metadata ?? {}),
+    recordedAt: new Date().toISOString(),
+    recordedBy: "tools/modality-claim-gate.mjs --write",
+  };
+}
+
+/**
+ * The ONNX record: the graph's own declared interface plus the pinned config.json, both fetched
+ * from the catalog's URIs and the config checked against the digest the catalog lists for it, so
+ * the record cannot describe a config the entry does not pin.
+ */
+async function onnxRecord(model, inspectOnnx) {
+  const graph = await inspectOnnx(model.downloadUri);
+  const configFile = (model.files ?? []).find((f) => f.path === "config.json");
+  let config = {};
+  let configSha256 = null;
+  if (configFile) {
+    const uri = `${model.sourceUri}/resolve/${model.revision}/${configFile.path}`;
+    const response = await fetch(uri, { redirect: "follow" });
+    if (!response.ok) throw new Error(`HTTP ${response.status} fetching ${uri}`);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    configSha256 = createHash("sha256").update(bytes).digest("hex");
+    if (configSha256 !== configFile.sha256) {
+      throw new Error(`config.json digest ${configSha256.slice(0, 12)} does not match the catalog's ${configFile.sha256.slice(0, 12)}`);
+    }
+    config = JSON.parse(new TextDecoder().decode(bytes));
+  }
+  const declared = onnxDeclaredTasks(graph, config);
+  return {
+    id: model.id,
+    downloadUri: model.downloadUri,
+    sha256: model.sha256,
+    format: "onnx",
+    architecture: model.architecture,
+    irVersion: graph.irVersion,
+    producer: graph.producer,
+    opset: graph.opset,
+    inputs: graph.inputs,
+    outputs: graph.outputs,
+    nodeCount: graph.nodeCount,
+    operatorTypes: graph.operatorTypes,
+    initializerCount: graph.initializerCount,
+    config: {
+      sha256: configSha256,
+      model_type: config.model_type ?? null,
+      sample_rate: config.sample_rate ?? null,
+      voices: Array.isArray(config.voices) ? config.voices : null,
+      n_token: config.n_token ?? null,
+    },
+    towers: {},
+    declaredTasks: declared.tasks,
+    declaredTaskEvidence: declared.evidence,
+    recordedAt: new Date().toISOString(),
+    recordedBy: "tools/modality-claim-gate.mjs --write",
+  };
+}
+
 function loadCatalog(root) {
   const raw = JSON.parse(readFileSync(path.join(root, "catalog", "models.json"), "utf8"));
   return Array.isArray(raw) ? raw : raw.models;
@@ -158,31 +254,26 @@ function loadCatalog(root) {
 async function main(argv) {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
   const write = argv.includes("--write");
+  const only = argv.find((a) => a.startsWith("--only="))?.slice("--only=".length);
   const models = loadCatalog(root);
   const dir = evidenceDir(root);
 
   if (write) {
     const { triageUri } = await import("./gguf-triage.mjs");
+    const { inspectOnnx } = await import("./onnx-inspector.mjs");
     mkdirSync(dir, { recursive: true });
     for (const model of models) {
-      if (claimsOf(model).length === 0 || model.format !== "gguf") continue;
-      process.stdout.write(`  fetching header: ${model.id} ... `);
+      if (claimsOf(model).length === 0) continue;
+      if (only && model.id !== only) continue;
+      if (model.format !== "gguf" && model.format !== "onnx") continue;
+      process.stdout.write(`  fetching ${model.format === "gguf" ? "header" : "graph"}: ${model.id} ... `);
       try {
-        const t = await triageUri(model.downloadUri);
-        const record = {
-          id: model.id,
-          downloadUri: model.downloadUri,
-          sha256: model.sha256,
-          architecture: t.architecture,
-          tensorCount: t.tensorCount,
-          towers: t.towers,
-          declaredTasks: declaredTasks(t.metadata ?? {}),
-          recordedAt: new Date().toISOString(),
-          recordedBy: "tools/modality-claim-gate.mjs --write",
-        };
+        const record = model.format === "gguf"
+          ? await ggufRecord(model, triageUri)
+          : await onnxRecord(model, inspectOnnx);
         writeFileSync(path.join(dir, `${model.id}.json`),
                       `${JSON.stringify(record, null, 1)}\n`);
-        console.log(`towers=${JSON.stringify(t.towers)} tasks=${JSON.stringify(record.declaredTasks)}`);
+        console.log(`towers=${JSON.stringify(record.towers)} tasks=${JSON.stringify(record.declaredTasks)}`);
       } catch (e) {
         console.log(`FAILED: ${e.message.slice(0, 100)}`);
         process.exitCode = 1;
@@ -210,7 +301,7 @@ async function main(argv) {
   if (unverifiable.length) {
     console.log();
     console.log(`${unverifiable.length} entr${unverifiable.length === 1 ? "y" : "ies"} cannot be `
-      + `verified by this gate (not GGUF). That is "no data", not "claim is fine"; they need a `
+      + `verified by this gate (neither GGUF nor ONNX). That is "no data", not "claim is fine"; they need a `
       + `safetensors reader or a separate check.`);
   }
 

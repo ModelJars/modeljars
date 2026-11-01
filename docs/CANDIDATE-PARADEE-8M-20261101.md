@@ -6,7 +6,44 @@ nothing here is authorized beyond the candidate record itself — the sections b
 plans are recommendations, and they are labelled as such. The artifact facts are ours, read from
 the bytes (`docs/model-evidence/paradee-8m/`); every quality and speed figure is the publisher's.
 
-## Disposition
+## Status, later on 2026-11-01
+
+The owner decided **v1.2** the same day and asked for the qualification to run. What exists now,
+and where:
+
+- **Runtime (recommendation 1): built.** `models-backend-onnx` on branch `feat/paradee-8m-tts`
+  of the models repository (PR integrallis/models#326): a pure-Java eager executor for the 56
+  operators the int8 graph uses, kernels on the Vector API. **Seeded parity closed, 40 of 40
+  cases** (fp32 and int8 graphs, four voices, five sentences each) against onnxruntime 1.23.2:
+  PCM cosine 1.000000 throughout, worst signal-to-difference 63.37 dB against the 20 dB floor
+  (`experiments/paradee-8m-tts/evidence/parity/seeded-parity-2026-11-01.json` there).
+- **Phonemizer (recommendation 2): built, and its own number measured.** The Java misaki port
+  resolves every word of the Harvard sentences but one (1 of 1,765 words, both accents) and
+  drops **4.1 % of the words of the WikiText held-out set** (161 of 3,896 in US spelling, 160 in
+  British; 90 and 91 of 200 sentences touched), which is the eSpeak fallback the port does not
+  carry showing up as proper nouns (`experiments/paradee-8m-tts/evidence/phonemizer/`). The
+  exact-match rate against the publisher's phonemes is derived once the arms finish. The four
+  misaki dictionaries now ship inside `models-audio`, so a catalog entry needs only the
+  publisher's two files.
+- **Gate (recommendation 3): frozen and running.** The protocol is
+  `experiments/paradee-8m-tts/README.md` in the models repository; the publisher's held-out
+  200 WikiText sentences turned out to be published (`training/data/wikitext_sents.json`, first
+  200), so the corpus is the publisher's own plus the Harvard sentences. The WER passes of both
+  arms are running on the dev box; the throughput passes need a quiet machine and are recorded
+  separately. **No verdict exists yet.**
+- **This branch** carries, beside the record: `modeljars contribute` accepting an ONNX graph
+  with its `config.json`; the cache path and the catalog's loadable-format check accepting
+  `format: onnx` with a file list; the modality claim gate reading an ONNX graph's typed
+  interface and the pinned config as its declared task, with the evidence record for this
+  artifact; and the catalog entry `sahilmahendrakar_paradee_8m_v1_2_onnx_int8` **as a
+  candidate**, with no `catalogPublishedAt` and no qualification. The speech loader's `paradee`
+  branch waits for the models release that carries the runtime, per the bottom-up release
+  rule.
+
+The sections below are the record as written that morning, before any of this existed; the
+pinned-revision tables remain the provenance for both versions.
+
+## Disposition (as recorded that morning)
 
 **Recorded as a candidate. Phase 4. No port scheduled, and none authorized.**
 

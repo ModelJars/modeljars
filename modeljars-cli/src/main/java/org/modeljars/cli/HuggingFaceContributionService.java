@@ -107,7 +107,7 @@ final class HuggingFaceContributionService implements ContributionService {
                 .map(RemoteFile::path)
                 .map(HuggingFaceContributionService::baseName)
                 .orElse(repositoryName)
-            : repositoryName + " Safetensors";
+            : repositoryName + (format.equals("onnx") ? " ONNX" : " Safetensors");
 
     return new ContributionDraft(
         source.repository(),
@@ -190,6 +190,9 @@ final class HuggingFaceContributionService implements ContributionService {
           .anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors"))) {
         return standardSafetensorsFiles(byPath);
       }
+      if (selected.stream().anyMatch(file -> isOnnx(file.path()))) {
+        return onnxFiles(selected, byPath);
+      }
       return selected;
     }
 
@@ -201,11 +204,15 @@ final class HuggingFaceContributionService implements ContributionService {
         tree.stream()
             .filter(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".cact"))
             .toList();
+    List<RemoteFile> onnx = tree.stream().filter(file -> isOnnx(file.path())).toList();
     boolean standardSafetensors =
         byPath.containsKey("model.safetensors")
             || byPath.containsKey("model.safetensors.index.json");
     int availableFormats =
-        (gguf.isEmpty() ? 0 : 1) + (cact.isEmpty() ? 0 : 1) + (standardSafetensors ? 1 : 0);
+        (gguf.isEmpty() ? 0 : 1)
+            + (cact.isEmpty() ? 0 : 1)
+            + (onnx.isEmpty() ? 0 : 1)
+            + (standardSafetensors ? 1 : 0);
     if (availableFormats > 1) {
       throw new IllegalArgumentException(
           "Repository contains more than one supported model format; choose one with --file");
@@ -213,6 +220,7 @@ final class HuggingFaceContributionService implements ContributionService {
     if (standardSafetensors) return standardSafetensorsFiles(byPath);
     if (gguf.size() == 1) return gguf;
     if (cact.size() == 1) return cact;
+    if (onnx.size() == 1) return onnxFiles(onnx, byPath);
     if (gguf.size() > 1) {
       throw new IllegalArgumentException(
           "Repository contains multiple GGUF files; choose one with --file: "
@@ -224,9 +232,34 @@ final class HuggingFaceContributionService implements ContributionService {
           "Repository contains multiple CACT files; choose one with --file: "
               + cact.stream().map(RemoteFile::path).sorted().limit(12).toList());
     }
+    if (onnx.size() > 1) {
+      throw new IllegalArgumentException(
+          "Repository contains multiple ONNX graphs; choose one with --file: "
+              + onnx.stream().map(RemoteFile::path).sorted().limit(12).toList());
+    }
     throw new IllegalArgumentException(
-        "No single GGUF or CACT file, or standard Safetensors checkpoint, was found; "
+        "No single GGUF, CACT or ONNX file, or standard Safetensors checkpoint, was found; "
             + "select files with --file");
+  }
+
+  private static boolean isOnnx(String path) {
+    return path.toLowerCase(Locale.ROOT).endsWith(".onnx");
+  }
+
+  /**
+   * An ONNX graph's vocabulary, sample rate and voices live in the repository's {@code
+   * config.json}, so a contribution that selects a graph always carries that file too when the
+   * revision has one. Nothing else is implied; a repository that ships several graphs is a {@code
+   * --file} choice.
+   */
+  private static List<RemoteFile> onnxFiles(
+      List<RemoteFile> selected, Map<String, RemoteFile> byPath) {
+    LinkedHashSet<RemoteFile> files = new LinkedHashSet<>();
+    if (byPath.containsKey("config.json")) {
+      files.add(byPath.get("config.json"));
+    }
+    files.addAll(selected);
+    return List.copyOf(files);
   }
 
   private static List<RemoteFile> standardSafetensorsFiles(Map<String, RemoteFile> byPath) {
@@ -338,8 +371,9 @@ final class HuggingFaceContributionService implements ContributionService {
     if (files.stream()
         .anyMatch(file -> file.path().toLowerCase(Locale.ROOT).endsWith(".safetensors")))
       return "safetensors";
+    if (files.stream().anyMatch(file -> isOnnx(file.path()))) return "onnx";
     throw new IllegalArgumentException(
-        "Selected files do not contain GGUF, CACT, or Safetensors model weights");
+        "Selected files do not contain GGUF, CACT, Safetensors, or ONNX model weights");
   }
 
   private static String role(String path) {
@@ -347,8 +381,10 @@ final class HuggingFaceContributionService implements ContributionService {
     if (path.equals("tokenizer.json")) return "tokenizer";
     if (path.equals("tokenizer_config.json")) return "tokenizer-configuration";
     if (path.endsWith(".index.json")) return "weights-index";
-    if (path.endsWith(".gguf") || path.endsWith(".cact") || path.endsWith(".safetensors"))
-      return "model-weights";
+    if (path.endsWith(".gguf")
+        || path.endsWith(".cact")
+        || path.endsWith(".safetensors")
+        || path.endsWith(".onnx")) return "model-weights";
     return "supporting-file";
   }
 

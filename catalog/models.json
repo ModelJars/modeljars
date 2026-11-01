@@ -22434,6 +22434,67 @@
       ]
     },
     {
+      "id": "sahilmahendrakar_paradee_8m_v1_2_onnx_int8",
+      "name": "Paradee-8M v1.2 ONNX INT8",
+      "description": "English text-to-speech distilled from Kokoro-82M: 7.9M parameters in an 8.5 MB int8 ONNX graph, four voices at 24 kHz, executed in process by the pure-Java ONNX executor with a Java port of misaki's lexicon path. Candidate under the round-trip-WER protocol; not yet published.",
+      "sourceId": "hf://sahilmahendrakar/Paradee-8M-v1.2",
+      "sourceUri": "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2",
+      "downloadUri": "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/resolve/ed2934d4df8a4fd891e29584c5e1104649409765/onnx/paradee_int8.onnx",
+      "revision": "ed2934d4df8a4fd891e29584c5e1104649409765",
+      "markerCoordinate": "org.modeljars.huggingface:sahilmahendrakar.paradee-8m-v1.2.int8:1.2.0-int8.1",
+      "modelVersion": "1.2.0",
+      "variant": "int8",
+      "format": "onnx",
+      "architecture": "paradee",
+      "quantization": "INT8",
+      "localPath": "${user.home}/.modeljars/models/Paradee-8M-v1.2/onnx/paradee_int8.onnx",
+      "sha256": "a6989796692ac173597e15d405c971989202d5c73cfad65f22e90bd7b6c97da1",
+      "sizeBytes": 8462119,
+      "license": "Apache-2.0",
+      "licenseUri": "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/blob/ed2934d4df8a4fd891e29584c5e1104649409765/README.md",
+      "capabilities": [
+        "text-to-speech",
+        "audio-generation",
+        "streaming"
+      ],
+      "features": [
+        "pure-java",
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "english",
+        "multi-voice",
+        "24khz-audio",
+        "sentence-level-streaming",
+        "onnx-opset-17",
+        "int8-weights",
+        "distilled-from:hexgrad/Kokoro-82M"
+      ],
+      "backends": {
+        "pure-java": true,
+        "rust-ffm": false
+      },
+      "domains": [
+        "speech",
+        "audio",
+        "text-to-speech"
+      ],
+      "files": [
+        {
+          "path": "config.json",
+          "role": "model-configuration",
+          "sha256": "002535cf8dd08a434cdddb13372da8a7b4844152bdf9b5b4e7342e12ec30bcfb",
+          "sizeBytes": 1827
+        },
+        {
+          "path": "onnx/paradee_int8.onnx",
+          "role": "model-weights",
+          "sha256": "a6989796692ac173597e15d405c971989202d5c73cfad65f22e90bd7b6c97da1",
+          "sizeBytes": 8462119
+        }
+      ]
+    },
+    {
       "id": "wordtour_glove_6b_300d_optimal",
       "name": "WordTour GloVe 6B 300d Optimal",
       "description": "Proven-optimal cyclic semantic ordering of the 40,000-word GloVe 6B 300d vocabulary for compact pure-Java neighbor lookup and blurred bag-of-words.",

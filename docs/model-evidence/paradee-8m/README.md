@@ -51,7 +51,11 @@ both, so the choice changes digests and nothing else.
   (`us_gold.json` 3,000,469 B, `us_silver.json` 3,099,517 B, `gb_gold.json` 2,838,552 B,
   `gb_silver.json` 3,663,898 B — 12.6 MB of JSON), stem rules for -s/-ed/-ing, number and currency
   expansion through `num2words`, stress rules, and part-of-speech-dependent special cases that need
-  spaCy.
+  spaCy. The four files as shipped in the misaki 0.9.4 wheel, which `models-audio` now bundles
+  byte-for-byte: `us_gold` sha256 `dc414872a49a28ae6c141463d502fd945f3b2fde040484fdc47d00cc4612686f`,
+  `us_silver` `de8f67be911bb6c659187b4a65fd966b6a30e56350e0f790d763210b053ac475`, `gb_gold`
+  `29e62f4b60261c88f7f3c2c7811ca3825978948090b72d2b27d565b729282f71`, `gb_silver`
+  `48131e2d92ccc41655f4543e87e0f938e71463eb5a54be7f0693bb712ebb6bce`.
 
 ## Publisher-reported figures — read, never measured here
 

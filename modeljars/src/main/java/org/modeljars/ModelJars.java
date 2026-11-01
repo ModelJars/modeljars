@@ -1571,10 +1571,12 @@ public final class ModelJars {
   }
 
   private static Path cachePath(ModelJarDescriptor descriptor, Path cacheDirectory) {
+    boolean multiFile = !descriptor.files().isEmpty();
     boolean supported =
         descriptor.format().equals("gguf")
             || descriptor.format().equals("cact")
-            || (descriptor.format().equals("safetensors") && !descriptor.files().isEmpty());
+            || (descriptor.format().equals("safetensors") && multiFile)
+            || (descriptor.format().equals("onnx") && multiFile);
     if (!supported) {
       throw new ModelJarException(
           "Models backends cannot load ModelJar format " + descriptor.format());

@@ -187,8 +187,8 @@ class ModelJarsCatalogLocateTest {
 
   @Test
   void neverReportsAPathForAFormatTheBackendsRefuse() {
-    // ModelJars.cachePath refuses anything but gguf, cact and a safetensors marker with files, so
-    // reporting one of those here would hand a caller a path the loader then rejects.
+    // ModelJars.cachePath refuses anything but gguf, cact and a safetensors or onnx marker with
+    // files, so reporting one of those here would hand a caller a path the loader then rejects.
     ModelJarRegistry registry = ModelJarRegistry.fromClasspath();
     ModelJarsCatalog catalog = new ModelJarsCatalog();
 
@@ -196,7 +196,8 @@ class ModelJarsCatalogLocateTest {
       boolean loadable =
           "gguf".equals(descriptor.format())
               || "cact".equals(descriptor.format())
-              || ("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty());
+              || ("safetensors".equals(descriptor.format()) && !descriptor.files().isEmpty())
+              || ("onnx".equals(descriptor.format()) && !descriptor.files().isEmpty());
       if (loadable) {
         continue;
       }

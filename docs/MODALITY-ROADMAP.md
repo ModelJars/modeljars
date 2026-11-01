@@ -134,16 +134,18 @@ Lower priority: TTS already exists as a modality, so these add breadth not reach
 `Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice` (`qwen3_tts`) both need new architectures **and** multi-file
 loading, which Phase 2.1 delivers first.
 
-`sahilmahendrakar/Paradee-8M-v1.1` (`paradee`, 7.9M parameters, 8.46 MB int8 ONNX, Apache-2.0) was
-added as a candidate on 2026-11-01 at the owner's request and triaged the same day:
-`docs/CANDIDATE-PARADEE-8M-20261101.md`, evidence in `docs/model-evidence/paradee-8m/`. It is by
-far the smallest TTS candidate on this page and it is a distillation of Kokoro-82M, so it reaches
-the Kokoro place at a tenth the size. **v1.2 was triaged beside it and is recommended** — four
-voices for 681 more bytes, identical blockers — which is an open decision for the owner, not a
-decision taken.
+`sahilmahendrakar/Paradee-8M-v1.2` (`paradee`, 7.9M parameters, 8.46 MB int8 ONNX, Apache-2.0,
+four voices) was added as a candidate on 2026-11-01 at the owner's request, triaged the same day,
+and the owner chose v1.2 over the v1.1 first asked for: `docs/CANDIDATE-PARADEE-8M-20261101.md`,
+evidence in `docs/model-evidence/paradee-8m/`. It is by far the smallest TTS candidate on this
+page and it is a distillation of Kokoro-82M, so it reaches the Kokoro place at a tenth the size.
+The catalog carries it as `sahilmahendrakar_paradee_8m_v1_2_onnx_int8` with no publication time
+and no qualification; the qualification is running against the frozen protocol in the models
+repository (`experiments/paradee-8m-tts/README.md` on PR integrallis/models#326) and the record's
+status section says what has been measured so far.
 
-Three things stand in front of a port, none of them port work, and the candidate record carries a
-**recommendation** for each rather than a decision:
+Three things stood in front of a port, none of them port work. The candidate record carried a
+**recommendation** for each; all three were taken and built on 2026-11-01:
 
 1. The graph takes **phoneme ids, not text**, and this tree has no grapheme-to-phoneme stage of any
    kind. Recommended: a Java port of misaki's English lexicon path (Apache-2.0), American and

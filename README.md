@@ -84,7 +84,7 @@ modeljars pull qwen-0.6b
 modeljars demo qwen-0.6b "What is the capital of France? Reply with only the city name."
 modeljars demo embeddinggemma "Public transit schedule"
 modeljars demo minilm-reranker "How many people live in Berlin?"
-modeljars demo soprano-q8 "The JVM can speak for itself."
+modeljars demo walkingcat-q8 "The JVM can speak for itself."
 modeljars demo smollm-360m --spring-ai
 modeljars demo smollm-360m --spring-boot
 modeljars coordinates smollm-360m --spring-boot --tool gradle-kotlin

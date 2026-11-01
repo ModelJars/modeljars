@@ -28,6 +28,9 @@ Jev comparison does not establish the base checkpoint's quality or our runtime's
 
 Support requires DeBERTa attention/tokenization, schema-marker preprocessing and GLiNER2
 classification scoring, followed by a Models typed-decision adapter and ModelJars snapshot loading.
+The [2026-11-01 implementation and qualification plan](gliner25-decide-support-plan.md)
+identifies the reusable DeBERTa runtime, concrete F32/tokenizer/API gaps, proposed gates,
+and the ordered PRs through released-runtime validation and publication.
 Qualify with publisher-output parity, label-order and multi-label tests, multiple independent
 classification datasets, and same-host latency measurements. A task-specific fine-tune must beat
 its untuned base on held-out data. The generative RAG gate is not an applicable substitute.

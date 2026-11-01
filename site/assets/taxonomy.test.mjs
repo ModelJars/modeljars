@@ -3,9 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { filterCatalog } from "./search.js";
+import { MODALITY_CLAIMS } from "../../tools/modality-claim-gate.mjs";
 import {
   buildFacets,
   catalogDomains,
+  leadingDomains,
   modelTerms,
   relatedModels,
   sizeTier,
@@ -341,4 +343,59 @@ test("every typed-decision artifact is discoverable as System One", async () => 
     filterCatalog(catalog, { domain: "system-1" }).length,
     "the System One count must equal the number of entries the filter returns",
   );
+});
+
+test("a featured domain outside the nine most common still leads the pill row", () => {
+  const domains = [
+    "general",
+    "retrieval",
+    "embeddings",
+    "coding",
+    "reasoning",
+    "healthcare",
+    "legal",
+    "rag",
+    "system-1",
+  ].map((value, index) => ({ value, count: 70 - index * 7 }));
+  const facets = { domains: [...domains, { value: "audio", count: 2 }] };
+
+  const pills = leadingDomains(facets, { featured: ["audio", "absent"] });
+  assert.equal(pills[0].value, "audio", "the featured domain leads the row");
+  assert.equal(pills.length, 10, "nine by count plus the one featured domain");
+  assert.ok(!pills.some((facet) => facet.value === "absent"), "a featured domain the catalogue lacks renders nothing");
+
+  const repeated = leadingDomains(facets, { featured: ["general"] });
+  assert.equal(repeated.filter((facet) => facet.value === "general").length, 1, "a featured domain already in the top nine is not shown twice");
+  assert.equal(repeated.length, 9);
+});
+
+/**
+ * A NON-TEXT MODALITY MUST BE REACHABLE FROM THE PILL ROW.
+ *
+ * MEASURED 2026-11-01: modeljars.org listed the two qualified Text-to-Speech entries, tagged them,
+ * and offered no pill that filtered to them. Their domains (speech, audio, text-to-speech) each
+ * count two; the row is the nine most common domains, and from a991a8f (2026-10-23) System One's
+ * derived third entry pushed `audio` from ninth to tenth. Nothing touched the speech entries; the
+ * regression was arithmetic. This test reads the gate's own list of non-text modality claims, so
+ * the next modality (speech-to-text, image understanding, OCR) fails here on the day its first
+ * entry lands, instead of shipping invisible.
+ */
+test("every non-text modality in the catalogue is reachable from the pill row", async () => {
+  const models = await readFile(new URL("../../catalog/models.json", import.meta.url), "utf8").then(
+    JSON.parse,
+  );
+  const catalog = models.models;
+  const modalityCapabilities = new Set(MODALITY_CLAIMS.keys());
+  const modal = catalog.filter((entry) =>
+    (entry.capabilities || []).some((capability) => modalityCapabilities.has(capability)),
+  );
+  assert.ok(modal.length > 0, "the catalogue must hold a non-text-modality entry");
+
+  const pills = new Set(leadingDomains(buildFacets(catalog)).map((facet) => facet.value));
+  for (const entry of modal) {
+    assert.ok(
+      catalogDomains(entry).some((domain) => pills.has(domain)),
+      `${entry.id} (${(entry.capabilities || []).join(", ")}) has no domain in the pill row: ${[...pills].join(", ")}`,
+    );
+  }
 });

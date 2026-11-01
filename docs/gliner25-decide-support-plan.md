@@ -1,7 +1,26 @@
 # GLiNER2.5-Decide: implementation and catalog admission plan
 
-Date: 2026-11-01. Status: researched plan; no runtime implementation, inference result,
-qualification, or publication is claimed by this document.
+Date: 2026-11-01. Status: runtime implementation and first remote evidence now exist in
+[Models draft PR 323](https://github.com/integrallis/models/pull/323); the pinned base checkpoint
+fails the registered absolute-quality gates. No qualification or publication is claimed.
+
+Implementation update: Models reuses the DeBERTa encoder with F16/F32 loading and adds a GLiNER
+classification API/head plus a Rust `tokenizers=0.22.2` FFM adapter. The development runtime at
+`6add46ee740f8acd80295741fc8e22bae34f845f` matches publisher selected labels on all 529 frozen
+quality cases without inference errors. Nine diagnostic cases and thirteen shape cases through
+512 tokens pass exact-token and numerical parity. A separate 46-case comparison of publisher
+`extract` and `classify_text` APIs has identical logits and decisions.
+
+Both runtimes score 61.11% on JevBench yes/no (70% floor), and 43.69% micro-F1 / 43.95% macro-F1
+on GoEmotions (70% / 60% floors). JevBench overall accuracy is 80.83%; CLINC banking macro-F1
+is 86.67%. Thus porting fidelity passes these checks while the base checkpoint's registered
+quality claim fails. Keep the full failing evidence; neither speed work nor a policy change
+can turn this measurement into a pass. The performance screen and existing F16 reranker
+regression are underway. ModelJars integration and released-artifact repeats remain outstanding.
+
+Raw outcomes, source/runtime hashes, policy and reports are recorded in
+[Models evidence](https://github.com/integrallis/models/tree/99aed5cc/benchmark-results/2026-11-01-gliner25-decide).
+The implementation below remains the admission plan; its original gates are unchanged.
 
 **Recommendation:** support the pinned F32 checkpoint as a schema-driven classification
 model. Reuse the existing DeBERTa encoder mathematics, add GLiNER preprocessing and its

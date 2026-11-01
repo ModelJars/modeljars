@@ -134,6 +134,36 @@ export function buildFacets(models) {
   );
 }
 
+/**
+ * The domains the pill row leads with regardless of how many entries carry them.
+ *
+ * The row is ordered by count and cut to nine, which is right for discovering what the catalogue
+ * is mostly made of and wrong for a category that exists on purpose. MEASURED 2026-11-01: the two
+ * qualified Text-to-Speech entries carry domains speech, audio and text-to-speech, each counting
+ * two. From a991a8f (2026-10-23) System One's derived third entry took the ninth slot, `audio` fell
+ * to tenth, and the catalogue's only non-text modality had no pill at all. A modality nobody can
+ * filter to is a modality the catalogue does not visibly have.
+ *
+ * `audio` is the domain every TTS entry shares. When a modality's first entry lands, add the domain
+ * it declares here; the test "every non-text modality in the catalogue is reachable from the pill
+ * row" fails until that happens.
+ */
+export const FEATURED_DOMAINS = ["system-1", "audio"];
+
+/**
+ * The domain facets the pill row shows: the featured ones that exist in the catalogue, then the
+ * most common ones, without repeats. A featured domain absent from the catalogue renders nothing
+ * rather than a button that returns an empty list.
+ */
+export function leadingDomains(facets, { limit = 9, featured = FEATURED_DOMAINS } = {}) {
+  const byCount = facets.domains.slice(0, limit);
+  const lead = featured.flatMap((value) => {
+    const facet = facets.domains.find((candidate) => candidate.value === value);
+    return facet && !byCount.some((shown) => shown.value === value) ? [facet] : [];
+  });
+  return [...lead, ...byCount];
+}
+
 function hasCompleteMetadata(model) {
   return Boolean(
     model.name &&

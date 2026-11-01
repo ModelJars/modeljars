@@ -444,3 +444,12 @@ verification remain to be completed before this branch can land.
 Models accuracy work is currently auditing the publisher's full public
 fast-decisions development data and the complete official GoEmotions test set.
 That audit does not alter the admission targets recorded above.
+
+
+The CLI demo generator now distinguishes `schema-driven-classification` from
+Harriet's typed-decision composition before checking the shared `typed-decision`
+capability. Its GLiNER template uses `ModelJars.openClassificationRuntime`, caller
+supplied single-label and multi-label tasks, and prints selected labels with load
+and execution time. The generated source compiles against the staged public API;
+the existing regular and Spring demo generator tests pass. A released-artifact
+execution and the website/evidence publication integration still remain.

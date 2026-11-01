@@ -51,10 +51,10 @@ regression, but failed its whole-model speed screen: the three completed 128-tok
 only 0.468–0.503x publisher throughput, with 1.846–2.237x p95 latency. The worker was stopped
 after a completed failure; five paired buckets are complete and eight are incomplete. The native
 candidate code was removed in Models `47be23e1`; its historical source and raw measurements remain
-available. It was never adopted as the public default. Final aggregate rental is at most
+available. It was never adopted as the public default. Aggregate rental through that experiment was at most
 99 minutes 22 seconds, with every owned rental and final root volume verified deleted. The
-remaining 20 minutes 38 seconds cannot cover another complete evaluation under the registered
-minimum. No further rental was launched.
+remaining 20 minutes 38 seconds could not cover another complete evaluation under the original
+minimum; the subsequent user-authorized continuation is recorded below.
 The derived checkpoint must satisfy the unchanged
 quality floors, parity and performance gates; its new name does not reset the rental budget.
 ModelJars integration and released-artifact repeats remain outstanding. Neither checkpoint is
@@ -69,6 +69,23 @@ oversampling ablation, retaining every intent domain and BoolQ. Training-only da
 14,143 neutral examples and 67 grief examples. Select on development data and freeze a new
 untouched qualification holdout before another experiment; retain the evaluated cases as
 regression evidence. Neither hypothesis is a measured fix or authorization to reset the cap.
+
+The user then instructed continued qualification work. The continuation ledger preserves all
+prior spend and adds a bounded two rental-hours, raising the cumulative limit to four hours.
+An initial CPU profiling job failed before inference because its overlay was not extracted;
+that failed rental is counted. The repaired profile completed 104 requests on the original base
+checkpoint. Of 76,995 CPU samples, 42,447 were in projections and 27,134 in attention; these are
+sample counts across threads, not wall-time percentages. Allocation sampling exposed repeated
+F32 layout creation during weight loading. Both profiling instances are terminated.
+
+The new runtime candidate in Models `0b115ba1` combines bulk F32 weight loading, parallel GELU,
+cached relative-position indices, and native batched matrix/attention operations. It passed
+synthetic numerical/lifecycle tests and static checks. A complete 13-shape, 429-request-per-arm
+CPU screening run is active on `gliner25-eval-20261101T214018Z`; this is not yet a measured win
+or a public-default change. A separate bounded GPU run trains `general-v2` for up to 12,000
+steps using the identical training/development splits and a new untouched 1,000-case holdout.
+It selects solely by development loss. Final quality, three counterbalanced performance pairs,
+public runtime integration, and the released-runtime repeat remain required.
 
 **Recommendation:** support the pinned F32 checkpoint as a schema-driven classification
 model. Reuse the existing DeBERTa encoder mathematics, add GLiNER preprocessing and its

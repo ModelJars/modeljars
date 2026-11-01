@@ -418,3 +418,29 @@ estimate; checkpoint the evidence after PR 1 and after the first end-to-end pari
 
 Research for this plan fetched source/config/tokenizer metadata and a bounded safetensors header
 range only. No model weights were fully downloaded and no model inference was run.
+
+
+## Implementation checkpoint — 2026-11-01
+
+The branch now has a snapshot-backed classification API, a dedicated qualification
+record/registry and a generated registry resource. Admission validates the frozen
+quality floors, all 13 CPU shapes in at least three paired replications, exact
+snapshot files, numerical parity and released-runtime verification. The registry
+contains no entries; this checkpoint does not admit or publish a model.
+
+The integration uses the Models public `SchemaClassificationModel` and
+`RustGlinerClassificationModel` APIs from the unreleased 0.5.10 development build.
+The repository's normal Models dependency remains 0.5.9 until bottom-up release
+coordination is complete. Candidate checks used an isolated staging repository
+and disabled dependency locking only in an external Gradle init script; they did
+not modify the normal dependency locks or claim a Central release.
+
+Validation: three Node generator tests, six Java qualification/registry tests,
+two runtime ownership/rejection tests and both affected modules' strict Javadoc
+tasks pass against the staged development API. Default-release integration,
+CLI/site classification examples, actual admission evidence and released-artifact
+verification remain to be completed before this branch can land.
+
+Models accuracy work is currently auditing the publisher's full public
+fast-decisions development data and the complete official GoEmotions test set.
+That audit does not alter the admission targets recorded above.

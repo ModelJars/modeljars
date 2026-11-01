@@ -32,6 +32,8 @@ function parseArguments(argumentsList) {
         "--previous-speech-qualifications",
         "--component-qualifications",
         "--previous-component-qualifications",
+        "--classification-qualifications",
+        "--previous-classification-qualifications",
         "--decision-qualifications",
         "--previous-decision-qualifications",
         "--github-output",
@@ -53,6 +55,7 @@ function parseArguments(argumentsList) {
           "--previous-component-qualifications FILE] " +
           "[--decision-qualifications FILE " +
           "--previous-decision-qualifications FILE] " +
+          "[--classification-qualifications FILE --previous-classification-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -114,6 +117,23 @@ function parseArguments(argumentsList) {
   ) {
     throw new Error(
       "--previous-decision-qualifications is required for a decision-qualification-aware delta",
+    );
+  }
+  if (
+    values.has("--previous-classification-qualifications") &&
+    (!values.has("--previous") || !values.has("--classification-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-classification-qualifications requires --previous and --classification-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--classification-qualifications") &&
+    !values.has("--previous-classification-qualifications")
+  ) {
+    throw new Error(
+      "--previous-classification-qualifications is required for a classification-qualification-aware delta",
     );
   }
   if (
@@ -190,6 +210,7 @@ function qualifiedCatalog(
   speechManifest,
   componentManifest,
   decisionManifest,
+  classificationManifest,
 ) {
   const filtered = filterQualifiedPublications(
     selectCatalogPublications(catalog, ["all"]),
@@ -201,6 +222,7 @@ function qualifiedCatalog(
     speechManifest,
     componentManifest,
     decisionManifest,
+    classificationManifest,
   );
   const qualifiedIds = new Set(
     filtered.publications.map((publication) => publication.id),
@@ -282,6 +304,13 @@ async function main() {
     decisionQualificationPath === undefined
       ? { schemaVersion: 1, entries: [] }
       : await readCatalog(decisionQualificationPath);
+  const classificationQualificationPath = argumentsMap.get(
+    "--classification-qualifications",
+  );
+  const currentClassificationQualifications =
+    classificationQualificationPath === undefined
+      ? { schemaVersion: 1, entries: [] }
+      : await readCatalog(classificationQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -318,6 +347,9 @@ async function main() {
       const previousDecisionPath = argumentsMap.get(
         "--previous-decision-qualifications",
       );
+      const previousClassificationPath = argumentsMap.get(
+        "--previous-classification-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
         await readCatalog(previousQualificationsPath),
@@ -339,6 +371,9 @@ async function main() {
         previousDecisionPath === undefined
           ? { schemaVersion: 1, entries: [] }
           : await readCatalog(previousDecisionPath),
+        previousClassificationPath === undefined
+          ? { schemaVersion: 1, entries: [] }
+          : await readCatalog(previousClassificationPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
@@ -349,6 +384,7 @@ async function main() {
         currentSpeechQualifications,
         currentComponentQualifications,
         currentDecisionQualifications,
+        currentClassificationQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
@@ -367,6 +403,7 @@ async function main() {
           ...(previousSpeechPath === undefined
             ? []
             : [await readCatalog(previousSpeechPath)]),
+          ...(previousClassificationPath === undefined ? [] : [await readCatalog(previousClassificationPath)]),
           ...(previousComponentPath === undefined
             ? []
             : [await readCatalog(previousComponentPath)]),
@@ -385,6 +422,7 @@ async function main() {
           ...(currentSpeechQualifications === undefined
             ? []
             : [currentSpeechQualifications]),
+          ...(classificationQualificationPath === undefined ? [] : [currentClassificationQualifications]),
           ...(componentQualificationPath === undefined
             ? []
             : [currentComponentQualifications]),
@@ -421,6 +459,7 @@ async function main() {
           currentSpeechQualifications,
           currentComponentQualifications,
           currentDecisionQualifications,
+        currentClassificationQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

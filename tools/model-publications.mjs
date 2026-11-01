@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { validateEntry as validateClassification } from "./classification-qualifications.mjs";
 
 function assertCatalog(document, label) {
   if (
@@ -424,6 +425,7 @@ export function filterQualifiedPublications(
   speechQualifications = { schemaVersion: 1, entries: [] },
   componentQualifications = { schemaVersion: 1, entries: [] },
   decisionQualifications = { schemaVersion: 1, entries: [] },
+  classificationQualifications = { schemaVersion: 1, entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
@@ -462,6 +464,26 @@ export function filterQualifiedPublications(
       qualification.tier === "RANKED_DECISION",
   )) {
     qualifiedIds.add(id);
+  }
+  if (classificationQualifications?.schemaVersion !== 1 || !Array.isArray(classificationQualifications.entries)) {
+    throw new Error("Classification qualifications must use schemaVersion 1");
+  }
+  const classificationIds = new Set();
+  const identity = files => canonicalJson(files.map(({path,role,sha256,sizeBytes}) =>
+    ({path,role,sha256,sizeBytes})).sort(comparePath));
+  for (const entry of classificationQualifications.entries) {
+    validateClassification(entry);
+    if (classificationIds.has(entry.modelId)) throw new Error("Duplicate classification model id");
+    classificationIds.add(entry.modelId);
+    const model = modelsById.get(entry.modelId);
+    if (!model || model.architecture !== "gliner2" || model.format !== "safetensors"
+        || !Array.isArray(model.files) || identity(entry.files) !== identity(model.files)) {
+      throw new Error(`Classification snapshot does not match catalog model ${entry.modelId}`);
+    }
+    if (entry.qualified) {
+      if (model.backends?.[entry.backend] !== true) throw new Error("Classification backend is not enabled");
+      qualifiedIds.add(entry.modelId);
+    }
   }
   for (const id of collectQualifiedComponentIds(
     componentQualifications,

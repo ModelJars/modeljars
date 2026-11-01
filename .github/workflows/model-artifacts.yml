@@ -12,6 +12,7 @@ on:
       - catalog/reranking-qualifications.json
       - catalog/speech-qualifications.json
       - catalog/decision-qualifications.json
+      - catalog/classification-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
@@ -42,6 +43,7 @@ on:
       - catalog/reranking-qualifications.json
       - catalog/speech-qualifications.json
       - catalog/decision-qualifications.json
+      - catalog/classification-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
       - tools/model-publications.test.mjs
@@ -133,6 +135,7 @@ jobs:
               --reranking-qualifications catalog/reranking-qualifications.json \
               --speech-qualifications catalog/speech-qualifications.json \
               --decision-qualifications catalog/decision-qualifications.json \
+              --classification-qualifications catalog/classification-qualifications.json \
               --ids "${REQUESTED_MODEL_IDS}" \
               --github-output "${GITHUB_OUTPUT}"
             exit 0
@@ -151,6 +154,7 @@ jobs:
           previous_reranking="${RUNNER_TEMP}/reranking-qualifications-before.json"
           previous_speech="${RUNNER_TEMP}/speech-qualifications-before.json"
           previous_decision="${RUNNER_TEMP}/decision-qualifications-before.json"
+          previous_classification="${RUNNER_TEMP}/classification-qualifications-before.json"
           if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
               ! git cat-file -e "${comparison}^{commit}"; then
             printf '%s\n' '{"schemaVersion":2,"models":[]}' > "${previous_catalog}"
@@ -162,6 +166,7 @@ jobs:
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_reranking}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_speech}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_decision}"
+            printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_classification}"
           else
             git show "${comparison}:catalog/models.json" > "${previous_catalog}"
             if ! git show "${comparison}:catalog/component-qualifications.json" > "${previous_components}"; then
@@ -186,6 +191,9 @@ jobs:
             if ! git show "${comparison}:catalog/decision-qualifications.json" > "${previous_decision}"; then
               printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_decision}"
             fi
+            if ! git show "${comparison}:catalog/classification-qualifications.json" > "${previous_classification}"; then
+              printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_classification}"
+            fi
           fi
           node tools/qualification-smoke-gate.mjs \
             --previous "${previous_qualifications}" \
@@ -209,6 +217,8 @@ jobs:
             --previous-speech-qualifications "${previous_speech}" \
             --decision-qualifications catalog/decision-qualifications.json \
             --previous-decision-qualifications "${previous_decision}" \
+            --classification-qualifications catalog/classification-qualifications.json \
+            --previous-classification-qualifications "${previous_classification}" \
             --previous-profiles "${previous_profiles}" \
             --current-profiles catalog/performance-profiles.json \
             --github-output "${GITHUB_OUTPUT}"

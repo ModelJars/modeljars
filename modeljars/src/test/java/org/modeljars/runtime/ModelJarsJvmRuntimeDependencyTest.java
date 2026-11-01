@@ -24,6 +24,8 @@ import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.modeljars.ModelClassificationQualification;
+import org.modeljars.ModelClassificationQualificationRegistry;
 import org.modeljars.ModelComponentQualificationRegistry;
 import org.modeljars.ModelDecisionQualificationRegistry;
 import org.modeljars.ModelEmbeddingQualificationRegistry;
@@ -52,6 +54,7 @@ class ModelJarsJvmRuntimeDependencyTest {
     var rerankingQualifications = ModelRerankingQualificationRegistry.fromClasspath();
     var speechQualifications = ModelSpeechQualificationRegistry.fromClasspath();
     var componentQualifications = ModelComponentQualificationRegistry.fromClasspath();
+    var classificationQualifications = ModelClassificationQualificationRegistry.fromClasspath();
     var decisionQualifications = ModelDecisionQualificationRegistry.fromClasspath();
 
     // Every public capability has its own evidence gate. Passing any gate is sufficient to publish,
@@ -92,6 +95,11 @@ class ModelJarsJvmRuntimeDependencyTest {
         decisionQualifications.entries().stream()
             .map(ModelDecisionQualificationRegistry.Entry::modelId)
             .collect(Collectors.toSet());
+    var classificationQualified =
+        classificationQualifications.entries().stream()
+            .filter(ModelClassificationQualification::qualified)
+            .map(ModelClassificationQualification::modelId)
+            .collect(Collectors.toSet());
     var allQualified = new java.util.HashSet<>(ragQualified);
     allQualified.addAll(embeddingQualified);
     allQualified.addAll(toolQualified);
@@ -99,6 +107,7 @@ class ModelJarsJvmRuntimeDependencyTest {
     allQualified.addAll(speechQualified);
     allQualified.addAll(componentQualified);
     allQualified.addAll(decisionQualified);
+    allQualified.addAll(classificationQualified);
 
     var physicalDescriptors =
         descriptors.stream()
@@ -139,6 +148,7 @@ class ModelJarsJvmRuntimeDependencyTest {
                             .flatMap(speechQualifications::qualificationFor)
                             .isPresent()
                         || decisionQualifications.qualificationFor(descriptor).isPresent()
+                        || classificationQualifications.qualificationFor(descriptor).isPresent()
                         || componentQualified.contains(descriptor.alias())));
     assertNull(
         getClass()

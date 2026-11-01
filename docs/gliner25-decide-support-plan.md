@@ -18,18 +18,33 @@ quality claim fails. Keep the full failing evidence; neither speed work nor a po
 can turn this measurement into a pass. The existing F16 reranker regression passes. The first
 performance screen fails twelve of thirteen shape buckets: at 128–512 tokens, Models reaches
 0.313–0.365x publisher throughput against the 0.80x floor. Three passing final pairs have not
-been run. Both CPU workers are terminated; the conservative aggregate rental upper bound is
-43 minutes 22 seconds, leaving at least 76 minutes 38 seconds under the original two-hour cap.
+been run. Both original CPU workers are terminated; the conservative aggregate rental upper
+bound at that stage was 43 minutes 22 seconds.
 
 The user subsequently authorized fine-tuning for qualification and general usage. Models now
 registers a separate unpublished candidate, `modeljars-gliner25-decide-general-v1`, with a bounded
 LoRA training recipe covering all ten CLINC domains, all 28 GoEmotions labels and BoolQ decisions.
 Its 65,656 training, 990 development and 1,001 fresh qualification cases are disjoint by normalized
 text; the original 529 cases are excluded from training/development and remain regression checks.
-Training has not run and no accuracy gain is claimed. GPU access is unresolved. The derived
-checkpoint must satisfy the unchanged quality floors, parity and performance gates; its new name
-does not reset the rental budget. ModelJars integration and released-artifact repeats remain
-outstanding.
+Training completed 1,500 steps on a rented RunPod GPU, which is verified deleted. The merged F32
+checkpoint is `d1ca5a14b0b535987ce6333680d0de2c963100cbff91745620e8455ec731caf5`.
+On all 1,001 fresh cases, Models and the publisher select identical labels with zero inference
+errors. BoolQ accuracy improves from 73.65% to 80.41%, and CLINC overall accuracy from 84% to 94%.
+GoEmotions micro-F1 improves from 38.66% to 49.67% and macro-F1 from 38.34% to 47.09%; both still
+fail the unchanged 70% / 60% floors. These base-to-variant comparisons use the same fresh cohort;
+they are not comparisons against the different original cohort above.
+
+The original 529-case regression suite completes without errors: JevBench yes/no rises to 72.22%
+and clears its floor, overall accuracy is 85%, and CLINC banking macro-F1 is 94.63%. GoEmotions
+still fails at 51.94% micro-F1 and 47.78% macro-F1. The GPU and all CPU evaluation instances from
+this stage are deleted/terminated; the latest CPU root volume is verified deleted. Aggregate
+rented time through this stage is at most 86 minutes, leaving 34 minutes under the original cap.
+An isolated native batched F32 projection experiment has passed local synthetic and lifecycle
+checks. Its whole-model parity/performance screen is now pending and it is not the public default.
+The derived checkpoint must satisfy the unchanged
+quality floors, parity and performance gates; its new name does not reset the rental budget.
+ModelJars integration and released-artifact repeats remain outstanding. Neither checkpoint is
+qualified or published.
 
 Raw outcomes, source/runtime hashes, policy and reports are recorded in
 [Models evidence](https://github.com/integrallis/models/tree/5a1a1ca8/benchmark-results/2026-11-01-gliner25-decide).

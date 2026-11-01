@@ -35,7 +35,7 @@ class ModelClassificationQualificationTest {
   @Test
   void upstreamFidelityAllowsDisclosedLowAbsoluteAccuracy() {
     var quality = new HashMap<>(qualityScores());
-    quality.put("goemotions.microF1", .496);
+    quality.put("goemotions.microF1", .495);
     assertTrue(evidence(true, true, quality, buckets(3)).qualified());
   }
 

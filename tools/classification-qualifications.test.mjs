@@ -83,6 +83,9 @@ test('low absolute scores qualify only when they preserve paired upstream accura
   const entry=fixture();
   for (const k of qualityMetrics) entry.quality[k]=entry.oracleQuality[k]=.2;
   assert.equal(validateEntry(entry).qualified,true);
+  entry.quality['goemotions.microF1']=.195;
+  entry.maximumOracleQualityLoss=.005;
+  assert.equal(validateEntry(entry).qualified,true);
   entry.quality['goemotions.microF1']=.194;
   assert.throws(()=>validateEntry(entry),/recorded oracle loss/);
   entry.maximumOracleQualityLoss=.006;

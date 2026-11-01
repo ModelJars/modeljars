@@ -127,6 +127,7 @@ public record ModelClassificationQualification(
     for (String metric : qualityMetrics())
       measuredLoss = Math.max(measuredLoss, oracleQuality.get(metric) - quality.get(metric));
     if (!Double.isFinite(maximumOracleQualityLoss)
+        || maximumOracleQualityLoss < 0
         || Math.abs(measuredLoss - maximumOracleQualityLoss) > 1e-12)
       throw new IllegalArgumentException(
           "recorded oracle loss differs from disclosed paired metrics");
@@ -141,7 +142,7 @@ public record ModelClassificationQualification(
         && (!releasedRuntimeVerified
             || !numericalParityPassed
             || inferenceErrors != 0
-            || maximumOracleQualityLoss > .005
+            || maximumOracleQualityLoss > .005 + 1e-12
             || !performancePasses(performance))) {
       throw new IllegalArgumentException(
           "qualified classification evidence must pass every registered gate and released-runtime verification");

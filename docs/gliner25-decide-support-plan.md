@@ -6,8 +6,10 @@ qualification, or publication is claimed by this document.
 **Recommendation:** support the pinned F32 checkpoint as a schema-driven classification
 model. Reuse the existing DeBERTa encoder mathematics, add GLiNER preprocessing and its
 small classification head, then qualify accuracy and performance against the publisher's
-Python implementation. Start with Java and existing Vectors operations. Rust work is
-conditional on measured bottlenecks, not a prerequisite inferred from the model name.
+Python implementation. Start by assessing reuse of Java and existing Vectors operations,
+and introduce Rust shims wherever required for correct integration or justified by performance.
+A complete pure-Java implementation is not a prerequisite for a supported Models backend.
+Qualification uses a dedicated GLiNER harness; llama.cpp and Ollama are not prerequisites.
 
 This is substantial integration work, but not a new transformer architecture from scratch.
 The main risks are preprocessing parity, refactoring the reranker-specific encoder safely,
@@ -109,7 +111,21 @@ Scores are model scores, not an assertion of calibrated confidence. Do not force
 multi-label sigmoid scores into a distribution summing to one. Existing `Choice`/`Verdict`
 types may be adapted for compatible single-label consumers, but cannot define the full API.
 
-### Vectors and Rust: optimize only the measured shared path
+### Vectors and Rust: adaptation and measured optimization
+
+Rust shims are an explicitly supported implementation option, not restricted to accelerating
+matrix multiplication. During PR 1, assess whether tokenizer semantics, tensor layout, an
+upstream native component or another missing operation is better adapted through a narrow
+Rust C ABI exposed to Java FFM. Put that integration in Models `backend-native`, behind the
+same classification contract. Keep schema and task orchestration in Models; reuse an upstream
+component where appropriate rather than porting it merely to satisfy a Java-only requirement.
+Record the selected implementation, dependencies, licenses and supported platforms in an ADR.
+
+For any shim, define buffer layout/dtype/length, ownership and lifetime, thread safety, error
+translation, version negotiation and cleanup. Prevent Rust panics from unwinding across the
+ABI. Test malformed inputs, repeated open/close and concurrent use; verify packaged native
+libraries on every advertised platform. Report the actual executing backend in evidence and
+runtime diagnostics. Do not label a native-backed implementation as pure Java.
 
 The existing encoder already uses `VectorUtil.batchDotProductExact`, weighted-row operations,
 and Models `TensorOps` normalization/softmax. Vectors also provides `F32ExecutionMatrix` with
@@ -118,17 +134,58 @@ normalization, preprocessing, allocations and weight loading separately.
 
 If matrix operations dominate, compare the existing projection loop with a shared F32 batch
 kernel at actual shapes (1024×1024, 4096×1024, 1024×4096) and actual sequence lengths. A Rust
-FFM kernel belongs in Models `backend-native` only if end-to-end results justify it; GLiNER
-schema/tokenizer/head semantics stay in Models, generic Java vector primitives in Vectors.
+FFM performance kernel belongs in Models `backend-native` when end-to-end results justify it;
+adaptation shims can be necessary independently of a speedup. Generic Java vector primitives
+belong in Vectors; model-specific semantics remain owned by Models even when implemented in Rust.
 Check native-library packaging, CPU dispatch, thread ownership and oversubscription if added.
 
 Do not retain an alternate worse path: experiment in isolated branches, retain measurements,
 promote the winning implementation and remove its losing experimental switches. Preserve the
-existing supported Java portability path if native acceleration is introduced; it is a supported
-backend, not a place to leave unsuccessful experiments. Every production optimization must pass
+existing supported Java portability path where one exists; do not build or retain an inferior
+GLiNER implementation solely to offer a second route. Unsupported platforms should fail clearly.
+Every production optimization must pass
 parity, held-out quality and existing DeBERTa reranker regression checks.
 
 ## Qualification: three independent obligations
+
+### Dedicated comparison harness
+
+Build a model-specific harness in Models (proposed location
+`experiments/gliner25-decide/`) with independent Python-reference and Models JVM workers.
+Use the publisher's supported local runtime as the primary external comparator. Do not force
+this architecture through llama.cpp, Ollama, a GGUF conversion or a generative benchmark just
+to reuse an existing harness. Their absence does not block qualification.
+
+The harness needs:
+
+- A versioned JSONL request format carrying case ID, text, ordered tasks/labels/descriptions,
+  classification mode, threshold and supported options. Each worker adapts this common task
+  into its native API. Responses contain selected labels, available scores, errors and timings.
+- A launcher that starts workers separately, verifies readiness and snapshot/runtime hashes,
+  controls thread budgets and case order, applies timeouts, and retains stderr and raw records.
+  Workers stay loaded for warm measurements; cold startup/load is measured separately.
+- A comparison/report generator that joins by case ID, detects missing/duplicate responses,
+  includes failures in coverage, evaluates held-out labels and produces machine-readable
+  quality/performance evidence. Failed cases must not disappear from latency reports.
+- Separate worker-side inference timing and controller-observed request latency. Include
+  preprocessing and decoding in end-to-end inference; report transport/serialization overhead
+  separately and use symmetric measurement boundaries. Record batching and concurrency.
+- A small schema/protocol test suite with synthetic workers, followed by the remote real-model
+  runs. No Python reference dependency is required in a user's ModelJars installation.
+
+There are two comparison levels. **Implementation parity** uses the same checkpoint and
+matched semantics to diagnose the Models port with exact preprocessing and numerical tolerances.
+**Operational comparison** asks how comparable tasks perform through the two real runtimes:
+same documents, label choices, quality targets and hardware budget, but potentially different
+internal kernels, batching, API shapes or supported preprocessing paths. It need not be an
+exact internal execution match or produce byte-identical floating-point results.
+
+Disclose every operational difference and report each arm's absolute quality, latency and
+memory use. If a different quantization/checkpoint or materially different task mapping is
+needed, identify it as a separate comparator, not an oracle. The parity tolerances and proposed
+oracle-relative gates below apply to the matched-reference experiment; set a separate policy
+before running a non-equivalent comparison. A favorable approximate comparison cannot replace
+correctness tests or establish that the Models implementation faithfully loads the checkpoint.
 
 ### 1. Publisher parity
 
@@ -138,8 +195,8 @@ Include Unicode/whitespace/punctuation, descriptions, several tasks, label permu
 reserved-marker text, ties, threshold boundaries, no-label-above-threshold, and overlength inputs.
 
 Proposed initial numerical contract: exact preprocessing and selected-label agreement on
-deterministic fixtures; `abs(java - oracle) <= 1e-4 + 1e-4 * abs(oracle)` for final logits and
-scores, finite values throughout. Register this before Java measurements. A failure triggers
+deterministic fixtures; `abs(models - oracle) <= 1e-4 + 1e-4 * abs(oracle)` for final logits and
+scores, finite values throughout. Register this before Models measurements. A failure triggers
 layer-by-layer investigation, not an automatic tolerance increase. Large-corpus differences
 near ties/thresholds must remain visible in reports even when aggregate accuracy is unchanged.
 Changing tolerances requires an explained policy revision and fresh evidence.
@@ -173,7 +230,7 @@ PR 1 should register a versioned schema-classification policy and compatible evi
   OOS behavior and coverage. Test label permutations against the oracle; do not assume the model
   is invariant. OOS diagnostics do not establish an abstention capability.
 - Proposed additional floors: macro-F1 ≥0.70 on the locked independent single-label suite;
-  multi-label micro-F1 ≥0.70 and macro-F1 ≥0.60. Require Java versus oracle accuracy/F1 loss
+  multi-label micro-F1 ≥0.70 and macro-F1 ≥0.60. Require Models versus oracle accuracy/F1 loss
   ≤0.5 percentage points on each cohort. These are **proposed new admission thresholds**, not
   current catalog policy or measurements; register the final policy before either arm runs.
 - Keep a separate calibration/development split for any temperature or threshold fitting;
@@ -190,7 +247,8 @@ do not lower a threshold after results or publish an unrelated article claim as 
 Use disposable remote CPU workers, never a local weight download or local full-model run.
 Start on one Linux x86_64 AVX2 host with sufficient RAM; record exact CPU, physical/logical cores,
 OS, JDK, vector width, Rust/native versions if used, Python/Torch dependencies and all thread counts.
-Use serial, counterbalanced Java/reference arms on the same host and immutable snapshot.
+Use serial, counterbalanced Models/reference arms on the same host and immutable snapshot.
+The Models arm includes its actual Java/FFM/Rust execution path and all required shim overhead.
 Pin the oracle's actual attention implementation; compare against a supported efficient CPU
 reference configuration, not an accidentally slow implementation.
 
@@ -200,7 +258,7 @@ matrix covering 32/128/256/512 total tokens, 2/8/32 labels where they fit, one/s
 and batch 1 plus a representative throughput batch if supported. Unsupported combinations
 are stated up front. TTFT and generated tokens/sec are inapplicable.
 
-Proposed performance admission: Java p95 end-to-end ≤1.50× reference and throughput ≥0.80×
+Proposed performance admission: Models p95 end-to-end ≤1.50× reference and throughput ≥0.80×
 reference for each advertised workload bucket, with a warm-up policy and at least 30 timed
 samples per bucket. Screen once, then require two fresh counterbalanced confirmations.
 These are new proposed classification gates, not automatically inherited RAG policy. Record
@@ -216,8 +274,8 @@ profile; do not transfer an AMD result to a hybrid Intel CPU by assumption.
 
 | PR | Repository / deliverable | Must be true before proceeding |
 | --- | --- | --- |
-| 1 | Models: pinned Python oracle runner, dependency lock, fixtures, task mappings, cohort manifests and registered policy | Offline reference loads exact snapshot; classifier-only execution verified; limits/metrics fixed; small parity fixtures committed. No Java quality or speed claim yet. |
-| 2 | Models: shared DeBERTa encoder and tokenizer boundaries; F32 loading and namespace support | Synthetic tensor/config tests pass; existing F16 DeBERTa reranker numerical tests pass; remote existing-model reranker repeat shows no regression. No duplicated encoder path. |
+| 1 | Models: dedicated two-worker harness, pinned Python reference, dependency lock, fixtures, task mappings, cohort manifests, registered policy and Rust-adaptation assessment | Offline reference loads exact snapshot; classifier-only execution verified; matched versus operational comparisons declared; limits/metrics fixed; small parity fixtures committed. No Models quality or speed claim yet. |
+| 2 | Models: shared DeBERTa encoder and tokenizer boundaries; F32 loading, namespace support and required Rust shims | Synthetic tensor/config and any ABI/packaging tests pass; existing F16 DeBERTa reranker numerical tests pass; remote existing-model reranker repeat shows no regression. No duplicated encoder path. |
 | 3 | Models: GLiNER schema compiler, classifier head, classification API and adapter | Exact preprocessing and numerical/decision parity pass, including multi-label fallback; lifecycle/limits/concurrency tests pass. |
 | 4 | Models, and Vectors only if justified: remote quality/performance runs and targeted optimization | All registered gates pass, losing implementations removed, results reproducible; publish Vectors only if changed, then Models with the tested implementation. |
 | 5 | ModelJars: snapshot-backed classification runtime, evidence schema/generator/registry, marker metadata, CLI/site classification demo | Download/cache/offline/invalid-digest tests pass; old decision and published-model routes unchanged; no generation/tool claims; ordinary build and catalog CI green. Can be developed alongside PRs 3–4. |

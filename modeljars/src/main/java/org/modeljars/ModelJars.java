@@ -26,6 +26,7 @@ import com.integrallis.models.api.SchemaClassificationModel;
 import com.integrallis.models.api.SharedPrefixInferenceBackend;
 import com.integrallis.models.api.TextGenerationModel;
 import com.integrallis.models.api.TextToSpeechModel;
+import com.integrallis.models.audio.ParadeeTextToSpeechModel;
 import com.integrallis.models.audio.SopranoTextToSpeechModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
 import com.integrallis.models.backend.nativekernel.RustGlinerClassificationModel;
@@ -1674,21 +1675,45 @@ public final class ModelJars {
       Path artifact,
       ModelJarDescriptor descriptor,
       ModelSpeechQualificationRegistry.Entry qualification) {
-    if (!"soprano".equals(descriptor.architecture())) {
-      throw new ModelJarException(
-          "Unsupported Models speech architecture: " + descriptor.architecture());
-    }
     try {
-      return switch (qualification.backend()) {
-        case JAVA_BACKEND -> SopranoTextToSpeechModel.load(artifact);
-        case NATIVE_BACKEND -> SopranoTextToSpeechModel.loadNative(artifact);
+      return switch (descriptor.architecture()) {
+        case "soprano" ->
+            switch (qualification.backend()) {
+              case JAVA_BACKEND -> SopranoTextToSpeechModel.load(artifact);
+              case NATIVE_BACKEND -> SopranoTextToSpeechModel.loadNative(artifact);
+              default ->
+                  throw new ModelJarException(
+                      "Unsupported Models speech backend: " + qualification.backend());
+            };
+        case "paradee" -> {
+          // The ONNX graph is the primary file; the publisher's config.json sits at the bundle
+          // root beside it, and the phonemizer's dictionaries and fallback ship in models-audio.
+          if (!JAVA_BACKEND.equals(qualification.backend())) {
+            throw new ModelJarException(
+                "Paradee runs on the pure-Java ONNX executor only; the qualification names "
+                    + qualification.backend());
+          }
+          yield ParadeeTextToSpeechModel.load(
+              artifact, bundleRoot(artifact, descriptor).resolve("config.json"));
+        }
         default ->
             throw new ModelJarException(
-                "Unsupported Models speech backend: " + qualification.backend());
+                "Unsupported Models speech architecture: " + descriptor.architecture());
       };
     } catch (IOException failure) {
       throw new ModelJarException("Cannot open qualified speech artifact " + artifact, failure);
     }
+  }
+
+  /** The directory that owns every file of a multi-file artifact: the primary file's path removed. */
+  private static Path bundleRoot(Path artifact, ModelJarDescriptor descriptor) {
+    int parts =
+        descriptor.primaryFile().map(file -> Path.of(file.path()).getNameCount()).orElse(1);
+    Path root = artifact.toAbsolutePath().normalize();
+    for (int i = 0; i < parts && root.getParent() != null; i++) {
+      root = root.getParent();
+    }
+    return root;
   }
 
   @FunctionalInterface

@@ -1705,10 +1705,11 @@ public final class ModelJars {
     }
   }
 
-  /** The directory that owns every file of a multi-file artifact: the primary file's path removed. */
+  /**
+   * The directory that owns every file of a multi-file artifact: the primary file's path removed.
+   */
   private static Path bundleRoot(Path artifact, ModelJarDescriptor descriptor) {
-    int parts =
-        descriptor.primaryFile().map(file -> Path.of(file.path()).getNameCount()).orElse(1);
+    int parts = descriptor.primaryFile().map(file -> Path.of(file.path()).getNameCount()).orElse(1);
     Path root = artifact.toAbsolutePath().normalize();
     for (int i = 0; i < parts && root.getParent() != null; i++) {
       root = root.getParent();

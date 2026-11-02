@@ -468,6 +468,9 @@ export function filterQualifiedPublications(
   if (classificationQualifications?.schemaVersion !== 2 || !Array.isArray(classificationQualifications.entries)) {
     throw new Error("Classification qualifications must use schemaVersion 2");
   }
+  if (classificationQualifications.entries.length && classificationQualifications.policy !== "schema-classification-upstream-v2") {
+    throw new Error("Unsupported classification admission policy");
+  }
   const classificationIds = new Set();
   const identity = files => canonicalJson(files.map(({path,role,sha256,sizeBytes}) =>
     ({path,role,sha256,sizeBytes})).sort(comparePath));

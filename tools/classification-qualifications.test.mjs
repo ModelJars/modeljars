@@ -36,6 +36,8 @@ test('publication filters bind every classification file and enforce measured ga
   const planned=selectCatalogPublications(catalog,['all']);
   const filter=(e,c=catalog) => filterQualifiedPublications(planned,c,empty,empty,empty,empty,empty,empty,empty,{schemaVersion:2,policy:'schema-classification-upstream-v2',entries:[e]});
   assert.equal(filter(entry).publications.length,1);
+  assert.throws(()=>filterQualifiedPublications(planned,catalog,empty,empty,empty,empty,empty,empty,empty,
+    {schemaVersion:2,policy:'unknown-policy',entries:[entry]}),/Unsupported classification admission policy/);
   assert.equal(filter({...entry,qualified:false}).publications.length,0);
   const changed=structuredClone(catalog);changed.models[0].files[1].sha256='b'.repeat(64);
   assert.throws(() => filter(entry,changed),/snapshot/);

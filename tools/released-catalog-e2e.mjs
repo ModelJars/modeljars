@@ -230,7 +230,7 @@ function smallestPerCapability(models) {
 export function program(model, capability, probe, modeljarsVersion) {
   const imports = ["org.modeljars.ModelJars", "org.modeljars.ModelJar", ...probe.imports];
   return `//JAVA 25
-//RUNTIME_OPTIONS --add-modules=jdk.incubator.vector --enable-native-access=ALL-UNNAMED -Xmx6g
+//RUNTIME_OPTIONS --add-modules=jdk.incubator.vector --enable-native-access=ALL-UNNAMED -Xmx6g${capability === "schema-classification" ? " -Dmodels.deberta.threads=8 -Djdk.virtualThreadScheduler.parallelism=8" : ""}
 //DEPS org.modeljars:modeljars:${modeljarsVersion}
 //DEPS ${model.markerCoordinate}
 

@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T07:39:32Z",
+  "generatedAt": "2026-10-31T19:31:53Z",
   "policyVersion": "production-rag-model-contribution-v6",
   "modelsRevision": "1955b55ba16f9a2cd90655be3ac7323f3efa452a",
   "targetQualifiedModels": 25,
-  "qualifiedModels": 82,
+  "qualifiedModels": 81,
   "rejectedModels": 1,
   "entries": [
     {
@@ -4222,61 +4222,6 @@
       },
       "modelsRevision": "3569bbf43742390d21b9180ca1db179c6ecef644",
       "contextLength": 2048
-    },
-    {
-      "modelId": "mellum2_12b_a2_5b_thinking_q4_k_m",
-      "model": "Mellum2-12B-A2.5B-Thinking GGUF Q4_K_M",
-      "backend": "rust-ffm",
-      "backendVersion": "q4kfix-760f7776",
-      "workload": "coding",
-      "corpusSha256": "6841c286837b4c45c06fe8d103b2e044b61a1bfe75a61b64fa04c7ca31b20e45",
-      "promptTemplate": "chatml-no-think",
-      "groundingPolicy": "bounded-context-injection-screened-citation-safe-statement-grounding-v24",
-      "artifactSha256": "489cf0d7ca86ef4683e34e2efe8a46a9b52573bfe994a6ad9c86bf57c7173ccb",
-      "artifactSizeBytes": 8071295040,
-      "reportSha256": "160b360b67eeffe5bbd37437af84fb2c5fc31a23e9f920e5623b3fc472f29735",
-      "performanceTier": "PERFORMANCE_REDUCED",
-      "verdict": "QUALIFIED",
-      "qualified": true,
-      "attempts": 27,
-      "p95RetrievalMillis": 3.6887783,
-      "p95TtftMillis": 3239.6858985999997,
-      "p95TpotMillis": 26.617173300000008,
-      "p95EndToEndMillis": 4066.9783690999993,
-      "p50PrefillTokensPerSecond": 68.34525521498269,
-      "p50DecodeTokensPerSecond": 44.98922915421026,
-      "peakRssBytes": 8178843648,
-      "correctAnswerRate": 1.0,
-      "rawCorrectAnswerRate": 0.8888888888888888,
-      "abstentionAccuracy": 1.0,
-      "modelAnswerRate": 0.7777777777777778,
-      "modelAnswerCorrectRate": 1.0,
-      "extractiveFallbackRate": 0.1111111111111111,
-      "environment": {
-        "hostname": "94a1687fbf02",
-        "osName": "Linux",
-        "osVersion": "6.8.0-138-generic",
-        "architecture": "amd64",
-        "cpuModel": "AMD EPYC 9654 96-Core Processor",
-        "availableProcessors": 16,
-        "totalMemoryBytes": 32000000000,
-        "maxHeapBytes": 8002732032,
-        "javaVersion": "25.0.5",
-        "javaVendor": "Eclipse Adoptium",
-        "vmName": "OpenJDK 64-Bit Server VM"
-      },
-      "report": "benchmark-results/certified-20261102/rag/jetbrains-mellum2-12b-a2-5b-thinking-gguf-q4_k_m/jetbrains-mellum2-12b-a2-5b-thinking-gguf-q4_k_m-rust-ffm-grounded.json",
-      "defaultConfigurationSmoke": {
-        "configuration": "library-defaults",
-        "backend": "rust-ffm",
-        "artifactSha256": "489cf0d7ca86ef4683e34e2efe8a46a9b52573bfe994a6ad9c86bf57c7173ccb",
-        "report": "benchmark-results/certified-20261102/rag/jetbrains-mellum2-12b-a2-5b-thinking-gguf-q4_k_m/default-correctness/models-rust-ffm.json",
-        "reportSha256": "3e95e3e096f028ebfbf573908f02023277fd2bc6e500226d6c8233739cce0d1c",
-        "totalAttempts": 9,
-        "successfulAttempts": 9,
-        "tuningSystemProperties": []
-      },
-      "modelsRevision": "36233eab175ba3a01901c853fa57679ab075182d"
     }
   ]
 }

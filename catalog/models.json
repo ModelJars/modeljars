@@ -23142,6 +23142,60 @@
         "feedForwardLength": 4096,
         "attentionBlockCount": 24
       }
+    },
+    {
+      "id": "jetbrains_mellum2_12b_a2_5b_thinking_gguf_q4_k_m",
+      "name": "Mellum2-12B-A2.5B-Thinking GGUF Q4_K_M",
+      "description": "Pinned local-inference GGUF artifact for Mellum2-12B-A2.5B-Thinking, verified by immutable revision, byte size, and SHA-256.",
+      "sourceId": "hf://JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M",
+      "sourceUri": "https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M",
+      "downloadUri": "https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M/resolve/71a489e7b95efacf89feaaa6fe3b2995f3542409/Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf",
+      "revision": "71a489e7b95efacf89feaaa6fe3b2995f3542409",
+      "markerCoordinate": "org.modeljars.huggingface:jetbrains.mellum2-12b-a2.5b-thinking-gguf.q4_k_m:2.0.0-q4_k_m.1",
+      "modelVersion": "2.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "mellum",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf",
+      "sha256": "489cf0d7ca86ef4683e34e2efe8a46a9b52573bfe994a6ad9c86bf57c7173ccb",
+      "sizeBytes": 8071295040,
+      "license": "Apache-2.0",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "code-completion"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "q4-k-m",
+        "mixture-of-experts",
+        "sliding-window-attention",
+        "yarn-rope-scaling",
+        "chatml-chat-template"
+      ],
+      "backends": {
+        "rust-ffm": true,
+        "ollama": true
+      },
+      "domains": [
+        "coding"
+      ],
+      "dimensions": {
+        "parameterCount": 12149923072,
+        "contextLength": 131072,
+        "embeddingLength": 2304,
+        "blockCount": 28,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 4,
+        "keyLength": 128,
+        "valueLength": 128,
+        "feedForwardLength": 7168,
+        "expertCount": 64,
+        "expertUsedCount": 8,
+        "attentionBlockCount": 28
+      }
     }
   ]
 }

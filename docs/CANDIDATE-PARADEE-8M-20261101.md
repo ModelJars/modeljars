@@ -25,12 +25,23 @@ and where:
   exact-match rate against the publisher's phonemes is derived once the arms finish. The four
   misaki dictionaries now ship inside `models-audio`, so a catalog entry needs only the
   publisher's two files.
-- **Gate (recommendation 3): frozen and running.** The protocol is
-  `experiments/paradee-8m-tts/README.md` in the models repository; the publisher's held-out
-  200 WikiText sentences turned out to be published (`training/data/wikitext_sents.json`, first
-  200), so the corpus is the publisher's own plus the Harvard sentences. The WER passes of both
-  arms are running on the dev box; the throughput passes need a quiet machine and are recorded
-  separately. **No verdict exists yet.**
+- **Gate (recommendation 3): frozen, run, and passed on intelligibility (2026-11-02).** The
+  protocol is `experiments/paradee-8m-tts/README.md` in the models repository (PR #332 carries
+  the verdict and every pass); the publisher's held-out 200 WikiText sentences turned out to be
+  published (`training/data/wikitext_sents.json`, first 200), so the corpus is the publisher's own
+  plus the Harvard sentences. On our own phonemizer, three passes per cell, the worst pass sits
+  under the floor (comparator's worst pass + 0.5 points) in all eight voice-and-corpus cells:
+  WikiText 5.91 / 6.12 / 6.20 / 6.20 % against 6.18 / 6.13 / 6.41 / 6.24 % for af_heart /
+  am_puck / bf_isabella / bm_fable, Harvard 4.15 / 6.70 / 3.38 / 4.09 % against 4.59 / 7.01 /
+  3.88 / 4.52 %. On the publisher's phonemes the executor scores 5.34 to 5.60 % (WikiText) and
+  3.96 to 4.02 % (Harvard), at parity with onnxruntime; the comparator reproduces the card within
+  a quarter point on every voice; no kill criterion triggered. What closed the last quarter point
+  on the American voices was a CMUdict tier (BSD-2-Clause) in front of the bundled fallback model
+  that replaced the GPL eSpeak slot; two margins are one and two words wide and the README says so.
+  **Still open for the catalog entry:** the shipped policy's latency block and the throughput
+  ratio, to be measured on a quiet dedicated box against the released 0.5.11 library (the dev box
+  measured a p95 time-to-first-audio of 3,067 ms under load against the policy's 2,000 ms limit;
+  the same route answers in 181 to 609 ms on five sentences when the machine is not saturated).
 - **This branch** carries, beside the record: `modeljars contribute` accepting an ONNX graph
   with its `config.json` (the command that refused v1.1 that morning now writes
   `docs/model-evidence/paradee-8m/contribute-v1.2.md` for v1.2, run from this branch); the cache path and the catalog's loadable-format check accepting

@@ -147,6 +147,19 @@
           "backend-java:com.integrallis.models.backend.purejava.lora.ActivatedLoraAdapter"
         ]
       }
+    },
+    "classification-qualifications.json": {
+      "backends": [
+        "rust-ffm"
+      ],
+      "classes": [
+        "models-api:com.integrallis.models.api.SchemaClassificationModel"
+      ],
+      "architectures": {
+        "gliner2": [
+          "backend-native:com.integrallis.models.backend.nativekernel.RustGlinerClassificationModel"
+        ]
+      }
     }
   }
 }

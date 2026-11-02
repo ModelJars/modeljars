@@ -49,6 +49,30 @@ class RuntimeSupportTest(unittest.TestCase):
         self.artifacts.append({**self.artifacts[0], 'module': 'backend-native', 'version': '0.3.54'})
         self.assertIn('Mixed Models runtime', '\n'.join(self.check()))
 
+    def test_classification_policy_checks_the_actual_released_api_and_native_adapter(self):
+        import json
+        policy = json.loads((Path(__file__).parents[2] / 'catalog/runtime-support.json').read_text())
+        requirement = policy['workloads']['classification-qualifications.json']
+        self.policy['workloads'] = {'classification-qualifications.json': requirement}
+        self.catalog = {'models': [{'id': 'classifier', 'architecture': 'gliner2'}]}
+        self.manifests = {'classification-qualifications.json': {'entries': [
+            {'modelId': 'classifier', 'qualified': True, 'backend': 'rust-ffm'}]}}
+        absent = '\n'.join(self.check())
+        self.assertIn('SchemaClassificationModel', absent)
+        self.assertIn('RustGlinerClassificationModel', absent)
+        for module, classes in {
+            'models-api': ['com/integrallis/models/api/SchemaClassificationModel.class'],
+            'backend-native': ['com/integrallis/models/backend/nativekernel/RustGlinerClassificationModel.class',
+                               'com/integrallis/models/backend/nativekernel/RustFfmBackend.class'],
+        }.items():
+            target = Path(self.directory.name) / (module + '.jar')
+            with zipfile.ZipFile(target, 'w') as jar:
+                for name in classes:
+                    jar.writestr(name, b'fixture')
+            self.artifacts.append({'group': 'com.integrallis', 'module': module,
+                                   'version': '0.3.57', 'file': str(target)})
+        self.assertEqual([], self.check())
+
     def test_unqualified_entry_does_not_claim_support(self):
         self.manifests['embedding-qualifications.json']['entries'][0]['qualified'] = False
         self.catalog['models'][0]['architecture'] = 'unimplemented'

@@ -148,6 +148,19 @@ tasks in one encoder pass. Scores and selected labels are structured outputs. No
 tool calling, explanation trace, entity extraction, relation extraction, or long-document
 chunking is implied. Reject unsupported schema features explicitly.
 
+The article's reported ~7.6x serial latency advantage compares its local duplicate detector
+with the hosted Jev API, including network latency. Its reported 80.3% accuracy and 0.811 F1
+are for 1,500 balanced QQP validation pairs. These are author-reported measurements, not ours;
+the available article preview/index does not establish enough hardware and adapter provenance
+to reproduce them here. Our three CPU pairs compare original GLiNER weights in Models and the
+publisher runtime on the same host: median p50 is 130.3 vs 188.6 ms (32 tokens/eight labels),
+292.1 vs 290.7 ms (128/eight), and 1107.9 vs 1437.4 ms (512/eight). They establish runtime
+fidelity and CPU performance, not a 7x advantage over Jev. A reproduction must pin the author's
+adapter, QQP split, schema, hardware/precision, serial/batch settings, and actual Jev API
+measurements; it must report task accuracy beside end-to-end latency. See the
+[author's article](https://pub.towardsai.net/gliner2-5-decide-fine-tuned-local-system-one-model-jev-level-accuracy-7-faster-367f82c01bf7)
+and [our retained paired measurements](https://github.com/integrallis/models/blob/dcfa7c83/benchmark-results/2026-11-01-gliner25-decide/gliner25-eval-20261101T234435Z/README.md).
+
 The article's duplicate-detection LoRA is a separate potential artifact. Its released adapter,
 license, base revision and held-out data have not been established. Do not attribute its
 accuracy or speed claims to this base checkpoint. General-classification LoRA training is now

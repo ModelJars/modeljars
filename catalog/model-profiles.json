@@ -11411,6 +11411,176 @@
           "recurrent layer state is excluded; only attention layers are charged"
         ]
       }
+    },
+    {
+      "modelId": "mellum2_12b_a2_5b_thinking_q4_k_m",
+      "artifactSha256": "489cf0d7ca86ef4683e34e2efe8a46a9b52573bfe994a6ad9c86bf57c7173ccb",
+      "revision": "71a489e7b95efacf89feaaa6fe3b2995f3542409",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf",
+            "uri": "https://huggingface.co/JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M/resolve/71a489e7b95efacf89feaaa6fe3b2995f3542409/Mellum2-12B-A2.5B-Thinking-Q4_K_M.gguf",
+            "revision": "71a489e7b95efacf89feaaa6fe3b2995f3542409",
+            "sha256": "489cf0d7ca86ef4683e34e2efe8a46a9b52573bfe994a6ad9c86bf57c7173ccb",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 28,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ],
+        "reasoning": {
+          "openToken": {
+            "text": "<think>",
+            "id": 23,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "closeToken": {
+            "text": "</think>",
+            "id": 24,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.tokens"
+              }
+            ]
+          },
+          "thinkingDefault": {
+            "value": true,
+            "rule": "opt-out-enable-thinking",
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.chat_template"
+              }
+            ]
+          }
+        }
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 131072,
+          "groups": [
+            {
+              "layers": 21,
+              "kvHeads": 4,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": 1024
+            },
+            {
+              "layers": 7,
+              "kvHeads": 4,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": 1024,
+          "slidingWindowPatternDeclared": true,
+          "upperBound": false
+        },
+        "weightBytes": 8071295040,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 14336,
+            "slidingWindowBytesPerToken": 43008,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 102760448,
+                "totalBytes": 9247797312
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 513802240,
+                "totalBytes": 9658839104
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1923088384,
+                "totalBytes": 11068125248
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 7616,
+            "slidingWindowBytesPerToken": 22848,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 54591488,
+                "totalBytes": 9199628352
+              },
+              {
+                "contextTokens": 32768,
+                "kvBytes": 272957440,
+                "totalBytes": 9417994304
+              },
+              {
+                "contextTokens": 131072,
+                "kvBytes": 1021640704,
+                "totalBytes": 10166677568
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 0,
+                "limitedBy": "memory"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 131072,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
     }
   ],
   "coverage": [
@@ -12837,6 +13007,20 @@
         "repetitionPenalty",
         "reasoningMarkers",
         "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "mellum2_12b_a2_5b_thinking_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "<|im_end|> (28) already declared",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty"
       ],
       "memoryFit": "computed"
     }

@@ -23144,7 +23144,7 @@
       }
     },
     {
-      "id": "jetbrains_mellum2_12b_a2_5b_thinking_gguf_q4_k_m",
+      "id": "mellum2_12b_a2_5b_thinking_q4_k_m",
       "name": "Mellum2-12B-A2.5B-Thinking GGUF Q4_K_M",
       "description": "Pinned local-inference GGUF artifact for Mellum2-12B-A2.5B-Thinking, verified by immutable revision, byte size, and SHA-256.",
       "sourceId": "hf://JetBrains/Mellum2-12B-A2.5B-Thinking-GGUF-Q4_K_M",

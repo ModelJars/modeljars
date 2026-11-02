@@ -29,7 +29,7 @@ import { execFile } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const run = promisify(execFile);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -62,6 +62,22 @@ function diagnosticLines(failure) {
 }
 
 const CAPABILITY_PROBES = {
+  "schema-classification": {
+    entry: "openClassificationRuntime",
+    body: `try (var runtime = ModelJars.openClassificationRuntime(MODEL)) {
+      var task = new Task("sentiment", List.of(new Label("positive"),
+          new Label("negative"), new Label("neutral")), false, 0.5);
+      var results = runtime.model().classify(new Request("I love this product!", List.of(task)));
+      require(results.size() == 1 && results.getFirst().task().equals("sentiment"), "classification task identity differs");
+      var labels = results.getFirst().labels();
+      require(labels.size() == 3 && labels.stream().allMatch(label -> Double.isFinite(label.score())), "invalid classification scores");
+      var selected = labels.stream().filter(label -> label.selected()).map(label -> label.label()).toList();
+      require(selected.equals(List.of("positive")), "classification prediction differs from pinned publisher case");
+      System.out.println("PASS schema classification: " + selected);
+    }`,
+    imports: ["java.util.List", "com.integrallis.models.api.SchemaClassificationModel.Label",
+      "com.integrallis.models.api.SchemaClassificationModel.Task", "com.integrallis.models.api.SchemaClassificationModel.Request"],
+  },
   "text-generation": {
     entry: "openRuntime",
     // Every call here is lifted from its declaration, because the first version of this probe was
@@ -186,7 +202,10 @@ function published(models) {
   return models.filter((model) => typeof model.catalogPublishedAt === "string");
 }
 
-function probeFor(model) {
+export function probeFor(model) {
+  if ((model.features || []).includes("schema-driven-classification")) {
+    return ["schema-classification", CAPABILITY_PROBES["schema-classification"]];
+  }
   for (const capability of model.capabilities || []) {
     if (CAPABILITY_PROBES[capability]) return [capability, CAPABILITY_PROBES[capability]];
   }
@@ -208,7 +227,7 @@ function smallestPerCapability(models) {
   return [...chosen.values()];
 }
 
-function program(model, capability, probe, modeljarsVersion) {
+export function program(model, capability, probe, modeljarsVersion) {
   const imports = ["org.modeljars.ModelJars", "org.modeljars.ModelJar", ...probe.imports];
   return `//JAVA 25
 //RUNTIME_OPTIONS --add-modules=jdk.incubator.vector --enable-native-access=ALL-UNNAMED -Xmx6g
@@ -340,4 +359,4 @@ async function main() {
   }
 }
 
-await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

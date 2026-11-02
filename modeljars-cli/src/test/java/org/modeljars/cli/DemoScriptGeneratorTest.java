@@ -68,6 +68,7 @@ class DemoScriptGeneratorTest {
     assertContains(
         demo.source(),
         "ModelJars.openClassificationRuntime(MODEL)",
+        "//RUNTIME_OPTIONS -Dmodels.deberta.threads=8 -Djdk.virtualThreadScheduler.parallelism=8",
         "runtime.model().classify(new Request(input, tasks))",
         "false, 0.5",
         "true, 0.5",

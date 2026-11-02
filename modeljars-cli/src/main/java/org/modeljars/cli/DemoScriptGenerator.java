@@ -529,6 +529,7 @@ final class DemoScriptGenerator {
 
   private String classificationSource(ModelJarDescriptor descriptor, String defaultInput) {
     return directives(descriptor, false)
+        + "//RUNTIME_OPTIONS -Dmodels.deberta.threads=8 -Djdk.virtualThreadScheduler.parallelism=8\n"
         + """
         import com.integrallis.models.api.SchemaClassificationModel.Label;
         import com.integrallis.models.api.SchemaClassificationModel.Request;

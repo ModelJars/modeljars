@@ -92,6 +92,7 @@ import com.integrallis.models.api.SchemaClassificationModel.Task;
 import java.util.List;
 import org.modeljars.ModelJars;
 
+// Measured CPU profile: -Dmodels.deberta.threads=8 -Djdk.virtualThreadScheduler.parallelism=8
 try (var classifier = ModelJars.openClassifier(MODEL)) {
   var task = new Task("queue", List.of(new Label("billing"),
       new Label("technical"), new Label("shipping")), false, 0.5);
@@ -964,7 +965,7 @@ function renderClassificationQualification(summary) {
     <table><thead><tr><th>Task score</th><th>Models</th><th>Publisher runtime</th></tr></thead>
     <tbody>${metrics.map(([label,key])=>`<tr><th>${escapeHtml(label)}</th><td>${formatPercent(summary.quality[key])}</td><td>${formatPercent(summary.oracleQuality[key])}</td></tr>`).join("")}</tbody></table>
     <p>Maximum upstream accuracy loss: ${(summary.maximumOracleQualityLoss*100).toFixed(3)} percentage points.
-    ${summary.replications} paired CPU replications cover all 13 workload shapes; lowest throughput ratio ${summary.minimumThroughputRatio.toFixed(3)}×,
+    ${summary.replications} paired CPU replications on Linux x86-64 use eight threads per arm and cover all 13 workload shapes; lowest throughput ratio ${summary.minimumThroughputRatio.toFixed(3)}×,
     highest p95 latency ratio ${summary.maximumP95Ratio.toFixed(3)}×. Ratios are Models divided by the publisher runtime.</p>
     <p>Label scores are not calibrated confidence estimates. Accuracy varies by task; per-domain scores are disclosed in the evidence.</p>
     <div class="qualification-evidence"><a href="${safeExternalUrl(summary.evidenceUri)}">Full paired evidence &#8599;</a>

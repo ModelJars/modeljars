@@ -27,6 +27,9 @@
         "llama": [
           "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
         ],
+        "mellum": [
+          "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
+        ],
         "mistral3": [
           "backend-java:com.integrallis.models.backend.purejava.llama.LlamaForwardPass"
         ],

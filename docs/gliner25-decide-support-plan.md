@@ -10,8 +10,11 @@ Both runtimes returned identical labels on all 10,027 requests (7,127 unique sou
 Full GoEmotions micro/macro F1 is 36.08% / 32.09%; publisher public development single-head
 mean domain exact match is 63.46%. All 56 disclosed metrics match. See the
 [complete retained accuracy audit](https://github.com/integrallis/models/blob/c0a2566a/benchmark-results/2026-11-01-gliner25-decide/UPSTREAM-V2-ACCURACY.md).
-Three performance pairs are running. Models [focused release PR329](https://github.com/integrallis/models/pull/329)
-keeps unrelated pending GGUF changes separate. Catalog registry, SDK, CLI, site, publication
+All three candidate performance pairs passed all 13 shapes (2,574 requests, zero errors);
+worst throughput ratio was 0.9122 and worst p95 latency ratio was 1.3269. Models
+[focused release PR329](https://github.com/integrallis/models/pull/329) is merged and keeps
+unrelated pending GGUF changes separate. Its release dry run passed; actual Models 0.5.10
+publication is running, after which accuracy and performance repeat against Central artifacts. Catalog registry, SDK, CLI, site, publication
 plumbing, and released-consumer probe are implemented, but the registry remains empty until
 released evidence passes. No publication is claimed yet.
 

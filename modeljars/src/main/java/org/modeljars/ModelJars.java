@@ -1688,9 +1688,14 @@ public final class ModelJars {
         case "paradee" -> {
           // The ONNX graph is the primary file; the publisher's config.json sits at the bundle
           // root beside it, and the phonemizer's dictionaries and fallback ship in models-audio.
-          if (!JAVA_BACKEND.equals(qualification.backend())) {
+          // The qualified route is the library default: the Java ONNX executor with its matrix
+          // products, sines and erf on the bundled Rust kernels. Where a platform has no kernel
+          // library, Models falls back to its pure-Java kernels and names the reason in the
+          // model's diagnostics.
+          if (!NATIVE_BACKEND.equals(qualification.backend())) {
             throw new ModelJarException(
-                "Paradee runs on the pure-Java ONNX executor only; the qualification names "
+                "Paradee is qualified on the Java ONNX executor with the bundled Rust kernels"
+                    + " (rust-ffm); the qualification names "
                     + qualification.backend());
           }
           yield ParadeeTextToSpeechModel.load(

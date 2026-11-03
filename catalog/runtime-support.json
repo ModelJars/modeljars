@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "minimumModelsVersion": "0.5.8",
-  "basis": "Support floor includes Flint GGUF execution and ordered Q4_K native projections (0.5.8), plus the previously required architectures and formats. Class availability is structural; numerical qualification and released-library verification remain separate.",
+  "minimumModelsVersion": "0.5.12",
+  "basis": "Support floor includes Paradee ONNX speech on the Models-owned Rust ONNX kernels (0.5.12), Flint GGUF execution and ordered Q4_K native projections (0.5.8), plus the previously required architectures and formats. Class availability is structural; numerical qualification and released-library verification remain separate.",
   "workloads": {
     "qualifications.json": {
       "backends": [
@@ -135,6 +135,10 @@
         "models-audio:com.integrallis.models.audio.SopranoTextToSpeechModel"
       ],
       "architectures": {
+        "paradee": [
+          "models-audio:com.integrallis.models.audio.ParadeeTextToSpeechModel",
+          "backend-native:com.integrallis.models.backend.nativekernel.NativeOnnxKernels"
+        ],
         "soprano": []
       }
     },

@@ -12946,6 +12946,11 @@
       "memoryFit": "not applicable: no generation KV cache"
     },
     {
+      "modelId": "sahilmahendrakar_paradee_8m_v1_2_onnx_int8",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "mradermacher_mixture_summarizer_qwen3_5_2b_gguf_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",

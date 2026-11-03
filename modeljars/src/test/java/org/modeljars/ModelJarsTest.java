@@ -17,6 +17,7 @@ package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1174,6 +1175,86 @@ class ModelJarsTest {
         Optional.empty(),
         Optional.empty(),
         Set.of("general"),
+        ModelDimensions.unknown());
+  }
+
+  @Test
+  void resolvesAMultiFileSpeechBundleFromTheRootTheInstallerReturns() {
+    // Paradee's shape: two files, the graph nested one directory down, and the descriptor's own
+    // sha256 naming the graph rather than the bundle. install() returns the bundle root for a
+    // multi-file artifact, so both paths resolve from it.
+    String graphSha = "a6989796692ac173597e15d405c971989202d5c73cfad65f22e90bd7b6c97da1";
+    ModelJarDescriptor descriptor =
+        multiFileSpeechDescriptor(graphSha, "onnx/paradee_int8.onnx", 8_462_119L);
+    Path bundle = Path.of("/cache/sha256/a6").resolve(graphSha);
+
+    Path graph = ModelJars.speechBundleGraph(bundle, descriptor);
+    assertEquals(
+        bundle.resolve("onnx/paradee_int8.onnx"),
+        graph,
+        "the graph must resolve inside the bundle the installer returned");
+    // Both halves of the released defect. The graph argument was the bundle root itself, passed
+    // straight through where the loader expects the .onnx file.
+    assertNotEquals(bundle, graph, "the graph is a file inside the bundle, not the bundle");
+    // And config.json was looked for two directories above the bundle, in the shared cache
+    // directory, because the primary file's path components were stripped off a root that had
+    // never carried them.
+    assertEquals(
+        bundle.resolve("config.json"),
+        bundle.resolve("config.json").normalize(),
+        "config.json sits directly in the bundle root");
+    assertNotEquals(
+        Path.of("/cache/sha256/config.json"),
+        bundle.resolve("config.json"),
+        "config.json must not resolve above the bundle");
+  }
+
+  private static ModelJarDescriptor multiFileSpeechDescriptor(
+      String graphSha, String graphPath, long graphSize) {
+    return new ModelJarDescriptor(
+        "paradee-int8",
+        "hf://sahilmahendrakar/Paradee-8M-v1.2",
+        ModelJarCoordinate.parse(
+            "org.modeljars.huggingface:sahilmahendrakar.paradee-8m-v1.2.int8:1.2.0-int8.1"),
+        ModelVersion.parse("1.2.0"),
+        "int8",
+        "onnx",
+        "paradee",
+        "INT8",
+        Optional.empty(),
+        Optional.empty(),
+        Optional.of(URI.create("https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2")),
+        Optional.of(
+            URI.create(
+                "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/resolve/rev/"
+                    + graphPath)),
+        Optional.of("ed2934d4df8a4fd891e29584c5e1104649409765"),
+        Optional.of(graphSha),
+        Optional.of(graphSize),
+        Optional.of("Apache-2.0"),
+        Set.of("text-to-speech"),
+        Set.of("streaming", "multi-file-artifact"),
+        List.of(
+            new ModelArtifactFile(
+                "config.json",
+                "model-configuration",
+                URI.create(
+                    "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/resolve/rev/config.json"),
+                "002535cf8dd08a434cdddb13372da8a7b4844152bdf9b5b4e7342e12ec30bcfb",
+                1_827L),
+            new ModelArtifactFile(
+                graphPath,
+                "model-weights",
+                URI.create(
+                    "https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.2/resolve/rev/"
+                        + graphPath),
+                graphSha,
+                graphSize)),
+        Map.of("rust-ffm", true, "pure-java", true),
+        Optional.of("Paradee 8M v1.2 INT8"),
+        Optional.empty(),
+        Optional.empty(),
+        Set.of("audio"),
         ModelDimensions.unknown());
   }
 

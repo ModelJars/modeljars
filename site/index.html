@@ -327,6 +327,68 @@ try (var runtime = ModelJars.openRuntime(selected)) {
         </div>
       </section>
 
+      <section class="guide-band" id="entry-points">
+        <div class="guide-inner">
+          <div class="guide-intro">
+            <p class="eyebrow">One entry point per capability</p>
+            <h2>Open a model by what it does</h2>
+            <p>
+              <code>openRuntime</code> serves generative models. A model qualified for another
+              capability is opened through the entry point that capability names, and refuses the
+              wrong one by design &mdash; a typed-decision model has no generative runtime, so
+              <code>openRuntime</code> rejects it rather than returning something that cannot
+              answer. Every route below is exercised against the published artifacts on each
+              release by <code>released-catalog-e2e</code>.
+            </p>
+          </div>
+          <div class="guide-body">
+            <div class="guide-steps">
+              <article>
+                <div class="guide-step-heading"><h3>text-generation</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openRuntime(MODEL)) {
+  var pipeline = runtime.pipeline();
+}</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading"><h3>text-embedding</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openEmbeddingRuntime(MODEL)) {
+  float[] vector = runtime.model().embed("a sentence");
+}</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading"><h3>reranking</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openRerankingRuntime(MODEL)) {
+  var ranked = runtime.model().rerank(query, documents);
+}</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading"><h3>text-to-speech</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openSpeechRuntime(MODEL)) {
+  var audio = runtime.model().synthesize("ready");
+}</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading"><h3>schema-classification</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openClassificationRuntime(MODEL)) {
+  var results = runtime.model().classify(request);
+}</code></pre>
+              </article>
+              <article>
+                <div class="guide-step-heading"><h3>typed-decision</h3></div>
+                <pre><code class="language-java hljs" data-lang="java">try (var runtime = ModelJars.openDecisionRuntime(MODEL)) {
+  Verdict verdict = runtime.decide(space, state);
+}</code></pre>
+              </article>
+            </div>
+            <p class="guide-runtime-note">
+              A typed decision is answered in one forward pass: the runtime reads the logits of the
+              declared options and normalises over just those, so nothing is generated, there is no
+              JSON to repair, and there is no decoding loop to bound.
+            </p>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <footer class="site-footer">

@@ -148,17 +148,96 @@ export function buildFacets(models) {
  * it declares here; the test "every non-text modality in the catalogue is reachable from the pill
  * row" fails until that happens.
  */
-export const FEATURED_DOMAINS = ["system-1", "audio"];
+// Empty by design. This list existed to rescue capability-shaped values -- system-1 and audio --
+// from a row ranked by domain count. The capability pills do that directly now: system-1 is
+// reachable as "decisions" and audio as "speech". A domain promoted here would cost width that a
+// capability pill uses better, and the row cannot wrap.
+export const FEATURED_DOMAINS = [];
+
+/**
+ * Domains a capability pill already reaches, kept out of the domain half of the row.
+ *
+ * `embeddings` and `text-embedding` select the same 31 entries, so showing both spends width twice
+ * for one filter. `audio` and `system-1` are the capability-shaped domains FEATURED_DOMAINS used to
+ * promote, now carried by "speech" and "decisions".
+ */
+export const DOMAINS_COVERED_BY_CAPABILITY = ["embeddings", "audio", "system-1"];
+
+/**
+ * A facet earns a pill only if choosing it discards most of the catalogue.
+ *
+ * The row cannot wrap on desktop, so every pill spends width that another could use, and a facet
+ * most entries carry buys almost nothing. Measured on the served catalogue of 123: `general` covers
+ * 70 (57%), `text-generation` and `chat` 84 each (68%). Choosing `general` discards 43% of the list
+ * while costing the same width as `reranking`, which discards 98%.
+ *
+ * One rule for both halves of the row, rather than two lists of exceptions.
+ */
+export const PILL_MAJORITY_SHARE = 0.5;
+
+/** Whether a facet discriminates enough to deserve a pill. */
+export function discriminates(facet, total) {
+  return total > 0 && facet.count / total <= PILL_MAJORITY_SHARE;
+}
+
+/**
+ * The capabilities that earn a pill, in the order they are shown.
+ *
+ * Ordered by decreasing specificity, the way Hugging Face orders its task filters, rather than by
+ * count -- the counts here are small precisely because these are the specialised capabilities, and
+ * `discriminates` already removes the ones a majority carries. These are also the capabilities this
+ * page documents an entry point for.
+ */
+export const PILL_CAPABILITIES = [
+  "reranking",
+  "text-embedding",
+  "text-to-speech",
+  "typed-decision",
+  "tool-calling",
+];
+
+/** Short pill labels. The capability string is accurate but too wide for a single row. */
+const CAPABILITY_LABELS = {
+  reranking: "reranking",
+  "text-embedding": "embedding",
+  "text-to-speech": "speech",
+  "typed-decision": "decisions",
+  "text-classification": "classification",
+  "tool-calling": "tools",
+};
+
+/** The pill label for a capability facet value. */
+export function capabilityLabel(value) {
+  return CAPABILITY_LABELS[value] ?? value;
+}
+
+/**
+ * The capability facets the pill row shows: those in PILL_CAPABILITIES that the catalogue actually
+ * has, in that order. A capability nobody holds renders nothing rather than a button that returns
+ * an empty list, which is how leadingDomains already treats a featured domain.
+ */
+export function leadingCapabilities(facets, { capabilities = PILL_CAPABILITIES, total } = {}) {
+  const size = total ?? facets.capabilities.reduce((most, f) => Math.max(most, f.count), 0);
+  return capabilities.flatMap((value) => {
+    const facet = facets.capabilities.find((candidate) => candidate.value === value);
+    return facet && discriminates(facet, size) ? [facet] : [];
+  });
+}
 
 /**
  * The domain facets the pill row shows: the featured ones that exist in the catalogue, then the
  * most common ones, without repeats. A featured domain absent from the catalogue renders nothing
  * rather than a button that returns an empty list.
  */
-export function leadingDomains(facets, { limit = 9, featured = FEATURED_DOMAINS } = {}) {
-  const byCount = facets.domains.slice(0, limit);
+export function leadingDomains(facets, { limit = 3, featured = FEATURED_DOMAINS, total } = {}) {
+  const size = total ?? facets.domains.reduce((sum, facet) => Math.max(sum, facet.count), 0);
+  const available = facets.domains.filter(
+    (facet) =>
+      !DOMAINS_COVERED_BY_CAPABILITY.includes(facet.value) && discriminates(facet, size),
+  );
+  const byCount = available.slice(0, limit);
   const lead = featured.flatMap((value) => {
-    const facet = facets.domains.find((candidate) => candidate.value === value);
+    const facet = available.find((candidate) => candidate.value === value);
     return facet && !byCount.some((shown) => shown.value === value) ? [facet] : [];
   });
   return [...lead, ...byCount];

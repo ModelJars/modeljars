@@ -7,6 +7,8 @@ import { primaryQualification, tierLabel } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
 import {
   buildFacets,
+  capabilityLabel,
+  leadingCapabilities,
   catalogDomains,
   kindProfile,
   leadingDomains,
@@ -23,6 +25,7 @@ const state = {
   architecture: "",
   size: "",
   qualification: "",
+  capability: "",
   sort: "name",
 };
 
@@ -131,6 +134,7 @@ function renderEntry(model) {
 function activeFilterCount() {
   return [
     state.domain,
+    state.capability,
     state.backend,
     state.architecture,
     state.size,
@@ -139,20 +143,28 @@ function activeFilterCount() {
 }
 
 function renderDomainFilters(facets) {
-  // Featured categories first, then the most common. The rule and its history live beside
-  // leadingDomains in taxonomy.js, where it is tested against the real catalogue.
-  const visibleDomains = leadingDomains(facets);
-  elements.domains.innerHTML = [
-    { value: "", count: catalog.length, label: "All" },
-    ...visibleDomains.map((facet) => ({ ...facet, label: facet.value })),
-  ]
-    .map(
-      ({ value, count, label }) => `
-        <button type="button" data-domain="${escapeHtml(value)}" aria-pressed="${state.domain === value}">
-          ${escapeHtml(label)} <span>${numberFormat.format(count)}</span>
+  // Two modalities in one row, in two shapes: what a model does, then what it is about. The row
+  // cannot wrap on desktop, so both halves are bounded -- see leadingCapabilities and
+  // leadingDomains in taxonomy.js, where the selection rules and their history live, and
+  // taxonomy.test.mjs, which holds the row to a width budget against the real catalogue.
+  const all = `
+        <button type="button" data-domain="" data-facet="all" aria-pressed="${!state.domain && !state.capability}">
+          All <span>${numberFormat.format(catalog.length)}</span>
+        </button>`;
+  const total = catalog.length;
+  const capabilities = leadingCapabilities(facets, { total }).map(
+    ({ value, count }) => `
+        <button type="button" class="chip-capability" data-capability="${escapeHtml(value)}" data-facet="capability" aria-pressed="${state.capability === value}">
+          ${escapeHtml(capabilityLabel(value))} <span>${numberFormat.format(count)}</span>
         </button>`,
-    )
-    .join("");
+  );
+  const domains = leadingDomains(facets, { total }).map(
+    ({ value, count }) => `
+        <button type="button" data-domain="${escapeHtml(value)}" data-facet="domain" aria-pressed="${state.domain === value}">
+          ${escapeHtml(value)} <span>${numberFormat.format(count)}</span>
+        </button>`,
+  );
+  elements.domains.innerHTML = [all, ...capabilities, ...domains].join("");
 }
 
 function populateSelect(select, facets, format = (value) => value) {
@@ -184,6 +196,7 @@ function clearFilters() {
   Object.assign(state, {
     query: "",
     domain: "",
+    capability: "",
     backend: "",
     architecture: "",
     size: "",
@@ -247,6 +260,7 @@ function bindControls() {
   document.addEventListener("click", async (event) => {
     const copyButton = event.target.closest("[data-build-tool][data-coordinate]");
     const domainButton = event.target.closest("[data-domain]");
+    const capabilityButton = event.target.closest("[data-capability]");
     const searchButton = event.target.closest("[data-search]");
     if (copyButton) {
       const originalLabel = copyButton.getAttribute("aria-label");
@@ -269,8 +283,18 @@ function bindControls() {
         copyButton.setAttribute("aria-label", originalLabel);
         copyButton.title = originalTitle;
       }, 1_200);
+    } else if (capabilityButton) {
+      // The two halves are one choice: picking a capability clears any domain, and "All" clears
+      // both. Keeping them independent let a visitor select reranking AND healthcare and get an
+      // empty list with two pills lit, which reads as a broken filter rather than a narrow one.
+      state.capability = state.capability === capabilityButton.dataset.capability
+        ? ""
+        : capabilityButton.dataset.capability;
+      state.domain = "";
+      render();
     } else if (domainButton) {
       state.domain = domainButton.dataset.domain;
+      state.capability = "";
       render();
     } else if (searchButton) {
       state.query = searchButton.dataset.search;

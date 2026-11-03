@@ -4,6 +4,12 @@ import test from "node:test";
 
 import { filterCatalog } from "./search.js";
 import { tierLabel } from "./qualification-data.js";
+import {
+  PILL_MAJORITY_SHARE,
+  capabilityLabel,
+  discriminates,
+  leadingCapabilities,
+} from "./taxonomy.js";
 import { MODALITY_CLAIMS } from "../../tools/modality-claim-gate.mjs";
 import {
   buildFacets,
@@ -351,7 +357,7 @@ test("every typed-decision artifact is discoverable as System One", async () => 
   );
 });
 
-test("a featured domain outside the nine most common still leads the pill row", () => {
+test("a featured domain outside the most common still leads the pill row", () => {
   const domains = [
     "general",
     "retrieval",
@@ -363,16 +369,29 @@ test("a featured domain outside the nine most common still leads the pill row", 
     "rag",
     "system-1",
   ].map((value, index) => ({ value, count: 70 - index * 7 }));
-  const facets = { domains: [...domains, { value: "audio", count: 2 }] };
+  // Not "audio": DOMAINS_COVERED_BY_CAPABILITY excludes it before the featured lookup, because the
+  // "speech" capability pill reaches it. A featured domain has to be one no capability covers.
+  const facets = { domains: [...domains, { value: "robotics", count: 2 }] };
 
-  const pills = leadingDomains(facets, { featured: ["audio", "absent"] });
-  assert.equal(pills[0].value, "audio", "the featured domain leads the row");
-  assert.equal(pills.length, 10, "nine by count plus the one featured domain");
+  // FEATURED_DOMAINS is empty by design now -- capability pills reach system-1 and audio directly,
+  // and the row cannot afford a domain promoted past its count. The mechanism is kept and still
+  // tested, because a future domain may need it; `featured` is passed explicitly here rather than
+  // relying on the default.
+  // limit 3 is the default now, so robotics at count 2 sits outside the row on count and has to be
+  // promoted. With the old limit of 9 every available domain was already included and the
+  // promotion path was never exercised.
+  const pills = leadingDomains(facets, { featured: ["robotics", "absent"], total: 200 });
+  assert.equal(pills[0].value, "robotics", "the featured domain leads the row");
+  assert.equal(pills.length, 4, "three by count plus the one featured domain");
   assert.ok(!pills.some((facet) => facet.value === "absent"), "a featured domain the catalogue lacks renders nothing");
 
-  const repeated = leadingDomains(facets, { featured: ["general"] });
-  assert.equal(repeated.filter((facet) => facet.value === "general").length, 1, "a featured domain already in the top nine is not shown twice");
-  assert.equal(repeated.length, 9);
+  const repeated = leadingDomains(facets, { featured: ["general"], total: 200 });
+  assert.equal(
+    repeated.filter((facet) => facet.value === "general").length,
+    1,
+    "a featured domain already in the row on count is not shown twice",
+  );
+  assert.equal(repeated.length, 3, "three by count, with the featured one already among them");
 });
 
 /**
@@ -397,11 +416,70 @@ test("every non-text modality in the catalogue is reachable from the pill row", 
   );
   assert.ok(modal.length > 0, "the catalogue must hold a non-text-modality entry");
 
-  const pills = new Set(leadingDomains(buildFacets(catalog)).map((facet) => facet.value));
+  // The row carries two modalities now. Audio reaches it as the "speech" capability rather than as
+  // the audio domain, which DOMAINS_COVERED_BY_CAPABILITY deliberately excludes, so reachability
+  // is the union of both halves.
+  const facets = buildFacets(catalog);
+  const total = catalog.length;
+  const domainPills = new Set(leadingDomains(facets, { total }).map((facet) => facet.value));
+  const capabilityPills = new Set(
+    leadingCapabilities(facets, { total }).map((facet) => facet.value),
+  );
   for (const entry of modal) {
     assert.ok(
-      catalogDomains(entry).some((domain) => pills.has(domain)),
-      `${entry.id} (${(entry.capabilities || []).join(", ")}) has no domain in the pill row: ${[...pills].join(", ")}`,
+      catalogDomains(entry).some((domain) => domainPills.has(domain)) ||
+        (entry.capabilities || []).some((capability) => capabilityPills.has(capability)),
+      `${entry.id} (${(entry.capabilities || []).join(", ")}) is in no half of the pill row;` +
+        ` domains: ${[...domainPills].join(", ")}; capabilities: ${[...capabilityPills].join(", ")}`,
     );
   }
+});
+
+
+test("a facet a majority carries earns no pill, however it is shaped", async () => {
+  const models = await readFile(new URL("../../catalog/models.json", import.meta.url), "utf8").then(
+    JSON.parse,
+  );
+  const catalog = models.models;
+  const facets = buildFacets(catalog);
+  const total = catalog.length;
+
+  // The row cannot wrap, so a pill is width spent. `general` and `reranking` cost the same and
+  // remove very different amounts of the list, which is the whole rule.
+  const general = facets.domains.find((facet) => facet.value === "general");
+  assert.ok(general, "the catalogue no longer has a general domain; this test needs rewriting");
+  assert.ok(
+    general.count / total > PILL_MAJORITY_SHARE,
+    "general no longer covers a majority; this test needs rewriting",
+  );
+  assert.equal(discriminates(general, total), false);
+  assert.ok(
+    !leadingDomains(facets, { total }).some((facet) => facet.value === "general"),
+    "general still takes a pill despite covering a majority",
+  );
+
+  for (const value of ["text-generation", "chat"]) {
+    const facet = facets.capabilities.find((candidate) => candidate.value === value);
+    if (facet) assert.equal(discriminates(facet, total), false, `${value} should not discriminate`);
+  }
+});
+
+test("the capability half leads with the specialised capabilities, reranking among them", async () => {
+  const models = await readFile(new URL("../../catalog/models.json", import.meta.url), "utf8").then(
+    JSON.parse,
+  );
+  const catalog = models.models;
+  const capabilities = leadingCapabilities(buildFacets(catalog), { total: catalog.length });
+
+  assert.ok(capabilities.length > 0, "no capability pills");
+  // #270: a reranker could not be reached from the row at all.
+  assert.ok(
+    capabilities.some((facet) => facet.value === "reranking"),
+    "reranking has no pill",
+  );
+  assert.equal(capabilityLabel("text-embedding"), "embedding");
+});
+
+test("a capability nobody holds renders nothing rather than an empty button", () => {
+  assert.deepEqual(leadingCapabilities(buildFacets([]), { total: 0 }), []);
 });

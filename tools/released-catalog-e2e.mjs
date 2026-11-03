@@ -212,6 +212,60 @@ export function probeFor(model) {
   return [null, null];
 }
 
+/** Maven Central URL of a marker coordinate's POM. */
+export function markerPomUrl(coordinate) {
+  const [group, artifact, version, extra] = String(coordinate || "").split(":");
+  if (!group || !artifact || !version || extra !== undefined) {
+    throw new Error(`malformed marker coordinate ${coordinate}`);
+  }
+  return `https://repo1.maven.org/maven2/${group.replaceAll(".", "/")}/${artifact}/${version}/${artifact}-${version}.pom`;
+}
+
+/**
+ * Smallest published artifact per capability whose marker Central already serves, plus the
+ * smaller published ones it does not serve yet.
+ *
+ * The compile-only check runs on every pull request and every push, and it resolves from Central.
+ * The publishing order makes a stamped-but-absent marker routine there: the catalog merges first,
+ * stamping catalogPublishedAt, and the Central publish is dispatched after it. MEASURED
+ * 2026-11-03: the pull request publishing Paradee-8M, the smallest text-to-speech artifact,
+ * failed this check on "Could not read artifact descriptor" for its own marker, and would have
+ * failed again on main until the Central publish ran. The probe body is per capability, so the
+ * next-smallest model Central serves compiles the same code. Only 404 means "not yet"; any other
+ * answer stops the run rather than silently changing the selection. The full post-deployment
+ * run keeps the strict selection, because a stamped marker missing from Central is a defect there.
+ */
+export async function smallestOnCentralPerCapability(models, fetchImpl = fetch) {
+  const byCapability = new Map();
+  for (const model of models) {
+    const [capability] = probeFor(model);
+    if (!capability) continue;
+    if (!byCapability.has(capability)) byCapability.set(capability, []);
+    byCapability.get(capability).push(model);
+  }
+  const chosen = [];
+  const pending = [];
+  for (const candidates of byCapability.values()) {
+    candidates.sort(
+      (a, b) =>
+        Number(a.sizeBytes || Number.MAX_SAFE_INTEGER) - Number(b.sizeBytes || Number.MAX_SAFE_INTEGER),
+    );
+    for (const model of candidates) {
+      const url = markerPomUrl(model.markerCoordinate);
+      const response = await fetchImpl(url, { method: "HEAD" });
+      if (response.status === 200) {
+        chosen.push(model);
+        break;
+      }
+      if (response.status !== 404) {
+        throw new Error(`Maven Central answered HTTP ${response.status} for ${url}`);
+      }
+      pending.push(model);
+    }
+  }
+  return { chosen, pending };
+}
+
 /** Smallest published artifact per capability: every entry point, bounded download. */
 function smallestPerCapability(models) {
   const chosen = new Map();
@@ -274,9 +328,17 @@ async function main() {
     });
   } else if (options.get("--all")) {
     targets = all.filter((model) => probeFor(model)[0]);
+  } else if (options.get("--compile-only")) {
+    // Compile-only wants one model per capability, which is one probe body per capability and
+    // every distinct thing there is to compile, from markers Central already serves.
+    const { chosen, pending } = await smallestOnCentralPerCapability(all);
+    for (const model of pending) {
+      process.stdout.write(
+        `SKIPPED ${model.id}: published in the catalog, marker not yet on Maven Central\n`,
+      );
+    }
+    targets = chosen;
   } else {
-    // Compile-only wants the same selection: one model per capability is one probe body per
-    // capability, which is every distinct thing there is to compile.
     targets = smallestPerCapability(all);
   }
   if (targets.length === 0) throw new Error("no published model matched");

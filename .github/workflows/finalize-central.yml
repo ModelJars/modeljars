@@ -155,3 +155,133 @@ jobs:
             echo
             echo "Published ${published} deployment(s) matching \`${DEPLOYMENT_NAME_FILTER}\`."
           } >> "${GITHUB_STEP_SUMMARY}"
+
+  advertise:
+    name: Open a PR advertising the published release
+    needs: finalize
+    # Library releases only. finalize-central also publishes model markers, whose deployment names
+    # are modeljars-<model-id>-<run-id>; those do not change what the site advertises.
+    if: needs.finalize.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Decide whether this release changes the advertised coordinate
+        id: release
+        shell: bash
+        env:
+          DEPLOYMENT_NAME_FILTER: ${{ inputs.deployment_name_filter }}
+        run: |
+          if [[ "${DEPLOYMENT_NAME_FILTER}" =~ ^modeljars-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=${BASH_REMATCH[1]}" >> "${GITHUB_OUTPUT}"
+            echo "library=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "library=false" >> "${GITHUB_OUTPUT}"
+            echo "Not a library release (\`${DEPLOYMENT_NAME_FILTER}\`); the site advertises no model markers." \
+              >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Checkout
+        if: steps.release.outputs.library == 'true'
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        if: steps.release.outputs.library == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Wait for repo1 to serve the release
+        if: steps.release.outputs.library == 'true'
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          # The finalize above waits on Central's own publisher API, which flips before repo1 has
+          # synced: 0.1.75 served its jar while its POM was still 404 and maven-metadata still named
+          # 0.1.73, for roughly twenty minutes. verify-site-version.mjs reads repo1, so opening the
+          # PR before the sync lands would produce a branch that cannot pass its own gate.
+          metadata=https://repo1.maven.org/maven2/org/modeljars/modeljars/maven-metadata.xml
+          deadline=$(( SECONDS + 2400 ))
+          while :; do
+            release="$(curl -fsSL --max-time 30 "${metadata}" 2>/dev/null |
+              grep -oE '<release>[^<]+' | sed 's/<release>//' || true)"
+            pom="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+              "https://repo1.maven.org/maven2/org/modeljars/modeljars/${VERSION}/modeljars-${VERSION}.pom")"
+            if [[ "${release}" == "${VERSION}" && "${pom}" == "200" ]]; then
+              echo "repo1 serves ${VERSION}."
+              exit 0
+            fi
+            if (( SECONDS >= deadline )); then
+              # Not a failure of the release, which is published. The bump is simply not openable
+              # yet, and is left to a re-run rather than opened against a coordinate repo1 cannot
+              # resolve.
+              {
+                echo "### Site bump deferred"
+                echo
+                echo "repo1 had not synced ${VERSION} within 40 minutes (release=\`${release}\`,"
+                echo "POM \`${pom}\`). Re-run this workflow, or bump the site by hand with"
+                echo "\`node tools/advertise-release.mjs site ${VERSION}\`."
+              } >> "${GITHUB_STEP_SUMMARY}"
+              echo "SYNC_TIMED_OUT=1" >> "${GITHUB_ENV}"
+              exit 0
+            fi
+            sleep 30
+          done
+
+      - name: Rewrite the carriers and open the PR
+        if: steps.release.outputs.library == 'true' && env.SYNC_TIMED_OUT != '1'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          npm ci
+          node tools/advertise-release.mjs site "${VERSION}" | tee /tmp/advertise.log
+          if git diff --quiet -- site; then
+            echo "The site already advertises ${VERSION}; nothing to open." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          branch="site/advertise-${VERSION}"
+          if gh pr list --head "${branch}" --state all --json number --jq 'length' | grep -qv '^0$'; then
+            echo "A PR for \`${branch}\` already exists." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          # Evidence in the body, because a PR opened with GITHUB_TOKEN does not trigger this
+          # repository's workflows: a reviewer would otherwise see a version bump with no checks.
+          node tools/verify-site-version.mjs site | tee /tmp/gate.log
+          npm test 2>&1 | tail -5 | tee /tmp/tests.log
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${branch}"
+          git add site
+          printf '%s\n\n%s\n' \
+            "Advertise ${VERSION} in the site's dependency snippets" \
+            "Opened by finalize-central once repo1 served ${VERSION}. The coordinate is a literal so that a published release can be withheld from the page, and so the same commit always renders the same version. This is the bump that literal costs." \
+            > /tmp/commit.txt
+          git commit -F /tmp/commit.txt
+          git push --set-upstream origin "${branch}"
+          {
+            echo "Opened by \`finalize-central\` after repo1 served **${VERSION}**."
+            echo
+            echo '```'
+            cat /tmp/advertise.log /tmp/gate.log
+            echo '```'
+            echo
+            echo "\`npm test\`:"
+            echo '```'
+            cat /tmp/tests.log
+            echo '```'
+            echo
+            echo "Checks are absent by design: a PR opened with \`GITHUB_TOKEN\` does not trigger"
+            echo "this repository's workflows, so the gate and test output above is the evidence."
+            echo "Merging re-runs \`pages\`, which is what makes the new coordinate live."
+          } > /tmp/body.md
+          gh pr create --base main --head "${branch}" \
+            --title "Advertise ${VERSION} in the site's dependency snippets" \
+            --body-file /tmp/body.md

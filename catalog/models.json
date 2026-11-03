@@ -23057,7 +23057,7 @@
     {
       "id": "fastino_gliner2_5_decide_f32",
       "name": "GLiNER2.5-Decide F32",
-      "description": "Apache-2.0 schema-driven classification candidate with a DeBERTa-v3-large encoder. Requires GLiNER2 preprocessing and scoring support; not qualified or published. The article-specific duplicate-detection adapter is not identified by this entry.",
+      "description": "Apache-2.0 schema-driven classification with a DeBERTa-v3-large encoder and GLiNER2 preprocessing and scoring, executed by the Models Java encoder with Rust FFM shims. Qualified against the publisher's own runtime under schema-classification-upstream-v2 on the released Models 0.5.12: identical labels on every evaluated request and three passing CPU performance pairs. The article-specific duplicate-detection adapter is not identified by this entry.",
       "sourceId": "hf://fastino/GLiNER2.5-Decide",
       "sourceUri": "https://huggingface.co/fastino/GLiNER2.5-Decide",
       "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/model.safetensors",
@@ -23071,6 +23071,7 @@
       "localPath": "${user.home}/.modeljars/candidates/gliner2.5-decide/model.safetensors",
       "sha256": "40a5a23ff860dc3dff426cecd1048cacdd29c648c96db209dad818e9686dc997",
       "sizeBytes": 1945828140,
+      "catalogPublishedAt": "2026-11-03T04:48:48Z",
       "license": "Apache-2.0",
       "capabilities": [
         "text-classification",
@@ -23127,7 +23128,7 @@
       ],
       "backends": {
         "pure-java": false,
-        "rust-ffm": false,
+        "rust-ffm": true,
         "llama.cpp": false,
         "gliner2": true
       },

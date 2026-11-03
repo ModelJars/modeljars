@@ -6,7 +6,7 @@
       "modelId": "fastino_gliner2_5_decide_f32",
       "backend": "rust-ffm",
       "backendVersion": "models-0.5.12",
-      "report": "https://github.com/integrallis/models/blob/0aec584d473cc7590fe180c7a786ed2d6ed92dbe/benchmark-results/2026-11-01-gliner25-decide/catalog-qualification-released-0.5.12.json",
+      "report": "https://github.com/integrallis/models/blob/27d9a59773b760965d48d692bd7836bf697117a5/benchmark-results/2026-11-01-gliner25-decide/catalog-qualification-released-0.5.12.json",
       "reportSha256": "69d6c08c84ae55d1c0def34f16c291ad2d40f7fce95a4e0569ec25000c728050",
       "maximumOracleQualityLoss": 0,
       "inferenceErrors": 0,

@@ -973,6 +973,21 @@ select {
   font-size: 0.78rem;
 }
 
+/* Evidence sits beside Sort rather than behind the Filters disclosure. It answers a different
+   question from either half of the pill row -- not what a model does or is about, but what was
+   measured about it -- and it was the only route to the typed-decision and schema-classification
+   models before the capability pills existed. A control nobody opens is a control nobody uses. */
+.evidence-control {
+  margin-left: auto;
+}
+
+.filter-legend {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
 .sort-control select {
   width: 180px;
   border: 0;

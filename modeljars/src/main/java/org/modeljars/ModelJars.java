@@ -1699,7 +1699,7 @@ public final class ModelJars {
                     + qualification.backend());
           }
           yield ParadeeTextToSpeechModel.load(
-              artifact, bundleRoot(artifact, descriptor).resolve("config.json"));
+              speechBundleGraph(artifact, descriptor), artifact.resolve("config.json"));
         }
         default ->
             throw new ModelJarException(
@@ -1711,15 +1711,34 @@ public final class ModelJars {
   }
 
   /**
-   * The directory that owns every file of a multi-file artifact: the primary file's path removed.
+   * The graph file inside a multi-file speech bundle.
+   *
+   * <p>{@code install()} hands back the bundle root for a multi-file artifact -- the convention the
+   * Safetensors models rely on -- not the primary file inside it, so both of a bundle's paths
+   * resolve from the root it returns. Earlier code stripped the primary file's path components off
+   * that root, which had never carried them, and looked for {@code config.json} two directories
+   * above the bundle in the shared {@code cache/sha256} directory. Package-private so the
+   * resolution is tested directly rather than only through a loader that stubs it out.
+   *
+   * @param artifact bundle root as returned by the installer
+   * @param descriptor immutable model metadata
+   * @return the declared primary file resolved inside the bundle
    */
-  private static Path bundleRoot(Path artifact, ModelJarDescriptor descriptor) {
-    int parts = descriptor.primaryFile().map(file -> Path.of(file.path()).getNameCount()).orElse(1);
-    Path root = artifact.toAbsolutePath().normalize();
-    for (int i = 0; i < parts && root.getParent() != null; i++) {
-      root = root.getParent();
+  static Path speechBundleGraph(Path artifact, ModelJarDescriptor descriptor) {
+    String primary =
+        descriptor
+            .primaryFile()
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "A multi-file speech bundle needs a declared primary file: "
+                            + descriptor.markerCoordinate()))
+            .path();
+    Path graph = artifact.resolve(primary).normalize();
+    if (!graph.startsWith(artifact.normalize())) {
+      throw new ModelJarException("Speech graph path escapes its bundle: " + primary);
     }
-    return root;
+    return graph;
   }
 
   @FunctionalInterface

@@ -3,7 +3,7 @@ import { renderDependencyCopyActions } from "./catalog-entry-actions.js";
 import { copyDependencySnippet } from "./dependency-snippets.js";
 import { describeCoordinate } from "./coordinate.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
-import { primaryQualification } from "./qualification-data.js";
+import { primaryQualification, tierLabel } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
 import {
   buildFacets,
@@ -302,6 +302,7 @@ async function loadCatalog() {
     populateSelect(elements.backend, facets.backends);
     populateSelect(elements.architecture, facets.architectures);
     populateSelect(elements.size, facets.sizes, (value) => value.replace("-", " "));
+    populateSelect(elements.qualification, facets.qualifications, tierLabel);
 
     document.querySelector("#model-total").textContent = numberFormat.format(
       catalog.filter((model) => model.kind !== "hybrid").length,

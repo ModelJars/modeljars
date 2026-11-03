@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { filterCatalog } from "./search.js";
+import { tierLabel } from "./qualification-data.js";
 import { MODALITY_CLAIMS } from "../../tools/modality-claim-gate.mjs";
 import {
   buildFacets,
@@ -214,10 +215,15 @@ test("offers the emitted reranking evidence tier in the production evidence filt
   const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
   assert.equal(tier.value, "second-stage-reranking");
-  assert.match(
-    index,
-    new RegExp(`<option value="${tier.value}">Second-stage reranking</option>`),
-  );
+  assert.equal(tierLabel(tier.value), "Second-stage reranking");
+  // The options are generated from the facets now, like every other select. They were literals
+  // here, and drifted: the served catalog emitted hybrid-composition, ranked-decision,
+  // recipe-pinned-base and schema-classification with no option for any of them, while
+  // production-rag and generative-rag were offered and matched nothing. A literal reintroduced
+  // here would start that again, so the absence is asserted.
+  assert.doesNotMatch(index, /<option value="[a-z-]+-rag">/);
+  assert.doesNotMatch(index, new RegExp(`<option value="${tier.value}">`));
+  assert.match(index, /<select id="qualification-filter">\s*<option value="">Any qualified tier<\/option>\s*<\/select>/);
 });
 
 test("describes embedding evidence without borrowing RAG wording", () => {

@@ -19,7 +19,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { renderModel } from "../site/assets/model-detail.js";
-import { primaryQualification } from "../site/assets/qualification-data.js";
+import { primaryQualification, tierLabel } from "../site/assets/qualification-data.js";
+import { buildFacets } from "../site/assets/taxonomy.js";
 import { catalogDomains } from "../site/assets/taxonomy.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -90,6 +91,26 @@ for (const entry of renderable) {
     }
   }
 }
+// Every tier the served catalog emits must have its own label in the production-evidence filter.
+//
+// That select used to carry its options as literals in index.html while every other select is
+// populated from the facets, and it drifted: the catalog emitted hybrid-composition,
+// ranked-decision, recipe-pinned-base and schema-classification with no option for any of them, so
+// the qualified typed-decision and schema-classification models could not be reached through the
+// filter at all, while production-rag and generative-rag were offered and matched nothing. The
+// options are generated now, and this is the guard that the generation covers what is emitted.
+//
+// A tier with no case in qualificationLabel falls through to "Guarded RAG", which would mislabel a
+// new tier rather than fail. guarded-rag is the one value allowed to carry that label.
+for (const facet of buildFacets(renderable).qualifications) {
+  if (facet.value !== "guarded-rag" && tierLabel(facet.value) === "Guarded RAG") {
+    failures.push(
+      `${facet.value}: emitted by ${facet.count} entr${facet.count === 1 ? "y" : "ies"} with no` +
+        ` label of its own, so the production-evidence filter would show it as "Guarded RAG"`,
+    );
+  }
+}
+
 delete globalThis.document;
 
 process.stdout.write(

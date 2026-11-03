@@ -817,8 +817,34 @@ a:focus-visible {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  flex-wrap: wrap;
+  /* The row carries two modalities and must stay on one line on desktop, so both halves are
+     bounded in taxonomy.js and held to a width budget by taxonomy.test.mjs. Scrolling is the
+     fallback if a future label overruns the budget: a wrapped row pushes the Filters button out of
+     line, which is what this replaced. The max-width: 560px rule restores wrapping. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
   gap: 7px;
+}
+
+.chip-list::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-list button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* What a model does, in its own shape: squared off against the fully round domain pills, so the two
+   modalities in one row are told apart without reading them. */
+.chip-list button.chip-capability {
+  border-radius: 7px;
+  border-style: dashed;
+}
+
+.chip-list button.chip-capability[aria-pressed="true"] {
+  border-style: solid;
 }
 
 .chip-list button,
@@ -2713,6 +2739,11 @@ select {
   }
 
   .chip-list {
+    /* Narrow viewports keep the previous behaviour: wrap, then clip to two rows. The desktop rule
+       is nowrap with horizontal scroll, and leaving that in force here would clip the row
+       sideways with overflow: hidden and strand every pill past the first few. */
+    flex-wrap: wrap;
+    overflow-x: visible;
     max-height: 74px;
     overflow: hidden;
   }

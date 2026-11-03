@@ -47,7 +47,7 @@ export function matches(model, query, backend) {
 }
 
 export function filterCatalog(catalog, filters = {}) {
-  const { query, domain, backend, architecture, size, qualification, sort = "name" } = filters;
+  const { query, domain, capability, backend, architecture, size, qualification, sort = "name" } = filters;
   const filtered = catalog.filter(
     (model) => {
       const evidence = primaryQualification(model);
@@ -60,6 +60,7 @@ export function filterCatalog(catalog, filters = {}) {
       return (
         matches(model, query, backend) &&
         (!domain || catalogDomains(model).includes(domain)) &&
+        (!capability || (model.capabilities || []).includes(capability)) &&
         (!architecture || normalize(model.architecture) === normalize(architecture)) &&
         (!size || sizeTier(model) === size) &&
         qualificationMatches

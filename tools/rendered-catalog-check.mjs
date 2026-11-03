@@ -20,7 +20,12 @@ import { fileURLToPath } from "node:url";
 
 import { renderModel } from "../site/assets/model-detail.js";
 import { primaryQualification, tierLabel } from "../site/assets/qualification-data.js";
-import { buildFacets } from "../site/assets/taxonomy.js";
+import {
+  buildFacets,
+  capabilityLabel,
+  leadingCapabilities,
+  leadingDomains,
+} from "../site/assets/taxonomy.js";
 import { catalogDomains } from "../site/assets/taxonomy.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -91,6 +96,31 @@ for (const entry of renderable) {
     }
   }
 }
+// The pill row must fit one desktop line. It shares its line with the Filters button, and a 1280px
+// viewport leaves roughly 1000px; the row it replaced emitted up to 10 pills at an estimated
+// ~1005px and wrapped, which pushes that button out of line. taxonomy.test.mjs cannot check this
+// properly because npm test runs before the Gradle build and so reads catalog/models.json, whose
+// counts are the whole candidate set rather than the 123 entries actually served. The shares that
+// decide which facets earn a pill only exist here.
+const PILL_WIDTH_BUDGET = 1000;
+const pillWidth = (label) => Math.round(label.length * 6.6 + 26 + 20 + 7);
+{
+  const facets = buildFacets(renderable);
+  const total = renderable.length;
+  const labels = [
+    "All",
+    ...leadingCapabilities(facets, { total }).map((facet) => capabilityLabel(facet.value)),
+    ...leadingDomains(facets, { total }).map((facet) => facet.value),
+  ];
+  const width = labels.reduce((sum, label) => sum + pillWidth(label), 0);
+  if (width > PILL_WIDTH_BUDGET) {
+    failures.push(
+      `the pill row estimates ${width}px against a ${PILL_WIDTH_BUDGET}px budget and would wrap:` +
+        ` ${labels.join(", ")}`,
+    );
+  }
+}
+
 // Every tier the served catalog emits must have its own label in the production-evidence filter.
 //
 // That select used to carry its options as literals in index.html while every other select is

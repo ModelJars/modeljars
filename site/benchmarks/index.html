@@ -195,6 +195,72 @@
             </p>
           </div>
           <div>
+            <h3 id="evidence-tiers">What the other evidence tiers mean</h3>
+            <p>
+              The catalog's <strong>Evidence</strong> filter offers one tier per qualification
+              policy, and they do not all measure the same kind of thing. Each tier names the policy
+              it was measured under, and every entry carries its own numbers.
+            </p>
+            <ul>
+              <li>
+                <strong>Guarded RAG</strong> &mdash;
+                <code>production-rag-model-contribution-v6</code>. The model's own contribution,
+                not the pipeline's: how often it answered, and how often those answers were correct,
+                plus decode throughput and end-to-end latency against an authoritative engine.
+              </li>
+              <li>
+                <strong>Semantic search</strong> &mdash; <code>oracle-equivalence-v1</code>. That our
+                embeddings reproduce the publisher's runtime, to around 1e-6 cosine. It is an
+                implementation-parity result and <em>not</em> a retrieval-quality one: no corpus, no
+                queries, no relevance judgments.
+              </li>
+              <li>
+                <strong>Second-stage reranking</strong> &mdash;
+                <code>reranking-exact-artifact-and-latency-v3</code>. Logit parity against ONNX
+                Runtime, agreement on top-k order, and latency. Also parity rather than ranking
+                quality: the top-k check is agreement with the oracle, not correctness against
+                ground truth.
+              </li>
+              <li>
+                <strong>Text-to-speech</strong> &mdash;
+                <code>speech-oracle-streaming-latency-v1</code>. That the waveform reproduces the
+                publisher's own implementation &mdash; PCM cosine and a signal-to-difference bound
+                in dB &mdash; together with streaming behaviour: first audio before completion, p95
+                real-time factor, and p95 time to first audio. Parity and latency rather than
+                listening quality.
+              </li>
+              <li>
+                <strong>Schema classification</strong> &mdash;
+                <code>schema-classification-upstream-v2</code>. Numerical parity with the upstream
+                runtime, a bounded quality loss against it, and verification on a released build.
+              </li>
+              <li>
+                <strong>Ranked decisions</strong> and <strong>Typed decisions</strong> &mdash;
+                <code>decision-calibration-v2</code>. Accuracy over a pinned cohort against chance,
+                per question type, with calibration error reported. Ranked decisions publish an
+                ordering; only a calibrated tier may be thresholded on the probability beside the
+                answer.
+              </li>
+              <li>
+                <strong>Tool calling</strong> &mdash; <code>needle2-tool-conformance-v2</code>.
+                Structured-output rate, tool-selection accuracy, schema validity and argument
+                accuracy over an upstream suite.
+              </li>
+              <li>
+                <strong>Qualified hybrid</strong> &mdash;
+                <code>activated-adapter-component-v1</code>. A component measured on the base
+                artifact it activates against, with both identities pinned.
+              </li>
+            </ul>
+            <p>
+              Three of these &mdash; semantic search, second-stage reranking and text-to-speech
+              &mdash; measure faithfulness to a reference implementation rather than how good the
+              result is. That is a real guarantee, and it is a different one from quality; where it
+              applies it is said so above rather than implied. Adding retrieval and ranking quality
+              to the embedding and reranking gates is tracked in integrallis/models#352 and #353.
+            </p>
+          </div>
+          <div>
             <h3>Evidence identity</h3>
             <p>
               Model bytes, raw report bytes, Models revision, backend version, policy, host, JVM,

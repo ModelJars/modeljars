@@ -104,6 +104,12 @@
               placeholder="Search by model, task, architecture, publisher, or tag">
           </label>
 
+          <p class="filter-legend">
+            Dashed pills filter by <strong>what a model does</strong>; round pills by
+            <strong>what it is about</strong>. <strong>Evidence</strong>, beside Sort, filters by the
+            qualification that was measured &mdash; what we ran, on which artifact, and under which
+            policy. <a href="/benchmarks/#evidence-tiers">What each tier measures</a>.
+          </p>
           <div class="filter-row">
             <div id="domain-filters" class="chip-list" aria-label="Model categories"></div>
             <button
@@ -129,18 +135,18 @@
               <span>Model size</span>
               <select id="size-filter"><option value="">Any size</option></select>
             </label>
-            <label>
-              <span>Production evidence</span>
-              <select id="qualification-filter">
-                <option value="">Any qualified tier</option>
-              </select>
-            </label>
             <button id="clear-filters" class="text-button" type="button">Clear filters</button>
           </div>
         </form>
 
         <div class="results-toolbar">
           <p id="result-count" aria-live="polite">Loading models...</p>
+          <label class="sort-control evidence-control">
+            <span>Evidence</span>
+            <select id="qualification-filter">
+              <option value="">Any qualified tier</option>
+            </select>
+          </label>
           <label class="sort-control">
             <span>Sort</span>
             <select id="sort-filter">

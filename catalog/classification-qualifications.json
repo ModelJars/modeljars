@@ -1,5 +1,465 @@
 {
   "schemaVersion": 2,
   "policy": "schema-classification-upstream-v2",
-  "entries": []
+  "entries": [
+    {
+      "modelId": "fastino_gliner2_5_decide_f32",
+      "backend": "rust-ffm",
+      "backendVersion": "models-0.5.12",
+      "report": "https://github.com/integrallis/models/blob/0aec584d473cc7590fe180c7a786ed2d6ed92dbe/benchmark-results/2026-11-01-gliner25-decide/catalog-qualification-released-0.5.12.json",
+      "reportSha256": "69d6c08c84ae55d1c0def34f16c291ad2d40f7fce95a4e0569ec25000c728050",
+      "maximumOracleQualityLoss": 0,
+      "inferenceErrors": 0,
+      "numericalParityPassed": true,
+      "releasedRuntimeVerified": true,
+      "qualified": true,
+      "quality": {
+        "publisher.singleHead.meanDomainExactMatch": 0.6345588235294117,
+        "publisher.singleHead.agent_handoff.exactMatch": 0.76,
+        "publisher.singleHead.banking_intent.exactMatch": 0.64,
+        "publisher.singleHead.benefits_request.exactMatch": 0.75,
+        "publisher.singleHead.clinic_request.exactMatch": 0.645,
+        "publisher.singleHead.document_type.exactMatch": 0.79,
+        "publisher.singleHead.email_triage.exactMatch": 0.5925,
+        "publisher.singleHead.news_topic.exactMatch": 0.69,
+        "publisher.singleHead.paper_field.exactMatch": 0.47,
+        "publisher.singleHead.product_feedback.exactMatch": 0.52,
+        "publisher.singleHead.restaurant_review.exactMatch": 0.535,
+        "publisher.singleHead.review_sentiment.exactMatch": 0.84,
+        "publisher.singleHead.screen_tags.exactMatch": 0.485,
+        "publisher.singleHead.sports_recap.exactMatch": 0.7566666666666667,
+        "publisher.singleHead.support_intent.exactMatch": 0.76,
+        "publisher.singleHead.support_topic.exactMatch": 0.44,
+        "publisher.singleHead.ticket_route.exactMatch": 0.48333333333333334,
+        "publisher.singleHead.travel_request.exactMatch": 0.63,
+        "publisher.jointHead.meanDomainExactMatch": 0.6371568627450981,
+        "publisher.jointHead.agent_handoff.exactMatch": 0.76,
+        "publisher.jointHead.banking_intent.exactMatch": 0.64,
+        "publisher.jointHead.benefits_request.exactMatch": 0.78,
+        "publisher.jointHead.clinic_request.exactMatch": 0.66,
+        "publisher.jointHead.document_type.exactMatch": 0.79,
+        "publisher.jointHead.email_triage.exactMatch": 0.6,
+        "publisher.jointHead.news_topic.exactMatch": 0.69,
+        "publisher.jointHead.paper_field.exactMatch": 0.47,
+        "publisher.jointHead.product_feedback.exactMatch": 0.52,
+        "publisher.jointHead.restaurant_review.exactMatch": 0.5,
+        "publisher.jointHead.review_sentiment.exactMatch": 0.84,
+        "publisher.jointHead.screen_tags.exactMatch": 0.485,
+        "publisher.jointHead.sports_recap.exactMatch": 0.7766666666666666,
+        "publisher.jointHead.support_intent.exactMatch": 0.76,
+        "publisher.jointHead.support_topic.exactMatch": 0.44,
+        "publisher.jointHead.ticket_route.exactMatch": 0.49,
+        "publisher.jointHead.travel_request.exactMatch": 0.63,
+        "publisher.jointDocument.meanDomainExactMatch": 0.4882352941176471,
+        "publisher.jointDocument.agent_handoff.exactMatch": 0.76,
+        "publisher.jointDocument.banking_intent.exactMatch": 0.64,
+        "publisher.jointDocument.benefits_request.exactMatch": 0.59,
+        "publisher.jointDocument.clinic_request.exactMatch": 0.43,
+        "publisher.jointDocument.document_type.exactMatch": 0.79,
+        "publisher.jointDocument.email_triage.exactMatch": 0.12,
+        "publisher.jointDocument.news_topic.exactMatch": 0.69,
+        "publisher.jointDocument.paper_field.exactMatch": 0.47,
+        "publisher.jointDocument.product_feedback.exactMatch": 0.24,
+        "publisher.jointDocument.restaurant_review.exactMatch": 0.15,
+        "publisher.jointDocument.review_sentiment.exactMatch": 0.84,
+        "publisher.jointDocument.screen_tags.exactMatch": 0.14,
+        "publisher.jointDocument.sports_recap.exactMatch": 0.47,
+        "publisher.jointDocument.support_intent.exactMatch": 0.76,
+        "publisher.jointDocument.support_topic.exactMatch": 0.44,
+        "publisher.jointDocument.ticket_route.exactMatch": 0.14,
+        "publisher.jointDocument.travel_request.exactMatch": 0.63,
+        "goemotions.microF1": 0.36076701170880704,
+        "goemotions.macroF1": 0.3209405017221317
+      },
+      "oracleQuality": {
+        "publisher.singleHead.meanDomainExactMatch": 0.6345588235294117,
+        "publisher.singleHead.agent_handoff.exactMatch": 0.76,
+        "publisher.singleHead.banking_intent.exactMatch": 0.64,
+        "publisher.singleHead.benefits_request.exactMatch": 0.75,
+        "publisher.singleHead.clinic_request.exactMatch": 0.645,
+        "publisher.singleHead.document_type.exactMatch": 0.79,
+        "publisher.singleHead.email_triage.exactMatch": 0.5925,
+        "publisher.singleHead.news_topic.exactMatch": 0.69,
+        "publisher.singleHead.paper_field.exactMatch": 0.47,
+        "publisher.singleHead.product_feedback.exactMatch": 0.52,
+        "publisher.singleHead.restaurant_review.exactMatch": 0.535,
+        "publisher.singleHead.review_sentiment.exactMatch": 0.84,
+        "publisher.singleHead.screen_tags.exactMatch": 0.485,
+        "publisher.singleHead.sports_recap.exactMatch": 0.7566666666666667,
+        "publisher.singleHead.support_intent.exactMatch": 0.76,
+        "publisher.singleHead.support_topic.exactMatch": 0.44,
+        "publisher.singleHead.ticket_route.exactMatch": 0.48333333333333334,
+        "publisher.singleHead.travel_request.exactMatch": 0.63,
+        "publisher.jointHead.meanDomainExactMatch": 0.6371568627450981,
+        "publisher.jointHead.agent_handoff.exactMatch": 0.76,
+        "publisher.jointHead.banking_intent.exactMatch": 0.64,
+        "publisher.jointHead.benefits_request.exactMatch": 0.78,
+        "publisher.jointHead.clinic_request.exactMatch": 0.66,
+        "publisher.jointHead.document_type.exactMatch": 0.79,
+        "publisher.jointHead.email_triage.exactMatch": 0.6,
+        "publisher.jointHead.news_topic.exactMatch": 0.69,
+        "publisher.jointHead.paper_field.exactMatch": 0.47,
+        "publisher.jointHead.product_feedback.exactMatch": 0.52,
+        "publisher.jointHead.restaurant_review.exactMatch": 0.5,
+        "publisher.jointHead.review_sentiment.exactMatch": 0.84,
+        "publisher.jointHead.screen_tags.exactMatch": 0.485,
+        "publisher.jointHead.sports_recap.exactMatch": 0.7766666666666666,
+        "publisher.jointHead.support_intent.exactMatch": 0.76,
+        "publisher.jointHead.support_topic.exactMatch": 0.44,
+        "publisher.jointHead.ticket_route.exactMatch": 0.49,
+        "publisher.jointHead.travel_request.exactMatch": 0.63,
+        "publisher.jointDocument.meanDomainExactMatch": 0.4882352941176471,
+        "publisher.jointDocument.agent_handoff.exactMatch": 0.76,
+        "publisher.jointDocument.banking_intent.exactMatch": 0.64,
+        "publisher.jointDocument.benefits_request.exactMatch": 0.59,
+        "publisher.jointDocument.clinic_request.exactMatch": 0.43,
+        "publisher.jointDocument.document_type.exactMatch": 0.79,
+        "publisher.jointDocument.email_triage.exactMatch": 0.12,
+        "publisher.jointDocument.news_topic.exactMatch": 0.69,
+        "publisher.jointDocument.paper_field.exactMatch": 0.47,
+        "publisher.jointDocument.product_feedback.exactMatch": 0.24,
+        "publisher.jointDocument.restaurant_review.exactMatch": 0.15,
+        "publisher.jointDocument.review_sentiment.exactMatch": 0.84,
+        "publisher.jointDocument.screen_tags.exactMatch": 0.14,
+        "publisher.jointDocument.sports_recap.exactMatch": 0.47,
+        "publisher.jointDocument.support_intent.exactMatch": 0.76,
+        "publisher.jointDocument.support_topic.exactMatch": 0.44,
+        "publisher.jointDocument.ticket_route.exactMatch": 0.14,
+        "publisher.jointDocument.travel_request.exactMatch": 0.63,
+        "goemotions.microF1": 0.36076701170880704,
+        "goemotions.macroF1": 0.3209405017221317
+      },
+      "cohortCases": {
+        "publisher.singleHead": 2900,
+        "publisher.jointHead": 1700,
+        "goemotions.fullTest": 5427
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "role": "configuration",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/config.json",
+          "sha256": "501c6579278518e72dbba5a1f248b421dd5bfb13600db45d86c94c224368670b",
+          "sizeBytes": 1612
+        },
+        {
+          "path": "encoder_config/config.json",
+          "role": "configuration",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/encoder_config/config.json",
+          "sha256": "bd32f1484ba5a199f7a63df44df3814b839fffcf6e64478323c4689868ef6015",
+          "sizeBytes": 920
+        },
+        {
+          "path": "model.safetensors",
+          "role": "classification-model",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/model.safetensors",
+          "sha256": "40a5a23ff860dc3dff426cecd1048cacdd29c648c96db209dad818e9686dc997",
+          "sizeBytes": 1945828140
+        },
+        {
+          "path": "special_tokens_map.json",
+          "role": "tokenizer",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/special_tokens_map.json",
+          "sha256": "84ea70143f533d7e99b393d87f20010887a9ac2cba955828ef313886e4e83f4f",
+          "sizeBytes": 2414
+        },
+        {
+          "path": "tokenizer.json",
+          "role": "tokenizer",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/tokenizer.json",
+          "sha256": "3ad87d9ffe669147063e70850927dd2da90249e2acc5c8527f1eb65df467bcc8",
+          "sizeBytes": 8333952
+        },
+        {
+          "path": "tokenizer_config.json",
+          "role": "tokenizer",
+          "downloadUri": "https://huggingface.co/fastino/GLiNER2.5-Decide/resolve/9d1bfb848cd16d93ee56ccbc59cd92bf0f284d90/tokenizer_config.json",
+          "sha256": "323199a4e946039410899f3779f2aa3eaef1500213c512727ad0f623d4f21309",
+          "sizeBytes": 3356
+        }
+      ],
+      "performance": [
+        {
+          "pair": 1,
+          "shape": "tokens32-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.427868741345602,
+          "p95LatencyRatio": 0.7552597183903637
+        },
+        {
+          "pair": 1,
+          "shape": "tokens32-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.4351128464474667,
+          "p95LatencyRatio": 0.7787326651339287
+        },
+        {
+          "pair": 1,
+          "shape": "tokens128-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9544249229316614,
+          "p95LatencyRatio": 1.0788217797734774
+        },
+        {
+          "pair": 1,
+          "shape": "tokens128-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9704235156638517,
+          "p95LatencyRatio": 1.1830703245917724
+        },
+        {
+          "pair": 1,
+          "shape": "tokens128-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.0129011983088498,
+          "p95LatencyRatio": 0.9331259330452711
+        },
+        {
+          "pair": 1,
+          "shape": "tokens256-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9737240334643306,
+          "p95LatencyRatio": 1.0991219934471836
+        },
+        {
+          "pair": 1,
+          "shape": "tokens256-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9683809101853867,
+          "p95LatencyRatio": 1.0444524945402942
+        },
+        {
+          "pair": 1,
+          "shape": "tokens256-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9542301520765069,
+          "p95LatencyRatio": 1.0519381549988787
+        },
+        {
+          "pair": 1,
+          "shape": "tokens512-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2707974593949454,
+          "p95LatencyRatio": 0.8292783994877962
+        },
+        {
+          "pair": 1,
+          "shape": "tokens512-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2866374318420097,
+          "p95LatencyRatio": 0.765228204843331
+        },
+        {
+          "pair": 1,
+          "shape": "tokens512-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.3026846722225967,
+          "p95LatencyRatio": 0.8079486096462403
+        },
+        {
+          "pair": 1,
+          "shape": "tokens128-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 0.9553850672399016,
+          "p95LatencyRatio": 1.229888941352159
+        },
+        {
+          "pair": 1,
+          "shape": "tokens512-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 1.2628154639010245,
+          "p95LatencyRatio": 0.7985386504352893
+        },
+        {
+          "pair": 2,
+          "shape": "tokens32-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.4923209758249372,
+          "p95LatencyRatio": 0.7472223000601383
+        },
+        {
+          "pair": 2,
+          "shape": "tokens32-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.588450892874899,
+          "p95LatencyRatio": 0.6638775232522791
+        },
+        {
+          "pair": 2,
+          "shape": "tokens128-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9890400964875807,
+          "p95LatencyRatio": 1.0187103224437803
+        },
+        {
+          "pair": 2,
+          "shape": "tokens128-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9403069765953384,
+          "p95LatencyRatio": 1.2469499287503265
+        },
+        {
+          "pair": 2,
+          "shape": "tokens128-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9892383906890571,
+          "p95LatencyRatio": 1.0701133609251723
+        },
+        {
+          "pair": 2,
+          "shape": "tokens256-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9457843759236327,
+          "p95LatencyRatio": 1.1687290806543558
+        },
+        {
+          "pair": 2,
+          "shape": "tokens256-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9430718802745693,
+          "p95LatencyRatio": 1.1220504642481097
+        },
+        {
+          "pair": 2,
+          "shape": "tokens256-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9515486312019222,
+          "p95LatencyRatio": 1.0162691003057145
+        },
+        {
+          "pair": 2,
+          "shape": "tokens512-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2195862198349103,
+          "p95LatencyRatio": 0.848503857528467
+        },
+        {
+          "pair": 2,
+          "shape": "tokens512-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2156903624301314,
+          "p95LatencyRatio": 0.7718611770674317
+        },
+        {
+          "pair": 2,
+          "shape": "tokens512-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2366999997344157,
+          "p95LatencyRatio": 0.8023197726835909
+        },
+        {
+          "pair": 2,
+          "shape": "tokens128-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 0.9541959464652449,
+          "p95LatencyRatio": 1.3102015177417456
+        },
+        {
+          "pair": 2,
+          "shape": "tokens512-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 1.221017385094146,
+          "p95LatencyRatio": 0.8274198851182871
+        },
+        {
+          "pair": 3,
+          "shape": "tokens32-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.4775442652752129,
+          "p95LatencyRatio": 0.7794108404675398
+        },
+        {
+          "pair": 3,
+          "shape": "tokens32-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.6295932800011683,
+          "p95LatencyRatio": 0.5971425860563434
+        },
+        {
+          "pair": 3,
+          "shape": "tokens128-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9974476998325725,
+          "p95LatencyRatio": 1.1132826074508546
+        },
+        {
+          "pair": 3,
+          "shape": "tokens128-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9760888928939565,
+          "p95LatencyRatio": 1.2066493006807095
+        },
+        {
+          "pair": 3,
+          "shape": "tokens128-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.997089926656134,
+          "p95LatencyRatio": 1.0465206183810516
+        },
+        {
+          "pair": 3,
+          "shape": "tokens256-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9644606596983862,
+          "p95LatencyRatio": 1.0131288845331479
+        },
+        {
+          "pair": 3,
+          "shape": "tokens256-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9273250857637441,
+          "p95LatencyRatio": 1.2179496503237508
+        },
+        {
+          "pair": 3,
+          "shape": "tokens256-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 0.9945749717127316,
+          "p95LatencyRatio": 1.0092246908967684
+        },
+        {
+          "pair": 3,
+          "shape": "tokens512-labels2-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.243162072678209,
+          "p95LatencyRatio": 0.8377867800709915
+        },
+        {
+          "pair": 3,
+          "shape": "tokens512-labels8-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.2911802542200146,
+          "p95LatencyRatio": 0.7660747324285714
+        },
+        {
+          "pair": 3,
+          "shape": "tokens512-labels32-tasks1",
+          "samples": 30,
+          "throughputRatio": 1.3104931654682903,
+          "p95LatencyRatio": 0.7846682432607116
+        },
+        {
+          "pair": 3,
+          "shape": "tokens128-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 0.9724064653414294,
+          "p95LatencyRatio": 1.0394100886761002
+        },
+        {
+          "pair": 3,
+          "shape": "tokens512-labels8-tasks2",
+          "samples": 30,
+          "throughputRatio": 1.253246681158979,
+          "p95LatencyRatio": 0.8165217539900849
+        }
+      ],
+      "limitations": [
+        "Publisher public development split; not its private headline test.",
+        "Publisher documents are reused for joint and single-head requests.",
+        "Accuracy runs used concurrent workers; their timings are not performance qualification.",
+        "Scores are not calibrated confidence; emotion fine-tuning is a separate candidate.",
+        "Performance applies to the recorded Linux x86-64 CPU profile with eight threads per arm."
+      ]
+    }
+  ]
 }

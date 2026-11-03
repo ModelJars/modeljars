@@ -13016,6 +13016,11 @@
       "memoryFit": "computed"
     },
     {
+      "modelId": "fastino_gliner2_5_decide_f32",
+      "generation": "not applicable: no text-generation capability",
+      "memoryFit": "not applicable: no generation KV cache"
+    },
+    {
       "modelId": "mellum2_12b_a2_5b_thinking_q4_k_m",
       "generationConfig": "absent at pinned revision",
       "ggufHeader": "read",

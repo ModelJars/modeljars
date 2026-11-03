@@ -225,6 +225,24 @@ export function primaryQualification(model) {
   return entries.find((entry) => entry.qualified) || entries[0] || null;
 }
 
+/**
+ * The label for a qualification-tier facet value, which is the `useCaseTier` slugified.
+ *
+ * The production-evidence select used to carry its options as literals in index.html while every
+ * other select is populated from the facets. It drifted: the served catalog emitted
+ * `hybrid-composition`, `ranked-decision`, `recipe-pinned-base` and `schema-classification` with no
+ * option for any of them, so the qualified typed-decision and schema-classification models could
+ * not be reached through the filter at all, and it offered `production-rag` and `generative-rag`,
+ * which no entry emits. tools/rendered-catalog-check.mjs guards the labels against the served
+ * catalog.
+ */
+export function tierLabel(value) {
+  return qualificationLabel({
+    qualified: true,
+    useCaseTier: String(value).toUpperCase().replaceAll("-", "_"),
+  });
+}
+
 export function qualificationLabel(qualification) {
   if (!qualification?.qualified) return qualification ? "Evaluated" : "Not evaluated";
   if (qualification.useCaseTier === "SCHEMA_CLASSIFICATION") return "Schema classification";

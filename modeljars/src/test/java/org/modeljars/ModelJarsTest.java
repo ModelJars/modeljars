@@ -1669,4 +1669,30 @@ class ModelJarsTest {
       closed = true;
     }
   }
+
+  @Test
+  void theNativeEmbeddingKernelIsOnByDefaultAndCanBeTurnedOff() {
+    // On by default; a typo in the property must not silently cost the acceleration.
+    String previous = System.getProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY);
+    try {
+      System.clearProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY);
+      assertTrue(ModelJars.nativeEmbeddingKernelEnabled(), "unset must mean on");
+
+      System.setProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY, "false");
+      assertFalse(ModelJars.nativeEmbeddingKernelEnabled(), "false must turn it off");
+
+      System.setProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY, "FALSE");
+      assertFalse(ModelJars.nativeEmbeddingKernelEnabled(), "the off switch is case-insensitive");
+
+      // Anything else is on, so a typo cannot silently disable acceleration.
+      System.setProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY, "no");
+      assertTrue(ModelJars.nativeEmbeddingKernelEnabled(), "only \"false\" turns it off");
+    } finally {
+      if (previous == null) {
+        System.clearProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY);
+      } else {
+        System.setProperty(ModelJars.NATIVE_EMBEDDING_KERNEL_PROPERTY, previous);
+      }
+    }
+  }
 }

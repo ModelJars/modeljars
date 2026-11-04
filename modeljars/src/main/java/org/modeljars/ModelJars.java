@@ -29,12 +29,14 @@ import com.integrallis.models.api.TextToSpeechModel;
 import com.integrallis.models.audio.ParadeeTextToSpeechModel;
 import com.integrallis.models.audio.SopranoTextToSpeechModel;
 import com.integrallis.models.backend.nativekernel.RustFfmBackend;
+import com.integrallis.models.backend.nativekernel.RustGgufBatchedMatrixKernel;
 import com.integrallis.models.backend.nativekernel.RustGlinerClassificationModel;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.GgufRerankingModel;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
+import com.integrallis.models.backend.purejava.spi.GgufBatchedMatrixKernel;
 import com.integrallis.models.runtime.ActivatedToolCallingModel;
 import com.integrallis.models.runtime.ContinuousBatchingOptions;
 import com.integrallis.models.runtime.InferencePipeline;
@@ -1610,6 +1612,45 @@ public final class ModelJars {
     };
   }
 
+  /**
+   * Switches the native projection kernel off for embedding. On by default.
+   *
+   * <p>Q8_0 is bit-identical between the two kernels. K-quants are not, so an index built on the
+   * old path and queried on the new one shifts slightly; measured, no query changed its top result.
+   * The published oracle-equivalence scores were recorded on the Vector API path and are being
+   * re-run on this one.
+   */
+  public static final String NATIVE_EMBEDDING_KERNEL_PROPERTY = "modeljars.embedding.nativeKernel";
+
+  /** Separated from the load so the switch is assertable without opening a model. */
+  static boolean nativeEmbeddingKernelEnabled() {
+    return !"false".equalsIgnoreCase(System.getProperty(NATIVE_EMBEDDING_KERNEL_PROPERTY, "true"));
+  }
+
+  /**
+   * Opens the backend an embedding model runs on.
+   *
+   * <p>This went through {@code loadAutomatic}, whose provider discovery had been dead since {@code
+   * backend-tornado} was removed, so every embedding projection ran with {@code
+   * GgufBatchedMatrixKernel.none()}. Generation never had that problem: it sends native-qualified
+   * models to {@code RustFfmBackend}, a branch embedding cannot reach.
+   */
+  private static PureJavaBackend openEmbeddingBackend(
+      Path artifact, BackendConfiguration configuration) {
+    if (!nativeEmbeddingKernelEnabled()) {
+      return PureJavaBackend.load(artifact, configuration);
+    }
+    GgufBatchedMatrixKernel kernel = RustGgufBatchedMatrixKernel.openBundled();
+    try {
+      return PureJavaBackend.load(artifact, configuration, kernel);
+    } catch (RuntimeException | LinkageError failure) {
+      // The backend owns and closes the kernel once it has taken it; if the load threw, it never
+      // did, and leaking a native handle to fall back quietly would be worse than the fallback.
+      kernel.close();
+      throw failure;
+    }
+  }
+
   private static EmbeddingBackend loadEmbeddingBackend(
       Path artifact,
       ModelEmbeddingQualificationRegistry.Entry qualification,
@@ -1618,6 +1659,7 @@ public final class ModelJars {
       throw new ModelJarException(
           "Unsupported Models embedding backend: " + qualification.backend());
     }
+
     Pooling pooling =
         switch (qualification.pooling()) {
           case "last-token" -> Pooling.LAST_TOKEN;
@@ -1627,7 +1669,7 @@ public final class ModelJars {
               throw new ModelJarException(
                   "Unsupported qualified embedding pooling: " + qualification.pooling());
         };
-    PureJavaBackend backend = PureJavaBackend.loadAutomatic(artifact, configuration);
+    PureJavaBackend backend = openEmbeddingBackend(artifact, configuration);
     try {
       var builder = GgufEmbeddingBackend.builder(backend).normalize(qualification.normalized());
       if (!backend.supportsSequenceEmbedding()) {

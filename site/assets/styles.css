@@ -981,13 +981,6 @@ select {
   margin-left: auto;
 }
 
-.filter-legend {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 0.76rem;
-  line-height: 1.5;
-}
-
 .sort-control select {
   width: 180px;
   border: 0;

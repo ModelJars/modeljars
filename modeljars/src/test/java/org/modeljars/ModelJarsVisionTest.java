@@ -145,7 +145,8 @@ class ModelJarsVisionTest {
 
   @Test
   void rejectsAndClosesAnIncompleteNativeExecutionPlan() {
-    for (String missing : List.of("encoder", "decoder", "attention", "disabled")) {
+    for (String missing :
+        List.of("encoder", "decoder", "attention", "disabled", "reference-arithmetic")) {
       var backend = nativeBackend(missing);
       assertThrows(ModelJarException.class, () -> ModelJars.requireQualifiedVisionKernels(backend));
       assertTrue(backend.closed);
@@ -176,7 +177,12 @@ class ModelJarsVisionTest {
                         : OptimizationStatus.ENABLED,
                     "fixture",
                     Map.of(
-                        "implementation", missing.equals("decoder") ? "java" : "rust-ffm-test"))));
+                        "implementation",
+                        switch (missing) {
+                          case "decoder" -> "java";
+                          case "reference-arithmetic" -> "rust-ffm-quantized-v14";
+                          default -> "rust-ffm-quantized-v16-packed-q4-k";
+                        }))));
       }
     };
   }

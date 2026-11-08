@@ -57,8 +57,7 @@ unreleased libraries. Release dependency validation continues to reject source
 substitution. No release versions or dependency locks are changed for publication.
 
 ```sh
-./gradlew -PmodelsSource=../models-vision-qualification \
-  -PmodelsVersion=0.5.14 -PvectorsVersion=0.1.33 --write-locks \
+./gradlew -PmodelsSource=../models-vision-arithmetic --write-locks \
   :modeljars-core:test :modeljars:test :modeljars-cli:test \
   :modeljars:stageVisionQualificationRuntime :modeljars-cli:installDist \
   :modeljars-catalog:markerJarSecondStateLlavaV157bGgufQ4KS \

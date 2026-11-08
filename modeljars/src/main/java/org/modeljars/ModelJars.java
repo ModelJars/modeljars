@@ -1213,13 +1213,15 @@ public final class ModelJars {
                   decision ->
                       decision.id().equals("grouped-projections")
                           && decision.status() == OptimizationStatus.ENABLED
-                          && decision
-                              .settings()
-                              .getOrDefault("implementation", "")
-                              .startsWith("rust-ffm"));
+                          // The llava-vqa-v1 evidence requires this numerical contract.
+                          // Older native kernels and unsupported CPUs can still report
+                          // rust-ffm while using a different reduction order.
+                          && "rust-ffm-quantized-v16-packed-q4-k"
+                              .equals(decision.settings().get("implementation")));
       if (!nativeVision || !nativeDecoder || !nativeAttention)
         throw new ModelJarException(
-            "Qualified vision execution requires native encoder, decoder and attention kernels");
+            "Qualified vision execution requires reference K-quant decoder arithmetic"
+                + " and native encoder and attention kernels");
       return backend;
     } catch (RuntimeException | Error failure) {
       try (backend) {

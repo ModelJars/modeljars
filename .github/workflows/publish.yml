@@ -127,6 +127,7 @@ jobs:
           python3 -m unittest discover -s tools/tests -p 'test_*.py'
           python3 scripts/test-dependency-policy.py
           python3 scripts/test-published-consumers.py
+          python3 experiments/vision-catalog/test-release.py
 
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions

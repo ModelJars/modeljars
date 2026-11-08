@@ -1,0 +1,23 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.fasterxml.jackson.core:jackson-annotations:2.22=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-core:2.22.3=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.22.3=compileClasspath,runtimeClasspath
+com.fasterxml.jackson:jackson-bom:2.22.3=compileClasspath,runtimeClasspath
+com.integrallis:backend-java:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:backend-native:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models-api:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models-audio:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models-backend-onnx:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models-decisions:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models-runtime:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:models:0.5.12=compileClasspath,runtimeClasspath
+com.integrallis:vectors-core:0.1.32=runtimeClasspath
+org.modeljars.huggingface:ggml-org.embeddinggemma-2-gguf.q8_0:2.0.0-q8_0.1=runtimeClasspath
+org.modeljars.huggingface:ggml-org.embeddinggemma-300m-gguf.q8_0:3.0.0-q8_0.1=runtimeClasspath
+org.modeljars:modeljars-core:0.1.76=compileClasspath,runtimeClasspath
+org.modeljars:modeljars:0.1.76=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.20=runtimeClasspath
+org.slf4j:slf4j-bom:2.0.20=compileClasspath,runtimeClasspath
+empty=annotationProcessor

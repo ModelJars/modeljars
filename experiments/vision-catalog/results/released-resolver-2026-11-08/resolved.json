@@ -1,0 +1,93 @@
+[
+  {
+    "group": "org.modeljars",
+    "name": "modeljars",
+    "version": "0.1.76",
+    "file": "modeljars-0.1.76.jar",
+    "sha256": "9341faa155956adde33af141b69815a2b89dff7a76c4d27ad731b4e0755d331a"
+  },
+  {
+    "group": "org.modeljars",
+    "name": "modeljars-core",
+    "version": "0.1.76",
+    "file": "modeljars-core-0.1.76.jar",
+    "sha256": "cea2d38ee56983d5127380a4dd9817cc759b774c15ddd070e1f67cdb506de223"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models",
+    "version": "0.5.12",
+    "file": "models-0.5.12.jar",
+    "sha256": "bd3dfe7b79f025b36542688a1617991142b066d75b03c11b46a2bb8559da7011"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models-audio",
+    "version": "0.5.12",
+    "file": "models-audio-0.5.12.jar",
+    "sha256": "4d104d4b07a97a31c584c59a8ae789ab51a6639382091d172c4967872b50d061"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "backend-native",
+    "version": "0.5.12",
+    "file": "backend-native-0.5.12.jar",
+    "sha256": "1584f6ef89d3469a14e36997b6e35d6473086e775285e8f2d6dee335f79cd948"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "backend-java",
+    "version": "0.5.12",
+    "file": "backend-java-0.5.12.jar",
+    "sha256": "8e74f024b6f647148d853dfcc14d4e2fc30274f08465ea72f5805d8a4540c901"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models-decisions",
+    "version": "0.5.12",
+    "file": "models-decisions-0.5.12.jar",
+    "sha256": "247c7c6f2f1f6d7dc3b438be3775c20f3d1afaf07425927f4d95794d5e29627c"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models-runtime",
+    "version": "0.5.12",
+    "file": "models-runtime-0.5.12.jar",
+    "sha256": "a784303f7fbcfe69d8e7c6ac5b0628dc87106b7a0e5cd1dec000411c6080695b"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "vectors-core",
+    "version": "0.1.32",
+    "file": "vectors-core-0.1.32.jar",
+    "sha256": "a035235f056fbf81720b185925db4a63958a167999d066445371e64fc7b12e2b"
+  },
+  {
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-core",
+    "version": "2.22.3",
+    "file": "jackson-core-2.22.3.jar",
+    "sha256": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models-api",
+    "version": "0.5.12",
+    "file": "models-api-0.5.12.jar",
+    "sha256": "7eeb0bc799057966583914a22cc33bd07f69037c68012ee870e54b09cb5cc255"
+  },
+  {
+    "group": "com.integrallis",
+    "name": "models-backend-onnx",
+    "version": "0.5.12",
+    "file": "models-backend-onnx-0.5.12.jar",
+    "sha256": "c408da3a8391aad4431636f14784062877454701e295b0c598be21fba21829f6"
+  },
+  {
+    "group": "org.slf4j",
+    "name": "slf4j-api",
+    "version": "2.0.20",
+    "file": "slf4j-api-2.0.20.jar",
+    "sha256": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439"
+  }
+]

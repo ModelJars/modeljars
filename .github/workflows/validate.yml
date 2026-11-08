@@ -213,6 +213,7 @@ jobs:
         run: |
           python3 scripts/test-dependency-policy.py
           python3 experiments/vision-catalog/test-release.py
+          python3 experiments/vision-catalog/test-preview.py
           python3 scripts/test-published-consumers.py
 
       - name: Test catalog tooling and site modules

@@ -103,8 +103,11 @@ the same cache. Keep stdout and stderr. If backend qualification fails, the publ
 loader must reject it before downloading or opening a model; record that refusal
 instead of manufacturing a passing marker.
 
-`run-preview.py /opt/vision /opt/vision/modeljars-preview-COMMIT` automates both
-outcomes after measurement and diagnosis finish. Put the two markers generated from
+`run-preview.py /opt/vision/final-repeat /opt/vision/modeljars-preview-COMMIT
+--native-library /opt/vision/final-repeat/native-candidate.so` automates both
+outcomes after measurement and diagnosis finish. It requires completed two-arm collection and
+admission evaluation, and verifies that the native library matches the measured receipt hash.
+Put the two markers generated from
 the imported attempt in the payload's `measured-markers` directory. Passing candidates
 run the three public API cases and the unchanged CLI-generated demo. Failed candidates
 must produce the specific qualification rejection and leave the isolated cache empty.

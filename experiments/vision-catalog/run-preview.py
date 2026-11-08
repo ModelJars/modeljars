@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Exercise measured preview markers through the public API, including admission refusals."""
 import base64
+import argparse
 import hashlib
 import json
 import platform
 import subprocess
-import sys
 import zipfile
 from pathlib import Path
 
@@ -20,15 +20,29 @@ def run(command, directory, name):
         return subprocess.run(list(map(str, command)), stdout=stdout, stderr=stderr).returncode
 
 
+def completed_attempt(root, native):
+    campaign = root / 'campaign'
+    for marker in [root / 'COLLECTION_COMPLETE', campaign / 'results/COLLECTION_COMPLETE']:
+        if not marker.is_file():
+            raise ValueError('Finish both-arm collection and admission evaluation first: ' + str(marker))
+    report = read(campaign / 'results/admission-attempt.json')
+    with native.open('rb') as stream:
+        native_sha = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if native_sha != report['receipt']['nativeSha256']:
+        raise ValueError('Preview native library differs from the measured backend')
+    return campaign, report
+
+
 def main():
     if platform.system() != 'Linux':
         raise SystemExit('Run on the remote Linux worker')
-    root, payload = map(Path, sys.argv[1:])
-    for name in ['worker', 'f16-performance', 'postprocess']:
-        if (root / (name + '-exit.txt')).read_text().strip() != '0':
-            raise ValueError('Finish collection and diagnostics first: ' + name)
-    campaign = root / 'campaign'
-    report = read(campaign / 'results/admission-attempt.json')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('root', type=Path)
+    parser.add_argument('payload', type=Path)
+    parser.add_argument('--native-library', type=Path, required=True)
+    args = parser.parse_args()
+    root, payload, native = args.root.resolve(), args.payload.resolve(), args.native_library.resolve()
+    campaign, report = completed_attempt(root, native)
     cases = read(campaign / 'cases.json')['cases']
     selected = [next(c for c in cases if c['dataset'] == dataset and not c['blank'])
                 for dataset in ['vqav2', 'textvqa']]
@@ -45,7 +59,7 @@ def main():
         raise ValueError('Preview classpath differs from its payload receipt')
     common = ['/opt/java/bin/java', '--add-modules=jdk.incubator.vector',
               '--enable-native-access=ALL-UNNAMED', '-Xmx12g',
-              '-Dmodels.native.kernels.library=' + str(root / 'model-kernels/target/release/libjmodels_kernels.so'),
+              '-Dmodels.native.kernels.library=' + str(native),
               '-cp', ':'.join(map(str, jars + markers))]
     for candidate in report['candidates']:
         variant = candidate['variant']

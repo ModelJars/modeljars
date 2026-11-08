@@ -128,6 +128,7 @@ jobs:
           python3 scripts/test-dependency-policy.py
           python3 scripts/test-published-consumers.py
           python3 experiments/vision-catalog/test-release.py
+          python3 experiments/vision-catalog/test-preview.py
 
       - name: Verify qualified composition evidence
         run: npm run catalog:verify-compositions

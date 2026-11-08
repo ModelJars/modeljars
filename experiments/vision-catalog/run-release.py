@@ -54,6 +54,13 @@ def artifacts(consumer, versions, resolved):
     return result
 
 
+def verify_demo_dependencies(source, sdk_version, marker):
+    declarations = [line.removeprefix('//DEPS ').strip() for line in source.splitlines()
+                    if line.startswith('//DEPS ')]
+    if len(declarations) != 2 or set(declarations) != {f'org.modeljars:modeljars:{sdk_version}', marker}:
+        raise ValueError('Generated demo must resolve the exact released SDK and candidate marker')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['campaign', 'payload', 'output', 'gradle-wrapper', 'java']:
@@ -74,16 +81,24 @@ def main():
     (project / 'settings.gradle').write_text("rootProject.name = 'released-vision-consumer'\n")
     (project / 'build.gradle').write_text('''plugins { id 'java' }
 repositories { maven { url = uri('https://repo.maven.apache.org/maven2') } }
-dependencies { implementation 'org.modeljars:modeljars:VERSION' }
+configurations { cli }
+dependencies {
+    implementation 'org.modeljars:modeljars:VERSION'
+    cli 'org.modeljars:modeljars-cli:VERSION'
+}
 tasks.register('stage') { doLast {
-    def jars = configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts
-    assert jars.collect { it.file.name }.toSet().size() == jars.size(): 'Duplicate artifact file names'
-    def rows = jars.collect { a ->
-        def id = a.moduleVersion.id
-        [group:id.group, name:id.name, version:id.version, file:a.file.name]
+    def stageGraph = { configuration, suffix ->
+        def jars = configuration.resolvedConfiguration.resolvedArtifacts
+        assert jars.collect { it.file.name }.toSet().size() == jars.size(): 'Duplicate artifact file names'
+        def rows = jars.collect { a ->
+            def id = a.moduleVersion.id
+            [group:id.group, name:id.name, version:id.version, file:a.file.name]
+        }
+        file("resolved${suffix}.json").text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(rows))
+        copy { from jars.collect { it.file }; into "lib${suffix}" }
     }
-    file('resolved.json').text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(rows))
-    copy { from jars.collect { it.file }; into 'lib' }
+    stageGraph(configurations.runtimeClasspath, '')
+    stageGraph(configurations.cli, '-cli')
 } }
 '''.replace('VERSION', args.modeljars_version))
     env = dict(os.environ)
@@ -95,6 +110,18 @@ tasks.register('stage') { doLast {
     for row in resolved:
         row['sha256'] = digest(project / 'lib' / row['file'])
     (output / 'resolved.json').write_text(json.dumps(resolved, indent=2) + '\n')
+    cli_graph = read(project / 'resolved-cli.json')
+    for row in cli_graph:
+        row['sha256'] = digest(project / 'lib-cli' / row['file'])
+    (output / 'resolved-cli.json').write_text(json.dumps(cli_graph, indent=2) + '\n')
+    cli = [r for r in cli_graph if r['group'] == 'org.modeljars' and r['name'] == 'modeljars-cli']
+    if len(cli) != 1 or cli[0]['version'] != args.modeljars_version:
+        raise ValueError('Released CLI graph differs from the requested SDK version')
+    cli_generator = dict(url=f'{CENTRAL}/org/modeljars/modeljars-cli/{args.modeljars_version}/'
+                            f'modeljars-cli-{args.modeljars_version}.jar', sha256=cli[0]['sha256'])
+    with urllib.request.urlopen(cli_generator['url'], timeout=120) as response:
+        if hashlib.sha256(response.read()).hexdigest() != cli_generator['sha256']:
+            raise ValueError('CLI generator bytes differ from Maven Central')
     cases = read(campaign / 'cases.json')['cases']
     selected = [next(c for c in cases if c['dataset'] == name and not c['blank'])
                 for name in ['vqav2', 'textvqa']]
@@ -134,7 +161,15 @@ tasks.register('stage') { doLast {
             with urllib.request.urlopen(artifact['url'], timeout=120) as response:
                 if hashlib.sha256(response.read()).hexdigest() != artifact['sha256']:
                     raise ValueError('Central bytes differ from the loaded runtime')
-        demo = payload / ('pr380-llava-q4k' + quant[-1].lower() + '-demo.java')
+        # Resolve the CLI separately so its dependencies cannot mask missing SDK dependencies.
+        demo = directory / ('pr380-llava-q4k' + quant[-1].lower() + '-demo.java')
+        cli_cp = ':'.join(map(str, sorted((project / 'lib-cli').glob('*.jar')) + [marker]))
+        execute([args.java, '-Dmodeljars.catalog.offline=true',
+                 '-Dmodeljars.catalog.cache=' + str(directory / 'cli-catalog'), '-cp', cli_cp,
+                 'org.modeljars.cli.ModelJarsCli', 'demo',
+                 'second_state_llava_v1_5_7b_gguf_' + quant.lower(), '--output-file', demo],
+                directory, 'generate-demo')
+        verify_demo_dependencies(demo.read_text(), args.modeljars_version, coordinate)
         execute(command + [demo, campaign / selected[0]['image'], selected[0]['question']], directory, 'demo')
         if 'Answer: ' + consumer['cases'][0]['answer'] + '\n' not in (directory / 'demo.stdout.log').read_text():
             raise ValueError('Generated demo changed the measured answer')
@@ -142,7 +177,8 @@ tasks.register('stage') { doLast {
                        consumer=consumer, passed=True, markerPublished=False,
                        stagedMarkerSha256=digest(marker), harnessSha256=digest(Path(__file__)),
                        backendReportSha256=digest(campaign / 'results/admission-attempt.json'),
-                       demoSha256=digest(demo))
+                       demoSha256=digest(demo), cliGenerator=cli_generator,
+                       cliResolvedGraphSha256=digest(output / 'resolved-cli.json'))
         (directory / 'release.json').write_text(json.dumps(receipt, indent=2) + '\n')
         print(quant + ': released runtime and generated source PASS; marker Central resolution still required', flush=True)
 

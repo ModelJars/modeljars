@@ -10,6 +10,15 @@ spec.loader.exec_module(release)
 
 
 class ReleaseTest(unittest.TestCase):
+    def test_stale_or_different_demo_dependencies_rejected(self):
+        marker = 'org.modeljars.huggingface:llava.q4_k_s:1.0.0-q4_k_s.1'
+        current = '//DEPS org.modeljars:modeljars:0.1.77\n//DEPS ' + marker + '\n'
+        release.verify_demo_dependencies(current, '0.1.77', marker)
+        for source in [current.replace('0.1.77', '0.1.65'), current.replace('llava.q4_k_s', 'llava.q4_k_m'),
+                       current + '//DEPS unrelated:runtime:1.0.0\n', current + '//DEPS ' + marker + '\n']:
+            with self.assertRaisesRegex(ValueError, 'exact released SDK'):
+                release.verify_demo_dependencies(source, '0.1.77', marker)
+
     def test_unreleased_versions_rejected(self):
         for value in ['0.1.2-SNAPSHOT', 'latest', '1.2.3;exit', '../1.2.3']:
             with self.assertRaises(argparse.ArgumentTypeError):

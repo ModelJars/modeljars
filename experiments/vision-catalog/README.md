@@ -137,8 +137,13 @@ python3 run-release.py --campaign /opt/vision/campaign-quick \
   --modeljars-version MODELJARS_RELEASE --models-version MODELS_RELEASE --vectors-version VECTORS_RELEASE
 ```
 
-Use actual published versions. The payload contains `PreviewVision.java`, unchanged
-CLI-generated demo sources, and the measured candidate markers under `measured-markers`.
+Use actual published versions. The payload contains `PreviewVision.java` and the
+measured candidate markers under `measured-markers`. The runner resolves the released
+CLI separately, verifies its JAR against Central, and uses it to generate each demo.
+It checks that the generated JBang declarations name the exact SDK release and marker,
+then executes the unchanged source using only the SDK dependency graph. CLI dependencies
+cannot conceal a missing SDK dependency. The receipt records the CLI JAR, dependency
+graph, and generated source hashes.
 The markers must carry the released backend version after that release is verified.
 The runner rejects an attempt with no passing candidates, preserves existing output,
 and never supplies an external native-library path. Its `markerPublished: false`

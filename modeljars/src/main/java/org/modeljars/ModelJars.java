@@ -1079,7 +1079,9 @@ public final class ModelJars {
     environment.put("modeljars-qualification-workload", "oracle-equivalence-v1");
     EmbeddingBackend backend =
         embeddingBackendLoader.load(
-            artifact, qualification, new BackendConfiguration(environment, Map.of(), List.of()));
+            artifact,
+            qualification,
+            new BackendConfiguration(environment, Map.of(), List.of(), Map.of()));
     return new ModelJarEmbeddingRuntime(backend, descriptor, qualification);
   }
 
@@ -1426,7 +1428,10 @@ public final class ModelJars {
       return configuration;
     }
     return new BackendConfiguration(
-        configuration.environment(), recommendations, configuration.optimizations());
+        configuration.environment(),
+        recommendations,
+        configuration.optimizations(),
+        configuration.overrides());
   }
 
   private BackendConfiguration configuration(
@@ -1477,7 +1482,7 @@ public final class ModelJars {
     }
     decisions.add(
         profileSelectionDecision(safeProfiles, applicableProfiles, qualification.backend()));
-    return new BackendConfiguration(environment, recommendations, decisions);
+    return new BackendConfiguration(environment, recommendations, decisions, Map.of());
   }
 
   private static OptimizationDecision launchBlockedDecision(

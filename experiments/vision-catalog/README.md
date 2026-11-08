@@ -94,6 +94,14 @@ the same cache. Keep stdout and stderr. If backend qualification fails, the publ
 loader must reject it before downloading or opening a model; record that refusal
 instead of manufacturing a passing marker.
 
+`run-preview.py /opt/vision /opt/vision/modeljars-preview-COMMIT` automates both
+outcomes after measurement and diagnosis finish. Put the two markers generated from
+the imported attempt in the payload's `measured-markers` directory. Passing candidates
+run the three public API cases and the unchanged CLI-generated demo. Failed candidates
+must produce the specific qualification rejection and leave the isolated cache empty.
+An execution receipt marked `passed` for a rejected candidate means admission was
+correctly refused; its separate `backendQualified` field remains false.
+
 After a successful release train (Vectors → Models → ModelJars), repeat the consumer
 smoke with actual released JARs and the generated JBang dependencies. Attach its
 immutable receipt, then admit the entries for marker publication. This pre-merge

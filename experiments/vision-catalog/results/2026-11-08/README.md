@@ -57,7 +57,7 @@ after a future ordered release train.
 - The remote evidence gate validates both imported records against the immutable report.
 - The qualification-generation gate passes against the branch's main base.
 
-Logs and receipts are adjacent. Earlier source-composite JVM runtime/core/CLI tests
+Logs and receipts are adjacent. Earlier source-composite JVM Runtime, core, and CLI tests
 also passed, including the native encoder/decoder/attention requirement. This is not
 a default released-dependency build or a publication qualification. Fix the backend
 fidelity and decode failures, rerun the frozen campaign, then run the positive public

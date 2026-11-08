@@ -107,11 +107,17 @@ correctly refused; its separate `backendQualified` field remains false.
 
 After the runtime release train (Vectors → Models → ModelJars), resolve the actual
 released SDK and backend JARs from Central into a fresh dependency cache, including
-the Linux native classifier. Repeat the consumer and generated Java source with
+the backend-native JAR that bundles the Linux native library. Repeat the consumer and generated Java source with
 those released runtime JARs and the explicitly staged candidate marker. Record
 every artifact coordinate and digest. Do not use the source-composite runtime or
 an external native-library override for this release repeat. The candidate marker
 is still local at this point; this does not prove its Central resolution.
+
+The consumer records the actual JAR file names and digests that provide ModelJars,
+Models API, Java backend, native backend, and Vectors classes. The release receipt
+names their released versions and Central URLs. The evidence gate independently
+fetches those Central JARs and compares their bytes with the loaded-JAR digests;
+a release label or a successful source build cannot substitute for that check.
 
 Attach the immutable passing release receipt, then admit only the exact qualified
 entries for marker publication. After publishing and verifying those marker JARs

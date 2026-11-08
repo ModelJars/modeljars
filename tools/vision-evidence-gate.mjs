@@ -26,12 +26,43 @@ function consumer(report, entry, model) {
   'Consumer does not cover the frozen questions and reset repeat');
 }
 
+async function releasedArtifacts(release, loadArtifact) {
+  require(/^[0-9]+\.[0-9]+\.[0-9]+$/.test(release.modeljarsVersion ?? '')
+    && /^[0-9]+\.[0-9]+\.[0-9]+$/.test(release.vectorsVersion ?? ''), 'Missing released dependency versions');
+  require(Object.keys(release.consumer.runtimeProperties).every(k => k === 'modeljars.cache'),
+    'Released consumer must use its bundled native library');
+  const expected = [
+    ['modeljars','org/modeljars','modeljars',release.modeljarsVersion],
+    ['modelsApi','com/integrallis','models-api',release.modelsVersion],
+    ['javaBackend','com/integrallis','backend-java',release.modelsVersion],
+    ['nativeBackend','com/integrallis','backend-native',release.modelsVersion],
+    ['vectors','com/integrallis','vectors-core',release.vectorsVersion],
+  ];
+  require(release.artifacts?.length === expected.length
+    && release.consumer.runtimeJars?.length === expected.length, 'Incomplete released runtime provenance');
+  for (const [id,group,artifact,version] of expected) {
+    const published = release.artifacts.filter(a => a.id === id);
+    const loaded = release.consumer.runtimeJars.filter(a => a.id === id);
+    const fileName = `${artifact}-${version}.jar`;
+    require(published.length === 1 && loaded.length === 1
+      && published[0].url === `https://repo.maven.apache.org/maven2/${group}/${artifact}/${version}/${fileName}`
+      && loaded[0].fileName === fileName && /^[a-f0-9]{64}$/.test(published[0].sha256)
+      && loaded[0].sha256 === published[0].sha256, 'Loaded runtime differs from released coordinates');
+    const bytes = await loadArtifact(published[0].url);
+    require(createHash('sha256').update(bytes).digest('hex') === published[0].sha256,
+      'Loaded runtime differs from Maven Central bytes');
+  }
+}
+
 export async function verifyVisionEvidence(manifest, catalog, loadReport) {
   validateManifest(manifest, catalog);
   const downloaded = new Map();
+  async function download(url) {
+    if (!downloaded.has(url)) downloaded.set(url, await loadReport(url));
+    return downloaded.get(url);
+  }
   async function load(reference) {
-    if (!downloaded.has(reference.report)) downloaded.set(reference.report, await loadReport(reference.report));
-    const bytes = downloaded.get(reference.report);
+    const bytes = await download(reference.report);
     require(createHash('sha256').update(bytes).digest('hex') === reference.reportSha256, 'Vision report digest mismatch');
     return bytes;
   }
@@ -49,6 +80,7 @@ export async function verifyVisionEvidence(manifest, catalog, loadReport) {
       require(release.schema === 'modeljars-vision-release-v1' && release.passed === true
         && release.modelsVersion === entry.backendVersion, 'Released vision runtime was not verified');
       consumer(release.consumer, entry, model);
+      await releasedArtifacts(release, download);
     }
   }
   return manifest.entries.length;

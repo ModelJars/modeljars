@@ -35,6 +35,25 @@ class PreviewVision {
             catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
           });
       json.writeEndObject();
+      json.writeArrayFieldStart("runtimeJars");
+      for (String[] runtime : new String[][] {
+          {"modeljars", "org.modeljars.ModelJars"},
+          {"modelsApi", "com.integrallis.models.api.ImageInferenceBackend"},
+          {"javaBackend", "com.integrallis.models.backend.purejava.LlavaBackend"},
+          {"nativeBackend", "com.integrallis.models.backend.nativekernel.RustFfmBackend"},
+          {"vectors", "com.integrallis.vectors.core.VectorUtil"}}) {
+        Path jar = Path.of(Class.forName(runtime[1], false, PreviewVision.class.getClassLoader()).getProtectionDomain()
+            .getCodeSource().getLocation().toURI());
+        if (!Files.isRegularFile(jar)) throw new IllegalStateException("Runtime is not a JAR: " + jar);
+        json.writeStartObject();
+        json.writeStringField("id", runtime[0]);
+        json.writeStringField("className", runtime[1]);
+        json.writeStringField("fileName", jar.getFileName().toString());
+        json.writeStringField("sha256", HexFormat.of().formatHex(
+            MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(jar))));
+        json.writeEndObject();
+      }
+      json.writeEndArray();
       long started = System.nanoTime();
       try (var runtime = ModelJars.openVisionRuntime(args[0])) {
         json.writeNumberField("loadMillis", (System.nanoTime() - started) / 1e6);

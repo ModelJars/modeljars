@@ -35,6 +35,12 @@ checks its digest and compares every imported score, ratio and verdict to that r
 Validation, marker publication and Pages all run this gate. A failed attempt remains rejected evidence. It refuses
 to overwrite a nonempty qualification manifest.
 
+Separate quantization workers produce separate attempt reports. Import each into a new temporary
+manifest, then combine their entries without changing the per-entry report URL or digest. A
+single-variant report must declare the same variant in `receipt.variants` and name its measured
+host. It must still cover the complete corpus, all performance cases and every admission gate.
+Do not combine two hosts' measurements into a fabricated shared-host receipt.
+
 A branch backend pass can be loaded from its explicit preview marker. It cannot enter
 the public runtime registry, aggregate catalog, site, or publication plan. ModelJars
 and release verification flags require checksummed, commit-pinned receipts; consumer receipts must

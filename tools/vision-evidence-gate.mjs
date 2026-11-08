@@ -75,6 +75,7 @@ export async function verifyVisionEvidence(manifest, catalog, loadReport) {
   for (const entry of manifest.entries) {
     const raw = await load(entry);
     const derived = importAttempt(raw, entry.report, catalog).entries.find(e => e.modelId === entry.modelId);
+    require(derived, 'Vision report does not contain this model');
     for (const field of ['files','corpusSha256','datasets','tokenAgreement','performance','integrationPassed','qualified'])
       require(isDeepStrictEqual(entry[field], derived[field]), `Catalog vision ${field} differs from its measured report`);
     if (!entry.releasedRuntimeVerified)

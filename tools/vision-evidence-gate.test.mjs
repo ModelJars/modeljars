@@ -22,6 +22,24 @@ test('tampered bytes cannot inherit a report digest', async () => {
   await assert.rejects(verifyVisionEvidence(manifest,catalog,async()=>Buffer.from('tampered')),/digest mismatch/);
 });
 
+test('separate worker reports retain independent provenance and cannot be swapped', async () => {
+  const reports=new Map(), entries=[];
+  for (const [index,variant] of ['Q4_K_S','Q4_K_M'].entries()) {
+    const attempt=fixture();
+    attempt.candidates=[attempt.candidates[index]];
+    attempt.receipt.variants=[variant];
+    attempt.receipt.host=`worker-${variant}`;
+    const raw=bytes(attempt), url=report.replace('attempt.json',`${variant}.json`);
+    reports.set(url,raw);
+    entries.push(...importAttempt(raw,url,catalog).entries);
+  }
+  const manifest={schemaVersion:1,policy:'llava-vqa-v1',entries};
+  assert.equal(await verifyVisionEvidence(manifest,catalog,async u=>reports.get(u)),2);
+  entries[0].report=entries[1].report;
+  entries[0].reportSha256=entries[1].reportSha256;
+  await assert.rejects(verifyVisionEvidence(manifest,catalog,async u=>reports.get(u)),/does not contain this model/);
+});
+
 test('consumer verification requires exact artifacts, three outputs and public defaults', async () => {
   const raw=bytes(fixture()), manifest=importAttempt(raw,report,catalog), entry=manifest.entries[0];
   const url=report.replace('attempt.json','consumer.json');

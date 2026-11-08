@@ -40,3 +40,39 @@ test('failed attempts remain importable as rejected evidence', () => {
   const result=importAttempt(bytes(attempt),report,catalog);
   assert.ok(result.entries.every(e=>!e.qualified && !e.integrationPassed));
 });
+
+test('a single-variant worker retains its own report binding and all admission gates', () => {
+  const attempt=fixture();
+  attempt.candidates=attempt.candidates.slice(1);
+  attempt.receipt.variants=['Q4_K_M'];
+  attempt.receipt.host='qualification-worker-m';
+  const raw=bytes(attempt);
+  const result=importAttempt(raw,report,catalog);
+  assert.equal(result.entries.length,1);
+  assert.equal(result.entries[0].modelId,models[1].id);
+  assert.equal(result.entries[0].reportSha256,createHash('sha256').update(raw).digest('hex'));
+  assert.equal(result.entries[0].qualified,true);
+  assert.equal(result.entries[0].releasedRuntimeVerified,false);
+  for(const mutate of [
+    a=>delete a.receipt.variants,
+    a=>a.receipt.variants=['Q4_K_S'],
+    a=>a.receipt.variants=['Q4_K_M','Q4_K_M'],
+    a=>a.receipt.host='',
+    a=>delete a.candidates[0].gates.tokenAgreement,
+  ]) {
+    const invalid=structuredClone(attempt);mutate(invalid);
+    assert.throws(()=>importAttempt(bytes(invalid),report,catalog));
+  }
+});
+
+test('declared coverage cannot hide a missing variant or duplicate verdict', () => {
+  for(const mutate of [
+    a=>a.receipt.variants=['Q4_K_S'],
+    a=>a.candidates.push(a.candidates[0]),
+    a=>a.candidates=[],
+    a=>a.candidates[1].variant='Q4_K_S',
+  ]) {
+    const attempt=fixture();attempt.receipt.host='worker';mutate(attempt);
+    assert.throws(()=>importAttempt(bytes(attempt),report,catalog));
+  }
+});

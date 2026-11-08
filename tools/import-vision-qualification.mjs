@@ -17,8 +17,19 @@ export function importAttempt(bytes, reportUrl, catalog) {
   require(/^[a-f0-9]{40}$/.test(receipt.revision), "Measured runtime commit required");
   require(receipt.threads === 8 && receipt.context === 1024 && receipt.maximumOutputTokens === 32
     && receipt.kvType === "f32", "Measured execution controls differ");
-  require(attempt.candidates?.length === 2
-    && new Set(attempt.candidates.map(c => c.variant)).size === 2, "Both variant verdicts required");
+  const knownVariants = ["Q4_K_S", "Q4_K_M"];
+  const variants = attempt.candidates?.map(c => c.variant);
+  require(Array.isArray(variants) && variants.length >= 1 && variants.length <= 2
+    && new Set(variants).size === variants.length
+    && variants.every(v => knownVariants.includes(v)), "Distinct known variant verdicts required");
+  // A worker may measure one quantization, but its receipt must declare that scope.
+  // Keep each worker's own report/host binding instead of inventing a combined host.
+  if (receipt.variants !== undefined || variants.length === 1) {
+    require(Array.isArray(receipt.variants)
+      && [...receipt.variants].sort().join() === [...variants].sort().join()
+      && typeof receipt.host === "string" && receipt.host.trim(),
+    "Variant verdicts must match the measured worker receipt");
+  }
   const entries = attempt.candidates.map(candidate => {
     require(["Q4_K_S", "Q4_K_M"].includes(candidate.variant), "Unknown LLaVA variant");
     require(Object.keys(candidate.gates).sort().join() === [...gates].sort().join()

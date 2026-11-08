@@ -46,6 +46,7 @@ final class DemoScriptGenerator {
     EMBEDDING,
     RERANKING,
     SPEECH,
+    VISION,
     TOOLS
   }
 
@@ -92,6 +93,7 @@ final class DemoScriptGenerator {
           case EMBEDDING -> embeddingSource(descriptor, input);
           case RERANKING -> rerankingSource(descriptor, input);
           case SPEECH -> speechSource(descriptor, input);
+          case VISION -> visionSource(descriptor, input);
           case TOOLS -> toolSource(descriptor, input);
         };
     return new GeneratedDemo(
@@ -99,6 +101,7 @@ final class DemoScriptGenerator {
   }
 
   private static Type typeFor(ModelJarDescriptor descriptor) {
+    if (descriptor.capabilities().contains("image-understanding")) return Type.VISION;
     if (descriptor.features().contains("schema-driven-classification")
         && descriptor.capabilities().contains("text-classification")) {
       return Type.CLASSIFICATION;
@@ -147,6 +150,7 @@ final class DemoScriptGenerator {
       case EMBEDDING -> "Public transit connects people and cities.";
       case RERANKING -> "How many people live in Berlin?";
       case SPEECH -> "The JVM can speak for itself.";
+      case VISION -> "What is shown in this image?";
       case TOOLS -> "Dim the bedroom lights to 20 percent and lock the front door.";
     };
   }
@@ -160,6 +164,7 @@ final class DemoScriptGenerator {
       case EMBEDDING -> "embedding";
       case RERANKING -> "reranking";
       case SPEECH -> "speech";
+      case VISION -> "vision";
       case TOOLS -> "tools";
     };
   }
@@ -525,6 +530,42 @@ final class DemoScriptGenerator {
         }
         """
             .formatted(javaString(defaultInput));
+  }
+
+  private String visionSource(ModelJarDescriptor descriptor, String defaultInput) {
+    return directives(descriptor, false)
+        + """
+        import java.nio.file.Files;
+        import java.nio.file.Path;
+        import java.util.Arrays;
+        import org.modeljars.ModelJars;
+
+        class ModelJarsDemo {
+          private static final String MODEL = "%s";
+
+          public static void main(String... args) throws Exception {
+            if (args.length == 0) {
+              throw new IllegalArgumentException("Usage: jbang this-demo.java IMAGE.png [question]");
+            }
+            byte[] image = Files.readAllBytes(Path.of(args[0]));
+            String question = args.length == 1 ? "%s"
+                : String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            long started = System.nanoTime();
+            try (var runtime = ModelJars.openVisionRuntime(MODEL)) {
+              long loaded = System.nanoTime();
+              String answer = runtime.answer(image, question);
+              long completed = System.nanoTime();
+              System.out.println("Image: " + args[0]);
+              System.out.println("Question: " + question);
+              System.out.println("Answer: " + answer);
+              System.out.printf("Load:      %%,d ms%%n", (loaded - started) / 1_000_000);
+              System.out.printf("Execution: %%,d ms%%n", (completed - loaded) / 1_000_000);
+            }
+          }
+        }
+        """
+            .formatted(
+                javaString(descriptor.markerCoordinate().toString()), javaString(defaultInput));
   }
 
   private String classificationSource(ModelJarDescriptor descriptor, String defaultInput) {

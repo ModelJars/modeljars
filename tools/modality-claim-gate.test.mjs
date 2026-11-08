@@ -2,8 +2,33 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  MODALITY_CLAIMS, backing, claimsOf, declaredTasks, onnxDeclaredTasks, runGate,
+  MODALITY_CLAIMS, backing, claimsOf, declaredTasks, onnxDeclaredTasks, runGate, ggufRecord,
 } from "./modality-claim-gate.mjs";
+
+test("two-file vision evidence binds the projector and preserves header declarations", async () => {
+  const model = {
+    id: "llava", format: "gguf", downloadUri: "https://example.invalid/text", sha256: "a".repeat(64),
+    capabilities: ["image-understanding"],
+    files: [
+      {path: "text.gguf", role: "weights", downloadUri: "https://example.invalid/text", sha256: "a".repeat(64), sizeBytes: 10},
+      {path: "mmproj.gguf", role: "vision-projector", downloadUri: "https://example.invalid/projector", sha256: "b".repeat(64), sizeBytes: 20},
+    ],
+  };
+  const calls = [];
+  const record = await ggufRecord(model, async uri => {
+    calls.push(uri);
+    return {architecture: uri.endsWith("text") ? "llama" : "clip", tensorCount: 4,
+      towers: uri.endsWith("text") ? {} : {vision: "declared in header", projector: 4}, metadata: {}};
+  });
+  assert.equal(calls.length, 2);
+  assert.equal(record.towers.vision, "declared in header");
+  assert.equal(runGate([model], () => record)[0].status, "BACKED");
+  const swapped = structuredClone(model);
+  swapped.files[1].sha256 = "c".repeat(64);
+  assert.equal(runGate([swapped], () => record)[0].status, "STALE_EVIDENCE");
+  const missing = {...record}; delete missing.files;
+  assert.equal(runGate([model], () => missing)[0].status, "STALE_EVIDENCE");
+});
 
 test("a tower in the artifact backs an encoder-side claim", () => {
   const r = backing("image-understanding", { towers: { vision: 24 }, declaredTasks: [] });

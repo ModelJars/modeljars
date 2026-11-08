@@ -175,7 +175,8 @@ final class SpringIntegration {
     Set<String> capabilities = descriptor.capabilities();
     boolean composite = descriptor.format().equals("composite");
     boolean speech = capabilities.stream().anyMatch(SPEECH::contains);
-    if (!composite && !speech) {
+    boolean vision = capabilities.contains("image-understanding");
+    if (!composite && !speech && !vision) {
       if (capabilities.contains("tool-calling")) {
         if (descriptor.architecture().equals("needle2")) {
           if (flavor == Flavor.SPRING_BOOT) {
@@ -207,7 +208,9 @@ final class SpringIntegration {
             ? "is a qualified hybrid, which has no Models Spring adapter"
             : speech
                 ? "is a speech model, which has no Models Spring adapter"
-                : "has no capability with a Models Spring adapter";
+                : vision
+                    ? "is an image-question model, which has no Models Spring adapter"
+                    : "has no capability with a Models Spring adapter";
     throw new IllegalArgumentException(
         "Model "
             + descriptor.alias()

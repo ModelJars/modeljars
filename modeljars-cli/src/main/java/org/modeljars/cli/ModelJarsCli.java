@@ -2082,6 +2082,7 @@ public final class ModelJarsCli implements Callable<Integer> {
 
       CliOutput out = parent.out();
       String framework = flavor.map(SpringIntegration.Flavor::id).orElse("java");
+      String arguments = demo.type() == DemoScriptGenerator.Type.VISION ? " IMAGE.png" : "";
       if (out.format() == CliOutput.Format.JSON) {
         out.json(
             Map.of(
@@ -2089,13 +2090,13 @@ public final class ModelJarsCli implements Callable<Integer> {
                 "type", demo.type().toString().toLowerCase(Locale.ROOT),
                 "framework", framework,
                 "file", destination.toString(),
-                "command", "jbang " + destination));
+                "command", "jbang " + destination + arguments));
       } else if (out.format() == CliOutput.Format.PLAIN) {
         out.line("model=" + descriptor.alias());
         out.line("type=" + demo.type().toString().toLowerCase(Locale.ROOT));
         out.line("framework=" + framework);
         out.line("file=" + destination);
-        out.line("command=jbang " + destination);
+        out.line("command=jbang " + destination + arguments);
       } else {
         out.success(
             "Generated "
@@ -2106,7 +2107,7 @@ public final class ModelJarsCli implements Callable<Integer> {
         properties.put("Model", parent.shortName(descriptor));
         properties.put("File", destination);
         out.properties(properties);
-        out.hint("Run: jbang " + shellQuote(destination.toString()));
+        out.hint("Run: jbang " + shellQuote(destination.toString()) + arguments);
       }
       return 0;
     }

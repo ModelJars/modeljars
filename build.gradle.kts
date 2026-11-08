@@ -532,6 +532,36 @@ data class CatalogClassificationQualifications(val entries: List<CatalogClassifi
     }
 }
 
+/** Paired image-question evidence validated by the publication tool. */
+data class CatalogVisionQualification(
+    val modelId: String,
+    val publishable: Boolean,
+    val raw: Map<String, Any?>,
+    val properties: String,
+) {
+    fun siteMetadata(): Map<String, Any?> = raw + mapOf(
+        "policyVersion" to "llava-vqa-v1",
+        "qualified" to publishable,
+        "backendQualified" to raw["qualified"],
+        "useCaseTier" to if (publishable) "IMAGE_QUESTION_ANSWERING" else "UNQUALIFIED",
+        "reportUri" to raw.requiredString("report"),
+        "cases" to (raw["datasets"] as Map<*, *>).values.sumOf { ((it as Map<*, *>)["cases"] as Number).toInt() },
+        "confidenceQualified" to false,
+    )
+}
+
+data class CatalogVisionQualifications(val entries: List<CatalogVisionQualification>) {
+    fun registryProperties(selected: List<CatalogVisionQualification> = entries): String = buildString {
+        appendLine("modeljars.vision.schemaVersion=1")
+        appendLine("modeljars.vision.count=${selected.size}")
+        selected.forEachIndexed { index, entry ->
+            entry.properties.lineSequence().filter { it.startsWith("vision.0.") }.forEach {
+                appendLine("vision.$index." + it.removePrefix("vision.0."))
+            }
+        }
+    }
+}
+
 /**
  * One typed-decision verdict as the catalog records it.
  *
@@ -2205,6 +2235,21 @@ val classificationQualifications = CatalogClassificationQualifications(
     }
 )
 
+val visionQualificationCatalogFile = file("catalog/vision-qualifications.json")
+val visionBuildDocument = JsonSlurper().parseText(providers.exec {
+    workingDir(rootDir)
+    commandLine("node", "tools/vision-build-metadata.mjs",
+        visionQualificationCatalogFile.absolutePath, file("catalog/models.json").absolutePath)
+}.standardOutput.asText.get()).stringKeyMap("Validated vision metadata")
+val visionQualifications = CatalogVisionQualifications(
+    (visionBuildDocument["entries"] as List<*>).map { value ->
+        val wrapped = value.stringKeyMap("Vision build entry")
+        val raw = wrapped["entry"].stringKeyMap("Vision evidence")
+        CatalogVisionQualification(raw.requiredString("modelId"), wrapped["publishable"] as Boolean,
+            raw, wrapped.requiredString("properties"))
+    }
+)
+
 val decisionQualificationCatalogFile = file("catalog/decision-qualifications.json")
 val decisionQualifications =
     if (decisionQualificationCatalogFile.isFile) {
@@ -2602,6 +2647,7 @@ val publicToolQualifications =
 val publicSpeechQualifications =
     speechQualifications?.entries?.filter(CatalogSpeechQualification::qualified).orEmpty()
 val publicClassificationQualifications = classificationQualifications.entries.filter { it.qualified }
+val publicVisionQualifications = visionQualifications.entries.filter { it.publishable }
 val publicDecisionQualifications =
     decisionQualifications?.entries?.filter(CatalogDecisionQualification::publishable).orEmpty()
 val publicModelIds =
@@ -2611,7 +2657,8 @@ val publicModelIds =
         publicToolQualifications.map(CatalogToolQualification::modelId).toSet() +
         publicSpeechQualifications.map(CatalogSpeechQualification::modelId).toSet() +
         publicDecisionQualifications.map(CatalogDecisionQualification::modelId).toSet() +
-        publicClassificationQualifications.map(CatalogClassificationQualification::modelId).toSet()
+        publicClassificationQualifications.map(CatalogClassificationQualification::modelId).toSet() +
+        publicVisionQualifications.map(CatalogVisionQualification::modelId).toSet()
 val compositionComponentIds =
     catalogEntries
         .filter { "composition-component" in it.capabilities }
@@ -4073,6 +4120,10 @@ project(":modeljars-core") {
         candidateTestResources.map {
             it.file("META-INF/modeljars/classification-qualifications-v2.properties")
         }
+    val candidateTestVisionQualificationRegistry =
+        candidateTestResources.map {
+            it.file("META-INF/modeljars/vision-qualifications-v1.properties")
+        }
     val candidateTestSpeechQualificationRegistry =
         candidateTestResources.map {
             it.file("META-INF/modeljars/speech-qualifications-v1.properties")
@@ -4113,6 +4164,7 @@ project(":modeljars-core") {
                 inputs.file(decisionQualificationCatalogFile)
                 inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
+            inputs.files(visionQualificationCatalogFile, rootProject.file("tools/vision-build-metadata.mjs"), rootProject.file("tools/vision-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -4135,6 +4187,7 @@ project(":modeljars-core") {
                 candidateTestRerankingQualificationRegistry,
                 candidateTestDecisionQualificationRegistry,
                 candidateTestClassificationQualificationRegistry,
+                candidateTestVisionQualificationRegistry,
                 candidateTestSpeechQualificationRegistry,
                 candidateTestComponentQualificationRegistry,
             )
@@ -4172,6 +4225,7 @@ project(":modeljars-core") {
                                             ?.map { it.siteMetadata(rerankingQualifications) }
                                             .orEmpty()) +
                                     ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
+                                    ("visionQualifications" to visionQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         decisionQualifications?.entries
                                             ?.filter { it.modelId == entry.id }
@@ -4237,6 +4291,10 @@ project(":modeljars-core") {
                 )
                 candidateTestClassificationQualificationRegistry.get().asFile.writeText(
                     classificationQualifications.registryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                candidateTestVisionQualificationRegistry.get().asFile.writeText(
+                    visionQualifications.registryProperties(),
                     StandardCharsets.ISO_8859_1,
                 )
                 candidateTestDecisionQualificationRegistry.get().asFile.writeText(
@@ -4452,6 +4510,10 @@ project(":modeljars") {
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/classification-qualifications-v2.properties")
         }
+    val runtimeVisionQualificationRegistry =
+        runtimeQualificationResources.map {
+            it.file("META-INF/modeljars/vision-qualifications-v1.properties")
+        }
     val runtimeToolQualificationRegistry =
         runtimeQualificationResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -4477,6 +4539,7 @@ project(":modeljars") {
                 inputs.file(decisionQualificationCatalogFile)
                 inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
+            inputs.files(visionQualificationCatalogFile, rootProject.file("tools/vision-build-metadata.mjs"), rootProject.file("tools/vision-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -4491,6 +4554,7 @@ project(":modeljars") {
                 runtimeRerankingQualificationRegistry,
                 runtimeDecisionQualificationRegistry,
                 runtimeClassificationQualificationRegistry,
+                runtimeVisionQualificationRegistry,
                 runtimeToolQualificationRegistry,
                 runtimeSpeechQualificationRegistry,
                 runtimeComponentQualificationRegistry,
@@ -4519,6 +4583,10 @@ project(":modeljars") {
                 )
                 runtimeClassificationQualificationRegistry.get().asFile.writeText(
                     classificationQualifications.registryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                runtimeVisionQualificationRegistry.get().asFile.writeText(
+                    visionQualifications.registryProperties(publicVisionQualifications),
                     StandardCharsets.ISO_8859_1,
                 )
                 runtimeDecisionQualificationRegistry.get().asFile.writeText(
@@ -5202,6 +5270,10 @@ project(":modeljars-catalog") {
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/classification-qualifications-v2.properties")
         }
+    val aggregateVisionQualificationRegistry =
+        generatedCatalogResources.map {
+            it.file("META-INF/modeljars/vision-qualifications-v1.properties")
+        }
     val aggregateToolQualificationRegistry =
         generatedCatalogResources.map {
             it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -5235,6 +5307,7 @@ project(":modeljars-catalog") {
                 inputs.file(decisionQualificationCatalogFile)
                 inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             }
+            inputs.files(visionQualificationCatalogFile, rootProject.file("tools/vision-build-metadata.mjs"), rootProject.file("tools/vision-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
             if (toolQualificationCatalogFile.isFile) {
                 inputs.file(toolQualificationCatalogFile)
             }
@@ -5256,6 +5329,7 @@ project(":modeljars-catalog") {
                 aggregateRerankingQualificationRegistry,
                 aggregateDecisionQualificationRegistry,
                 aggregateClassificationQualificationRegistry,
+                aggregateVisionQualificationRegistry,
                 aggregateToolQualificationRegistry,
                 aggregateSpeechQualificationRegistry,
                 aggregateComponentQualificationRegistry,
@@ -5322,6 +5396,7 @@ project(":modeljars-catalog") {
                                                 )
                                             }) +
                                     ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
+                                    ("visionQualifications" to visionQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         publicDecisionQualifications
                                             .filter { it.modelId == entry.id }
@@ -5372,6 +5447,10 @@ project(":modeljars-catalog") {
                 )
                 aggregateClassificationQualificationRegistry.get().asFile.writeText(
                     classificationQualifications.registryProperties(),
+                    StandardCharsets.ISO_8859_1,
+                )
+                aggregateVisionQualificationRegistry.get().asFile.writeText(
+                    visionQualifications.registryProperties(publicVisionQualifications),
                     StandardCharsets.ISO_8859_1,
                 )
                 aggregateDecisionQualificationRegistry.get().asFile.writeText(
@@ -5532,6 +5611,10 @@ project(":modeljars-catalog") {
             markerRoot.map {
                 it.file("META-INF/modeljars/classification-qualifications-v2.properties")
             }
+        val markerVisionQualificationRegistry =
+            markerRoot.map {
+                it.file("META-INF/modeljars/vision-qualifications-v1.properties")
+            }
         val markerToolQualificationRegistry =
             markerRoot.map {
                 it.file("META-INF/modeljars/tool-qualifications-v1.properties")
@@ -5567,6 +5650,7 @@ project(":modeljars-catalog") {
                     inputs.file(decisionQualificationCatalogFile)
                 inputs.files(classificationQualificationCatalogFile, rootProject.file("tools/classification-build-metadata.mjs"), rootProject.file("tools/classification-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
                 }
+                inputs.files(visionQualificationCatalogFile, rootProject.file("tools/vision-build-metadata.mjs"), rootProject.file("tools/vision-qualifications.mjs"), rootProject.file("tools/model-publications.mjs"))
                 if (speechQualificationCatalogFile.isFile) {
                     inputs.file(speechQualificationCatalogFile)
                 }
@@ -5584,6 +5668,7 @@ project(":modeljars-catalog") {
                     markerRerankingQualificationRegistry,
                     markerDecisionQualificationRegistry,
                 markerClassificationQualificationRegistry,
+                markerVisionQualificationRegistry,
                     markerToolQualificationRegistry,
                     markerSpeechQualificationRegistry,
                     markerComponentQualificationRegistry,
@@ -5625,6 +5710,7 @@ project(":modeljars-catalog") {
                                             it.siteMetadata(requireNotNull(rerankingQualifications))
                                         }) +
                                     ("classificationQualifications" to classificationQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
+                                    ("visionQualifications" to visionQualifications.entries.filter { it.modelId == entry.id }.map { it.siteMetadata() }) +
                                     ("decisionQualifications" to
                                         modelDecisionQualifications.map {
                                             it.siteMetadata(requireNotNull(decisionQualifications))
@@ -5704,6 +5790,10 @@ project(":modeljars-catalog") {
                         classificationQualifications.registryProperties(classificationQualifications.entries.filter { it.modelId == entry.id }),
                         StandardCharsets.ISO_8859_1,
                     )
+                    markerVisionQualificationRegistry.get().asFile.writeText(
+                        visionQualifications.registryProperties(visionQualifications.entries.filter { it.modelId == entry.id }),
+                        StandardCharsets.ISO_8859_1,
+                    )
                     markerDecisionQualificationRegistry.get().asFile.writeText(
                         decisionQualifications?.registryProperties(modelDecisionQualifications)
                             ?: "modeljars.decisionQualifications.schemaVersion=1\n",
@@ -5776,6 +5866,7 @@ project(":modeljars-catalog") {
                         "META-INF/modeljars/reranking-qualifications-v1.properties",
                         "META-INF/modeljars/decision-qualifications-v1.properties",
                         "META-INF/modeljars/classification-qualifications-v2.properties",
+                        "META-INF/modeljars/vision-qualifications-v1.properties",
                         "META-INF/modeljars/tool-qualifications-v1.properties",
                         "META-INF/modeljars/speech-qualifications-v1.properties",
                         "META-INF/modeljars/component-qualifications-v1.properties",
@@ -7351,3 +7442,17 @@ val verifyPublishedConsumerGraph by tasks.registering(Exec::class) {
     commandLine("python3", "scripts/verify-maven-runtime.py", "--repository", "build/central-repository")
 }
 tasks.named("verifyReleaseBundle") { dependsOn(verifyPublishedConsumerGraph) }
+
+// Isolated, hash-recordable runtime payload for pre-merge source qualification.
+// Release dependency verification remains unchanged and still rejects source substitution.
+if (providers.gradleProperty("modelsSource").isPresent) {
+    project(":modeljars") {
+        tasks.register<Sync>("stageVisionQualificationRuntime") {
+            group = "verification"
+            description = "Stage the exact source-composite runtime for remote vision qualification"
+            from(configurations.named("runtimeClasspath"))
+            from(tasks.named("jar"))
+            into(rootProject.layout.buildDirectory.dir("vision-qualification-runtime/lib"))
+        }
+    }
+}

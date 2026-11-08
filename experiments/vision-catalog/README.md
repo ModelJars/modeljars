@@ -125,3 +125,21 @@ on Central, run the unchanged generated JBang demos in a fresh cache using their
 ordinary dependency declarations. Preserve that final consumer result before
 publishing the site update. This order verifies the released library before model
 publication without pretending an unpublished marker already resolves on Central.
+
+The Linux release runner resolves the SDK through a fresh Gradle user home and a
+Central-only repository, verifies the five loaded runtime JARs against independently
+fetched Central bytes, and writes one release receipt for each passing backend candidate:
+
+```sh
+python3 run-release.py --campaign /opt/vision/campaign-quick \
+  --payload /opt/vision/modeljars-release-payload --output /opt/vision/released-consumers \
+  --gradle-wrapper /opt/vision/modeljars-wrapper/gradlew --java /opt/java/bin/java \
+  --modeljars-version MODELJARS_RELEASE --models-version MODELS_RELEASE --vectors-version VECTORS_RELEASE
+```
+
+Use actual published versions. The payload contains `PreviewVision.java`, unchanged
+CLI-generated demo sources, and the measured candidate markers under `measured-markers`.
+The markers must carry the released backend version after that release is verified.
+The runner rejects an attempt with no passing candidates, preserves existing output,
+and never supplies an external native-library path. Its `markerPublished: false`
+field records the remaining, separate Central/JBang marker check.

@@ -105,7 +105,17 @@ must produce the specific qualification rejection and leave the isolated cache e
 An execution receipt marked `passed` for a rejected candidate means admission was
 correctly refused; its separate `backendQualified` field remains false.
 
-After a successful release train (Vectors → Models → ModelJars), repeat the consumer
-smoke with actual released JARs and the generated JBang dependencies. Attach its
-immutable receipt, then admit the entries for marker publication. This pre-merge
-branch must not publish a marker whose runtime dependency lacks the API it calls.
+After the runtime release train (Vectors → Models → ModelJars), resolve the actual
+released SDK and backend JARs from Central into a fresh dependency cache, including
+the Linux native classifier. Repeat the consumer and generated Java source with
+those released runtime JARs and the explicitly staged candidate marker. Record
+every artifact coordinate and digest. Do not use the source-composite runtime or
+an external native-library override for this release repeat. The candidate marker
+is still local at this point; this does not prove its Central resolution.
+
+Attach the immutable passing release receipt, then admit only the exact qualified
+entries for marker publication. After publishing and verifying those marker JARs
+on Central, run the unchanged generated JBang demos in a fresh cache using their
+ordinary dependency declarations. Preserve that final consumer result before
+publishing the site update. This order verifies the released library before model
+publication without pretending an unpublished marker already resolves on Central.

@@ -52,6 +52,12 @@ async function releasedArtifacts(release, loadArtifact) {
     require(createHash('sha256').update(bytes).digest('hex') === published[0].sha256,
       'Loaded runtime differs from Maven Central bytes');
   }
+  const cliUrl = `https://repo.maven.apache.org/maven2/org/modeljars/modeljars-cli/${release.modeljarsVersion}/modeljars-cli-${release.modeljarsVersion}.jar`;
+  require(release.cliGenerator?.url === cliUrl
+    && [release.cliGenerator.sha256, release.cliResolvedGraphSha256, release.demoSha256]
+      .every(value => /^[a-f0-9]{64}$/.test(value ?? '')), 'Missing released CLI demo provenance');
+  require(createHash('sha256').update(await loadArtifact(cliUrl)).digest('hex') === release.cliGenerator.sha256,
+    'Demo generator differs from Maven Central bytes');
 }
 
 export async function verifyVisionEvidence(manifest, catalog, loadReport) {

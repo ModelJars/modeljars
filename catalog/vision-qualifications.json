@@ -4,9 +4,9 @@
   "entries": [
     {
       "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
-      "backendVersion": "models-source:ff627e32a3910488d9d4a9c1d15d361fe3242e25",
-      "report": "https://raw.githubusercontent.com/integrallis/models/318d0068555b7474c927d65a1eb15482fa47d740/experiments/vision-catalog-qualification/results/2026-11-08/campaign/results/admission-attempt.json",
-      "reportSha256": "1e76c9f875f5fe83b33367491acd082e2a59041af60a02643285bea81aa02d4a",
+      "backendVersion": "models-source:3f31646c743647449310de2c5ff57fbd55d9e957",
+      "report": "https://raw.githubusercontent.com/integrallis/models/6ce65f617cb5dddb136cecf3764a2aded3d73fbf/experiments/vision-catalog-qualification/results/quick-full-2026-11-08/campaign/results/admission-attempt.json",
+      "reportSha256": "ce22f53351f44ef0ac70ba851f8ecc87ffff613964e27d4938418869e30f0618",
       "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
       "files": [
         {
@@ -34,7 +34,7 @@
         },
         "textvqa": {
           "cases": 32,
-          "candidateScore": 0.415625,
+          "candidateScore": 0.434375,
           "referenceScore": 0.415625,
           "blankCases": 8,
           "imageContribution": 0.375
@@ -47,48 +47,48 @@
           "caseId": "vqav2-132415014",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.0739263761090272,
-          "decodeRatio": 1.1670273672024338,
-          "totalRatio": 1.075438336837735
+          "prefillRatio": 1.0819372085530743,
+          "decodeRatio": 1.098517384045562,
+          "totalRatio": 1.0822599887931565
         },
         {
           "dataset": "vqav2",
           "caseId": "vqav2-423731001",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.0518757136003625,
-          "decodeRatio": 1.1351402653644975,
-          "totalRatio": 1.0534871656437
+          "prefillRatio": 1.0418102073786493,
+          "decodeRatio": 1.1081989206096103,
+          "totalRatio": 1.0431070686239312
         },
         {
           "dataset": "textvqa",
           "caseId": "textvqa-36063",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.043765726129717,
-          "decodeRatio": 1.1535494331406926,
-          "totalRatio": 1.0447627814199338
+          "prefillRatio": 1.0436441052157308,
+          "decodeRatio": 1.0879265634557562,
+          "totalRatio": 1.044372801970374
         },
         {
           "dataset": "textvqa",
           "caseId": "textvqa-37476",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.0692897615732935,
-          "decodeRatio": 1.1130251430998026,
-          "totalRatio": 1.0697225666191994
+          "prefillRatio": 1.0375908035512489,
+          "decodeRatio": 1.0566881642222716,
+          "totalRatio": 1.037682280520657
         }
       ],
-      "integrationPassed": false,
+      "integrationPassed": true,
       "qualified": false,
       "releasedRuntimeVerified": false,
       "modeljarsRuntimeVerified": false
     },
     {
       "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
-      "backendVersion": "models-source:ff627e32a3910488d9d4a9c1d15d361fe3242e25",
-      "report": "https://raw.githubusercontent.com/integrallis/models/318d0068555b7474c927d65a1eb15482fa47d740/experiments/vision-catalog-qualification/results/2026-11-08/campaign/results/admission-attempt.json",
-      "reportSha256": "1e76c9f875f5fe83b33367491acd082e2a59041af60a02643285bea81aa02d4a",
+      "backendVersion": "models-source:3f31646c743647449310de2c5ff57fbd55d9e957",
+      "report": "https://raw.githubusercontent.com/integrallis/models/6ce65f617cb5dddb136cecf3764a2aded3d73fbf/experiments/vision-catalog-qualification/results/quick-full-2026-11-08/campaign/results/admission-attempt.json",
+      "reportSha256": "ce22f53351f44ef0ac70ba851f8ecc87ffff613964e27d4938418869e30f0618",
       "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
       "files": [
         {
@@ -109,7 +109,7 @@
       "datasets": {
         "vqav2": {
           "cases": 32,
-          "candidateScore": 0.696875,
+          "candidateScore": 0.675,
           "referenceScore": 0.675,
           "blankCases": 8,
           "imageContribution": 0.5375
@@ -122,46 +122,46 @@
           "imageContribution": 0.375
         }
       },
-      "tokenAgreement": 0.96875,
+      "tokenAgreement": 0.984375,
       "performance": [
         {
           "dataset": "vqav2",
           "caseId": "vqav2-132415014",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.083575628575075,
-          "decodeRatio": 1.1377171026983521,
-          "totalRatio": 1.084400350373662
+          "prefillRatio": 1.0483005830285594,
+          "decodeRatio": 1.1031121761492848,
+          "totalRatio": 1.0490675272797358
         },
         {
           "dataset": "vqav2",
           "caseId": "vqav2-423731001",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.0789509059563833,
-          "decodeRatio": 1.1093874386103006,
-          "totalRatio": 1.0800457387500926
+          "prefillRatio": 1.0373750548170906,
+          "decodeRatio": 1.0593031461753972,
+          "totalRatio": 1.038731415181153
         },
         {
           "dataset": "textvqa",
           "caseId": "textvqa-36063",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.063622217541753,
-          "decodeRatio": 1.118503932254691,
-          "totalRatio": 1.06389553578363
+          "prefillRatio": 1.036198895135331,
+          "decodeRatio": 1.0905021904094672,
+          "totalRatio": 1.037119210895012
         },
         {
           "dataset": "textvqa",
           "caseId": "textvqa-37476",
           "warmups": 1,
           "repetitions": 3,
-          "prefillRatio": 1.064460060329409,
-          "decodeRatio": 1.087030233790317,
-          "totalRatio": 1.0647018818158152
+          "prefillRatio": 1.0428545508313771,
+          "decodeRatio": 1.0707659832737562,
+          "totalRatio": 1.043041718780626
         }
       ],
-      "integrationPassed": false,
+      "integrationPassed": true,
       "qualified": false,
       "releasedRuntimeVerified": false,
       "modeljarsRuntimeVerified": false

@@ -62,12 +62,24 @@ test('released consumer binds loaded JARs to Central and forbids a native overri
       runtimeJars:artifacts.map(a=>({id:a.id,fileName:a.url.split('/').at(-1),sha256:a.sha256})),
       diagnostics:{'vision-projections':'rust-matrixmultiply','decoder-attention':'NativeCausalAttention'},
       cases:['vqav2-0','textvqa-0','vqav2-0'].map(id=>({id,answer:'yes',expected:'yes',matchesMeasuredOutput:true}))}};
+  const cliUrl='https://repo.maven.apache.org/maven2/org/modeljars/modeljars-cli/0.1.77/modeljars-cli-0.1.77.jar';
+  const cliBytes=Buffer.from('synthetic released CLI JAR');
+  jars.set(cliUrl,cliBytes);
+  value.cliGenerator={url:cliUrl,sha256:hash(cliBytes)};
+  value.cliResolvedGraphSha256=hash(Buffer.from('synthetic CLI graph'));
+  value.demoSha256=hash(Buffer.from('synthetic generated demo'));
   async function verify() {
     const release=bytes(value);
     entry.releaseVerification={report:url,reportSha256:hash(release),modelsVersion:'0.5.15'};
     return verifyVisionEvidence(manifest,catalog,async u=>u===url?release:jars.get(u)??raw);
   }
   assert.equal(await verify(),2);
+  value.cliGenerator.url=cliUrl.replaceAll('0.1.77','0.1.65');
+  await assert.rejects(verify(),/CLI demo provenance/);
+  value.cliGenerator.url=cliUrl;
+  jars.set(cliUrl,Buffer.from('different CLI JAR'));
+  await assert.rejects(verify(),/Demo generator differs/);
+  jars.set(cliUrl,cliBytes);
   value.consumer.runtimeProperties['models.native.kernels.library']='/tmp/source-build.so';
   await assert.rejects(verify(),/bundled native library/);
   value.consumer.runtimeProperties={};value.consumer.runtimeJars[0].sha256='0'.repeat(64);

@@ -250,6 +250,9 @@ jobs:
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
 
+      - name: Verify vision evidence reports
+        run: npm run catalog:verify-vision
+
       - name: Verify non-text modality claims against the artifacts
         run: npm run catalog:modality
 

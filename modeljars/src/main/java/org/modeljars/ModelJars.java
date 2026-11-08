@@ -1197,23 +1197,29 @@ public final class ModelJars {
   }
 
   private static ImageInferenceBackend loadVisionBackend(Path text, Path projector) {
-    var backend = LlavaBackend.load(text, projector);
+    return requireQualifiedVisionKernels(LlavaBackend.load(text, projector));
+  }
+
+  static ImageInferenceBackend requireQualifiedVisionKernels(ImageInferenceBackend backend) {
     try {
       var diagnostics = backend.diagnostics();
       boolean nativeVision =
           diagnostics.environment().getOrDefault("vision-projections", "").startsWith("rust-");
+      boolean nativeAttention =
+          "NativeCausalAttention".equals(diagnostics.environment().get("decoder-attention"));
       boolean nativeDecoder =
           diagnostics.optimizations().stream()
               .anyMatch(
                   decision ->
                       decision.id().equals("grouped-projections")
+                          && decision.status() == OptimizationStatus.ENABLED
                           && decision
                               .settings()
                               .getOrDefault("implementation", "")
                               .startsWith("rust-ffm"));
-      if (!nativeVision || !nativeDecoder)
+      if (!nativeVision || !nativeDecoder || !nativeAttention)
         throw new ModelJarException(
-            "Qualified vision execution requires native encoder and decoder kernels");
+            "Qualified vision execution requires native encoder, decoder and attention kernels");
       return backend;
     } catch (RuntimeException | Error failure) {
       try (backend) {

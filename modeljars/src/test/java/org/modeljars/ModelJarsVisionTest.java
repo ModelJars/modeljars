@@ -17,8 +17,11 @@ package org.modeljars;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.integrallis.models.api.BackendDiagnostics;
 import com.integrallis.models.api.ImageInferenceBackend;
 import com.integrallis.models.api.ModelMetadata;
+import com.integrallis.models.api.OptimizationDecision;
+import com.integrallis.models.api.OptimizationStatus;
 import com.integrallis.models.api.Tokenizer;
 import java.net.URI;
 import java.nio.file.Path;
@@ -138,6 +141,44 @@ class ModelJarsVisionTest {
       assertEquals(2, Collections.frequency(backend.calls, "reset"));
     }
     assertTrue(backend.closed);
+  }
+
+  @Test
+  void rejectsAndClosesAnIncompleteNativeExecutionPlan() {
+    for (String missing : List.of("encoder", "decoder", "attention", "disabled")) {
+      var backend = nativeBackend(missing);
+      assertThrows(ModelJarException.class, () -> ModelJars.requireQualifiedVisionKernels(backend));
+      assertTrue(backend.closed);
+    }
+    var supported = nativeBackend("");
+    assertSame(supported, ModelJars.requireQualifiedVisionKernels(supported));
+    assertFalse(supported.closed);
+    supported.close();
+  }
+
+  private static FakeBackend nativeBackend(String missing) {
+    return new FakeBackend() {
+      @Override
+      public BackendDiagnostics diagnostics() {
+        return new BackendDiagnostics(
+            "fixture",
+            "fixture",
+            Map.of(
+                "vision-projections",
+                missing.equals("encoder") ? "java" : "rust-matrixmultiply",
+                "decoder-attention",
+                missing.equals("attention") ? "Java" : "NativeCausalAttention"),
+            List.of(
+                new OptimizationDecision(
+                    "grouped-projections",
+                    missing.equals("disabled")
+                        ? OptimizationStatus.DISABLED
+                        : OptimizationStatus.ENABLED,
+                    "fixture",
+                    Map.of(
+                        "implementation", missing.equals("decoder") ? "java" : "rust-ffm-test"))));
+      }
+    };
   }
 
   @Test

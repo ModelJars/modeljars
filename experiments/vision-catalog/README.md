@@ -2,7 +2,10 @@
 
 Targets are `second_state_llava_v1_5_7b_gguf_q4_k_s` and
 `second_state_llava_v1_5_7b_gguf_q4_k_m`, with their pinned F16 projector. Qwen3-VL
-is outside the runtime supported by Models PR380.
+is outside the runtime supported by Models PR380. The candidates do not claim stock
+llama.cpp multimodal compatibility: the converted 23-block projector has an upstream
+loader issue documented in Models. The independent benchmark uses PyTorch CLIP with
+the external llama.cpp text decoder, not its stock multimodal loader.
 
 The catalog descriptors are candidates. They do not enter the public catalog or
 publication plan until backend admission, ModelJars execution, and released-runtime
@@ -27,13 +30,18 @@ node tools/import-vision-qualification.mjs \
 
 The importer derives every score and ratio from the report, binds both GGUF digests,
 checks all gates, records the measured Models commit, and initializes both publication
-verification flags to false. A failed attempt remains rejected evidence. It refuses
+verification flags to false. `npm run catalog:verify-vision` fetches the exact report,
+checks its digest and compares every imported score, ratio and verdict to that report.
+Validation, marker publication and Pages all run this gate. A failed attempt remains rejected evidence. It refuses
 to overwrite a nonempty qualification manifest.
 
 A branch backend pass can be loaded from its explicit preview marker. It cannot enter
 the public runtime registry, aggregate catalog, site, or publication plan. ModelJars
-and release verification flags require checksummed, commit-pinned receipts; released
-evidence must name the exact measured Models release version. Never relabel source
+and release verification flags require checksummed, commit-pinned receipts; consumer receipts must
+cover both datasets, reset, exact installed files, native execution and public defaults. Released
+evidence must name the exact measured Models release version and carry a passing
+`modeljars-vision-release-v1` report with that `modelsVersion` and its full `consumer`
+report from `PreviewVision.java`. Never relabel source
 measurements as released-runtime measurements.
 
 ## Build the branch payload

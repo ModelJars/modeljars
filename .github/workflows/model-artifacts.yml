@@ -16,6 +16,9 @@ on:
       - catalog/vision-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
+      - tools/vision-qualifications.mjs
+      - tools/import-vision-qualification.mjs
+      - tools/vision-evidence-gate.mjs
       - tools/model-publications.test.mjs
       - tools/composition-evidence-gate.mjs
       - tools/composition-evidence-gate.test.mjs
@@ -48,6 +51,9 @@ on:
       - catalog/vision-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
+      - tools/vision-qualifications.mjs
+      - tools/import-vision-qualification.mjs
+      - tools/vision-evidence-gate.mjs
       - tools/model-publications.test.mjs
       - tools/composition-evidence-gate.mjs
       - tools/composition-evidence-gate.test.mjs
@@ -117,6 +123,9 @@ jobs:
 
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
+
+      - name: Verify vision evidence reports
+        run: npm run catalog:verify-vision
 
       - name: Resolve model publication plan
         id: plan

@@ -86,6 +86,21 @@ public final class ModelVisionQualificationRegistry {
   }
 
   private static ModelVisionQualification entry(Properties p, String prefix) {
+    return new ModelVisionQualification(
+        text(p, prefix + "modelId"),
+        text(p, prefix + "backendVersion"),
+        URI.create(text(p, prefix + "report")),
+        text(p, prefix + "reportSha256"),
+        text(p, prefix + "corpusSha256"),
+        files(p, prefix),
+        datasets(p, prefix),
+        number(p, prefix + "tokenAgreement"),
+        performance(p, prefix),
+        bool(p, prefix + "integrationPassed"),
+        bool(p, prefix + "qualified"));
+  }
+
+  private static List<ModelArtifactFile> files(Properties p, String prefix) {
     List<ModelArtifactFile> files = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
       String f = prefix + "files." + i + ".";
@@ -97,6 +112,11 @@ public final class ModelVisionQualificationRegistry {
               text(p, f + "sha256"),
               Long.parseLong(text(p, f + "sizeBytes"))));
     }
+    return files;
+  }
+
+  private static Map<String, ModelVisionQualification.Dataset> datasets(
+      Properties p, String prefix) {
     Map<String, ModelVisionQualification.Dataset> datasets = new LinkedHashMap<>();
     for (String dataset : List.of("vqav2", "textvqa")) {
       String d = prefix + dataset + ".";
@@ -109,6 +129,11 @@ public final class ModelVisionQualificationRegistry {
               integer(p, d + "blankCases"),
               number(p, d + "imageContribution")));
     }
+    return datasets;
+  }
+
+  private static List<ModelVisionQualification.Performance> performance(
+      Properties p, String prefix) {
     List<ModelVisionQualification.Performance> performance = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
       String f = prefix + "performance." + i + ".";
@@ -122,18 +147,7 @@ public final class ModelVisionQualificationRegistry {
               number(p, f + "decodeRatio"),
               number(p, f + "totalRatio")));
     }
-    return new ModelVisionQualification(
-        text(p, prefix + "modelId"),
-        text(p, prefix + "backendVersion"),
-        URI.create(text(p, prefix + "report")),
-        text(p, prefix + "reportSha256"),
-        text(p, prefix + "corpusSha256"),
-        files,
-        datasets,
-        number(p, prefix + "tokenAgreement"),
-        performance,
-        bool(p, prefix + "integrationPassed"),
-        bool(p, prefix + "qualified"));
+    return performance;
   }
 
   /**

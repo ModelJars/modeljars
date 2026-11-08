@@ -120,9 +120,6 @@ final class DemoScriptGenerator {
     if (capabilities.contains("tool-calling") && descriptor.architecture().equals("needle2")) {
       return Type.TOOLS;
     }
-    if (capabilities.stream().anyMatch(DECISION_CAPABILITIES::contains)) {
-      return Type.DECISION;
-    }
     if (capabilities.stream().anyMatch(EMBEDDING_CAPABILITIES::contains)) {
       return Type.EMBEDDING;
     }

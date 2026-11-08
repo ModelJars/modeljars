@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {isVisionEvidence, qualificationSummary, visionJavaSnippet} from "./model-detail.js";
 import {primaryQualification, qualificationLabel} from "./qualification-data.js";
+import {verificationProfile} from "./taxonomy.js";
 
 test("vision entries select image evidence and an image runtime example", () => {
   const entry = {qualified: true, useCaseTier: "IMAGE_QUESTION_ANSWERING", backendVersion: "fixture",
@@ -15,4 +16,14 @@ test("vision entries select image evidence and an image runtime example", () => 
   assert.match(snippet, /ModelJars\.openVisionRuntime/);
   assert.match(snippet, /Files\.readAllBytes/);
   assert.doesNotMatch(snippet, /ModelJars\.openRuntime\(/);
+});
+
+test("vision verification counts raw dataset cases for passing and rejected evidence", () => {
+  for (const qualified of [true, false]) {
+    const profile = verificationProfile({visionQualifications: [{qualified,
+      datasets: {vqav2: {cases: 32}, textvqa: {cases: 32}}}]});
+    assert.deepEqual(profile.checks, ["64-case image-question evaluation"]);
+  }
+  const malformed = verificationProfile({visionQualifications: [{qualified: false, datasets: {}}]});
+  assert.deepEqual(malformed.checks, []);
 });

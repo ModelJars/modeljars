@@ -1,5 +1,170 @@
 {
   "schemaVersion": 1,
   "policy": "llava-vqa-v1",
-  "entries": []
+  "entries": [
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "backendVersion": "models-source:ff627e32a3910488d9d4a9c1d15d361fe3242e25",
+      "report": "https://raw.githubusercontent.com/integrallis/models/318d0068555b7474c927d65a1eb15482fa47d740/experiments/vision-catalog-qualification/results/2026-11-08/campaign/results/admission-attempt.json",
+      "reportSha256": "1e76c9f875f5fe83b33367491acd082e2a59041af60a02643285bea81aa02d4a",
+      "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_S.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_S.gguf",
+          "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+          "sizeBytes": 3856740128
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "datasets": {
+        "vqav2": {
+          "cases": 32,
+          "candidateScore": 0.6875,
+          "referenceScore": 0.6875,
+          "blankCases": 8,
+          "imageContribution": 0.5375
+        },
+        "textvqa": {
+          "cases": 32,
+          "candidateScore": 0.415625,
+          "referenceScore": 0.415625,
+          "blankCases": 8,
+          "imageContribution": 0.375
+        }
+      },
+      "tokenAgreement": 0.984375,
+      "performance": [
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-132415014",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.0739263761090272,
+          "decodeRatio": 1.1670273672024338,
+          "totalRatio": 1.075438336837735
+        },
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-423731001",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.0518757136003625,
+          "decodeRatio": 1.1351402653644975,
+          "totalRatio": 1.0534871656437
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-36063",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.043765726129717,
+          "decodeRatio": 1.1535494331406926,
+          "totalRatio": 1.0447627814199338
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-37476",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.0692897615732935,
+          "decodeRatio": 1.1130251430998026,
+          "totalRatio": 1.0697225666191994
+        }
+      ],
+      "integrationPassed": false,
+      "qualified": false,
+      "releasedRuntimeVerified": false,
+      "modeljarsRuntimeVerified": false
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "backendVersion": "models-source:ff627e32a3910488d9d4a9c1d15d361fe3242e25",
+      "report": "https://raw.githubusercontent.com/integrallis/models/318d0068555b7474c927d65a1eb15482fa47d740/experiments/vision-catalog-qualification/results/2026-11-08/campaign/results/admission-attempt.json",
+      "reportSha256": "1e76c9f875f5fe83b33367491acd082e2a59041af60a02643285bea81aa02d4a",
+      "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_M.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_M.gguf",
+          "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+          "sizeBytes": 4081004320
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "datasets": {
+        "vqav2": {
+          "cases": 32,
+          "candidateScore": 0.696875,
+          "referenceScore": 0.675,
+          "blankCases": 8,
+          "imageContribution": 0.5375
+        },
+        "textvqa": {
+          "cases": 32,
+          "candidateScore": 0.384375,
+          "referenceScore": 0.384375,
+          "blankCases": 8,
+          "imageContribution": 0.375
+        }
+      },
+      "tokenAgreement": 0.96875,
+      "performance": [
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-132415014",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.083575628575075,
+          "decodeRatio": 1.1377171026983521,
+          "totalRatio": 1.084400350373662
+        },
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-423731001",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.0789509059563833,
+          "decodeRatio": 1.1093874386103006,
+          "totalRatio": 1.0800457387500926
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-36063",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.063622217541753,
+          "decodeRatio": 1.118503932254691,
+          "totalRatio": 1.06389553578363
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-37476",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.064460060329409,
+          "decodeRatio": 1.087030233790317,
+          "totalRatio": 1.0647018818158152
+        }
+      ],
+      "integrationPassed": false,
+      "qualified": false,
+      "releasedRuntimeVerified": false,
+      "modeljarsRuntimeVerified": false
+    }
+  ]
 }

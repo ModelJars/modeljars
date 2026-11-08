@@ -1,0 +1,1 @@
+rendered 123 served catalog entries (82 carry enriched qualification metadata), 0 failed

@@ -65,6 +65,9 @@ local lockfile changes. The staged runtime lives at
 `modeljars-catalog/build/libs/markers`, and record every JAR hash. Copy this isolated
 payload to the Linux worker; never download weights or run model inference on the Mac.
 Compile the owned Rust kernels on Linux at the same Models runtime commit.
+Use `COPYFILE_DISABLE=1 tar ...` when packaging on macOS to exclude AppleDouble
+metadata. The preview runner verifies executable JAR hashes and excludes `._*` files
+from its explicit classpath.
 
 Generate the ordinary CLI demo with the preview marker on the CLI classpath,
 `-Dmodeljars.catalog.offline=true` and an empty

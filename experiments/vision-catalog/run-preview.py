@@ -6,6 +6,7 @@ import json
 import platform
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 
@@ -34,13 +35,18 @@ def main():
     selected.append(selected[0])
     output = payload / 'consumer-results'
     output.mkdir(exist_ok=False)
-    markers = sorted((payload / 'measured-markers').glob('*.jar'))
+    markers = sorted(p for p in (payload / 'measured-markers').glob('*.jar') if not p.name.startswith('._'))
     if len(markers) != 2:
         raise ValueError('Exactly two measured preview markers required')
+    jars = sorted(p for p in (payload / 'lib').glob('*.jar') if not p.name.startswith('._'))
+    expected = read(payload / 'receipt.json')['files']
+    if not jars or any(not zipfile.is_zipfile(p) or hashlib.sha256(p.read_bytes()).hexdigest()
+                       != expected[str(p.relative_to(payload))] for p in jars):
+        raise ValueError('Preview classpath differs from its payload receipt')
     common = ['/opt/java/bin/java', '--add-modules=jdk.incubator.vector',
               '--enable-native-access=ALL-UNNAMED', '-Xmx12g',
               '-Dmodels.native.kernels.library=' + str(root / 'model-kernels/target/release/libjmodels_kernels.so'),
-              '-cp', str(payload / 'lib/*') + ':' + ':'.join(map(str, markers))]
+              '-cp', ':'.join(map(str, jars + markers))]
     for candidate in report['candidates']:
         variant = candidate['variant']
         directory = output / variant

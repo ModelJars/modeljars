@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {mkdtemp, writeFile, rm} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+import {spawnSync} from "node:child_process";
+import {fileURLToPath} from "node:url";
 import test from "node:test";
 import {publishable, registryProperties, validateEntry, validateManifest} from "./vision-qualifications.mjs";
 import {filterQualifiedPublications, selectCatalogPublications} from "./model-publications.mjs";
@@ -19,6 +24,38 @@ function fixture() {
   };
 }
 const manifest = entry => ({schemaVersion: 1, policy: "llava-vqa-v1", entries: [entry]});
+
+test("vision-only CLI evidence filters manual selection and detects a new qualified delta", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "vision-publication-"));
+  try {
+    const current = join(directory, "catalog.json"), evidence = join(directory, "vision.json");
+    const previous = join(directory, "previous-vision.json");
+    await writeFile(current, JSON.stringify(catalog));
+    await writeFile(previous, JSON.stringify({...manifest(fixture()), entries: []}));
+    const entry = fixture();
+    await writeFile(evidence, JSON.stringify(manifest(entry)));
+    const run = extra => {
+      const result = spawnSync(process.execPath,
+        [fileURLToPath(new URL("./plan-model-publications.mjs", import.meta.url)),
+          "--current", current, "--vision-qualifications", evidence, ...extra], {encoding: "utf8"});
+      assert.equal(result.status, 0, result.stderr);
+      return JSON.parse(result.stdout);
+    };
+    assert.deepEqual(run(["--ids", model.id]).publications, []);
+    const delta = ["--previous", current, "--previous-vision-qualifications", previous];
+    assert.deepEqual(run(delta).publications, []);
+    entry.backendVersion = "0.0.1";
+    entry.releasedRuntimeVerified = entry.modeljarsRuntimeVerified = true;
+    entry.releaseVerification = {modelsVersion: "0.0.1", reportSha256: "c".repeat(64),
+      report: `https://raw.githubusercontent.com/example/repository/${"a".repeat(40)}/release.json`};
+    entry.modeljarsVerification = {reportSha256: "d".repeat(64),
+      report: `https://raw.githubusercontent.com/example/repository/${"a".repeat(40)}/consumer.json`};
+    await writeFile(evidence, JSON.stringify(manifest(entry)));
+    assert.deepEqual(run(delta).publications.map(p => p.id), [model.id]);
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+});
 
 test("passing branch evidence loads but cannot publish before release and ModelJars verification", () => {
   const entry = fixture();

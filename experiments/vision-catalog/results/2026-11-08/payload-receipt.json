@@ -1,0 +1,41 @@
+{
+  "schema": "modeljars-vision-preview-payload-v1",
+  "modeljarsRevision": "920708bd20ab8a4f6379979e0b3c36646f16ee19",
+  "modelsMeasuredRevision": "ff627e32a3910488d9d4a9c1d15d361fe3242e25",
+  "releasedRuntime": false,
+  "files": {
+    "PreviewVision.java": "8e28b16362c83bd0a71b3376752194d18c53e50959bc14b29541ab3061ace5c4",
+    "pr380-llava-q4km-demo.java": "b1cd13cf6a2b949420c8c36359c1c8de1f9b99f8d558eec23bd14ebeae2dc593",
+    "pr380-llava-q4ks-demo.java": "e30901c05bece2ef91b026156f20785936702aa8b6fe7d511b59da73167987ec",
+    "unqualified-markers/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar": "e7808a700befe4b0e96c08000b23926013be52097e46662b7fe7a475d55c3da9",
+    "unqualified-markers/second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar": "770dc30c3ff4e46904da1bb74f6fdf27c9ca8851e76f90c6719a274aa460bfc1",
+    "lib/modeljars-0.1.65.jar": "eb14ae905664c2c054cb41df32713d081fcb30b95bd9b7c6b18ab42da1806cd3",
+    "lib/backend-native-0.5.14.jar": "f2491650d72b1222d54b44e8690e0431d9ea7b8763abbf979ccbdf36cc4814b3",
+    "lib/models-decisions-0.5.14.jar": "46378d95330bd293a624a86e18652fda045cbe441f852bd87d52874d07ed8088",
+    "lib/vectors-core-0.1.33.jar": "cd301576cdba6c05c09bacb41abe8a416f79a05b70fe7d21e97bf1789f5108f0",
+    "lib/backend-java-0.5.14.jar": "bb319aa0b7df5f8626aa81942c2c2a9d588cbb274e9766815d5e9ce41425fe55",
+    "lib/models-api-0.5.14.jar": "ce036e2a41b12f5ae06cfdc644de174b2a27d90fc470c0929d82a7d11ef5af16",
+    "lib/models-0.5.14.jar": "c7c1ff4c45ba9f251632b9058a33df3b1d292ee15d5037bc95576f01632b895e",
+    "lib/slf4j-api-2.0.20.jar": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439",
+    "lib/models-backend-onnx-0.5.14.jar": "fc5e00629af0a67420de504e93ad59c759a64c637627661fb9b3dbfe0aee3b1e",
+    "lib/models-runtime-0.5.14.jar": "e6587c96df3a19fae3b45e00cd3e779d139deff2605ab766cc24fe932cef6c88",
+    "lib/jackson-core-2.22.3.jar": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c",
+    "lib/modeljars-core-0.1.65.jar": "6bc111ceff61bfa453c4dae486e337a7e102751eec5310dff2f4800d9f35899f",
+    "lib/models-audio-0.5.14.jar": "1534e180e1419c440b804f7f2a17cbab5061b2ebe15ae03661efaad8c3b6bac9",
+    "resolved-preview-locks/modeljars/gradle.lockfile": "bd1db861bdf50a70b056737b1a0986c3bcb4ed2369c848c7480a408060174549",
+    "resolved-preview-locks/modeljars-composite-granite-answerability/gradle.lockfile": "903b46191c932dce40aee914ff72cb446a9dfb5d80ea3a6e3f7e9df6f99ae893",
+    "resolved-preview-locks/modeljars-cli/gradle.lockfile": "3c8e68029058992010a7dbb73e92b7b464f960c16306bc1a38be693739dee395",
+    "resolved-preview-locks/modeljars-composite-qwen3-chat-tools/gradle.lockfile": "861da1d1a966785d61136e4d27ff43a54f354d5a199f4d6fbdd277ef2dfd58f0"
+  },
+  "matchingMeasuredModelsJars": [
+    "backend-native-0.5.14.jar",
+    "models-decisions-0.5.14.jar",
+    "vectors-core-0.1.33.jar",
+    "backend-java-0.5.14.jar",
+    "models-api-0.5.14.jar",
+    "slf4j-api-2.0.20.jar",
+    "models-backend-onnx-0.5.14.jar",
+    "models-runtime-0.5.14.jar",
+    "jackson-core-2.22.3.jar"
+  ]
+}

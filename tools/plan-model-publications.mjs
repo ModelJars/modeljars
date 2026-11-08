@@ -269,6 +269,10 @@ function qualifiedProfiles(profileCatalog, qualifiedIds) {
 
 async function main() {
   const argumentsMap = parseArguments(process.argv.slice(2));
+  const hasQualifications = [...argumentsMap.keys()].some(name =>
+    name.endsWith("qualifications") && !name.startsWith("--previous-"));
+  const hasPreviousQualifications = [...argumentsMap.keys()].some(name =>
+    name.endsWith("qualifications") && name.startsWith("--previous-"));
   const current = await readCatalog(argumentsMap.get("--current"));
   const previousPath = argumentsMap.get("--previous");
   const previousProfilesPath = argumentsMap.get("--previous-profiles");
@@ -284,7 +288,7 @@ async function main() {
   const qualificationPath = argumentsMap.get("--qualifications");
   const currentQualifications =
     qualificationPath === undefined
-      ? undefined
+      ? { schemaVersion: 1, entries: [] }
       : await readCatalog(qualificationPath);
   const embeddingQualificationPath = argumentsMap.get(
     "--embedding-qualifications",
@@ -357,7 +361,7 @@ async function main() {
     const previousQualificationsPath = argumentsMap.get(
       "--previous-qualifications",
     );
-    if (previousQualificationsPath !== undefined) {
+    if (hasPreviousQualifications) {
       const previousEmbeddingPath = argumentsMap.get(
         "--previous-embedding-qualifications",
       );
@@ -384,7 +388,9 @@ async function main() {
       );
       const previousQualified = qualifiedCatalog(
         previous,
-        await readCatalog(previousQualificationsPath),
+        previousQualificationsPath === undefined
+          ? { schemaVersion: 1, entries: [] }
+          : await readCatalog(previousQualificationsPath),
         previousEmbeddingPath === undefined
           ? undefined
           : await readCatalog(previousEmbeddingPath),
@@ -426,7 +432,8 @@ async function main() {
       currentForDelta = currentQualified.catalog;
       qualificationOptions = {
         previousQualificationManifests: [
-          await readCatalog(previousQualificationsPath),
+          ...(previousQualificationsPath === undefined
+            ? [] : [await readCatalog(previousQualificationsPath)]),
           ...(previousEmbeddingPath === undefined
             ? []
             : [await readCatalog(previousEmbeddingPath)]),
@@ -485,7 +492,7 @@ async function main() {
     });
   }
   const delta =
-    qualificationPath === undefined
+    !hasQualifications
       ? planned
       : filterQualifiedPublications(
           planned,

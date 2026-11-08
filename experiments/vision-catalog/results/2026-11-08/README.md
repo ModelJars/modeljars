@@ -62,3 +62,17 @@ also passed, including the native encoder/decoder/attention requirement. This is
 a default released-dependency build or a publication qualification. Fix the backend
 fidelity and decode failures, rerun the frozen campaign, then run the positive public
 API/reset/demo smoke before proceeding toward release.
+
+## Evidence retention and worker cleanup
+
+The full raw archive and compact observations are retained under
+`java-ai/audit-artifacts/pr380-vision-catalog-2026-11-08/`. Their exact sizes and
+SHA-256 digests are in [archives.json](archives.json). Both downloaded digests match
+the worker's originals. The full archive contains 1,455 entries, including numerical
+vectors, executable payloads, reference libraries and consumer receipts, without
+model weights or credentials. Scores and admission verdicts reproduce again from
+the downloaded compact archive.
+
+The worker is terminated, and its temporary AWS key pair, security group and local
+private key are deleted. [Cleanup receipt](worker-lifecycle.json) records verification
+at 2026-11-08 02:26 UTC, before the control-record deadline.

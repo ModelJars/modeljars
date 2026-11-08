@@ -1,0 +1,9 @@
+{
+  "instanceId": "i-0ad4a57ce18c35b8a",
+  "instanceState": "terminated",
+  "keyPairDeleted": true,
+  "securityGroupDeleted": true,
+  "localPrivateKeyDeleted": true,
+  "verifiedAt": "2026-11-08T02:26:42.845535+00:00",
+  "archivesVerified": true
+}

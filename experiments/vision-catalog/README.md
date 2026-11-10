@@ -52,20 +52,21 @@ measurements as released-runtime measurements.
 
 ## Build the branch payload
 
-The optional source composite enables a pre-merge integration test without publishing
-unreleased libraries. Release dependency validation continues to reject source
-substitution. No release versions or dependency locks are changed for publication.
+The branch payload uses the configured released Models and Vectors dependencies by default.
+The optional source composite enables testing an unreleased Models checkout; release
+dependency validation continues to reject source substitution.
 
 ```sh
-./gradlew -PmodelsSource=../models-vision-arithmetic --write-locks \
+./gradlew \
   :modeljars-core:test :modeljars:test :modeljars-cli:test \
   :modeljars:stageVisionQualificationRuntime :modeljars-cli:installDist \
   :modeljars-catalog:markerJarSecondStateLlavaV157bGgufQ4KS \
   :modeljars-catalog:markerJarSecondStateLlavaV157bGgufQ4KM
 ```
 
-Preserve the resolved preview locks alongside the payload receipt, then restore those
-local lockfile changes. The staged runtime lives at
+For a source composite, add `-PmodelsSource=../models-vision-arithmetic --write-locks`
+to that command. Preserve its resolved preview locks alongside the payload receipt, then
+restore those local lockfile changes. The staged runtime lives at
 `build/vision-qualification-runtime/lib`. Add each generated marker from
 `modeljars-catalog/build/libs/markers`, and record every JAR hash. Copy this isolated
 payload to the Linux worker; never download weights or run model inference on the Mac.

@@ -7444,16 +7444,14 @@ val verifyPublishedConsumerGraph by tasks.registering(Exec::class) {
 }
 tasks.named("verifyReleaseBundle") { dependsOn(verifyPublishedConsumerGraph) }
 
-// Isolated, hash-recordable runtime payload for pre-merge source qualification.
+// Isolated, hash-recordable runtime payload for pre-merge vision qualification.
 // Release dependency verification remains unchanged and still rejects source substitution.
-if (providers.gradleProperty("modelsSource").isPresent) {
-    project(":modeljars") {
-        tasks.register<Sync>("stageVisionQualificationRuntime") {
-            group = "verification"
-            description = "Stage the exact source-composite runtime for remote vision qualification"
-            from(configurations.named("runtimeClasspath"))
-            from(tasks.named("jar"))
-            into(rootProject.layout.buildDirectory.dir("vision-qualification-runtime/lib"))
-        }
+project(":modeljars") {
+    tasks.register<Sync>("stageVisionQualificationRuntime") {
+        group = "verification"
+        description = "Stage the exact runtime for remote vision qualification"
+        from(configurations.named("runtimeClasspath"))
+        from(tasks.named("jar"))
+        into(rootProject.layout.buildDirectory.dir("vision-qualification-runtime/lib"))
     }
 }

@@ -4,7 +4,7 @@
   "entries": [
     {
       "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
-      "backendVersion": "models-source:214d53f928923d21514cf2d8bca6e02712d4dd51",
+      "backendVersion": "0.5.19",
       "report": "https://raw.githubusercontent.com/integrallis/models/4ef8e5b56e92689ef4b9424d928a39627b9713a6/experiments/vision-catalog-qualification/results/2026-11-10-central-0.5.19-admission/admission-attempt.json",
       "reportSha256": "0483ce1099a6bfdcd9b2a3e6c50e211a3da38b8130e0b44da2c4ecb379278ed7",
       "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
@@ -81,16 +81,21 @@
       ],
       "integrationPassed": true,
       "qualified": true,
-      "releasedRuntimeVerified": false,
+      "releasedRuntimeVerified": true,
       "modeljarsRuntimeVerified": true,
       "modeljarsVerification": {
-        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_S/consumer.json",
-        "reportSha256": "5e287ca2a6c888505978cafddd8983daa8b8af0a61097dc8cc35117a2f926ac7"
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/c6c086420da23c7f732a34846464b07d87a64521/experiments/vision-catalog/results/2026-11-11-released-0.1.78/Q4_K_S/consumer.json",
+        "reportSha256": "7770db6bcb8a1ca95f25ebd64b3572c2bed60f24374365530b614a5f4a52e2cb"
+      },
+      "releaseVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/c6c086420da23c7f732a34846464b07d87a64521/experiments/vision-catalog/results/2026-11-11-released-0.1.78/Q4_K_S/release.json",
+        "reportSha256": "8f1219c2999eb91c9cfbb40221809364a01fdff54e52a346444e6c05d7799926",
+        "modelsVersion": "0.5.19"
       }
     },
     {
       "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
-      "backendVersion": "models-source:214d53f928923d21514cf2d8bca6e02712d4dd51",
+      "backendVersion": "0.5.19",
       "report": "https://raw.githubusercontent.com/integrallis/models/4ef8e5b56e92689ef4b9424d928a39627b9713a6/experiments/vision-catalog-qualification/results/2026-11-10-central-0.5.19-admission/admission-attempt.json",
       "reportSha256": "0483ce1099a6bfdcd9b2a3e6c50e211a3da38b8130e0b44da2c4ecb379278ed7",
       "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
@@ -167,11 +172,16 @@
       ],
       "integrationPassed": true,
       "qualified": true,
-      "releasedRuntimeVerified": false,
+      "releasedRuntimeVerified": true,
       "modeljarsRuntimeVerified": true,
       "modeljarsVerification": {
-        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_M/consumer.json",
-        "reportSha256": "08345ed17c59a0d81bdcbc82a7f421aee4ae6badabb429d65de0b3b9a95e0f0a"
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/c6c086420da23c7f732a34846464b07d87a64521/experiments/vision-catalog/results/2026-11-11-released-0.1.78/Q4_K_M/consumer.json",
+        "reportSha256": "7ce7429da75424473febe5dc3ad4a5e37e504f831eb49f6031fbe1fede9967af"
+      },
+      "releaseVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/c6c086420da23c7f732a34846464b07d87a64521/experiments/vision-catalog/results/2026-11-11-released-0.1.78/Q4_K_M/release.json",
+        "reportSha256": "6d49b9b072519b356fa7b2b73d37c764edc02dbd4d549dcc875ff3216ed338dc",
+        "modelsVersion": "0.5.19"
       }
     }
   ]

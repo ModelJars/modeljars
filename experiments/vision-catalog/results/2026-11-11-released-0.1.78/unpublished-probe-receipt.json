@@ -1,0 +1,13 @@
+{
+  "schema": "modeljars-vision-unpublished-release-probes-v1",
+  "sourceRevision": "9235ebfe8fd0796627098d521bdd99a89eae5a47",
+  "modelsVersion": "0.5.19",
+  "markerPublished": false,
+  "purpose": "Test actual released SDK runtime before official catalog admission or marker publication",
+  "files": {
+    "PreviewVision.java": "ee5e5f4b1d729dbf920cbeff4ccd0d287ad040173a70d30af06aa58e7b0b44f5",
+    "measured-markers/second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar": "073fe679a6423c2b0bc62963ba0e67585016d6f0c7da2c2b60a083fcaac74c9c",
+    "measured-markers/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar": "ae02243dc5d7745b084e9c447f982bdb7916491827bfb5e4ae6d4ffd7d75cd0e",
+    "unpublished-probe-manifest.json": "0db8cb8c28f69431f08135961b3ae6e5b5699c1a2a1222e47dbc2d6180c08921"
+  }
+}

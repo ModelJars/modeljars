@@ -1,0 +1,56 @@
+[
+    {
+        "group": "org.modeljars",
+        "name": "modeljars-cli",
+        "version": "0.1.78",
+        "file": "modeljars-cli-0.1.78.jar"
+    },
+    {
+        "group": "org.modeljars",
+        "name": "modeljars-catalog",
+        "version": "0.1.78",
+        "file": "modeljars-catalog-0.1.78.jar"
+    },
+    {
+        "group": "org.modeljars",
+        "name": "modeljars-core",
+        "version": "0.1.78",
+        "file": "modeljars-core-0.1.78.jar"
+    },
+    {
+        "group": "info.picocli",
+        "name": "picocli-shell-jline3",
+        "version": "4.7.7",
+        "file": "picocli-shell-jline3-4.7.7.jar"
+    },
+    {
+        "group": "info.picocli",
+        "name": "picocli",
+        "version": "4.7.7",
+        "file": "picocli-4.7.7.jar"
+    },
+    {
+        "group": "com.fasterxml.jackson.core",
+        "name": "jackson-core",
+        "version": "2.22.3",
+        "file": "jackson-core-2.22.3.jar"
+    },
+    {
+        "group": "com.fasterxml.jackson.core",
+        "name": "jackson-databind",
+        "version": "2.22.3",
+        "file": "jackson-databind-2.22.3.jar"
+    },
+    {
+        "group": "org.jline",
+        "name": "jline",
+        "version": "3.29.0",
+        "file": "jline-3.29.0.jar"
+    },
+    {
+        "group": "com.fasterxml.jackson.core",
+        "name": "jackson-annotations",
+        "version": "2.22",
+        "file": "jackson-annotations-2.22.jar"
+    }
+]

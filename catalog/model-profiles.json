@@ -11581,6 +11581,228 @@
         ],
         "notes": []
       }
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "artifactSha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+      "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "llava-v1.5-7b-Q4_K_S.gguf",
+            "uri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_S.gguf",
+            "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+            "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 2,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 4096,
+          "groups": [
+            {
+              "layers": 32,
+              "kvHeads": 32,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 3856740128,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 524288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 2147483648,
+                "totalBytes": 7077965600
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 278528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 1140850688,
+                "totalBytes": 6071332640
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "artifactSha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+      "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+      "generation": {
+        "sources": [
+          {
+            "id": "gguf",
+            "kind": "gguf-metadata",
+            "file": "llava-v1.5-7b-Q4_K_M.gguf",
+            "uri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_M.gguf",
+            "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+            "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+            "sha256Basis": "catalog-pinned artifact digest; header read by HTTP range"
+          }
+        ],
+        "eosTokenIds": [
+          {
+            "id": 2,
+            "provenance": [
+              {
+                "source": "gguf",
+                "key": "tokenizer.ggml.eos_token_id"
+              }
+            ]
+          }
+        ]
+      },
+      "memoryFit": {
+        "status": "computed",
+        "layout": {
+          "contextLength": 4096,
+          "groups": [
+            {
+              "layers": 32,
+              "kvHeads": 32,
+              "keyLength": 128,
+              "valueLength": 128,
+              "slidingWindow": null
+            }
+          ],
+          "slidingWindow": null,
+          "slidingWindowPatternDeclared": false,
+          "upperBound": false
+        },
+        "weightBytes": 4081004320,
+        "fixedOverheadBytes": 1073741824,
+        "upperBound": false,
+        "kvCache": [
+          {
+            "type": "f16",
+            "bytesPerToken": 524288,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 2147483648,
+                "totalBytes": 7302229792
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              }
+            ]
+          },
+          {
+            "type": "q8_0",
+            "bytesPerToken": 278528,
+            "slidingWindowBytesPerToken": 0,
+            "contexts": [
+              {
+                "contextTokens": 4096,
+                "kvBytes": 1140850688,
+                "totalBytes": 6295596832
+              }
+            ],
+            "maxContextByBudget": [
+              {
+                "budgetBytes": 8589934592,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 17179869184,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              },
+              {
+                "budgetBytes": 25769803776,
+                "maxContextTokens": 4096,
+                "limitedBy": "context-length"
+              }
+            ]
+          }
+        ],
+        "notes": []
+      }
     }
   ],
   "coverage": [
@@ -13031,6 +13253,38 @@
         "topK",
         "minP",
         "repetitionPenalty"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
+      ],
+      "memoryFit": "computed"
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "generationConfig": "absent at pinned revision",
+      "ggufHeader": "read",
+      "turnTerminator": "not determined: no tokenizer.chat_template",
+      "unsourced": [
+        "temperature",
+        "topP",
+        "topK",
+        "minP",
+        "repetitionPenalty",
+        "reasoningMarkers",
+        "thinkingDefault"
       ],
       "memoryFit": "computed"
     }

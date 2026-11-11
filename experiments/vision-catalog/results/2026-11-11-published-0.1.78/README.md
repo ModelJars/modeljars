@@ -36,3 +36,7 @@ The canonical markers are:
 org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1
 org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_m:1.0.0-q4_k_m.1
 ```
+
+`publication-times.json` records the canonical Central JAR HEAD responses used to stamp
+`catalogPublishedAt`: both immutable artifacts report `Last-Modified: Wed, 11 Nov 2026
+02:50:00 GMT`. Existing catalog publication timestamps were left unchanged.

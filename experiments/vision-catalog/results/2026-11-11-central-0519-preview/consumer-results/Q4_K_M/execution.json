@@ -1,0 +1,14 @@
+{
+  "schema": "modeljars-vision-preview-execution-v1",
+  "variant": "Q4_K_M",
+  "backendQualified": true,
+  "harnessSha256": "9cb780ee088aad4e8a0624de2f79cc23e079e43702ab6ea639f6f86ac236a965",
+  "modeljarsRevision": "36ad63c25c45a8c57c7067d8582a17322d7fdcdd",
+  "markers": {
+    "second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar": "d01c9ced637d9d49692e136562771a0880b75b8a5deb854e6cfb7b5522b2eb8d",
+    "second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar": "d48bc7236d4f70ff4edf42f27ad6154dcd7eb85a4200c631e37f3182e68f0efb"
+  },
+  "releasedRuntime": false,
+  "demoExitCode": 0,
+  "passed": true
+}

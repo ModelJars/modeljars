@@ -82,7 +82,11 @@
       "integrationPassed": true,
       "qualified": true,
       "releasedRuntimeVerified": false,
-      "modeljarsRuntimeVerified": false
+      "modeljarsRuntimeVerified": true,
+      "modeljarsVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_S/consumer.json",
+        "reportSha256": "5e287ca2a6c888505978cafddd8983daa8b8af0a61097dc8cc35117a2f926ac7"
+      }
     },
     {
       "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
@@ -164,7 +168,11 @@
       "integrationPassed": true,
       "qualified": true,
       "releasedRuntimeVerified": false,
-      "modeljarsRuntimeVerified": false
+      "modeljarsRuntimeVerified": true,
+      "modeljarsVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_M/consumer.json",
+        "reportSha256": "08345ed17c59a0d81bdcbc82a7f421aee4ae6badabb429d65de0b3b9a95e0f0a"
+      }
     }
   ]
 }

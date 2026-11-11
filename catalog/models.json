@@ -23218,6 +23218,7 @@
       "localPath": "${user.home}/.jvllm/models/llava-v1.5-7b-Q4_K_S.gguf",
       "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
       "sizeBytes": 3856740128,
+      "catalogPublishedAt": "2026-11-11T02:50:00Z",
       "license": "llama2",
       "capabilities": [
         "text-generation",
@@ -23284,6 +23285,7 @@
       "localPath": "${user.home}/.jvllm/models/llava-v1.5-7b-Q4_K_M.gguf",
       "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
       "sizeBytes": 4081004320,
+      "catalogPublishedAt": "2026-11-11T02:50:00Z",
       "license": "llama2",
       "capabilities": [
         "text-generation",

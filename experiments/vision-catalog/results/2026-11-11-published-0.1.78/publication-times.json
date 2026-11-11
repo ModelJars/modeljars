@@ -1,0 +1,25 @@
+{
+  "schema": "modeljars-central-publication-times-v1",
+  "observedAt": "2026-11-11T03:08:01Z",
+  "source": "HEAD responses from canonical Maven Central marker JAR URLs; immutable artifact Last-Modified",
+  "entries": [
+    {
+      "variant": "Q4_K_S",
+      "marker": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+      "jarUrl": "https://repo.maven.apache.org/maven2/org/modeljars/huggingface/second-state.llava-v1.5-7b-gguf.q4_k_s/1.0.0-q4_k_s.1/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar",
+      "jarSha256": "034ab85f3919c59ba83aa502c2e9292a2502cd563e78cc5f6433292eb0fef02c",
+      "httpStatus": 200,
+      "lastModified": "Wed, 11 Nov 2026 02:50:00 GMT",
+      "catalogPublishedAt": "2026-11-11T02:50:00Z"
+    },
+    {
+      "variant": "Q4_K_M",
+      "marker": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "jarUrl": "https://repo.maven.apache.org/maven2/org/modeljars/huggingface/second-state.llava-v1.5-7b-gguf.q4_k_m/1.0.0-q4_k_m.1/second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar",
+      "jarSha256": "61b821609768aa27bec1f1e4a08a6f73acfdeb32eb86de88e5131ed0e376e770",
+      "httpStatus": 200,
+      "lastModified": "Wed, 11 Nov 2026 02:50:00 GMT",
+      "catalogPublishedAt": "2026-11-11T02:50:00Z"
+    }
+  ]
+}

@@ -12,6 +12,8 @@ on:
       - tools/vision-evidence-gate.mjs
       - tools/vision-qualifications.mjs
       - tools/verify-site-version.mjs
+      - tools/site-smoke*
+      - tools/site-browser.mjs
       - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:
@@ -69,7 +71,9 @@ jobs:
         run: node tools/site-asset-versioning.mjs build/site "$GITHUB_SHA"
 
       - name: Smoke-test the rendered catalog
-        run: node tools/site-smoke.mjs build/site
+        run: |
+          node --test tools/site-smoke.browser-test.mjs
+          node tools/site-smoke.mjs build/site
 
       - name: Verify the advertised dependency version is the newest release
         run: node tools/verify-site-version.mjs build/site

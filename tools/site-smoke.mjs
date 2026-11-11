@@ -1,5 +1,5 @@
-import { execFile } from "node:child_process";
-import { access, readFile, stat } from "node:fs/promises";
+import { renderedCatalog } from "./site-browser.mjs";
+import { access, readFile, stat, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:http";
@@ -58,37 +58,7 @@ function serve(siteRoot) {
   });
 }
 
-function dumpDom(executable, profile, url) {
-  const args = [
-    "--headless=new",
-    "--no-sandbox",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-background-networking",
-    "--disable-component-update",
-    "--disable-gpu",
-    `--user-data-dir=${profile}`,
-    "--virtual-time-budget=8000",
-    "--dump-dom",
-    url,
-  ];
-  return new Promise((resolve, reject) => {
-    execFile(
-      executable,
-      args,
-      { encoding: "utf8", maxBuffer: 20 * 1024 * 1024, timeout: 20_000 },
-      (error, stdout, stderr) => {
-        if (error && !stdout) {
-          reject(new Error(`headless browser failed: ${error.message}\n${stderr.slice(-2000)}`));
-          return;
-        }
-        resolve(stdout);
-      },
-    );
-  });
-}
-
-export async function smokeGeneratedSite(siteRoot) {
+export async function smokeGeneratedSite(siteRoot, { timeoutMillis = 30_000 } = {}) {
   const root = path.resolve(siteRoot);
   const catalog = JSON.parse(await readFile(path.join(root, "catalog.json"), "utf8"));
   if (!Array.isArray(catalog) || !catalog.length) throw new Error("generated catalog must be non-empty");
@@ -99,15 +69,15 @@ export async function smokeGeneratedSite(siteRoot) {
     server.listen(0, "127.0.0.1", resolve);
   });
 
+  const profile = await mkdtemp(path.join(tmpdir(), "modeljars-site-smoke-"));
   try {
     const address = server.address();
-    const profile = await mkdtemp(path.join(tmpdir(), "modeljars-site-smoke-"));
-    const html = await dumpDom(
+    const { html, entries } = await renderedCatalog(
       await browserExecutable(),
       profile,
       `http://127.0.0.1:${address.port}/?site-smoke=1`,
+      timeoutMillis,
     );
-    const entries = html.match(/class="catalog-entry"/g)?.length || 0;
     if (html.includes("Catalog unavailable") || html.includes('class="error-state"')) {
       const error = html.match(/<p class="error-state">([\s\S]*?)<\/p>/)?.[1] || "unknown error";
       throw new Error(`rendered catalog reported an error: ${error}`);
@@ -119,7 +89,9 @@ export async function smokeGeneratedSite(siteRoot) {
     if (!html.includes(label)) throw new Error(`rendered catalog is missing result label: ${label}`);
     console.log(`Rendered-site gate passed with ${entries} qualified catalog entries`);
   } finally {
+    server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
+    await rm(profile, { recursive: true, force: true, maxRetries: 3 });
   }
 }
 

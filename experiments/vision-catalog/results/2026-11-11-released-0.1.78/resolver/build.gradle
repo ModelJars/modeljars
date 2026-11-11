@@ -1,0 +1,21 @@
+plugins { id 'java' }
+repositories { maven { url = uri('https://repo.maven.apache.org/maven2') } }
+configurations { cli }
+dependencies {
+    implementation 'org.modeljars:modeljars:0.1.78'
+    cli 'org.modeljars:modeljars-cli:0.1.78'
+}
+tasks.register('stage') { doLast {
+    def stageGraph = { configuration, suffix ->
+        def jars = configuration.resolvedConfiguration.resolvedArtifacts
+        assert jars.collect { it.file.name }.toSet().size() == jars.size(): 'Duplicate artifact file names'
+        def rows = jars.collect { a ->
+            def id = a.moduleVersion.id
+            [group:id.group, name:id.name, version:id.version, file:a.file.name]
+        }
+        file("resolved${suffix}.json").text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(rows))
+        copy { from jars.collect { it.file }; into "lib${suffix}" }
+    }
+    stageGraph(configurations.runtimeClasspath, '')
+    stageGraph(configurations.cli, '-cli')
+} }

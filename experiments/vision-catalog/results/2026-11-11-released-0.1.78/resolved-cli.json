@@ -1,0 +1,65 @@
+[
+  {
+    "group": "org.modeljars",
+    "name": "modeljars-cli",
+    "version": "0.1.78",
+    "file": "modeljars-cli-0.1.78.jar",
+    "sha256": "c3ced5b8aa479ac27af0af00c1a3ee892e2e85fbdce514ceaced708626676165"
+  },
+  {
+    "group": "org.modeljars",
+    "name": "modeljars-catalog",
+    "version": "0.1.78",
+    "file": "modeljars-catalog-0.1.78.jar",
+    "sha256": "315ed279c5f7cc5d4637d8fe146288e40ae3c303bc76275e367bc67ce0f36ed3"
+  },
+  {
+    "group": "org.modeljars",
+    "name": "modeljars-core",
+    "version": "0.1.78",
+    "file": "modeljars-core-0.1.78.jar",
+    "sha256": "2e84f88838906d5f14a47fa28ff5ccb6e276917cadc7ebfb6f290fd4dbabffdb"
+  },
+  {
+    "group": "info.picocli",
+    "name": "picocli-shell-jline3",
+    "version": "4.7.7",
+    "file": "picocli-shell-jline3-4.7.7.jar",
+    "sha256": "a023435a3d175d07cedb30f25ac6d0eef07fcbdd00744df472f09af2f5fca701"
+  },
+  {
+    "group": "info.picocli",
+    "name": "picocli",
+    "version": "4.7.7",
+    "file": "picocli-4.7.7.jar",
+    "sha256": "f86e30fffd10d2b13b8caa8d4b237a7ee61f2ffccf5b1941de718b765d235bf8"
+  },
+  {
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-core",
+    "version": "2.22.3",
+    "file": "jackson-core-2.22.3.jar",
+    "sha256": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c"
+  },
+  {
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-databind",
+    "version": "2.22.3",
+    "file": "jackson-databind-2.22.3.jar",
+    "sha256": "556db5439e206114346043f68d200497dc96a0bca62a360a81784092ebd0e0a9"
+  },
+  {
+    "group": "org.jline",
+    "name": "jline",
+    "version": "3.29.0",
+    "file": "jline-3.29.0.jar",
+    "sha256": "99c22a966838ba4291e69a5dd5689afd049500eb9362b23baace731f9c9c97dd"
+  },
+  {
+    "group": "com.fasterxml.jackson.core",
+    "name": "jackson-annotations",
+    "version": "2.22",
+    "file": "jackson-annotations-2.22.jar",
+    "sha256": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0"
+  }
+]

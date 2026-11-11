@@ -1,0 +1,80 @@
+[
+    {
+        "group": "org.modeljars",
+        "name": "modeljars",
+        "version": "0.1.78",
+        "file": "modeljars-0.1.78.jar"
+    },
+    {
+        "group": "org.modeljars",
+        "name": "modeljars-core",
+        "version": "0.1.78",
+        "file": "modeljars-core-0.1.78.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models",
+        "version": "0.5.19",
+        "file": "models-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models-audio",
+        "version": "0.5.19",
+        "file": "models-audio-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "backend-native",
+        "version": "0.5.19",
+        "file": "backend-native-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "backend-java",
+        "version": "0.5.19",
+        "file": "backend-java-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models-decisions",
+        "version": "0.5.19",
+        "file": "models-decisions-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models-runtime",
+        "version": "0.5.19",
+        "file": "models-runtime-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "vectors-core",
+        "version": "0.1.34",
+        "file": "vectors-core-0.1.34.jar"
+    },
+    {
+        "group": "com.fasterxml.jackson.core",
+        "name": "jackson-core",
+        "version": "2.22.3",
+        "file": "jackson-core-2.22.3.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models-api",
+        "version": "0.5.19",
+        "file": "models-api-0.5.19.jar"
+    },
+    {
+        "group": "com.integrallis",
+        "name": "models-backend-onnx",
+        "version": "0.5.19",
+        "file": "models-backend-onnx-0.5.19.jar"
+    },
+    {
+        "group": "org.slf4j",
+        "name": "slf4j-api",
+        "version": "2.0.20",
+        "file": "slf4j-api-2.0.20.jar"
+    }
+]

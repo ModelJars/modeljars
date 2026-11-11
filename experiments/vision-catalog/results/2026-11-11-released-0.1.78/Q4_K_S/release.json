@@ -1,0 +1,167 @@
+{
+  "schema": "modeljars-vision-release-v1",
+  "modeljarsVersion": "0.1.78",
+  "modelsVersion": "0.5.19",
+  "vectorsVersion": "0.1.34",
+  "artifacts": [
+    {
+      "id": "modeljars",
+      "sha256": "7c897d7a5f344106a52b7ee284324a157b29ba7aeab0f2b5fb2dfef23d2acaad",
+      "url": "https://repo.maven.apache.org/maven2/org/modeljars/modeljars/0.1.78/modeljars-0.1.78.jar"
+    },
+    {
+      "id": "modelsApi",
+      "sha256": "13c36569ab049ca922730daf7966d5f366789ff1c4c895e03ab30885b832ca4d",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-api/0.5.19/models-api-0.5.19.jar"
+    },
+    {
+      "id": "javaBackend",
+      "sha256": "646eecae5f5c1e71b2e893ba9d719a42a85c74b7d478a366b02b7d0bb553a843",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/backend-java/0.5.19/backend-java-0.5.19.jar"
+    },
+    {
+      "id": "nativeBackend",
+      "sha256": "9477cebc23cd23e96613727963611802211d921560a16672f663e311a5ef62b7",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/backend-native/0.5.19/backend-native-0.5.19.jar"
+    },
+    {
+      "id": "vectors",
+      "sha256": "099dabe62ec728ae00d722bf147f41a6245999d380e280d0aaec64fed603f838",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-core/0.1.34/vectors-core-0.1.34.jar"
+    }
+  ],
+  "consumer": {
+    "schema": "modeljars-vision-consumer-v1",
+    "host": "ip-172-31-9-66",
+    "java": "25.0.5+8-LTS",
+    "marker": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+    "jvmArguments": "[--add-modules=jdk.incubator.vector, --enable-native-access=ALL-UNNAMED, -Xmx12g, -Dmodeljars.cache=/home/ubuntu/qual/released-consumers-0178-20261111/Q4_K_S/cache, --add-modules=ALL-DEFAULT]",
+    "runtimeProperties": {
+      "modeljars.cache": "/home/ubuntu/qual/released-consumers-0178-20261111/Q4_K_S/cache"
+    },
+    "runtimeJars": [
+      {
+        "id": "modeljars",
+        "className": "org.modeljars.ModelJars",
+        "fileName": "modeljars-0.1.78.jar",
+        "sha256": "7c897d7a5f344106a52b7ee284324a157b29ba7aeab0f2b5fb2dfef23d2acaad"
+      },
+      {
+        "id": "modelsApi",
+        "className": "com.integrallis.models.api.ImageInferenceBackend",
+        "fileName": "models-api-0.5.19.jar",
+        "sha256": "13c36569ab049ca922730daf7966d5f366789ff1c4c895e03ab30885b832ca4d"
+      },
+      {
+        "id": "javaBackend",
+        "className": "com.integrallis.models.backend.purejava.LlavaBackend",
+        "fileName": "backend-java-0.5.19.jar",
+        "sha256": "646eecae5f5c1e71b2e893ba9d719a42a85c74b7d478a366b02b7d0bb553a843"
+      },
+      {
+        "id": "nativeBackend",
+        "className": "com.integrallis.models.backend.nativekernel.RustFfmBackend",
+        "fileName": "backend-native-0.5.19.jar",
+        "sha256": "9477cebc23cd23e96613727963611802211d921560a16672f663e311a5ef62b7"
+      },
+      {
+        "id": "vectors",
+        "className": "com.integrallis.vectors.core.VectorUtil",
+        "fileName": "vectors-core-0.1.34.jar",
+        "sha256": "099dabe62ec728ae00d722bf147f41a6245999d380e280d0aaec64fed603f838"
+      }
+    ],
+    "loadMillis": 244701.401404,
+    "context": 4096,
+    "modelsEvidenceVersion": "0.5.19",
+    "diagnostics": {
+      "java-version": "25.0.5",
+      "fast-scalar-fma": "true",
+      "vision-projections": "rust-matrixmultiply",
+      "vm-name": "OpenJDK 64-Bit Server VM",
+      "tokenizer.pre.implemented": "true",
+      "gguf-chunks-per-thread": "2",
+      "os": "Linux",
+      "gguf-parallel": "true",
+      "sve": "false",
+      "processors": "16",
+      "end-of-generation.2": "tokenizer.ggml.eos_token_id,vocabulary-text",
+      "compiler": "hotspot-c2",
+      "vm-vendor": "Eclipse Adoptium",
+      "decoder-attention": "NativeCausalAttention",
+      "architecture": "amd64",
+      "vector-api": "true",
+      "q4-unsigned-pairwise-supported": "true",
+      "gguf-threads": "8",
+      "tokenizer.pre": "",
+      "java-feature": "25",
+      "active-vector-bits": "256",
+      "cpu-model": "AMD EPYC 7R13 Processor",
+      "preferred-vector-bits": "256",
+      "vm-version": "25.0.5+8-LTS",
+      "fast-vector-fma": "true",
+      "projection-layers": "32",
+      "end-of-generation.chat-template": "absent",
+      "vector-provider": "PanamaVectorUtilSupport",
+      "q4-short-pairwise-supported": "true",
+      "model-architecture": "llama",
+      "end-of-generation-token-ids": "2",
+      "gguf-executor": "countdown"
+    },
+    "verifiedFiles": [
+      {
+        "path": "llava-v1.5-7b-Q4_K_S.gguf",
+        "role": "weights",
+        "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+        "sizeBytes": 3856740128
+      },
+      {
+        "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+        "role": "vision-projector",
+        "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+        "sizeBytes": 624434368
+      }
+    ],
+    "cases": [
+      {
+        "id": "vqav2-132415014",
+        "question": "How many pieces of pizza are there?",
+        "answer": "2",
+        "expected": "2",
+        "imageSha256": "7d5703ab4dc3f787b0813991699ad5d4840e5b5266e8ae1f1a7e4b0eedd8f98c",
+        "matchesMeasuredOutput": true,
+        "executionMillis": 13542.238951
+      },
+      {
+        "id": "textvqa-36063",
+        "question": "what kind of laptop is on the podium?",
+        "answer": "Apple",
+        "expected": "Apple",
+        "imageSha256": "389b68eae81122064f38c25efabb1a1c02d0de490c4044e8cbcc4ac5ca4f739a",
+        "matchesMeasuredOutput": true,
+        "executionMillis": 11508.595573
+      },
+      {
+        "id": "vqav2-132415014",
+        "question": "How many pieces of pizza are there?",
+        "answer": "2",
+        "expected": "2",
+        "imageSha256": "7d5703ab4dc3f787b0813991699ad5d4840e5b5266e8ae1f1a7e4b0eedd8f98c",
+        "matchesMeasuredOutput": true,
+        "executionMillis": 11515.904628
+      }
+    ],
+    "passed": true
+  },
+  "passed": true,
+  "markerPublished": false,
+  "stagedMarkerSha256": "ae02243dc5d7745b084e9c447f982bdb7916491827bfb5e4ae6d4ffd7d75cd0e",
+  "harnessSha256": "3629763679622fcd51aae1a06bf96fa8332a387ff8c79e7c0d7cb1a587938750",
+  "backendReportSha256": "0483ce1099a6bfdcd9b2a3e6c50e211a3da38b8130e0b44da2c4ecb379278ed7",
+  "demoSha256": "8199d11f7362aa1332f743bff8f0b5ca0e60d667d0fec5ea9b86952712d4e015",
+  "cliGenerator": {
+    "url": "https://repo.maven.apache.org/maven2/org/modeljars/modeljars-cli/0.1.78/modeljars-cli-0.1.78.jar",
+    "sha256": "c3ced5b8aa479ac27af0af00c1a3ee892e2e85fbdce514ceaced708626676165"
+  },
+  "cliResolvedGraphSha256": "e1e701a3a63be9f9fa10f476659393bbe8a7e5d81b378625c390e4c1648a85d6"
+}

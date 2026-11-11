@@ -107,6 +107,25 @@ export function isClassificationEvidence(qualification) {
       || qualification?.policy === "schema-classification-upstream-v2";
 }
 
+export function isVisionEvidence(qualification) {
+  return qualification?.useCaseTier === "IMAGE_QUESTION_ANSWERING"
+    || qualification?.policy === "llava-vqa-v1";
+}
+
+export function visionJavaSnippet(modelId) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
+  return `import static org.modeljars.catalog.${referenceClassName(modelId)}.MODEL;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.modeljars.ModelJars;
+
+try (var runtime = ModelJars.openVisionRuntime(MODEL)) {
+  var image = Files.readAllBytes(Path.of("image.png"));
+  System.out.println(runtime.answer(image, "What is shown in this image?"));
+}`;
+}
+
 export function decisionJavaSnippet(modelId) {
   if (!/^[a-z][a-z0-9_]*$/.test(String(modelId))) {
     throw new Error(`Invalid ModelJars catalog ID: ${modelId}`);
@@ -326,6 +345,12 @@ export function qualificationSummary(qualification) {
       finalQuality: null,
       fallbackRate: null,
     };
+  }
+  if (isVisionEvidence(qualification)) {
+    return {...qualification, label: qualificationLabel(qualification),
+      backend: `rust-ffm ${qualification.backendVersion}`,
+      evidenceUri: qualification.reportUri || qualification.report,
+      evidenceSha256: qualification.reportSha256};
   }
   if (isClassificationEvidence(qualification)) {
     return {
@@ -972,6 +997,19 @@ function renderClassificationQualification(summary) {
     <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code></div></section>`;
 }
 
+function renderVisionQualification(summary) {
+  return `<section class="detail-section qualification-panel ${summary.qualified ? "qualified" : "rejected"}">
+    <p class="eyebrow">Measured evidence</p><h2>Image questions</h2>
+    <p>Measured on ${escapeHtml(summary.backend)} against Transformers/PyTorch plus llama.cpp using the same GGUF weights.
+    These are bounded validation subsets, not full publisher benchmark results. TextVQA receives images and questions without OCR tokens.</p>
+    <table><thead><tr><th>Dataset</th><th>Cases</th><th>Models soft score</th><th>Reference soft score</th></tr></thead>
+    <tbody>${["vqav2", "textvqa"].map(name => { const d = summary.datasets[name]; return `<tr><th>${escapeHtml(name)}</th><td>${d.cases}</td><td>${formatPercent(d.candidateScore)}</td><td>${formatPercent(d.referenceScore)}</td></tr>`; }).join("")}</tbody></table>
+    <p>Token-sequence agreement: ${formatPercent(summary.tokenAgreement)}.
+    VQAv2 image contribution over the paired blank-image control: ${formatPercent(summary.datasets.vqav2.imageContribution)}.</p>
+    <div class="qualification-evidence"><a href="${safeExternalUrl(summary.evidenceUri)}">Paired accuracy and latency evidence &#8599;</a>
+    <code>SHA-256 ${escapeHtml(summary.evidenceSha256)}</code></div></section>`;
+}
+
 function renderQualification(qualification) {
   const summary = qualificationSummary(qualification);
   if (!summary) return "";
@@ -979,6 +1017,7 @@ function renderQualification(qualification) {
   if (isSpeechEvidence(qualification)) return renderSpeechQualification(summary);
   if (isEmbeddingEvidence(qualification)) return renderEmbeddingQualification(summary);
   if (isClassificationEvidence(qualification)) return renderClassificationQualification(summary);
+  if (isVisionEvidence(qualification)) return renderVisionQualification(summary);
   if (isDecisionEvidence(qualification)) return renderDecisionQualification(summary);
   if (isToolEvidence(qualification)) return renderToolQualification(summary);
   if (isRerankingEvidence(qualification)) return renderRerankingQualification(summary);
@@ -1157,6 +1196,8 @@ export function renderModel(model, catalog) {
                   ? speechJavaSnippet(model.id)
                 : isClassificationEvidence(qualification)
                   ? classificationJavaSnippet(model.id)
+                : isVisionEvidence(qualification)
+                  ? visionJavaSnippet(model.id)
                 : isDecisionEvidence(qualification)
                   ? decisionJavaSnippet(model.id)
                   : javaSnippet(model.id),

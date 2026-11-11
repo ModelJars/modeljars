@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "policy": "llava-vqa-v1",
+  "entries": [
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "backendVersion": "models-source:214d53f928923d21514cf2d8bca6e02712d4dd51",
+      "report": "https://raw.githubusercontent.com/integrallis/models/4ef8e5b56e92689ef4b9424d928a39627b9713a6/experiments/vision-catalog-qualification/results/2026-11-10-central-0.5.19-admission/admission-attempt.json",
+      "reportSha256": "0483ce1099a6bfdcd9b2a3e6c50e211a3da38b8130e0b44da2c4ecb379278ed7",
+      "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_S.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_S.gguf",
+          "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+          "sizeBytes": 3856740128
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "datasets": {
+        "vqav2": {
+          "cases": 32,
+          "candidateScore": 0.6875,
+          "referenceScore": 0.6875,
+          "blankCases": 8,
+          "imageContribution": 0.5375
+        },
+        "textvqa": {
+          "cases": 32,
+          "candidateScore": 0.415625,
+          "referenceScore": 0.415625,
+          "blankCases": 8,
+          "imageContribution": 0.375
+        }
+      },
+      "tokenAgreement": 1,
+      "performance": [
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-132415014",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9502982404767722,
+          "decodeRatio": 0.9996236230516763,
+          "totalRatio": 0.9516425032913479
+        },
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-423731001",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9445720054385609,
+          "decodeRatio": 0.9852900641592138,
+          "totalRatio": 0.9422154440258725
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-36063",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9326576219034455,
+          "decodeRatio": 0.967937590635556,
+          "totalRatio": 0.9329768897110775
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-37476",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9191168713774094,
+          "decodeRatio": 0.9789336609984702,
+          "totalRatio": 0.9196831456119697
+        }
+      ],
+      "integrationPassed": true,
+      "qualified": true,
+      "releasedRuntimeVerified": false,
+      "modeljarsRuntimeVerified": true,
+      "modeljarsVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_S/consumer.json",
+        "reportSha256": "5e287ca2a6c888505978cafddd8983daa8b8af0a61097dc8cc35117a2f926ac7"
+      }
+    },
+    {
+      "modelId": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "backendVersion": "models-source:214d53f928923d21514cf2d8bca6e02712d4dd51",
+      "report": "https://raw.githubusercontent.com/integrallis/models/4ef8e5b56e92689ef4b9424d928a39627b9713a6/experiments/vision-catalog-qualification/results/2026-11-10-central-0.5.19-admission/admission-attempt.json",
+      "reportSha256": "0483ce1099a6bfdcd9b2a3e6c50e211a3da38b8130e0b44da2c4ecb379278ed7",
+      "corpusSha256": "b0120176e445cf46e6d85d7aab6f96e37ec417ec73532adca6425466eb621e41",
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_M.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_M.gguf",
+          "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+          "sizeBytes": 4081004320
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "datasets": {
+        "vqav2": {
+          "cases": 32,
+          "candidateScore": 0.675,
+          "referenceScore": 0.675,
+          "blankCases": 8,
+          "imageContribution": 0.5375
+        },
+        "textvqa": {
+          "cases": 32,
+          "candidateScore": 0.384375,
+          "referenceScore": 0.384375,
+          "blankCases": 8,
+          "imageContribution": 0.375
+        }
+      },
+      "tokenAgreement": 1,
+      "performance": [
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-132415014",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 1.001561400977729,
+          "decodeRatio": 1.0016165147164997,
+          "totalRatio": 1.0015992553116146
+        },
+        {
+          "dataset": "vqav2",
+          "caseId": "vqav2-423731001",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9849573132264108,
+          "decodeRatio": 0.9822257546200155,
+          "totalRatio": 0.9849449564793422
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-36063",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.982365262888908,
+          "decodeRatio": 0.9755323853738633,
+          "totalRatio": 0.9822970588432881
+        },
+        {
+          "dataset": "textvqa",
+          "caseId": "textvqa-37476",
+          "warmups": 1,
+          "repetitions": 3,
+          "prefillRatio": 0.9823298384440392,
+          "decodeRatio": 0.9696687364921032,
+          "totalRatio": 0.9821874982270846
+        }
+      ],
+      "integrationPassed": true,
+      "qualified": true,
+      "releasedRuntimeVerified": false,
+      "modeljarsRuntimeVerified": true,
+      "modeljarsVerification": {
+        "report": "https://raw.githubusercontent.com/ModelJars/modeljars/f81f6c5dd75fc16e53dcb2551a9a7efa39f18b2c/experiments/vision-catalog/results/2026-11-11-central-0519-preview/consumer-results/Q4_K_M/consumer.json",
+        "reportSha256": "08345ed17c59a0d81bdcbc82a7f421aee4ae6badabb429d65de0b3b9a95e0f0a"
+      }
+    }
+  ]
+}

@@ -217,6 +217,7 @@ export function primaryQualification(model) {
     ...rag,
     ...tool,
     ...(model.classificationQualifications || []).map(entry => ({...entry, useCaseTier: "SCHEMA_CLASSIFICATION"})),
+    ...(model.visionQualifications || []).map(entry => ({...entry, useCaseTier: "IMAGE_QUESTION_ANSWERING"})),
     ...decision,
     ...reranking,
     ...speech,
@@ -246,6 +247,7 @@ export function tierLabel(value) {
 export function qualificationLabel(qualification) {
   if (!qualification?.qualified) return qualification ? "Evaluated" : "Not evaluated";
   if (qualification.useCaseTier === "SCHEMA_CLASSIFICATION") return "Schema classification";
+  if (qualification.useCaseTier === "IMAGE_QUESTION_ANSWERING") return "Image questions";
   if (qualification.useCaseTier === "GENERATIVE_RAG") return "Generative RAG";
   if (qualification.useCaseTier === "SEMANTIC_SEARCH") return "Semantic search";
   if (qualification.useCaseTier === "TOOL_CALLING") return "Tool calling";

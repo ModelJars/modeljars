@@ -37,6 +37,8 @@ import org.modeljars.ModelSpeechQualificationRegistry;
 import org.modeljars.ModelToolQualification;
 import org.modeljars.ModelToolQualificationRegistry;
 import org.modeljars.ModelVersion;
+import org.modeljars.ModelVisionQualification;
+import org.modeljars.ModelVisionQualificationRegistry;
 import org.modeljars.catalog.Qwen3_0_6b_Q4_0;
 
 class ModelJarsJvmRuntimeDependencyTest {
@@ -55,6 +57,7 @@ class ModelJarsJvmRuntimeDependencyTest {
     var speechQualifications = ModelSpeechQualificationRegistry.fromClasspath();
     var componentQualifications = ModelComponentQualificationRegistry.fromClasspath();
     var classificationQualifications = ModelClassificationQualificationRegistry.fromClasspath();
+    var visionQualifications = ModelVisionQualificationRegistry.fromClasspath();
     var decisionQualifications = ModelDecisionQualificationRegistry.fromClasspath();
 
     // Every public capability has its own evidence gate. Passing any gate is sufficient to publish,
@@ -108,6 +111,11 @@ class ModelJarsJvmRuntimeDependencyTest {
     allQualified.addAll(componentQualified);
     allQualified.addAll(decisionQualified);
     allQualified.addAll(classificationQualified);
+    allQualified.addAll(
+        visionQualifications.entries().stream()
+            .filter(ModelVisionQualification::qualified)
+            .map(ModelVisionQualification::modelId)
+            .toList());
 
     var physicalDescriptors =
         descriptors.stream()
@@ -149,6 +157,7 @@ class ModelJarsJvmRuntimeDependencyTest {
                             .isPresent()
                         || decisionQualifications.qualificationFor(descriptor).isPresent()
                         || classificationQualifications.qualificationFor(descriptor).isPresent()
+                        || visionQualifications.qualificationFor(descriptor).isPresent()
                         || componentQualified.contains(descriptor.alias())));
     assertNull(
         getClass()

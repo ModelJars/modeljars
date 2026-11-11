@@ -46,9 +46,9 @@ class SpringIntegrationTest {
   }
 
   @Test
-  void rejectsSpeechAndHybridModelsWithTheSupportedAlternatives() {
+  void rejectsSpeechVisionAndHybridModelsWithTheSupportedAlternatives() {
     for (ModelJarDescriptor unsupported :
-        List.of(SpringFixtures.speech(), SpringFixtures.composite())) {
+        List.of(SpringFixtures.speech(), SpringFixtures.vision(), SpringFixtures.composite())) {
       for (Flavor flavor : Flavor.values()) {
         IllegalArgumentException failure =
             assertThrows(

@@ -16,6 +16,7 @@
 package org.modeljars.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -31,6 +32,24 @@ import org.modeljars.ModelVersion;
 class DemoScriptGeneratorTest {
 
   private final DemoScriptGenerator generator = new DemoScriptGenerator("0.1.39");
+
+  @Test
+  void imageCapabilitySelectsVisionBeforeGenericChat() {
+    var demo =
+        generator.generate(
+            descriptor(Set.of("image-understanding", "chat", "text-generation")),
+            Optional.of("What color is it?"));
+    assertEquals(DemoScriptGenerator.Type.VISION, demo.type());
+    assertEquals("example-vision-demo.java", demo.fileName());
+    assertContains(
+        demo.source(),
+        "ModelJars.openVisionRuntime(MODEL)",
+        "Files.readAllBytes(Path.of(args[0]))",
+        "runtime.answer(image, question)",
+        "What color is it?",
+        "IMAGE.png [question]");
+    assertFalse(demo.source().contains("ModelJars.openRuntime("));
+  }
 
   @Test
   void generatesAChatDemoUsingThePublicRuntimeAndRuntimeOwnedMetrics() {

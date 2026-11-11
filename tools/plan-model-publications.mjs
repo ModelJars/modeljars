@@ -33,7 +33,9 @@ function parseArguments(argumentsList) {
         "--component-qualifications",
         "--previous-component-qualifications",
         "--classification-qualifications",
+        "--vision-qualifications",
         "--previous-classification-qualifications",
+        "--previous-vision-qualifications",
         "--decision-qualifications",
         "--previous-decision-qualifications",
         "--github-output",
@@ -56,6 +58,7 @@ function parseArguments(argumentsList) {
           "[--decision-qualifications FILE " +
           "--previous-decision-qualifications FILE] " +
           "[--classification-qualifications FILE --previous-classification-qualifications FILE] " +
+          "[--vision-qualifications FILE --previous-vision-qualifications FILE] " +
           "[--github-output FILE]",
       );
     }
@@ -137,6 +140,23 @@ function parseArguments(argumentsList) {
     );
   }
   if (
+    values.has("--previous-vision-qualifications") &&
+    (!values.has("--previous") || !values.has("--vision-qualifications"))
+  ) {
+    throw new Error(
+      "--previous-vision-qualifications requires --previous and --vision-qualifications",
+    );
+  }
+  if (
+    values.has("--previous") &&
+    values.has("--vision-qualifications") &&
+    !values.has("--previous-vision-qualifications")
+  ) {
+    throw new Error(
+      "--previous-vision-qualifications is required for a vision-qualification-aware delta",
+    );
+  }
+  if (
     values.has("--previous-profiles") !== values.has("--current-profiles")
   ) {
     throw new Error(
@@ -211,6 +231,7 @@ function qualifiedCatalog(
   componentManifest,
   decisionManifest,
   classificationManifest,
+  visionManifest,
 ) {
   const filtered = filterQualifiedPublications(
     selectCatalogPublications(catalog, ["all"]),
@@ -223,6 +244,7 @@ function qualifiedCatalog(
     componentManifest,
     decisionManifest,
     classificationManifest,
+    visionManifest,
   );
   const qualifiedIds = new Set(
     filtered.publications.map((publication) => publication.id),
@@ -247,6 +269,10 @@ function qualifiedProfiles(profileCatalog, qualifiedIds) {
 
 async function main() {
   const argumentsMap = parseArguments(process.argv.slice(2));
+  const hasQualifications = [...argumentsMap.keys()].some(name =>
+    name.endsWith("qualifications") && !name.startsWith("--previous-"));
+  const hasPreviousQualifications = [...argumentsMap.keys()].some(name =>
+    name.endsWith("qualifications") && name.startsWith("--previous-"));
   const current = await readCatalog(argumentsMap.get("--current"));
   const previousPath = argumentsMap.get("--previous");
   const previousProfilesPath = argumentsMap.get("--previous-profiles");
@@ -262,7 +288,7 @@ async function main() {
   const qualificationPath = argumentsMap.get("--qualifications");
   const currentQualifications =
     qualificationPath === undefined
-      ? undefined
+      ? { schemaVersion: 1, entries: [] }
       : await readCatalog(qualificationPath);
   const embeddingQualificationPath = argumentsMap.get(
     "--embedding-qualifications",
@@ -311,6 +337,13 @@ async function main() {
     classificationQualificationPath === undefined
       ? { schemaVersion: 2, entries: [] }
       : await readCatalog(classificationQualificationPath);
+  const visionQualificationPath = argumentsMap.get(
+    "--vision-qualifications",
+  );
+  const currentVisionQualifications =
+    visionQualificationPath === undefined
+      ? { schemaVersion: 1, policy: "llava-vqa-v1", entries: [] }
+      : await readCatalog(visionQualificationPath);
   let planned;
   if (previousPath === undefined) {
     planned = selectCatalogPublications(
@@ -328,7 +361,7 @@ async function main() {
     const previousQualificationsPath = argumentsMap.get(
       "--previous-qualifications",
     );
-    if (previousQualificationsPath !== undefined) {
+    if (hasPreviousQualifications) {
       const previousEmbeddingPath = argumentsMap.get(
         "--previous-embedding-qualifications",
       );
@@ -350,9 +383,14 @@ async function main() {
       const previousClassificationPath = argumentsMap.get(
         "--previous-classification-qualifications",
       );
+      const previousVisionPath = argumentsMap.get(
+        "--previous-vision-qualifications",
+      );
       const previousQualified = qualifiedCatalog(
         previous,
-        await readCatalog(previousQualificationsPath),
+        previousQualificationsPath === undefined
+          ? { schemaVersion: 1, entries: [] }
+          : await readCatalog(previousQualificationsPath),
         previousEmbeddingPath === undefined
           ? undefined
           : await readCatalog(previousEmbeddingPath),
@@ -374,6 +412,9 @@ async function main() {
         previousClassificationPath === undefined
           ? { schemaVersion: 2, entries: [] }
           : await readCatalog(previousClassificationPath),
+        previousVisionPath === undefined
+          ? { schemaVersion: 1, policy: "llava-vqa-v1", entries: [] }
+          : await readCatalog(previousVisionPath),
       );
       const currentQualified = qualifiedCatalog(
         current,
@@ -385,12 +426,14 @@ async function main() {
         currentComponentQualifications,
         currentDecisionQualifications,
         currentClassificationQualifications,
+        currentVisionQualifications,
       );
       previous = previousQualified.catalog;
       currentForDelta = currentQualified.catalog;
       qualificationOptions = {
         previousQualificationManifests: [
-          await readCatalog(previousQualificationsPath),
+          ...(previousQualificationsPath === undefined
+            ? [] : [await readCatalog(previousQualificationsPath)]),
           ...(previousEmbeddingPath === undefined
             ? []
             : [await readCatalog(previousEmbeddingPath)]),
@@ -404,6 +447,7 @@ async function main() {
             ? []
             : [await readCatalog(previousSpeechPath)]),
           ...(previousClassificationPath === undefined ? [] : [await readCatalog(previousClassificationPath)]),
+          ...(previousVisionPath === undefined ? [] : [await readCatalog(previousVisionPath)]),
           ...(previousComponentPath === undefined
             ? []
             : [await readCatalog(previousComponentPath)]),
@@ -423,6 +467,7 @@ async function main() {
             ? []
             : [currentSpeechQualifications]),
           ...(classificationQualificationPath === undefined ? [] : [currentClassificationQualifications]),
+          ...(visionQualificationPath === undefined ? [] : [currentVisionQualifications]),
           ...(componentQualificationPath === undefined
             ? []
             : [currentComponentQualifications]),
@@ -447,7 +492,7 @@ async function main() {
     });
   }
   const delta =
-    qualificationPath === undefined
+    !hasQualifications
       ? planned
       : filterQualifiedPublications(
           planned,
@@ -459,7 +504,8 @@ async function main() {
           currentSpeechQualifications,
           currentComponentQualifications,
           currentDecisionQualifications,
-        currentClassificationQualifications,
+          currentClassificationQualifications,
+          currentVisionQualifications,
         );
   const outputs = githubPublicationOutputs(delta);
   const githubOutput = argumentsMap.get("--github-output");

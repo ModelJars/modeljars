@@ -1,0 +1,5 @@
+
+> catalog:verify-vision
+> node tools/vision-evidence-gate.mjs
+
+Verified 2 vision evidence records against their immutable reports.

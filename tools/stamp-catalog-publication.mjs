@@ -24,6 +24,7 @@ const QUALIFICATION_FILES = [
   ["catalog/qualifications.json", (entry) => entry.qualified === true],
   ["catalog/tool-qualifications.json", (entry) => entry.summary?.qualified === true],
   ["catalog/classification-qualifications.json", (entry) => entry.qualified === true],
+  ["catalog/vision-qualifications.json", (entry) => entry.qualified === true && entry.releasedRuntimeVerified === true && entry.modeljarsRuntimeVerified === true],
   ["catalog/embedding-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/reranking-qualifications.json", (entry) => entry.qualified === true],
   ["catalog/speech-qualifications.json", (entry) => entry.qualified === true],

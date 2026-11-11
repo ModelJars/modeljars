@@ -172,43 +172,44 @@ final class SpringIntegration {
   static Kind kind(ModelJarDescriptor descriptor, Flavor flavor) {
     Objects.requireNonNull(descriptor, "descriptor");
     Objects.requireNonNull(flavor, "flavor");
+    String unavailable = unavailableReason(descriptor);
+    if (unavailable != null) throw unsupported(descriptor, flavor, unavailable);
     Set<String> capabilities = descriptor.capabilities();
-    boolean composite = descriptor.format().equals("composite");
-    boolean speech = capabilities.stream().anyMatch(SPEECH::contains);
-    if (!composite && !speech) {
-      if (capabilities.contains("tool-calling")) {
-        if (descriptor.architecture().equals("needle2")) {
-          if (flavor == Flavor.SPRING_BOOT) {
-            throw new IllegalArgumentException(
-                "Model "
-                    + descriptor.alias()
-                    + " selects actions rather than writing answers, so Spring AI needs a typed"
-                    + " tool-result renderer registered on its ModelsSpringAiChatModel. The Models"
-                    + " Spring Boot starter's auto-configured chat model cannot register one; use "
-                    + Flavor.SPRING_AI.flag()
-                    + " instead.");
-          }
-          return Kind.ACTION_TOOLS;
-        }
-        return Kind.TOOL_CHAT;
-      }
-      if (capabilities.stream().anyMatch(EMBEDDING::contains)) {
-        return Kind.EMBEDDING;
-      }
-      if (capabilities.stream().anyMatch(RERANKING::contains)) {
-        return Kind.RERANKING;
-      }
-      if (capabilities.stream().anyMatch(CHAT::contains)) {
-        return Kind.CHAT;
-      }
+    if (capabilities.contains("tool-calling")) return toolKind(descriptor, flavor);
+    if (capabilities.stream().anyMatch(EMBEDDING::contains)) return Kind.EMBEDDING;
+    if (capabilities.stream().anyMatch(RERANKING::contains)) return Kind.RERANKING;
+    if (capabilities.stream().anyMatch(CHAT::contains)) return Kind.CHAT;
+    throw unsupported(descriptor, flavor, "has no capability with a Models Spring adapter");
+  }
+
+  private static String unavailableReason(ModelJarDescriptor descriptor) {
+    if (descriptor.format().equals("composite"))
+      return "is a qualified hybrid, which has no Models Spring adapter";
+    if (descriptor.capabilities().stream().anyMatch(SPEECH::contains))
+      return "is a speech model, which has no Models Spring adapter";
+    if (descriptor.capabilities().contains("image-understanding"))
+      return "is an image-question model, which has no Models Spring adapter";
+    return null;
+  }
+
+  private static Kind toolKind(ModelJarDescriptor descriptor, Flavor flavor) {
+    if (!descriptor.architecture().equals("needle2")) return Kind.TOOL_CHAT;
+    if (flavor == Flavor.SPRING_BOOT) {
+      throw new IllegalArgumentException(
+          "Model "
+              + descriptor.alias()
+              + " selects actions rather than writing answers, so Spring AI needs a typed"
+              + " tool-result renderer registered on its ModelsSpringAiChatModel. The Models"
+              + " Spring Boot starter's auto-configured chat model cannot register one; use "
+              + Flavor.SPRING_AI.flag()
+              + " instead.");
     }
-    String reason =
-        composite
-            ? "is a qualified hybrid, which has no Models Spring adapter"
-            : speech
-                ? "is a speech model, which has no Models Spring adapter"
-                : "has no capability with a Models Spring adapter";
-    throw new IllegalArgumentException(
+    return Kind.ACTION_TOOLS;
+  }
+
+  private static IllegalArgumentException unsupported(
+      ModelJarDescriptor descriptor, Flavor flavor, String reason) {
+    return new IllegalArgumentException(
         "Model "
             + descriptor.alias()
             + " "

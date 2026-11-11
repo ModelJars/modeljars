@@ -1,0 +1,111 @@
+{
+  "schema" : "modeljars-vision-consumer-v1",
+  "host" : "ip-172-31-9-66",
+  "java" : "25.0.5+8-LTS",
+  "marker" : "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+  "jvmArguments" : "[--add-modules=jdk.incubator.vector, --enable-native-access=ALL-UNNAMED, -Xmx12g, -Dmodels.native.kernels.library=/home/ubuntu/qual/released-0.5.19-214d53f-20261110/libjmodels_kernels.so, -Dmodeljars.cache=/home/ubuntu/qual/preview-36ad63c/consumer-results/Q4_K_M/cache, --add-modules=ALL-DEFAULT]",
+  "runtimeProperties" : {
+    "modeljars.cache" : "/home/ubuntu/qual/preview-36ad63c/consumer-results/Q4_K_M/cache",
+    "models.native.kernels.library" : "/home/ubuntu/qual/released-0.5.19-214d53f-20261110/libjmodels_kernels.so"
+  },
+  "runtimeJars" : [ {
+    "id" : "modeljars",
+    "className" : "org.modeljars.ModelJars",
+    "fileName" : "modeljars-0.1.65.jar",
+    "sha256" : "6298f918f669e844a5c58b82f5fcfc0f4521ce5ef67a3db9ba6e5767b8fe7d5f"
+  }, {
+    "id" : "modelsApi",
+    "className" : "com.integrallis.models.api.ImageInferenceBackend",
+    "fileName" : "models-api-0.5.19.jar",
+    "sha256" : "13c36569ab049ca922730daf7966d5f366789ff1c4c895e03ab30885b832ca4d"
+  }, {
+    "id" : "javaBackend",
+    "className" : "com.integrallis.models.backend.purejava.LlavaBackend",
+    "fileName" : "backend-java-0.5.19.jar",
+    "sha256" : "646eecae5f5c1e71b2e893ba9d719a42a85c74b7d478a366b02b7d0bb553a843"
+  }, {
+    "id" : "nativeBackend",
+    "className" : "com.integrallis.models.backend.nativekernel.RustFfmBackend",
+    "fileName" : "backend-native-0.5.19.jar",
+    "sha256" : "9477cebc23cd23e96613727963611802211d921560a16672f663e311a5ef62b7"
+  }, {
+    "id" : "vectors",
+    "className" : "com.integrallis.vectors.core.VectorUtil",
+    "fileName" : "vectors-core-0.1.34.jar",
+    "sha256" : "099dabe62ec728ae00d722bf147f41a6245999d380e280d0aaec64fed603f838"
+  } ],
+  "loadMillis" : 222531.636827,
+  "context" : 4096,
+  "modelsEvidenceVersion" : "models-source:214d53f928923d21514cf2d8bca6e02712d4dd51",
+  "diagnostics" : {
+    "sve" : "false",
+    "processors" : "16",
+    "end-of-generation.2" : "tokenizer.ggml.eos_token_id,vocabulary-text",
+    "gguf-parallel" : "true",
+    "os" : "Linux",
+    "gguf-chunks-per-thread" : "2",
+    "vision-projections" : "rust-matrixmultiply",
+    "fast-scalar-fma" : "true",
+    "java-version" : "25.0.5",
+    "gguf-executor" : "countdown",
+    "end-of-generation-token-ids" : "2",
+    "model-architecture" : "llama",
+    "q4-short-pairwise-supported" : "true",
+    "vector-provider" : "PanamaVectorUtilSupport",
+    "end-of-generation.chat-template" : "absent",
+    "projection-layers" : "32",
+    "fast-vector-fma" : "true",
+    "vm-version" : "25.0.5+8-LTS",
+    "preferred-vector-bits" : "256",
+    "cpu-model" : "AMD EPYC 7R13 Processor",
+    "active-vector-bits" : "256",
+    "java-feature" : "25",
+    "tokenizer.pre" : "",
+    "gguf-threads" : "8",
+    "q4-unsigned-pairwise-supported" : "true",
+    "vector-api" : "true",
+    "architecture" : "amd64",
+    "decoder-attention" : "NativeCausalAttention",
+    "vm-vendor" : "Eclipse Adoptium",
+    "compiler" : "hotspot-c2",
+    "tokenizer.pre.implemented" : "true",
+    "vm-name" : "OpenJDK 64-Bit Server VM"
+  },
+  "verifiedFiles" : [ {
+    "path" : "llava-v1.5-7b-Q4_K_M.gguf",
+    "role" : "weights",
+    "sha256" : "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+    "sizeBytes" : 4081004320
+  }, {
+    "path" : "llava-v1.5-7b-mmproj-model-f16.gguf",
+    "role" : "vision-projector",
+    "sha256" : "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+    "sizeBytes" : 624434368
+  } ],
+  "cases" : [ {
+    "id" : "vqav2-132415014",
+    "question" : "How many pieces of pizza are there?",
+    "answer" : "2",
+    "expected" : "2",
+    "imageSha256" : "7d5703ab4dc3f787b0813991699ad5d4840e5b5266e8ae1f1a7e4b0eedd8f98c",
+    "matchesMeasuredOutput" : true,
+    "executionMillis" : 14449.246061
+  }, {
+    "id" : "textvqa-36063",
+    "question" : "what kind of laptop is on the podium?",
+    "answer" : "Apple",
+    "expected" : "Apple",
+    "imageSha256" : "389b68eae81122064f38c25efabb1a1c02d0de490c4044e8cbcc4ac5ca4f739a",
+    "matchesMeasuredOutput" : true,
+    "executionMillis" : 12141.995969
+  }, {
+    "id" : "vqav2-132415014",
+    "question" : "How many pieces of pizza are there?",
+    "answer" : "2",
+    "expected" : "2",
+    "imageSha256" : "7d5703ab4dc3f787b0813991699ad5d4840e5b5266e8ae1f1a7e4b0eedd8f98c",
+    "matchesMeasuredOutput" : true,
+    "executionMillis" : 12081.36656
+  } ],
+  "passed" : true
+}

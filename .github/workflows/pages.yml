@@ -9,6 +9,8 @@ on:
       - catalog/**
       - media/icons/**
       - tools/verify-central-catalog.mjs
+      - tools/vision-evidence-gate.mjs
+      - tools/vision-qualifications.mjs
       - tools/verify-site-version.mjs
       - build.gradle.kts
       - .github/workflows/pages.yml
@@ -50,6 +52,9 @@ jobs:
 
       - name: Test browser source
         run: npm ci && npm test
+
+      - name: Verify vision evidence reports
+        run: npm run catalog:verify-vision
 
       - name: Generate searchable catalog
         run: ./gradlew --no-daemon verifyCatalogPublicationTimes generateSite

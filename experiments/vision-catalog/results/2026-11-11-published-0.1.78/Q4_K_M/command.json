@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/home/ubuntu/qual/jbang-tool-cache/bin/jbang",
+    "--verbose",
+    "run",
+    "-Dmodeljars.cache=/home/ubuntu/qual/published-demos-0178-20261111/Q4_K_M/model-cache",
+    "/home/ubuntu/qual/released-consumers-0178-20261111/Q4_K_M/pr380-llava-q4km-demo.java",
+    "/home/ubuntu/qual/corpus/images/vqav2-132415014.png",
+    "How many pieces of pizza are there?"
+  ],
+  "environment": {
+    "JAVA_HOME": "/usr/lib/jvm/temurin-25-jdk-amd64",
+    "JBANG_DIR": "/home/ubuntu/qual/jbang-tool-cache",
+    "JBANG_CACHE_DIR": "/home/ubuntu/qual/published-demos-0178-20261111/jbang-cache",
+    "JBANG_REPO": "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache"
+  }
+}

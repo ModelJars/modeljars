@@ -1,0 +1,71 @@
+{
+  "schema": "modeljars-vision-published-demo-v1",
+  "variant": "Q4_K_S",
+  "passed": true,
+  "marker": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+  "modeljarsVersion": "0.1.78",
+  "modelsVersion": "0.5.19",
+  "jbangVersion": "0.143.0",
+  "jbangJarSha256": "cf953ed0acf3ebfce98cd72e41cf37585ac15719b4909592a853996e40cd7999",
+  "generatedSourceSha256": "8199d11f7362aa1332f743bff8f0b5ca0e60d667d0fec5ea9b86952712d4e015",
+  "releaseReportSha256": "8f1219c2999eb91c9cfbb40221809364a01fdff54e52a346444e6c05d7799926",
+  "publishedMarker": {
+    "second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.pom": {
+      "url": "https://repo.maven.apache.org/maven2/org/modeljars/huggingface/second-state.llava-v1.5-7b-gguf.q4_k_s/1.0.0-q4_k_s.1/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.pom",
+      "sha256": "18275ecb295f6a27a5980051f54826c07ce557ab20c34cef876a5324142e34ba",
+      "bytes": 1383
+    },
+    "second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar": {
+      "url": "https://repo.maven.apache.org/maven2/org/modeljars/huggingface/second-state.llava-v1.5-7b-gguf.q4_k_s/1.0.0-q4_k_s.1/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar",
+      "sha256": "034ab85f3919c59ba83aa502c2e9292a2502cd563e78cc5f6433292eb0fef02c",
+      "bytes": 9195
+    }
+  },
+  "resolvedMarkerFiles": [
+    "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/org/modeljars/huggingface/second-state.llava-v1.5-7b-gguf.q4_k_s/1.0.0-q4_k_s.1/second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar"
+  ],
+  "resolvedRuntimeFiles": {
+    "modeljars": {
+      "sha256": "7c897d7a5f344106a52b7ee284324a157b29ba7aeab0f2b5fb2dfef23d2acaad",
+      "files": [
+        "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/org/modeljars/modeljars/0.1.78/modeljars-0.1.78.jar"
+      ]
+    },
+    "modelsApi": {
+      "sha256": "13c36569ab049ca922730daf7966d5f366789ff1c4c895e03ab30885b832ca4d",
+      "files": [
+        "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/com/integrallis/models-api/0.5.19/models-api-0.5.19.jar"
+      ]
+    },
+    "javaBackend": {
+      "sha256": "646eecae5f5c1e71b2e893ba9d719a42a85c74b7d478a366b02b7d0bb553a843",
+      "files": [
+        "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/com/integrallis/backend-java/0.5.19/backend-java-0.5.19.jar"
+      ]
+    },
+    "nativeBackend": {
+      "sha256": "9477cebc23cd23e96613727963611802211d921560a16672f663e311a5ef62b7",
+      "files": [
+        "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/com/integrallis/backend-native/0.5.19/backend-native-0.5.19.jar"
+      ]
+    },
+    "vectors": {
+      "sha256": "099dabe62ec728ae00d722bf147f41a6245999d380e280d0aaec64fed603f838",
+      "files": [
+        "/home/ubuntu/qual/published-demos-0178-20261111/maven-cache/com/integrallis/vectors-core/0.1.34/vectors-core-0.1.34.jar"
+      ]
+    }
+  },
+  "caseId": "vqav2-132415014",
+  "expectedAnswer": "2",
+  "command": [
+    "/home/ubuntu/qual/jbang-tool-cache/bin/jbang",
+    "--verbose",
+    "run",
+    "-Dmodeljars.cache=/home/ubuntu/qual/published-demos-0178-20261111/Q4_K_S/model-cache",
+    "/home/ubuntu/qual/released-consumers-0178-20261111/Q4_K_S/pr380-llava-q4ks-demo.java",
+    "/home/ubuntu/qual/corpus/images/vqav2-132415014.png",
+    "How many pieces of pizza are there?"
+  ],
+  "exitCode": 0
+}

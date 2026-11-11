@@ -295,6 +295,12 @@ jobs:
       - name: Render every served catalog entry
         run: node tools/rendered-catalog-check.mjs
 
+      - name: Smoke-test the versioned site in Chrome
+        run: |
+          node --test tools/site-smoke.browser-test.mjs
+          node tools/site-asset-versioning.mjs build/site "$GITHUB_SHA"
+          node tools/site-smoke.mjs build/site
+
       - name: Retain dependency and consumer evidence
         if: always()
         uses: actions/upload-artifact@v7

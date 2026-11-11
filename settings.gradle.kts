@@ -32,6 +32,20 @@ dependencyResolutionManagement {
 
 rootProject.name = "model-jars"
 
+// Explicit source substitution for pre-release qualification; never affects published coordinates.
+providers.gradleProperty("modelsSource").orNull?.let { source ->
+    includeBuild(source) {
+        dependencySubstitution {
+            // Explicit substitutions also avoid the root/aggregate publication name collision.
+            listOf("models", "models-api", "models-runtime", "backend-java", "backend-native",
+                "models-backend-onnx", "models-audio", "models-decisions", "models-embedding",
+                "models-router").forEach { name ->
+                substitute(module("com.integrallis:$name")).using(project(":$name"))
+            }
+        }
+    }
+}
+
 include("modeljars")
 include("modeljars-core")
 include("modeljars-catalog")

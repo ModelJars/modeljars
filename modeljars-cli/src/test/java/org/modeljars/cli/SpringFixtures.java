@@ -55,6 +55,15 @@ final class SpringFixtures {
     return descriptor("example_q4_0", Set.of("chat", "text-generation"), "llama", "gguf", Set.of());
   }
 
+  static ModelJarDescriptor vision() {
+    return descriptor(
+        "example_vision_q4_k_m",
+        Set.of("chat", "text-generation", "image-understanding"),
+        "llama",
+        "gguf",
+        Set.of("llava-1.5"));
+  }
+
   static ModelJarDescriptor toolChat() {
     return descriptor(
         "example_tools_q8_0",

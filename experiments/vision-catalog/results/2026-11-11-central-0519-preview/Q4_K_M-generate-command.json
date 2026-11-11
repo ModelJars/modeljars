@@ -1,0 +1,13 @@
+[
+  "/Users/briansam-bodden/.sdkman/candidates/java/25.0.3-tem/bin/java",
+  "--enable-native-access=ALL-UNNAMED",
+  "-Dmodeljars.catalog.offline=true",
+  "-Dmodeljars.catalog.cache=/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/vision-cli-af_hum57",
+  "-cp",
+  "/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/jackson-annotations-2.22.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/jackson-core-2.22.3.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/jackson-databind-2.22.3.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/jline-3.29.0.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/modeljars-catalog-0.1.65.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/modeljars-cli-0.1.65.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/modeljars-core-0.1.65.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/picocli-4.7.7.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/cli-lib/picocli-shell-jline3-4.7.7.jar:/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/measured-markers/second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar",
+  "org.modeljars.cli.ModelJarsCli",
+  "demo",
+  "second_state_llava_v1_5_7b_gguf_q4_k_m",
+  "--output-file",
+  "/Users/briansam-bodden/Code/java-ai/audit-artifacts/2026-11-10-models-0519-release/preview-36ad63c/pr380-llava-q4km-demo.java"
+]

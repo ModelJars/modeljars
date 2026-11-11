@@ -192,6 +192,7 @@ export const PILL_CAPABILITIES = [
   "reranking",
   "text-embedding",
   "text-to-speech",
+  "image-understanding",
   "typed-decision",
   "tool-calling",
 ];
@@ -201,6 +202,7 @@ const CAPABILITY_LABELS = {
   reranking: "reranking",
   "text-embedding": "embedding",
   "text-to-speech": "speech",
+  "image-understanding": "vision",
   "typed-decision": "decisions",
   "text-classification": "classification",
   "tool-calling": "tools",
@@ -307,6 +309,9 @@ export function verificationProfile(model) {
   } else if (qualification?.useCaseTier === "SCHEMA_CLASSIFICATION") {
     checks.push("Paired upstream classification fidelity");
     checks.push("Three complete CPU performance replications");
+  } else if (qualification?.useCaseTier === "IMAGE_QUESTION_ANSWERING") {
+    const cases = Object.values(qualification.datasets || {}).reduce((sum, dataset) => sum + dataset.cases, 0);
+    if (Number.isSafeInteger(cases) && cases > 0) checks.push(`${cases}-case image-question evaluation`);
   } else if (qualification?.chanceAccuracy !== undefined) {
     // A decision qualification counts labelled cases, not requests, and carries no `attempts`.
     // Left to the RAG fallback below it rendered "undefined-request RAG qualification" on

@@ -23200,6 +23200,138 @@
         "attentionBlockCount": 28
       },
       "catalogPublishedAt": "2026-11-02T07:39:32Z"
+    },
+    {
+      "id": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "name": "LLaVA 1.5 7B Q4_K_S with F16 CLIP projector",
+      "description": "Two-file LLaVA 1.5 image-question candidate. Catalog admission is pending paired task, performance and runtime qualification.",
+      "sourceId": "hf://second-state/Llava-v1.5-7B-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_S.gguf",
+      "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_s",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_S",
+      "localPath": "${user.home}/.jvllm/models/llava-v1.5-7b-Q4_K_S.gguf",
+      "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+      "sizeBytes": 3856740128,
+      "license": "llama2",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "image-understanding"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "llava-1.5",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_S.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_S.gguf",
+          "sha256": "e785cbe9042356448cad670b31069316ea91b9c5149a6c79fe2f737d63cfac0e",
+          "sizeBytes": 3856740128
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": false
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 6738415616,
+        "contextLength": 4096,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 32
+      }
+    },
+    {
+      "id": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "name": "LLaVA 1.5 7B Q4_K_M with F16 CLIP projector",
+      "description": "Two-file LLaVA 1.5 image-question candidate. Catalog admission is pending paired task, performance and runtime qualification.",
+      "sourceId": "hf://second-state/Llava-v1.5-7B-GGUF",
+      "sourceUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF",
+      "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_M.gguf",
+      "revision": "ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77",
+      "markerCoordinate": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "modelVersion": "1.0.0",
+      "variant": "q4_k_m",
+      "format": "gguf",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "localPath": "${user.home}/.jvllm/models/llava-v1.5-7b-Q4_K_M.gguf",
+      "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+      "sizeBytes": 4081004320,
+      "license": "llama2",
+      "capabilities": [
+        "text-generation",
+        "chat",
+        "image-understanding"
+      ],
+      "features": [
+        "pinned-revision",
+        "verified-sha256",
+        "multi-file-artifact",
+        "llava-1.5",
+        "license-terms-apply",
+        "community-conversion"
+      ],
+      "files": [
+        {
+          "path": "llava-v1.5-7b-Q4_K_M.gguf",
+          "role": "weights",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-Q4_K_M.gguf",
+          "sha256": "2687b20ac8b7a23f6c70296d5b1e7f908fef2ce4769ecdebd1bb9503528a75bf",
+          "sizeBytes": 4081004320
+        },
+        {
+          "path": "llava-v1.5-7b-mmproj-model-f16.gguf",
+          "role": "vision-projector",
+          "downloadUri": "https://huggingface.co/second-state/Llava-v1.5-7B-GGUF/resolve/ffb5e9a1a3172f82448fbdbe578a051c8dc2ff77/llava-v1.5-7b-mmproj-model-f16.gguf",
+          "sha256": "50da4e5b0a011615f77686f9b02613571e65d23083c225e107c08c3b1775d9b1",
+          "sizeBytes": 624434368
+        }
+      ],
+      "backends": {
+        "pure-java": false,
+        "rust-ffm": true,
+        "llama.cpp": false
+      },
+      "domains": [
+        "general"
+      ],
+      "dimensions": {
+        "parameterCount": 6738415616,
+        "contextLength": 4096,
+        "embeddingLength": 4096,
+        "blockCount": 32,
+        "attentionHeadCount": 32,
+        "keyValueHeadCount": 32,
+        "feedForwardLength": 11008,
+        "attentionBlockCount": 32
+      }
     }
   ]
 }

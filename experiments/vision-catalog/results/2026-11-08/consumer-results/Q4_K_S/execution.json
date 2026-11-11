@@ -1,0 +1,16 @@
+{
+  "schema": "modeljars-vision-preview-execution-v1",
+  "variant": "Q4_K_S",
+  "backendQualified": false,
+  "harnessSha256": "084bc91610a1d4cc4a7cb8548ed14c9e23c4bcee81c97771e9c5102a6cbb3132",
+  "modeljarsRevision": "920708bd20ab8a4f6379979e0b3c36646f16ee19",
+  "markers": {
+    "second-state.llava-v1.5-7b-gguf.q4_k_m-1.0.0-q4_k_m.1.jar": "9e5aa7e662cb7da50e2cf2a22c7228cf12c05698c250834cc2b5d477dcd5dc37",
+    "second-state.llava-v1.5-7b-gguf.q4_k_s-1.0.0-q4_k_s.1.jar": "1dcc156e988d69c3fb1fd9b0bd0a414c79c0927c601fb63ea9e45431a5bcb1f6"
+  },
+  "releasedRuntime": false,
+  "demoExitCode": 1,
+  "rejectionReason": "No qualified vision execution for org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+  "cacheFiles": [],
+  "passed": true
+}

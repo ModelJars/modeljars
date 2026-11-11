@@ -1,0 +1,10 @@
+{
+  "pr380-vision-catalog-raw.tar.gz": {
+    "sha256": "59c8ec28a47292343d2840d43f72d041f18f1faeadd0efa6d5bfaa66b44713e5",
+    "sizeBytes": 921099585
+  },
+  "pr380-vision-catalog-compact.tar.gz": {
+    "sha256": "bcba69948a88e1279ca3bd1f0238502b202b292c7f715c728cc3314321dd32e0",
+    "sizeBytes": 281121
+  }
+}

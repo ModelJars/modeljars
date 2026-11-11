@@ -1,0 +1,12 @@
+{
+  "verifiedUtc": "2026-11-08T08:48:22.548842+00:00",
+  "modeljarsVersion": "0.1.76",
+  "gradleVersion": "9.4.1",
+  "freshDependencyCache": true,
+  "existingGradleDistribution": true,
+  "centralOnly": true,
+  "cliVersionOutput": "0.1.76",
+  "runtimeGraphArtifacts": 13,
+  "cliGraphArtifacts": 9,
+  "scope": "Dependency resolver and CLI version preflight only; no model inference, candidate admission or new-release consumer pass"
+}

@@ -1,0 +1,171 @@
+{
+  "schema": "central-vision-runtime-v1",
+  "modelsVersion": "0.5.19",
+  "vectorsVersion": "0.1.34",
+  "revision": "214d53f928923d21514cf2d8bca6e02712d4dd51",
+  "jars": [
+    {
+      "file": "backend-cuda-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/backend-cuda/0.5.19/backend-cuda-0.5.19.jar",
+      "coordinate": "com.integrallis:backend-cuda:0.5.19",
+      "sha256": "34bf58019caa43a31e159e233e779cdfbbcd240d7eb6494f1a7875c6c2deb85e",
+      "sizeBytes": 47591
+    },
+    {
+      "file": "backend-java-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/backend-java/0.5.19/backend-java-0.5.19.jar",
+      "coordinate": "com.integrallis:backend-java:0.5.19",
+      "sha256": "646eecae5f5c1e71b2e893ba9d719a42a85c74b7d478a366b02b7d0bb553a843",
+      "sizeBytes": 1236124
+    },
+    {
+      "file": "backend-native-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/backend-native/0.5.19/backend-native-0.5.19.jar",
+      "coordinate": "com.integrallis:backend-native:0.5.19",
+      "sha256": "9477cebc23cd23e96613727963611802211d921560a16672f663e311a5ef62b7",
+      "sizeBytes": 9007988
+    },
+    {
+      "file": "jackson-annotations-2.22.jar",
+      "origin": "third-party dependency resolved by Gradle",
+      "sha256": "21ddb598807d3a51a876704eb979d9296e1c6a6f47ab1826ff88c6d6a127a2d0",
+      "sizeBytes": 84211
+    },
+    {
+      "file": "jackson-core-2.22.3.jar",
+      "origin": "third-party dependency resolved by Gradle",
+      "sha256": "8a501126a385b25841915d839508f8a66e2a0dbc8a6709d055ef3b3e852b094c",
+      "sizeBytes": 594776
+    },
+    {
+      "file": "jackson-databind-2.22.3.jar",
+      "origin": "third-party dependency resolved by Gradle",
+      "sha256": "556db5439e206114346043f68d200497dc96a0bca62a360a81784092ebd0e0a9",
+      "sizeBytes": 1709604
+    },
+    {
+      "file": "jackson-datatype-jdk8-2.22.3.jar",
+      "origin": "third-party dependency resolved by Gradle",
+      "sha256": "f223061a5aaecdc9506458143807c73bcd1a744d6b3bbb8da4703a0abc408f7d",
+      "sizeBytes": 36039
+    },
+    {
+      "file": "models-api-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-api/0.5.19/models-api-0.5.19.jar",
+      "coordinate": "com.integrallis:models-api:0.5.19",
+      "sha256": "13c36569ab049ca922730daf7966d5f366789ff1c4c895e03ab30885b832ca4d",
+      "sizeBytes": 81888
+    },
+    {
+      "file": "models-backend-onnx-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-backend-onnx/0.5.19/models-backend-onnx-0.5.19.jar",
+      "coordinate": "com.integrallis:models-backend-onnx:0.5.19",
+      "sha256": "6015c3c5746ee6238cc94313814478fe0f92bd7dba1a3917579bd0f2cb52c1ef",
+      "sizeBytes": 104034
+    },
+    {
+      "file": "models-bench-0.5.19.jar",
+      "origin": "unpublished benchmark harness",
+      "revision": "214d53f928923d21514cf2d8bca6e02712d4dd51",
+      "sha256": "db8952301984e2a6c5993c0466f1818f598dc5d84d84dad001259b1418c833b6",
+      "sizeBytes": 2281932
+    },
+    {
+      "file": "models-decisions-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-decisions/0.5.19/models-decisions-0.5.19.jar",
+      "coordinate": "com.integrallis:models-decisions:0.5.19",
+      "sha256": "295688fa43cb3a75b526373b719897213159b7c8505c59821fccbe4a14f14c78",
+      "sizeBytes": 65816
+    },
+    {
+      "file": "models-router-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-router/0.5.19/models-router-0.5.19.jar",
+      "coordinate": "com.integrallis:models-router:0.5.19",
+      "sha256": "f13dd3a49e3f6278e1c13e286facf6f16f3f56f5c0a76b58e6046ea643b09012",
+      "sizeBytes": 803445
+    },
+    {
+      "file": "models-runtime-0.5.19.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/models-runtime/0.5.19/models-runtime-0.5.19.jar",
+      "coordinate": "com.integrallis:models-runtime:0.5.19",
+      "sha256": "8aa5295766020d6d0fc62497f86af0c3b7cf74e0ca718658d20fa28ac5a4a67f",
+      "sizeBytes": 248345
+    },
+    {
+      "file": "slf4j-api-2.0.20.jar",
+      "origin": "third-party dependency resolved by Gradle",
+      "sha256": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439",
+      "sizeBytes": 70255
+    },
+    {
+      "file": "vectors-core-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-core/0.1.34/vectors-core-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-core:0.1.34",
+      "sha256": "099dabe62ec728ae00d722bf147f41a6245999d380e280d0aaec64fed603f838",
+      "sizeBytes": 327450
+    },
+    {
+      "file": "vectors-db-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-db/0.1.34/vectors-db-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-db:0.1.34",
+      "sha256": "15d6cd6afa9c12b71fa473b0c57356da08e54eaf66fcd31345e5a3bb8e376221",
+      "sizeBytes": 353590
+    },
+    {
+      "file": "vectors-hnsw-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-hnsw/0.1.34/vectors-hnsw-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-hnsw:0.1.34",
+      "sha256": "2d8116dab0b32d9d43d7e7ae3e92268406da38d036e00be8337037a7af483cfe",
+      "sizeBytes": 69614
+    },
+    {
+      "file": "vectors-ivf-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-ivf/0.1.34/vectors-ivf-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-ivf:0.1.34",
+      "sha256": "70cd47906757e7a4e29fcd3d70e347fd60a620efe2ffe95218a13c18c940bfe3",
+      "sizeBytes": 60490
+    },
+    {
+      "file": "vectors-quantization-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-quantization/0.1.34/vectors-quantization-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-quantization:0.1.34",
+      "sha256": "6eef6ba2fd704d06e027a9bbcda9e0eedebd356b48161a79e4230ebcb3931c03",
+      "sizeBytes": 118731
+    },
+    {
+      "file": "vectors-storage-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-storage/0.1.34/vectors-storage-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-storage:0.1.34",
+      "sha256": "003a3af08227ffdb609f9a68b3822fb53e5ed9ea08abc0d73f8be94ae229f6f1",
+      "sizeBytes": 86744
+    },
+    {
+      "file": "vectors-vamana-0.1.34.jar",
+      "origin": "Maven Central",
+      "url": "https://repo.maven.apache.org/maven2/com/integrallis/vectors-vamana/0.1.34/vectors-vamana-0.1.34.jar",
+      "coordinate": "com.integrallis:vectors-vamana:0.1.34",
+      "sha256": "3339df9a717688bd51a35c6b51c2085a80b0d67746bdde548a88beb51b916e4f",
+      "sizeBytes": 39457
+    }
+  ],
+  "native": {
+    "jar": "backend-native-0.5.19.jar",
+    "member": "META-INF/models/native/linux-x86_64/libjmodels_kernels.so",
+    "sha256": "9e21989209d90d3d5caa21d4bfe1bcec40b47a858129fb0013914b91d0d08bb1"
+  },
+  "note": "Benchmark harness is source-built; all Integrallis runtime JARs are downloaded from Central. The task harness override names the unmodified native library extracted from the published JAR."
+}

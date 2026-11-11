@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { validateEntry as validateClassification } from "./classification-qualifications.mjs";
+import { validateManifest as validateVisionManifest, publishable as visionPublishable } from "./vision-qualifications.mjs";
 
 function assertCatalog(document, label) {
   if (
@@ -426,11 +427,16 @@ export function filterQualifiedPublications(
   componentQualifications = { schemaVersion: 1, entries: [] },
   decisionQualifications = { schemaVersion: 1, entries: [] },
   classificationQualifications = { schemaVersion: 2, entries: [] },
+  visionQualifications = { schemaVersion: 1, policy: "llava-vqa-v1", entries: [] },
 ) {
   assertCatalog(catalog, "Catalog");
 
   const modelsById = new Map(catalog.models.map((model) => [model.id, model]));
   const qualifiedIds = collectQualifiedIds(qualifications, modelsById);
+  validateVisionManifest(visionQualifications, catalog);
+  for (const entry of visionQualifications.entries) {
+    if (visionPublishable(entry)) qualifiedIds.add(entry.modelId);
+  }
   for (const id of collectQualifiedIds(embeddingQualifications, modelsById)) {
     qualifiedIds.add(id);
   }

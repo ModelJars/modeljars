@@ -165,6 +165,16 @@ export function runGate(models, loadEvidence) {
               + `${model.sha256.slice(0, 12)}` });
       continue;
     }
+    // A separate projector is part of the model's identity, not optional supporting metadata.
+    if ((model.files ?? []).some(file => file.role === "vision-projector")) {
+      const identity = files => JSON.stringify(files.map(({path, role, sha256, sizeBytes}) =>
+        ({path, role, sha256, sizeBytes})).sort((a, b) => a.path.localeCompare(b.path)));
+      if (!Array.isArray(ev.files) || identity(model.files) !== identity(ev.files)) {
+        findings.push({ id: model.id, status: "STALE_EVIDENCE", claims,
+          detail: "two-file vision evidence must bind every text/projector path, role, digest and size" });
+        continue;
+      }
+    }
     const unbacked = [];
     const backed = [];
     for (const claim of claims) {
@@ -180,15 +190,31 @@ export function runGate(models, loadEvidence) {
   return findings;
 }
 
-async function ggufRecord(model, triageUri) {
+export async function ggufRecord(model, triageUri) {
   const t = await triageUri(model.downloadUri);
+  const files = [];
+  const towers = {...t.towers};
+  if ((model.files ?? []).some(file => file.role === "vision-projector")) {
+    for (const file of model.files) {
+      const uri = file.downloadUri ?? `${model.sourceUri}/resolve/${model.revision}/${file.path}`;
+      const header = file.sha256 === model.sha256 ? t : await triageUri(uri);
+      files.push({...file, downloadUri: uri, architecture: header.architecture,
+        tensorCount: header.tensorCount, towers: header.towers});
+      for (const [tower, count] of Object.entries(header.towers ?? {})) {
+        const previous = towers[tower];
+        towers[tower] = typeof previous === "number" && typeof count === "number"
+          ? Math.max(previous, count) : previous ?? count;
+      }
+    }
+  }
   return {
     id: model.id,
     downloadUri: model.downloadUri,
     sha256: model.sha256,
     architecture: t.architecture,
     tensorCount: t.tensorCount,
-    towers: t.towers,
+    towers,
+    ...(files.length ? { files } : {}),
     declaredTasks: declaredTasks(t.metadata ?? {}),
     recordedAt: new Date().toISOString(),
     recordedBy: "tools/modality-claim-gate.mjs --write",

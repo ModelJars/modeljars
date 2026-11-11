@@ -13,8 +13,12 @@ on:
       - catalog/speech-qualifications.json
       - catalog/decision-qualifications.json
       - catalog/classification-qualifications.json
+      - catalog/vision-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
+      - tools/vision-qualifications.mjs
+      - tools/import-vision-qualification.mjs
+      - tools/vision-evidence-gate.mjs
       - tools/model-publications.test.mjs
       - tools/composition-evidence-gate.mjs
       - tools/composition-evidence-gate.test.mjs
@@ -44,8 +48,12 @@ on:
       - catalog/speech-qualifications.json
       - catalog/decision-qualifications.json
       - catalog/classification-qualifications.json
+      - catalog/vision-qualifications.json
       - catalog/performance-profiles.json
       - tools/model-publications.mjs
+      - tools/vision-qualifications.mjs
+      - tools/import-vision-qualification.mjs
+      - tools/vision-evidence-gate.mjs
       - tools/model-publications.test.mjs
       - tools/composition-evidence-gate.mjs
       - tools/composition-evidence-gate.test.mjs
@@ -116,6 +124,9 @@ jobs:
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
 
+      - name: Verify vision evidence reports
+        run: npm run catalog:verify-vision
+
       - name: Resolve model publication plan
         id: plan
         shell: bash
@@ -136,6 +147,7 @@ jobs:
               --speech-qualifications catalog/speech-qualifications.json \
               --decision-qualifications catalog/decision-qualifications.json \
               --classification-qualifications catalog/classification-qualifications.json \
+              --vision-qualifications catalog/vision-qualifications.json \
               --ids "${REQUESTED_MODEL_IDS}" \
               --github-output "${GITHUB_OUTPUT}"
             exit 0
@@ -155,6 +167,7 @@ jobs:
           previous_speech="${RUNNER_TEMP}/speech-qualifications-before.json"
           previous_decision="${RUNNER_TEMP}/decision-qualifications-before.json"
           previous_classification="${RUNNER_TEMP}/classification-qualifications-before.json"
+          previous_vision="${RUNNER_TEMP}/vision-qualifications-before.json"
           if [[ -z "${comparison}" || "${comparison}" =~ ^0+$ ]] || \
               ! git cat-file -e "${comparison}^{commit}"; then
             printf '%s\n' '{"schemaVersion":2,"models":[]}' > "${previous_catalog}"
@@ -167,6 +180,7 @@ jobs:
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_speech}"
             printf '%s\n' '{"schemaVersion":1,"entries":[]}' > "${previous_decision}"
             printf '%s\n' '{"schemaVersion":2,"entries":[]}' > "${previous_classification}"
+            printf '%s\n' '{"schemaVersion":1,"policy":"llava-vqa-v1","entries":[]}' > "${previous_vision}"
           else
             git show "${comparison}:catalog/models.json" > "${previous_catalog}"
             if ! git show "${comparison}:catalog/component-qualifications.json" > "${previous_components}"; then
@@ -194,6 +208,9 @@ jobs:
             if ! git show "${comparison}:catalog/classification-qualifications.json" > "${previous_classification}"; then
               printf '%s\n' '{"schemaVersion":2,"entries":[]}' > "${previous_classification}"
             fi
+            if ! git show "${comparison}:catalog/vision-qualifications.json" > "${previous_vision}"; then
+              printf '%s\n' '{"schemaVersion":1,"policy":"llava-vqa-v1","entries":[]}' > "${previous_vision}"
+            fi
           fi
           node tools/qualification-smoke-gate.mjs \
             --previous "${previous_qualifications}" \
@@ -218,7 +235,9 @@ jobs:
             --decision-qualifications catalog/decision-qualifications.json \
             --previous-decision-qualifications "${previous_decision}" \
             --classification-qualifications catalog/classification-qualifications.json \
+            --vision-qualifications catalog/vision-qualifications.json \
             --previous-classification-qualifications "${previous_classification}" \
+            --previous-vision-qualifications "${previous_vision}" \
             --previous-profiles "${previous_profiles}" \
             --current-profiles catalog/performance-profiles.json \
             --github-output "${GITHUB_OUTPUT}"

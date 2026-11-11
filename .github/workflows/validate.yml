@@ -212,6 +212,8 @@ jobs:
       - name: Test dependency policy rejection cases
         run: |
           python3 scripts/test-dependency-policy.py
+          python3 experiments/vision-catalog/test-release.py
+          python3 experiments/vision-catalog/test-preview.py
           python3 scripts/test-published-consumers.py
 
       - name: Test catalog tooling and site modules
@@ -249,6 +251,9 @@ jobs:
 
       - name: Verify qualified component evidence
         run: npm run catalog:verify-components
+
+      - name: Verify vision evidence reports
+        run: npm run catalog:verify-vision
 
       - name: Verify non-text modality claims against the artifacts
         run: npm run catalog:modality
@@ -299,6 +304,17 @@ jobs:
             build/reports/release-dependencies/
             build/reports/runtime-support/
             build/published-consumers/
+          retention-days: 30
+
+      - name: Retain test failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports
+          path: |
+            **/build/test-results/**/*.xml
+            **/build/reports/tests/**
+          if-no-files-found: ignore
           retention-days: 30
 
       - name: Exercise the qualified mxbai bundle through ModelJars

@@ -1,0 +1,23 @@
+{
+  "publications": [
+    {
+      "change": "selected",
+      "coordinate": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_s:1.0.0-q4_k_s.1",
+      "id": "second_state_llava_v1_5_7b_gguf_q4_k_s",
+      "githubTaskName": ":modeljars-catalog:publishMarkerSecondStateLlavaV157bGgufQ4KSPublicationToGitHubPackagesRepository",
+      "jarTaskName": ":modeljars-catalog:markerJarSecondStateLlavaV157bGgufQ4KS",
+      "publicationName": "markerSecondStateLlavaV157bGgufQ4KS",
+      "taskName": ":modeljars-catalog:publishMarkerSecondStateLlavaV157bGgufQ4KSPublicationToReleaseBundleRepository"
+    },
+    {
+      "change": "selected",
+      "coordinate": "org.modeljars.huggingface:second-state.llava-v1.5-7b-gguf.q4_k_m:1.0.0-q4_k_m.1",
+      "id": "second_state_llava_v1_5_7b_gguf_q4_k_m",
+      "githubTaskName": ":modeljars-catalog:publishMarkerSecondStateLlavaV157bGgufQ4KMPublicationToGitHubPackagesRepository",
+      "jarTaskName": ":modeljars-catalog:markerJarSecondStateLlavaV157bGgufQ4KM",
+      "publicationName": "markerSecondStateLlavaV157bGgufQ4KM",
+      "taskName": ":modeljars-catalog:publishMarkerSecondStateLlavaV157bGgufQ4KMPublicationToReleaseBundleRepository"
+    }
+  ],
+  "removed": []
+}

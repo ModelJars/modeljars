@@ -17,6 +17,7 @@ package org.modeljars;
 
 import com.integrallis.models.api.BackendConfiguration;
 import com.integrallis.models.api.EmbeddingBackend;
+import com.integrallis.models.api.ImageInferenceBackend;
 import com.integrallis.models.api.InferenceBackend;
 import com.integrallis.models.api.OptimizationDecision;
 import com.integrallis.models.api.OptimizationStatus;
@@ -33,6 +34,7 @@ import com.integrallis.models.backend.nativekernel.RustGgufBatchedMatrixKernel;
 import com.integrallis.models.backend.nativekernel.RustGlinerClassificationModel;
 import com.integrallis.models.backend.purejava.GgufEmbeddingBackend;
 import com.integrallis.models.backend.purejava.GgufRerankingModel;
+import com.integrallis.models.backend.purejava.LlavaBackend;
 import com.integrallis.models.backend.purejava.PureJavaBackend;
 import com.integrallis.models.backend.purejava.SafetensorsRerankingModel;
 import com.integrallis.models.backend.purejava.plan.RuntimeFingerprint;
@@ -1155,6 +1157,117 @@ public final class ModelJars {
    */
   public static SchemaClassificationModel openClassifier(ModelJar model, ModelLoadOptions options) {
     return openClassificationRuntime(model, options).model();
+  }
+
+  /**
+   * Opens a qualified two-file image-question runtime from classpath marker and evidence resources.
+   *
+   * @param model model marker selector
+   * @return owned vision runtime
+   */
+  public static ModelJarVisionRuntime openVisionRuntime(ModelJar model) {
+    return openVisionRuntime(model, ModelLoadOptions.defaults());
+  }
+
+  /**
+   * Opens a qualified image-question model from its marker coordinate.
+   *
+   * @param markerCoordinate model marker Maven coordinate
+   * @return owned vision runtime
+   */
+  public static ModelJarVisionRuntime openVisionRuntime(String markerCoordinate) {
+    return openVisionRuntime(ModelJar.of(markerCoordinate));
+  }
+
+  /**
+   * Opens and verifies both the text model and its qualified vision projector.
+   *
+   * @param model model marker selector
+   * @param options cache, offline and backend selection controls
+   * @return owned vision runtime
+   */
+  public static ModelJarVisionRuntime openVisionRuntime(ModelJar model, ModelLoadOptions options) {
+    requireVectorModule(ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent());
+    return classpathLoader()
+        .loadVisionRuntime(
+            model,
+            options,
+            ModelVisionQualificationRegistry.fromClasspath(),
+            ModelJars::loadVisionBackend);
+  }
+
+  private static ImageInferenceBackend loadVisionBackend(Path text, Path projector) {
+    return requireQualifiedVisionKernels(LlavaBackend.load(text, projector));
+  }
+
+  static ImageInferenceBackend requireQualifiedVisionKernels(ImageInferenceBackend backend) {
+    try {
+      var diagnostics = backend.diagnostics();
+      boolean nativeVision =
+          diagnostics.environment().getOrDefault("vision-projections", "").startsWith("rust-");
+      boolean nativeAttention =
+          "NativeCausalAttention".equals(diagnostics.environment().get("decoder-attention"));
+      boolean nativeDecoder =
+          diagnostics.optimizations().stream()
+              .anyMatch(
+                  decision ->
+                      decision.id().equals("grouped-projections")
+                          && decision.status() == OptimizationStatus.ENABLED
+                          // The llava-vqa-v1 evidence requires this numerical contract.
+                          // Older native kernels and unsupported CPUs can still report
+                          // rust-ffm while using a different reduction order.
+                          && "rust-ffm-quantized-v16-packed-q4-k"
+                              .equals(decision.settings().get("implementation")));
+      if (!nativeVision || !nativeDecoder || !nativeAttention)
+        throw new ModelJarException(
+            "Qualified vision execution requires reference K-quant decoder arithmetic"
+                + " and native encoder and attention kernels");
+      return backend;
+    } catch (RuntimeException | Error failure) {
+      try (backend) {
+        throw failure;
+      }
+    }
+  }
+
+  ModelJarVisionRuntime loadVisionRuntime(
+      ModelJar model,
+      ModelLoadOptions options,
+      ModelVisionQualificationRegistry registry,
+      VisionBackendLoader loader) {
+    Objects.requireNonNull(options, "options");
+    var descriptor =
+        models
+            .resolve(Objects.requireNonNull(model, "model"))
+            .orElseThrow(() -> new ModelJarException("No ModelJar matched " + model));
+    if (options.backend() == ModelBackend.JAVA)
+      throw new ModelJarException("Vision evidence requires the native backend");
+    var qualification =
+        registry
+            .qualificationFor(descriptor)
+            .orElseThrow(
+                () ->
+                    new ModelJarException(
+                        "No qualified vision execution for " + descriptor.markerCoordinate()));
+    requireNativeAccess(NATIVE_BACKEND, List.copyOf(jvmArguments.get()));
+    Path snapshot = installer.install(descriptor, options);
+    Path text = visionFile(snapshot, descriptor, "weights");
+    Path projector = visionFile(snapshot, descriptor, "vision-projector");
+    return new ModelJarVisionRuntime(loader.load(text, projector), descriptor, qualification);
+  }
+
+  private static Path visionFile(Path snapshot, ModelJarDescriptor descriptor, String role) {
+    return snapshot.resolve(
+        descriptor.files().stream()
+            .filter(f -> f.role().equals(role))
+            .findFirst()
+            .orElseThrow(() -> new ModelJarException("Missing vision artifact role " + role))
+            .path());
+  }
+
+  @FunctionalInterface
+  interface VisionBackendLoader {
+    ImageInferenceBackend load(Path text, Path projector);
   }
 
   ModelJarClassificationRuntime loadClassificationRuntime(

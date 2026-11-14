@@ -24,10 +24,24 @@ import java.util.Objects;
  * @param backend automatic or explicit backend policy
  * @param offline whether loading is restricted to an existing verified cache entry
  * @param cacheDirectory content-addressed artifact cache root
+ * @param maxContextLength the caller's bound on this runtime's context, in tokens, or {@link
+ *     #UNBOUNDED_CONTEXT} to leave the decision to the deployment and the catalog
  */
-public record ModelLoadOptions(ModelBackend backend, boolean offline, Path cacheDirectory) {
+public record ModelLoadOptions(
+    ModelBackend backend, boolean offline, Path cacheDirectory, int maxContextLength) {
   /** System property that overrides the default ModelJars cache directory. */
   public static final String CACHE_DIRECTORY_PROPERTY = ModelJarCache.CACHE_DIRECTORY_PROPERTY;
+
+  /**
+   * The Models setting a caller's {@link #maxContextLength()} is delivered as. It enters the
+   * backend's override tier, which outranks the JVM system property of the same name and the
+   * catalog's recommendation, so one runtime can be bounded without a JVM-global setting
+   * (integrallis/models#357).
+   */
+  public static final String MAX_CONTEXT_LENGTH_PROPERTY = "models.purejava.maxContextLength";
+
+  /** {@link #maxContextLength()} value meaning "no caller bound". */
+  public static final int UNBOUNDED_CONTEXT = 0;
 
   /** Environment variable that overrides the default ModelJars cache directory. */
   public static final String CACHE_DIRECTORY_ENV = ModelJarCache.CACHE_DIRECTORY_ENV;
@@ -37,6 +51,36 @@ public record ModelLoadOptions(ModelBackend backend, boolean offline, Path cache
     backend = Objects.requireNonNull(backend, "backend");
     cacheDirectory =
         Objects.requireNonNull(cacheDirectory, "cacheDirectory").toAbsolutePath().normalize();
+    if (maxContextLength < UNBOUNDED_CONTEXT) {
+      throw new IllegalArgumentException(
+          "maxContextLength must be positive, or "
+              + UNBOUNDED_CONTEXT
+              + " for no caller bound: "
+              + maxContextLength);
+    }
+  }
+
+  /**
+   * Options without a caller context bound.
+   *
+   * @param backend automatic or explicit backend policy
+   * @param offline whether loading is restricted to an existing verified cache entry
+   * @param cacheDirectory content-addressed artifact cache root
+   * @deprecated use the canonical constructor or {@link #builder()}; kept so adding {@code
+   *     maxContextLength} does not break existing callers.
+   */
+  @Deprecated(since = "0.1.79", forRemoval = true)
+  public ModelLoadOptions(ModelBackend backend, boolean offline, Path cacheDirectory) {
+    this(backend, offline, cacheDirectory, UNBOUNDED_CONTEXT);
+  }
+
+  /**
+   * Whether the caller bounded this runtime's context.
+   *
+   * @return {@code true} when {@link #maxContextLength()} is a positive bound
+   */
+  public boolean boundsContext() {
+    return maxContextLength > UNBOUNDED_CONTEXT;
   }
 
   /**
@@ -62,6 +106,7 @@ public record ModelLoadOptions(ModelBackend backend, boolean offline, Path cache
     private ModelBackend backend = ModelBackend.AUTO;
     private boolean offline;
     private Path cacheDirectory;
+    private int maxContextLength = UNBOUNDED_CONTEXT;
 
     private Builder() {}
 
@@ -99,6 +144,24 @@ public record ModelLoadOptions(ModelBackend backend, boolean offline, Path cache
     }
 
     /**
+     * Bounds the context this one runtime is opened with, in tokens. Delivered to the backend as
+     * {@link #MAX_CONTEXT_LENGTH_PROPERTY} in the override tier: it wins over the JVM system
+     * property of that name and over the catalog's qualified recommendation for that runtime only;
+     * other runtimes in the process are untouched. The default leaves the decision to the
+     * deployment and the catalog.
+     *
+     * @param tokens the bound, in tokens; must be positive
+     * @return this builder
+     */
+    public Builder maxContextLength(int tokens) {
+      if (tokens <= UNBOUNDED_CONTEXT) {
+        throw new IllegalArgumentException("maxContextLength must be positive: " + tokens);
+      }
+      maxContextLength = tokens;
+      return this;
+    }
+
+    /**
      * Builds immutable loading options.
      *
      * @return model loading options
@@ -107,7 +170,8 @@ public record ModelLoadOptions(ModelBackend backend, boolean offline, Path cache
       return new ModelLoadOptions(
           backend,
           offline,
-          cacheDirectory == null ? ModelJarCache.defaultDirectory() : cacheDirectory);
+          cacheDirectory == null ? ModelJarCache.defaultDirectory() : cacheDirectory,
+          maxContextLength);
     }
   }
 }

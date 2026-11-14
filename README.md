@@ -694,6 +694,20 @@ try (var model = ModelJars.open(MODEL, options)) {
 }
 ```
 
+One runtime's context can be bounded without a JVM-wide setting. `maxContextLength` reaches the
+backend in its override tier, so it wins over `-Dmodels.purejava.maxContextLength` and over the
+catalog's qualified recommendation for that runtime only; other runtimes in the process are untouched:
+
+```java
+var bounded = ModelLoadOptions.builder()
+    .maxContextLength(4096)
+    .build();
+
+try (var runtime = ModelJars.openRuntime(MODEL, bounded)) {
+    // The session's key/value cache is sized for 4,096 tokens.
+}
+```
+
 Configuration-driven applications can select the same classpath marker by its complete coordinate:
 
 ```java

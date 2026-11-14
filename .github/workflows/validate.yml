@@ -103,6 +103,14 @@ jobs:
           python3 tools/released-rag-smoke.py --models-repo models-smoke-source \
             --payload "$RUNNER_TEMP/released-models" \
             --model-id facebook_mobilemoe_s_qat_int4_g32 --output "$RUNNER_TEMP/mobilemoe-smoke"
+      # The oracle venv pins torch==2.8.0 (and transformers/tokenizers/safetensors/numpy) so the
+      # fixture provenance stays reproducible. Those wheels exist for CPython up to 3.12; when the
+      # runner image's default interpreter moved past that, `pip install torch==2.8.0` found only
+      # 2.9.0+ and the job failed before the suite ran (run 43642242673, 2026-11-14). Pin the
+      # interpreter rather than the oracle versions, so the recorded provenance does not change.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Exercise the source MobileMoE fixture suite with the installed gated weights
         env:
           FIXTURE_REPORT_ROOT: ${{ runner.temp }}/mobilemoe-smoke

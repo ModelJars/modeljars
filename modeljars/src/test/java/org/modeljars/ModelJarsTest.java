@@ -116,6 +116,54 @@ class ModelJarsTest {
   }
 
   @Test
+  void callerContextBoundEntersTheOverrideTierNotTheRecommendation() throws Exception {
+    Properties qualificationProperties = new Properties();
+    var resources =
+        getClass().getClassLoader().getResources(ModelRagQualificationRegistry.RESOURCE);
+    while (resources.hasMoreElements()) {
+      qualificationProperties.clear();
+      try (var input = resources.nextElement().openStream()) {
+        qualificationProperties.load(input);
+      }
+      if (qualificationProperties.containsKey("qualification.qwen3_0_6b_q4_0.model")) break;
+    }
+    qualificationProperties.setProperty("qualification.qwen3_0_6b_q4_0.contextLength", "2048");
+    AtomicReference<BackendConfiguration> selected = new AtomicReference<>();
+    ModelJars loader =
+        new ModelJars(
+            ModelJarRegistry.fromClasspath(),
+            ModelRagQualificationRegistry.fromProperties(qualificationProperties),
+            ModelPerformanceProfileRegistry.fromClasspath(),
+            (candidate, options) -> Path.of("verified-model.gguf"),
+            (backend, path, configuration) -> {
+              selected.set(configuration);
+              return new StubBackend();
+            },
+            Map::of,
+            List::of);
+    var bounded =
+        ModelLoadOptions.builder().backend(ModelBackend.JAVA).maxContextLength(1024).build();
+    try (var runtime = loader.loadRuntime(QWEN, bounded)) {
+      // The bound is an override; the qualified recommendation is still recorded beneath it.
+      assertEquals(2048, runtime.qualification().contextLength());
+      assertEquals(
+          "1024", selected.get().overrides().get(ModelLoadOptions.MAX_CONTEXT_LENGTH_PROPERTY));
+      assertEquals(
+          "2048",
+          selected.get().recommendations().get(ModelLoadOptions.MAX_CONTEXT_LENGTH_PROPERTY));
+      assertTrue(
+          selected.get().optimizations().stream()
+              .anyMatch(decision -> decision.id().equals("caller-bound-session-context")));
+    }
+    // Without a bound nothing enters the override tier.
+    try (var runtime =
+        loader.loadRuntime(QWEN, ModelLoadOptions.builder().backend(ModelBackend.JAVA).build())) {
+      assertEquals(2048, runtime.qualification().contextLength());
+      assertTrue(selected.get().overrides().isEmpty());
+    }
+  }
+
+  @Test
   void opensAQualifiedModelWithoutExposingItsInstalledPath() {
     ModelJarRegistry models = ModelJarRegistry.fromClasspath();
     ModelJarDescriptor descriptor = models.resolve(QWEN).orElseThrow();

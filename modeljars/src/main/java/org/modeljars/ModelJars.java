@@ -870,7 +870,7 @@ public final class ModelJars {
     Path adapterDirectory = installer.install(adapterDescriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
-        configuration(baseDescriptor, qualification, runtime, activeJvmArguments);
+        configuration(baseDescriptor, qualification, runtime, activeJvmArguments, options);
     SharedPrefixInferenceBackend backend =
         activatedBackendLoader.load(selectedBackend, baseArtifact, adapterDirectory, configuration);
     ActivatedToolCallingModel model = null;
@@ -1015,7 +1015,7 @@ public final class ModelJars {
     Path artifact = installer.install(descriptor, options);
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
-        configuration(descriptor, qualification, runtime, activeJvmArguments);
+        configuration(descriptor, qualification, runtime, activeJvmArguments, options);
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
     InferencePipeline pipeline;
     try {
@@ -1051,7 +1051,7 @@ public final class ModelJars {
     Map<String, String> runtime = Map.copyOf(runtimeEnvironment.get());
     BackendConfiguration configuration =
         decisionConfiguration(
-            configuration(descriptor, qualification, runtime, activeJvmArguments));
+            configuration(descriptor, qualification, runtime, activeJvmArguments, options));
     InferenceBackend loadedBackend = backendLoader.load(backend, artifact, configuration);
     try {
       return new ModelJarDecisionRuntime(loadedBackend, descriptor, qualification, temperature);
@@ -1551,7 +1551,8 @@ public final class ModelJars {
       ModelJarDescriptor descriptor,
       ModelExecutionQualification qualification,
       Map<String, String> runtime,
-      List<String> activeJvmArguments) {
+      List<String> activeJvmArguments,
+      ModelLoadOptions options) {
     List<ModelPerformanceProfile> safeProfiles =
         profiles.matching(descriptor, qualification.backend(), runtime).stream()
             .filter(ModelPerformanceProfile::safeForAutomaticSelection)
@@ -1595,7 +1596,21 @@ public final class ModelJars {
     }
     decisions.add(
         profileSelectionDecision(safeProfiles, applicableProfiles, qualification.backend()));
-    return new BackendConfiguration(environment, recommendations, decisions, Map.of());
+    // A caller's bound is a claim about this runtime, not about the model: it goes in the override
+    // tier, above the JVM system property and the catalog's recommendation (models#357 ask 1).
+    Map<String, String> overrides = Map.of();
+    if (options.boundsContext()) {
+      String bound = Integer.toString(options.maxContextLength());
+      overrides = Map.of(ModelLoadOptions.MAX_CONTEXT_LENGTH_PROPERTY, bound);
+      decisions.add(
+          new OptimizationDecision(
+              "caller-bound-session-context",
+              OptimizationStatus.ENABLED,
+              "size the session for the caller's bound; it outranks the deployment property and"
+                  + " the qualified recommendation for this runtime only",
+              Map.of("contextLength", bound)));
+    }
+    return new BackendConfiguration(environment, recommendations, decisions, overrides);
   }
 
   private static OptimizationDecision launchBlockedDecision(

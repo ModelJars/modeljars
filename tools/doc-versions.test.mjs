@@ -30,10 +30,18 @@ const TEXT = new Set([".md", ".html", ".js", ".yml", ".yaml", ".adoc", ".json", 
 // build property is the right authority for everything else, so each gate now owns its own files.
 const SITE_OWNED = new Set(["site/index.html", "site/assets/dependency-snippets.js"]);
 
+// Evidence records under experiments/<name>/results are pinned to the runtime they were produced
+// on (the LLaVA central-runtime receipt names every 0.5.19 jar it verified by SHA-256). Rewriting
+// them when the build pin moves would falsify the record; the gates that own them compare each
+// catalog entry's backendVersion with its own release verification (vision-evidence-gate.mjs,
+// component-evidence-gate.mjs), not with gradle.properties. Documents a reader copies from stay in.
+const EVIDENCE_RESULTS = /^experiments\/[^/]+\/results$/;
+
 async function* documents(dir) {
   for (const item of await readdir(dir, { withFileTypes: true })) {
     if (item.isDirectory()) {
       if (SKIP_DIRECTORIES.has(item.name)) continue;
+      if (EVIDENCE_RESULTS.test(path.relative(repositoryRoot, path.join(dir, item.name)))) continue;
       yield* documents(path.join(dir, item.name));
     } else if (TEXT.has(path.extname(item.name)) && !/CHANGELOG/i.test(item.name)) {
       yield path.join(dir, item.name);

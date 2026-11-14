@@ -282,6 +282,24 @@ jobs:
             echo "this repository's workflows, so the gate and test output above is the evidence."
             echo "Merging re-runs \`pages\`, which is what makes the new coordinate live."
           } > /tmp/body.md
-          gh pr create --base main --head "${branch}" \
-            --title "Advertise ${VERSION} in the site's dependency snippets" \
-            --body-file /tmp/body.md
+          if ! gh pr create --base main --head "${branch}" \
+              --title "Advertise ${VERSION} in the site's dependency snippets" \
+              --body-file /tmp/body.md; then
+            # This repository's Actions policy forbids GITHUB_TOKEN from creating pull requests
+            # ("GitHub Actions is not permitted to create or approve pull requests", 0.1.79,
+            # run 43650254534). By this point the release is published and the branch is pushed;
+            # the PR is the one manual step left, so say where to open it instead of reporting a
+            # successful publish as a failed run.
+            {
+              echo "### Site bump pushed; open the pull request by hand"
+              echo
+              echo "\`GITHUB_TOKEN\` may not create pull requests in this repository. Branch"
+              echo "\`${branch}\` carries the carrier bump and is pushed; open it against \`main\`:"
+              echo
+              echo "https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1"
+              echo
+              echo "The gate and test output is in this job's log. Merging runs \`pages\`, which is"
+              echo "what makes the new coordinate live."
+            } >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi

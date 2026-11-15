@@ -92,10 +92,10 @@ The publish workflow assigns `SDK_VERSION` from the next unused release version:
 ```text
 org.modeljars:modeljars:SDK_VERSION
   -> org.modeljars:modeljars-core:SDK_VERSION
-  -> com.integrallis:models:0.5.21
-  -> com.integrallis:backend-java:0.5.21
-  -> com.integrallis:backend-native:0.5.21
-  -> com.integrallis:vectors-core:0.1.35 (through Models)
+  -> com.integrallis:models:0.5.22
+  -> com.integrallis:backend-java:0.5.22
+  -> com.integrallis:backend-native:0.5.22
+  -> com.integrallis:vectors-core:0.1.36 (through Models)
 ```
 
 The separate CLI release workflow builds host-native executables with GraalVM on GitHub Actions,

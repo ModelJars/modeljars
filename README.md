@@ -141,6 +141,10 @@ qualified catalog today, and they do not look alike:
 | `granite_4_1_3b_answerability_hybrid` | `hybrid` | `hybrid` | `composite` | base + answerability adapter |
 | `harriet_qwen3_5_4b_decisions` | `recipe` | `qwen35` | `composite` | base only |
 
+Every composition names the **recipe** that assembles it (`recipe` in `catalog/compositions.json`;
+the card and the detail page show it, and [modeljars.org/recipes](https://modeljars.org/recipes/)
+explains each one). A hybrid is the category; recipes under it need not share architecture.
+
 A **hybrid** combines a base with an adapter that shares its prefix state physically, so it reports
 `hybrid` as its architecture. A **recipe** defines a behaviour over a frozen base without training
 anything, so it keeps the base's own architecture — `qwen35` for Harriet — and only its `format` and

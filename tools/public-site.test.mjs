@@ -179,6 +179,10 @@ test("publishes qualified hybrid compositions with qualified models or qualified
       composition.kind === "hybrid" || composition.kind === "recipe",
       `${composition.id} must declare a known kind, got ${composition.kind}`,
     );
+    assert.ok(
+      typeof composition.recipe === "string" && composition.recipe.length > 0,
+      `${composition.id} must name its assembly recipe`,
+    );
     if (composition.kind === "hybrid") {
       // A hybrid composes two sets of weights, so it must carry evidence that the composition
       // itself was qualified, not just that its members were.
@@ -211,6 +215,7 @@ test("publishes qualified hybrid compositions with qualified models or qualified
   assert.match(build, /runtimeCatalogIds = publicModelIds \+ referencedCompositionComponentIds/);
   assert.match(build, /Qualified compositions must not reference unqualified components/);
   assert.match(build, /requiredWeightBytes must equal its member artifacts/);
+  assert.match(build, /Catalog compositions must name a known recipe/);
 });
 
 test("explains the product, evidence, and complete Java onboarding", async () => {

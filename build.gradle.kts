@@ -1424,6 +1424,11 @@ val catalogEntries =
             )
         }
 
+// The assembly recipes the catalog may name. The public list, with each recipe's explanation,
+// is site/assets/recipes.js and the page it renders; keep the two in step.
+val knownCompositionRecipes =
+    setOf("shared-prefix-activated-lora", "option-logit-readout", "entropy-gated-logit-fusion")
+
 val compositionDocument =
     JsonSlurper()
         .parse(file("catalog/compositions.json"))
@@ -1443,6 +1448,11 @@ val catalogCompositions =
             val coordinate = raw.requiredString("markerCoordinate").split(':')
             require(coordinate.size == 3) {
                 "Composition markerCoordinate must be groupId:artifactId:version"
+            }
+            val recipe = raw.requiredString("recipe")
+            require(recipe in knownCompositionRecipes) {
+                "Catalog compositions must name a known recipe (site/assets/recipes.js): " +
+                    "${raw["id"]} names '$recipe'"
             }
             val members =
                 ((raw["members"] as? List<*>)

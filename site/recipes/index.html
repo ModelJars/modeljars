@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recipes | ModelJARs.org</title>
+    <meta
+      name="description"
+      content="The named assembly recipes behind ModelJARs.org compositions: what each one shares, how it opens from Java, and what qualifies it.">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem("modeljars-theme") ||
+        (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
+    <script src="/assets/static-page.js" type="module"></script>
+    <script src="/assets/install-drawer.js" type="module"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="ModelJARs.org home">
+          <img src="/android-chrome-192x192.png" alt="" width="34" height="34">
+          <span>ModelJARs.org</span>
+        </a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Models</a>
+          <a class="nav-cli" href="/#modeljars-cli">CLI</a>
+          <a class="nav-java" href="/#using-modeljars" aria-label="Use from Java">
+            <span class="nav-java-icon" aria-hidden="true"></span>
+            <span>Use from Java</span>
+          </a>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
+          <a class="active" href="/recipes/">Recipes</a>
+          <a class="nav-secondary" href="https://integrallis.github.io/models/docs/models/current/index.html">Docs</a>
+          <a class="nav-secondary" href="/contribute/">Contribute</a>
+          <a class="nav-secondary" href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Change theme">
+            <span class="theme-light" aria-hidden="true">&#9728;</span>
+            <span class="theme-dark" aria-hidden="true">&#9790;</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+    <main class="documentation-shell">
+      <header class="documentation-heading">
+        <p class="eyebrow">Compositions</p>
+        <h1>Recipes</h1>
+        <p class="lede">
+          A <strong>hybrid</strong> is a catalog category, not one construction. Every composition in
+          the catalog is assembled by a named <strong>recipe</strong>, and recipes need not share
+          architecture with one another: one forks a specialist from a base's KV cache, one reads a
+          decision off a frozen base in a single pass, one votes between independent models token by
+          token. The card and the detail page of every composition name its recipe; this page says
+          what each recipe is, what it shares and what it does not, how it opens from Java, and what
+          qualifies it.
+        </p>
+      </header>
+
+      <section class="documentation-section" aria-labelledby="shared-prefix-activated-lora">
+        <h2 id="shared-prefix-activated-lora">Shared-prefix activated LoRA</h2>
+        <p class="eyebrow">Category: hybrid &middot; recipe id <code>shared-prefix-activated-lora</code></p>
+        <p>
+          One base model and one activated low-rank adapter trained for a specialist job. The base
+          handles ordinary chat. When the specialist is invoked, its branch forks from the <em>same
+          physical KV-cache prefix</em> the chat already computed, applies the adapter's low-rank delta
+          from the activation point on, and answers; the base's state is untouched. The adapter is a
+          composition component, not a second standalone model, so the second behaviour costs no second
+          set of weights in memory and no second prefill of the conversation.
+        </p>
+        <h3>What is shared</h3>
+        <ul>
+          <li>The base weights, loaded once.</li>
+          <li>The KV-cache prefix up to the activation point, by physical block identity (the catalog
+            lists this as <code>exact-kv-block-sharing</code> and <code>shared-physical-prefix</code>).</li>
+        </ul>
+        <h3>What is not</h3>
+        <ul>
+          <li>The adapter's own delta and the specialist branch's tail of KV state, which diverge from
+            the activation point on.</li>
+        </ul>
+        <h3>How it opens</h3>
+        <pre><code class="language-java">try (var hybrid = ModelJars.openActivatedToolRuntime(BASE.MODEL, ADAPTER.MODEL);
+     var conversation = hybrid.openConversation()) {
+  var prompt = hybrid.chatTemplate().render(List.of(ChatMessage.user("...")));
+  var answer = conversation.generateBase(prompt, options);   // ordinary chat on the base
+  // the specialist verdict forks from the same prefix; see the composition's page
+}</code></pre>
+        <h3>What qualifies it</h3>
+        <p>
+          The base is qualified on its own. The adapter is a hidden component bound by the
+          composition's evidence: a controlled comparison of the complete recipe against its control on
+          a frozen window of published cases, with the composite's median latency recorded beside the
+          control's. The detail page shows that evidence under <em>Composition evidence</em>.
+        </p>
+        <p>In the catalog: <a href="/models/granite_4_1_3b_answerability_hybrid/">Granite 4.1 3B answerability hybrid</a>.</p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="option-logit-readout">
+        <h2 id="option-logit-readout">Option-logit readout</h2>
+        <p class="eyebrow">Category: recipe &middot; recipe id <code>option-logit-readout</code></p>
+        <p>
+          A frozen base model and a readout, no training and no generation. The question and its
+          declared options are rendered once; the model runs one forward pass; the answer is read off
+          the logits of the option letters and turned into a calibrated probability by a frozen
+          temperature table. However many options there are, it is still one pass, and the result is a
+          typed value (a proposition's probability, one of N labels, or an ordinal score) rather than
+          text to parse.
+        </p>
+        <h3>What is shared</h3>
+        <ul>
+          <li>Nothing between models: there is only one. Several questions over one input can share
+            that input's KV prefix where the base family supports it, which the catalog lists as
+            <code>shared-physical-prefix</code>.</li>
+        </ul>
+        <h3>What is not</h3>
+        <ul>
+          <li>The base is not modified (<code>frozen-base</code>); the recipe stands on the base's own
+            published qualification plus the readout's measured accuracy against its chance floor.</li>
+        </ul>
+        <h3>How it opens</h3>
+        <pre><code class="language-java">try (var decisions = ModelJars.openDecisionRuntime(MODEL)) {
+  var verdict = decisions.decide(question, options);   // typed, calibrated; no decoding loop
+}</code></pre>
+        <h3>What qualifies it</h3>
+        <p>
+          Accuracy on a published decision cohort reported against the cohort's chance floor, with the
+          calibration table frozen before the test window. The detail page shows it under
+          <em>Production evidence</em>.
+        </p>
+        <p>In the catalog: <a href="/models/harriet_qwen3_5_4b_decisions/">Harriet (Qwen3.5 4B decisions)</a>.</p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="entropy-gated-logit-fusion">
+        <h2 id="entropy-gated-logit-fusion">Entropy-gated logit fusion</h2>
+        <p class="eyebrow">Category: hybrid &middot; recipe id <code>entropy-gated-logit-fusion</code> &middot; status: runtime built, no catalog entry yet</p>
+        <p>
+          Several independent models that share one tokenizer, byte for byte. One is the
+          <strong>lead</strong> and always decodes. At every step the Shannon entropy of the lead's
+          next-token distribution is read; while it is below a threshold the lead emits alone and the
+          <strong>auxiliaries</strong> sit idle. When it reaches the threshold, each auxiliary catches
+          up over the tokens it has not seen in one batched prefill call and the members'
+          log-probabilities are combined as a weighted product of experts; the next token is sampled
+          from that. The published recipe fuses a coding specialist (lead), a maths specialist and a
+          general model of the same family at a threshold of 0.65 nats.
+        </p>
+        <h3>What is shared</h3>
+        <ul>
+          <li>The tokenizer, which must be identical across members (this is checked before anything
+            loads).</li>
+          <li>The decoded token sequence: every member sees the same prefix, each in its own cache.</li>
+        </ul>
+        <h3>What is not</h3>
+        <ul>
+          <li>Weights and KV caches. Members stay separate models in memory; nothing is merged, so
+            each keeps the sharpness weight-merging would blur. This recipe shares no structure with
+            the shared-prefix activated LoRA recipe above; both are hybrids because both are assembled
+            from more than one set of weights into one behaviour.</li>
+        </ul>
+        <h3>Why the gate</h3>
+        <p>
+          Fusing at <em>every</em> token was measured in September 2026 and lost to the best single
+          member on a GSM8K pilot; published work (SAFE, ICLR 2026) reports the same and recovers the
+          gain by choosing the positions, ensembling at a small fraction of tokens. The gate is that
+          choice, and it is also what keeps the cost close to the lead alone: the auxiliaries only pay
+          for the steps where they are asked.
+        </p>
+        <h3>How it opens</h3>
+        <pre><code class="language-java">// Models runtime, com.integrallis.models.runtime.fusion
+var recipe = new FusionRecipe(FusionRule.POE, new double[] {0.55, 0.25, 0.20}, new EntropyGate(0.65));
+try (var fused = new FusedInferenceBackend(List.of(lead, maths, general), recipe);
+     var pipeline = new InferencePipeline(fused)) {
+  // generate as with any backend; fused.metrics() reports how often the auxiliaries voted
+}</code></pre>
+        <p>
+          A catalog composition of this recipe will open through ModelJars like any other, with the
+          members, weights and threshold taken from the catalog so that what ships is what was measured.
+        </p>
+        <h3>What qualifies it</h3>
+        <p>
+          A pre-registered study in the Models repository
+          (<code>benchmark-results/2026-11-25-gated-logit-fusion/PREREGISTRATION.md</code>): the fused
+          output must beat its best member and every-token fusion on at least two of three published
+          datasets, cost at most 1.3&times; the lead alone, and stay within two points of a larger
+          model at matched memory. The catalog carries an entry for the published recipe only if that
+          practical claim holds. Until then this recipe is documented here and available as a runtime
+          in Models, not as a catalog composition.
+        </p>
+      </section>
+
+      <section class="documentation-section" aria-labelledby="naming-title">
+        <h2 id="naming-title">How recipes are named and checked</h2>
+        <p>
+          A recipe id names the architecture of the assembly, not the models in it. The catalog
+          (<code>catalog/compositions.json</code>) names a recipe on every composition, the build
+          refuses a name that is not on this page's list, and the card and detail page render the name
+          with a link here. Adding a recipe means adding it to that list, explaining it on this page,
+          and publishing its first composition only with the evidence its section describes.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <a class="footer-brand" href="/">ModelJARs.org</a>
+        <span class="footer-credit">
+          Built with <span aria-label="love">&#10084;&#65039;</span> by
+          <a href="https://integrallis.com" aria-label="Integrallis">
+            <img class="footer-integrallis-logo" src="/assets/integrallis-logo.png" alt="Integrallis">
+          </a>
+        </span>
+        <div>
+          <a href="/benchmarks/">Benchmarks</a>
+          <a href="/apple/">Apple</a>
+          <a href="/recipes/">Recipes</a>
+          <a href="https://integrallis.github.io/models/docs/models/current/index.html">Docs</a>
+          <a href="https://github.com/ModelJars/modeljars">GitHub</a>
+          <a href="/contribute/">Contribute</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

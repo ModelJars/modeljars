@@ -1191,6 +1191,26 @@ select {
   text-transform: uppercase;
 }
 
+.recipe-badge {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--surface-subtle);
+  color: var(--accent);
+  font-family: var(--tech);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.recipe-badge:hover,
+.recipe-badge:focus-visible {
+  text-decoration: underline;
+}
+
 .verification-badge {
   flex: 0 0 auto;
   border: 1px solid var(--line);

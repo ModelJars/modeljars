@@ -2,6 +2,7 @@ import { qualificationMetrics } from "./catalog-entry-metrics.js";
 import { renderDependencyCopyActions } from "./catalog-entry-actions.js";
 import { copyDependencySnippet } from "./dependency-snippets.js";
 import { describeCoordinate } from "./coordinate.js";
+import { recipeProfile } from "./recipes.js";
 import { formatBytes, formatParameters } from "./resource-profile.js";
 import { primaryQualification, tierLabel } from "./qualification-data.js";
 import { filterCatalog } from "./search.js";
@@ -79,6 +80,7 @@ function renderEntry(model) {
     : null;
   const profile = verificationProfile(model);
   const kind = kindProfile(model);
+  const recipe = recipeProfile(model);
   // The badge carries the group; the coordinate then shows only what differs row to row. The copy
   // buttons still emit the full coordinate, because a shortened one does not resolve in a build.
   const coordinate = describeCoordinate(model.markerCoordinate);
@@ -100,6 +102,7 @@ function renderEntry(model) {
         </span>
         <span class="entry-pills">
           ${kind ? `<span class="kind-badge ${escapeHtml(kind.kind)}">${escapeHtml(kind.label)}</span>` : ""}
+          ${recipe ? `<a class="recipe-badge" href="${escapeHtml(recipe.href)}" title="How this recipe works">${escapeHtml(recipe.name)}</a>` : ""}
           <span class="verification-badge ${escapeHtml(profile.level)}">${escapeHtml(profile.label)}</span>
         </span>
         <span class="entry-coordinate-row">

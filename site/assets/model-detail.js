@@ -1,4 +1,5 @@
 import { formatDuration } from "./benchmark-data.js";
+import { recipeProfile } from "./recipes.js";
 import { gradleSnippet, mavenSnippet } from "./dependency-snippets.js";
 import {
   primaryQualification,
@@ -1063,6 +1064,18 @@ function renderQualification(qualification) {
     </section>`;
 }
 
+export function renderRecipe(model) {
+  const recipe = recipeProfile(model);
+  if (!recipe) return "";
+  return `
+    <section class="detail-section recipe-section" aria-labelledby="recipe-title">
+      <p class="eyebrow">Recipe</p>
+      <h2 id="recipe-title">${escapeHtml(recipe.name)}</h2>
+      <p>${escapeHtml(recipe.summary)}</p>
+      <p><a href="${escapeHtml(recipe.href)}">How the ${escapeHtml(recipe.name.toLowerCase())} recipe works &#8594;</a></p>
+    </section>`;
+}
+
 function renderCompositionMembers(model, catalog) {
   if (model.kind !== "hybrid") return "";
   const byId = new Map(catalog.map((entry) => [entry.id, entry]));
@@ -1161,6 +1174,8 @@ export function renderModel(model, catalog) {
         </section>
 
         ${renderQualification(qualification)}
+
+        ${renderRecipe(model)}
 
         ${renderCompositionMembers(model, catalog)}
 
